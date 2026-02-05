@@ -1,0 +1,986 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel de Administração • Hub Resiliência Climática</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --green-regen:#1B7F5A;
+      --green-light:#4CAF8F;
+      --blue-deep:#0D3B66;
+
+      --yellow:#F2C94C;
+      --graphite:#2E2E2E;
+      --bg:#F5F7F6;
+      --white:#FFFFFF;
+
+      --shadow:0 10px 30px rgba(0,0,0,0.08);
+      --border:#E7ECEA;
+      --radius:16px;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background:var(--bg);
+      color:var(--graphite);
+    }
+    h1,h2,h3{ font-family:'Poppins', sans-serif; margin:0; }
+    a{ color:inherit; text-decoration:none; }
+    button, input, textarea, select { font-family:inherit; }
+
+    .app{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns: 300px 1fr;
+      gap:16px;
+      padding:16px;
+      max-width: 1400px;
+      margin:0 auto;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position:sticky;
+      top:16px;
+      height: calc(100vh - 32px);
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(13,59,102,0.98), rgba(27,127,90,0.98));
+      box-shadow: var(--shadow);
+      color:#fff;
+      padding:14px;
+      overflow:hidden;
+    }
+    .brand{
+      padding:10px 10px 12px;
+      border-bottom:1px solid rgba(255,255,255,0.14);
+      margin-bottom:12px;
+    }
+    .brand strong{ display:block; font-size:15px; letter-spacing:0.2px; }
+    .brand span{ display:block; font-size:12.5px; opacity:.9; margin-top:4px; }
+
+    .admin-meta{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.12);
+      border:1px solid rgba(255,255,255,0.14);
+      font-size:12.5px;
+      line-height:1.45;
+    }
+
+    .nav{
+      margin-top:12px;
+      display:grid;
+      gap:6px;
+    }
+    .nav button{
+      border:none;
+      cursor:pointer;
+      background: transparent;
+      color:#fff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:800;
+      font-size:13px;
+      text-align:left;
+      border: 1px solid transparent;
+      opacity:.96;
+      display:flex;
+      align-items:center;
+      gap:10px;
+    }
+    .nav button:hover{
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .nav .active{
+      background: rgba(242,201,76,0.14);
+      border-color: rgba(242,201,76,0.28);
+    }
+    .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: var(--yellow);
+      box-shadow: 0 0 0 3px rgba(242,201,76,0.16);
+      flex:0 0 auto;
+    }
+
+    .sidebar-bottom{
+      position:absolute;
+      left:14px;
+      right:14px;
+      bottom:12px;
+      padding-top:10px;
+      border-top:1px solid rgba(255,255,255,0.14);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      font-size:12px;
+      opacity:.95;
+    }
+    .btn-ghost{
+      width:100%;
+      border:none;
+      cursor:pointer;
+      border-radius:14px;
+      padding:10px 12px;
+      background: rgba(255,255,255,0.10);
+      border:1px solid rgba(255,255,255,0.14);
+      color:#fff;
+      font-weight:900;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      text-align:left;
+    }
+    .btn-ghost:hover{ background: rgba(255,255,255,0.14); }
+
+    /* Main */
+    .main{
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+    .topbar{
+      position:sticky;
+      top:16px;
+      z-index:10;
+      background: rgba(245,247,246,0.86);
+      backdrop-filter: blur(10px);
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .topbar h2{ font-size:16px; }
+    .muted{ color:#666; font-size:13px; line-height:1.5; }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1fr 1fr;
+      gap:12px;
+    }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      padding:14px;
+    }
+    .card h3{ font-size:14px; margin-bottom:10px; }
+
+    .row{
+      display:flex;
+      gap:10px;
+      align-items:center;
+    }
+    .row.wrap{ flex-wrap:wrap; }
+    .spacer{ flex:1; }
+
+    .input, .select, .textarea{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 12px;
+      outline:none;
+      font-size:14px;
+      background:#fff;
+      transition: box-shadow .2s ease, border-color .2s ease;
+    }
+    .textarea{ min-height:96px; resize:vertical; }
+    .input:focus, .select:focus, .textarea:focus{
+      border-color: rgba(27,127,90,0.45);
+      box-shadow: 0 0 0 4px rgba(27,127,90,0.10);
+    }
+
+    .btn{
+      border:none;
+      cursor:pointer;
+      padding:10px 12px;
+      border-radius:999px;
+      font-weight:900;
+      font-family:'Poppins';
+      font-size:12px;
+      transition: transform .15s ease, opacity .15s ease;
+    }
+    .btn:active{ transform: translateY(1px); opacity:.92; }
+    .btn-primary{
+      background: linear-gradient(135deg, var(--green-light), var(--green-regen));
+      color:#fff;
+    }
+    .btn-secondary{
+      background:#fff;
+      border:1px solid var(--border);
+      color: var(--blue-deep);
+    }
+    .btn-danger{
+      background:#fff;
+      border:1px solid rgba(220, 53, 69, 0.30);
+      color:#B02A37;
+    }
+
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      max-height: 520px;
+      overflow:auto;
+      padding-right:4px;
+    }
+    .item{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:10px 12px;
+      background:#fff;
+      cursor:pointer;
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+    }
+    .item:hover{ background:#f6faf8; }
+    .item.active{
+      border-color: rgba(27,127,90,0.35);
+      box-shadow: 0 0 0 4px rgba(27,127,90,0.08);
+    }
+    .item strong{
+      font-size:13.5px;
+      font-family:'Poppins';
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+    .item span{
+      font-size:12.5px;
+      color:#666;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      white-space:nowrap;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      color:#2f2f2f;
+    }
+
+    .msg{
+      display:none;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      line-height:1.45;
+      border:1px solid rgba(242,201,76,0.34);
+      background: rgba(242,201,76,0.16);
+      color:#5b4a12;
+    }
+    .msg.show{ display:block; }
+
+    @media (max-width: 1100px){
+      .app{ grid-template-columns: 1fr; }
+      .sidebar{ position:relative; height:auto; }
+      .grid{ grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>Painel de Administração</strong>
+        <span>Usuários • Conteúdos • Acessos</span>
+      </div>
+
+      <div class="admin-meta" id="adminMeta">
+        Validando acesso...
+      </div>
+
+      <div class="nav" aria-label="Seções">
+        <button class="active" data-tab="users"><span class="dot"></span> Usuários</button>
+        <button data-tab="posts"><span class="dot"></span> Conteúdos (Feed)</button>
+        <button data-tab="access"><span class="dot"></span> Acessos & Permissões</button>
+      </div>
+
+      <div class="sidebar-bottom">
+        <button id="goHomeBtn" class="btn-ghost"><span class="dot"></span> Voltar para Home</button>
+        <button id="logoutBtn" class="btn-ghost"><span class="dot"></span> Sair</button>
+        <div>Plataforma Regenera • v0.1</div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div>
+          <h2 id="pageTitle">Usuários</h2>
+          <div class="muted" id="pageSubtitle">Gerencie perfis, vínculos e permissões</div>
+        </div>
+        <div class="row" style="min-width: 420px; max-width: 520px;">
+          <input class="input" id="globalSearch" placeholder="Buscar por nome, e-mail, role, CRGR..." />
+          <button class="btn btn-secondary" id="refreshBtn" type="button">Atualizar</button>
+        </div>
+      </div>
+
+      <div id="msg" class="msg"></div>
+
+      <!-- TAB: USERS -->
+      <section id="tab-users" class="grid">
+        <div class="card">
+          <h3>Lista de usuários</h3>
+          <div class="row" style="margin-bottom:10px;">
+            <span class="pill" id="usersCount">0 usuários</span>
+            <div class="spacer"></div>
+            <button class="btn btn-secondary" id="seedAdminHintBtn" type="button">Dica: tornar admin</button>
+          </div>
+          <div class="list" id="usersList"></div>
+        </div>
+
+        <div class="card">
+          <h3>Editar usuário</h3>
+
+          <div class="row wrap" style="margin-bottom:10px;">
+            <span class="pill">UID: <span id="u_uid" style="font-weight:900;margin-left:6px;">—</span></span>
+            <span class="pill">Criado: <span id="u_created" style="font-weight:900;margin-left:6px;">—</span></span>
+          </div>
+
+          <div class="row" style="margin-bottom:10px;">
+            <div style="flex:1;">
+              <label class="muted">Nome</label>
+              <input class="input" id="u_name" placeholder="Nome do usuário" />
+            </div>
+            <div style="width:240px;">
+              <label class="muted">Perfil (role)</label>
+              <select class="select" id="u_role">
+                <option value="comunidade">comunidade</option>
+                <option value="lideranca">liderança comunitária</option>
+                <option value="tecnico">técnico</option>
+                <option value="gestor">gestor</option>
+                <option value="admin">admin</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row" style="margin-bottom:10px;">
+            <div style="flex:1;">
+              <label class="muted">E-mail</label>
+              <input class="input" id="u_email" placeholder="email@exemplo.com" disabled />
+            </div>
+            <div style="width:240px;">
+              <label class="muted">Organização (orgId)</label>
+              <input class="input" id="u_orgId" placeholder="ex: org_01" />
+            </div>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label class="muted">CRGR (crgrIds) — separados por vírgula</label>
+            <input class="input" id="u_crgrIds" placeholder="ex: crgr_01, crgr_02" />
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label class="muted">Mini bio</label>
+            <textarea class="textarea" id="u_bio" placeholder="Descreva a atuação no território..."></textarea>
+          </div>
+
+          <div class="row" style="margin-bottom:10px;">
+            <button class="btn btn-primary" id="saveUserBtn" type="button">Salvar usuário</button>
+            <button class="btn btn-secondary" id="resetUserBtn" type="button">Desfazer</button>
+            <div class="spacer"></div>
+          </div>
+
+          <div class="muted">
+            * Permissões (módulos) são configuradas em “Acessos & Permissões”.
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: POSTS -->
+      <section id="tab-posts" class="grid" style="display:none;">
+        <div class="card">
+          <h3>Conteúdos do Feed (posts)</h3>
+          <div class="row" style="margin-bottom:10px;">
+            <span class="pill" id="postsCount">0 posts</span>
+            <div class="spacer"></div>
+          </div>
+          <div class="list" id="postsList"></div>
+        </div>
+
+        <div class="card">
+          <h3>Criar / Editar post</h3>
+
+          <div class="row wrap" style="margin-bottom:10px;">
+            <span class="pill">Post ID: <span id="p_id" style="font-weight:900;margin-left:6px;">novo</span></span>
+            <span class="pill">Autor UID: <span id="p_authorUid" style="font-weight:900;margin-left:6px;">(auto)</span></span>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label class="muted">Texto</label>
+            <textarea class="textarea" id="p_text" placeholder="Escreva o conteúdo para aparecer no feed..."></textarea>
+          </div>
+
+          <div style="margin-bottom:10px;">
+            <label class="muted">Tags (separadas por vírgula)</label>
+            <input class="input" id="p_tags" placeholder="ex: aviso, oficina, oportunidade" />
+          </div>
+
+          <div class="row" style="margin-bottom:10px;">
+            <button class="btn btn-primary" id="savePostBtn" type="button">Salvar post</button>
+            <button class="btn btn-secondary" id="newPostBtn" type="button">Novo</button>
+            <button class="btn btn-danger" id="deletePostBtn" type="button">Remover</button>
+          </div>
+
+          <div class="muted">
+            * Neste MVP o post é salvo em <code>posts</code>. Depois adicionamos mídia, fixar por CRGR e moderação.
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB: ACCESS -->
+      <section id="tab-access" class="grid" style="display:none;">
+        <div class="card">
+          <h3>Selecionar usuário</h3>
+          <div class="muted" style="margin-bottom:10px;">
+            Selecione um usuário na aba “Usuários”. Aqui você define os módulos liberados.
+          </div>
+          <div class="row wrap" style="margin-bottom:10px;">
+            <span class="pill">Selecionado: <span id="a_userLabel" style="font-weight:900;margin-left:6px;">—</span></span>
+          </div>
+
+          <div class="muted">
+            Sugestão de módulos:
+            <div style="margin-top:8px; display:flex; flex-wrap:wrap; gap:8px;">
+              <span class="pill">feed</span>
+              <span class="pill">territorio</span>
+              <span class="pill">planos</span>
+              <span class="pill">biblioteca</span>
+              <span class="pill">agenda</span>
+              <span class="pill">forum</span>
+              <span class="pill">dashboards</span>
+              <span class="pill">admin</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Permissões (modules)</h3>
+
+          <div class="row wrap" style="gap:10px; margin-bottom:10px;">
+            <label class="pill"><input type="checkbox" id="m_feed"> feed</label>
+            <label class="pill"><input type="checkbox" id="m_territorio"> territorio</label>
+            <label class="pill"><input type="checkbox" id="m_planos"> planos</label>
+            <label class="pill"><input type="checkbox" id="m_biblioteca"> biblioteca</label>
+            <label class="pill"><input type="checkbox" id="m_agenda"> agenda</label>
+            <label class="pill"><input type="checkbox" id="m_forum"> forum</label>
+            <label class="pill"><input type="checkbox" id="m_dashboards"> dashboards</label>
+            <label class="pill"><input type="checkbox" id="m_admin"> admin</label>
+          </div>
+
+          <div class="row" style="margin-bottom:10px;">
+            <button class="btn btn-primary" id="saveModulesBtn" type="button">Salvar permissões</button>
+            <button class="btn btn-secondary" id="resetModulesBtn" type="button">Desfazer</button>
+            <div class="spacer"></div>
+          </div>
+
+          <div class="muted">
+            * Isso grava em <code>users/{uid}.modules</code>. O menu e telas da plataforma devem ler esse objeto.
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      collection,
+      query,
+      orderBy,
+      limit,
+      getDocs,
+      doc,
+      getDoc,
+      setDoc,
+      updateDoc,
+      addDoc,
+      deleteDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // === Firebase config (o seu)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
+      authDomain: "hub-resiliencia-climatica.firebaseapp.com",
+      projectId: "hub-resiliencia-climatica",
+      storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
+      messagingSenderId: "485694309026",
+      appId: "1:485694309026:web:771ed497d49861fa444dfb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // === UI refs
+    const msgEl = document.getElementById("msg");
+    const adminMeta = document.getElementById("adminMeta");
+
+    const tabs = {
+      users: document.getElementById("tab-users"),
+      posts: document.getElementById("tab-posts"),
+      access: document.getElementById("tab-access")
+    };
+    const pageTitle = document.getElementById("pageTitle");
+    const pageSubtitle = document.getElementById("pageSubtitle");
+
+    const navButtons = Array.from(document.querySelectorAll(".nav button[data-tab]"));
+    const globalSearch = document.getElementById("globalSearch");
+    const refreshBtn = document.getElementById("refreshBtn");
+
+    const usersList = document.getElementById("usersList");
+    const usersCount = document.getElementById("usersCount");
+
+    const u_uid = document.getElementById("u_uid");
+    const u_created = document.getElementById("u_created");
+    const u_name = document.getElementById("u_name");
+    const u_role = document.getElementById("u_role");
+    const u_email = document.getElementById("u_email");
+    const u_orgId = document.getElementById("u_orgId");
+    const u_crgrIds = document.getElementById("u_crgrIds");
+    const u_bio = document.getElementById("u_bio");
+    const saveUserBtn = document.getElementById("saveUserBtn");
+    const resetUserBtn = document.getElementById("resetUserBtn");
+    const seedAdminHintBtn = document.getElementById("seedAdminHintBtn");
+
+    const postsList = document.getElementById("postsList");
+    const postsCount = document.getElementById("postsCount");
+    const p_id = document.getElementById("p_id");
+    const p_authorUid = document.getElementById("p_authorUid");
+    const p_text = document.getElementById("p_text");
+    const p_tags = document.getElementById("p_tags");
+    const savePostBtn = document.getElementById("savePostBtn");
+    const newPostBtn = document.getElementById("newPostBtn");
+    const deletePostBtn = document.getElementById("deletePostBtn");
+
+    const a_userLabel = document.getElementById("a_userLabel");
+    const m_feed = document.getElementById("m_feed");
+    const m_territorio = document.getElementById("m_territorio");
+    const m_planos = document.getElementById("m_planos");
+    const m_biblioteca = document.getElementById("m_biblioteca");
+    const m_agenda = document.getElementById("m_agenda");
+    const m_forum = document.getElementById("m_forum");
+    const m_dashboards = document.getElementById("m_dashboards");
+    const m_admin = document.getElementById("m_admin");
+    const saveModulesBtn = document.getElementById("saveModulesBtn");
+    const resetModulesBtn = document.getElementById("resetModulesBtn");
+
+    const goHomeBtn = document.getElementById("goHomeBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    // === State
+    let sessionUser = null;          // firebase auth user
+    let sessionProfile = null;       // users/{uid} profile
+    let usersCache = [];             // list of users
+    let postsCache = [];             // list of posts
+
+    let selectedUserId = null;
+    let selectedUserDoc = null;      // snapshot data
+
+    let selectedPostId = null;
+    let selectedPostDoc = null;
+
+    function showMsg(text){
+      msgEl.textContent = text;
+      msgEl.classList.add("show");
+      setTimeout(()=> msgEl.classList.remove("show"), 3500);
+    }
+
+    function fmtDate(ts){
+      try{
+        if(!ts) return "—";
+        if(ts.toDate) return ts.toDate().toLocaleString("pt-BR");
+        return String(ts);
+      }catch{ return "—"; }
+    }
+
+    function safeStr(v){ return (v ?? "").toString(); }
+
+    function parseCsvIds(s){
+      return safeStr(s)
+        .split(",")
+        .map(x => x.trim())
+        .filter(Boolean);
+    }
+
+    function switchTab(tab){
+      Object.values(tabs).forEach(el => el.style.display = "none");
+      tabs[tab].style.display = "grid";
+      navButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+
+      if(tab === "users"){
+        pageTitle.textContent = "Usuários";
+        pageSubtitle.textContent = "Gerencie perfis, vínculos e permissões";
+      }else if(tab === "posts"){
+        pageTitle.textContent = "Conteúdos (Feed)";
+        pageSubtitle.textContent = "Criar, editar e moderar publicações";
+      }else{
+        pageTitle.textContent = "Acessos & Permissões";
+        pageSubtitle.textContent = "Defina módulos liberados por usuário";
+      }
+    }
+
+    function renderUsers(list){
+      usersList.innerHTML = "";
+      usersCount.textContent = `${list.length} usuários`;
+
+      list.forEach(u => {
+        const el = document.createElement("div");
+        el.className = "item" + (u.id === selectedUserId ? " active" : "");
+        el.innerHTML = `
+          <strong>${safeStr(u.data.name || u.data.email || u.id)}</strong>
+          <span>${safeStr(u.data.email || "—")} • ${safeStr(u.data.role || "comunidade")}</span>
+          <span>CRGR: ${Array.isArray(u.data.crgrIds) && u.data.crgrIds.length ? u.data.crgrIds.join(", ") : "—"}</span>
+        `;
+        el.addEventListener("click", () => selectUser(u.id));
+        usersList.appendChild(el);
+      });
+    }
+
+    function fillUserForm(userId, data){
+      selectedUserId = userId;
+      selectedUserDoc = JSON.parse(JSON.stringify(data || {}));
+
+      u_uid.textContent = userId || "—";
+      u_created.textContent = fmtDate(data?.createdAt);
+      u_name.value = safeStr(data?.name || "");
+      u_role.value = safeStr(data?.role || "comunidade");
+      u_email.value = safeStr(data?.email || "");
+      u_orgId.value = safeStr(data?.orgId || "");
+      u_crgrIds.value = Array.isArray(data?.crgrIds) ? data.crgrIds.join(", ") : "";
+      u_bio.value = safeStr(data?.bio || "");
+
+      // Access tab label + modules
+      a_userLabel.textContent = `${safeStr(data?.name || data?.email || userId)} (${safeStr(data?.role || "comunidade")})`;
+      fillModulesForm(data?.modules || {}, data?.role || "comunidade");
+
+      // rerender highlight
+      renderUsers(filterUsers(usersCache, globalSearch.value));
+    }
+
+    function fillModulesForm(modules = {}, role = "comunidade"){
+      const m = modules || {};
+      m_feed.checked = m.feed === true || true; // feed base
+      m_territorio.checked = m.territorio === true;
+      m_planos.checked = m.planos === true;
+      m_biblioteca.checked = m.biblioteca === true;
+      m_agenda.checked = m.agenda === true;
+      m_forum.checked = m.forum === true;
+      m_dashboards.checked = m.dashboards === true;
+      m_admin.checked = role === "admin" ? true : (m.admin === true);
+    }
+
+    function currentModulesFromUI(){
+      return {
+        feed: true, // base
+        territorio: m_territorio.checked,
+        planos: m_planos.checked,
+        biblioteca: m_biblioteca.checked,
+        agenda: m_agenda.checked,
+        forum: m_forum.checked,
+        dashboards: m_dashboards.checked,
+        admin: m_admin.checked
+      };
+    }
+
+    async function selectUser(userId){
+      const ref = doc(db, "users", userId);
+      const snap = await getDoc(ref);
+      if(!snap.exists()){
+        showMsg("Usuário não encontrado no Firestore.");
+        return;
+      }
+      fillUserForm(userId, snap.data());
+    }
+
+    function filterUsers(list, q){
+      const s = safeStr(q).trim().toLowerCase();
+      if(!s) return list;
+
+      return list.filter(u => {
+        const d = u.data || {};
+        const hay = [
+          u.id,
+          d.name,
+          d.email,
+          d.role,
+          d.orgId,
+          Array.isArray(d.crgrIds) ? d.crgrIds.join(" ") : ""
+        ].join(" ").toLowerCase();
+        return hay.includes(s);
+      });
+    }
+
+    function renderPosts(list){
+      postsList.innerHTML = "";
+      postsCount.textContent = `${list.length} posts`;
+
+      list.forEach(p => {
+        const d = p.data || {};
+        const el = document.createElement("div");
+        el.className = "item" + (p.id === selectedPostId ? " active" : "");
+        el.innerHTML = `
+          <strong>${safeStr(d.authorName || "Autor")}</strong>
+          <span>${safeStr(d.text || "").slice(0, 80)}${safeStr(d.text || "").length > 80 ? "..." : ""}</span>
+          <span>${safeStr(d.authorRole || "—")} • ${fmtDate(d.createdAt)}</span>
+        `;
+        el.addEventListener("click", () => selectPost(p.id));
+        postsList.appendChild(el);
+      });
+    }
+
+    function fillPostForm(postId, data){
+      selectedPostId = postId;
+      selectedPostDoc = JSON.parse(JSON.stringify(data || {}));
+
+      p_id.textContent = postId || "novo";
+      p_authorUid.textContent = safeStr(data?.authorUid || "(auto)");
+      p_text.value = safeStr(data?.text || "");
+      p_tags.value = Array.isArray(data?.tags) ? data.tags.join(", ") : "";
+    }
+
+    async function selectPost(postId){
+      const ref = doc(db, "posts", postId);
+      const snap = await getDoc(ref);
+      if(!snap.exists()){
+        showMsg("Post não encontrado.");
+        return;
+      }
+      fillPostForm(postId, snap.data());
+      renderPosts(postsCache);
+    }
+
+    async function loadUsers(){
+      // MVP: limita 200 usuários
+      const q = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(200));
+      const snap = await getDocs(q);
+      usersCache = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+      renderUsers(filterUsers(usersCache, globalSearch.value));
+    }
+
+    async function loadPosts(){
+      // MVP: limita 100 posts
+      const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(100));
+      const snap = await getDocs(q);
+      postsCache = snap.docs.map(d => ({ id: d.id, data: d.data() }));
+      renderPosts(postsCache);
+    }
+
+    // === Save user (profile fields)
+    saveUserBtn.addEventListener("click", async () => {
+      if(!selectedUserId) return showMsg("Selecione um usuário.");
+
+      const ref = doc(db, "users", selectedUserId);
+
+      const payload = {
+        name: u_name.value.trim() || null,
+        role: u_role.value,
+        orgId: u_orgId.value.trim() || null,
+        crgrIds: parseCsvIds(u_crgrIds.value),
+        bio: u_bio.value.trim() || null,
+        updatedAt: serverTimestamp()
+      };
+
+      await updateDoc(ref, payload);
+      showMsg("Usuário atualizado.");
+
+      await loadUsers();
+      await selectUser(selectedUserId);
+    });
+
+    resetUserBtn.addEventListener("click", () => {
+      if(!selectedUserId || !selectedUserDoc) return;
+      fillUserForm(selectedUserId, selectedUserDoc);
+      showMsg("Alterações desfeitas.");
+    });
+
+    // === Save modules
+    saveModulesBtn.addEventListener("click", async () => {
+      if(!selectedUserId) return showMsg("Selecione um usuário.");
+
+      const ref = doc(db, "users", selectedUserId);
+      const modules = currentModulesFromUI();
+
+      // Se role for admin, garante admin true
+      const role = u_role.value || selectedUserDoc?.role || "comunidade";
+      if(role === "admin") modules.admin = true;
+
+      await updateDoc(ref, { modules, updatedAt: serverTimestamp() });
+      showMsg("Permissões atualizadas.");
+
+      await loadUsers();
+      await selectUser(selectedUserId);
+    });
+
+    resetModulesBtn.addEventListener("click", () => {
+      if(!selectedUserId) return;
+      fillModulesForm(selectedUserDoc?.modules || {}, selectedUserDoc?.role || "comunidade");
+      showMsg("Permissões desfeitas.");
+    });
+
+    // === Posts
+    newPostBtn.addEventListener("click", () => {
+      selectedPostId = null;
+      selectedPostDoc = null;
+      fillPostForm(null, {});
+      showMsg("Criando novo post.");
+    });
+
+    savePostBtn.addEventListener("click", async () => {
+      const text = p_text.value.trim();
+      if(!text) return showMsg("Escreva um texto para o post.");
+
+      const tags = parseCsvIds(p_tags.value);
+
+      // Edit existing
+      if(selectedPostId){
+        const ref = doc(db, "posts", selectedPostId);
+        await updateDoc(ref, {
+          text,
+          tags,
+          updatedAt: serverTimestamp()
+        });
+        showMsg("Post atualizado.");
+        await loadPosts();
+        await selectPost(selectedPostId);
+        return;
+      }
+
+      // Create new post as admin
+      const authorName = sessionProfile?.name || "Admin";
+      const authorRole = sessionProfile?.role || "admin";
+      const authorUid = sessionUser?.uid;
+
+      const created = await addDoc(collection(db, "posts"), {
+        authorUid,
+        authorName,
+        authorRole,
+        authorPhotoURL: sessionUser?.photoURL || sessionProfile?.photoURL || null,
+        text,
+        tags,
+        createdAt: serverTimestamp(),
+        scope: { type: "global" } // preparado para: global / crgr / territorio
+      });
+
+      showMsg("Post criado.");
+      await loadPosts();
+      await selectPost(created.id);
+    });
+
+    deletePostBtn.addEventListener("click", async () => {
+      if(!selectedPostId) return showMsg("Selecione um post para remover.");
+      const ok = confirm("Tem certeza que deseja remover este post?");
+      if(!ok) return;
+
+      await deleteDoc(doc(db, "posts", selectedPostId));
+      showMsg("Post removido.");
+
+      selectedPostId = null;
+      selectedPostDoc = null;
+      fillPostForm(null, {});
+      await loadPosts();
+    });
+
+    // === Navigation
+    navButtons.forEach(btn => {
+      btn.addEventListener("click", async () => {
+        const tab = btn.dataset.tab;
+        switchTab(tab);
+
+        if(tab === "users") await loadUsers();
+        if(tab === "posts") await loadPosts();
+        if(tab === "access"){
+          if(!selectedUserId) showMsg("Selecione um usuário na aba 'Usuários' para configurar permissões.");
+        }
+      });
+    });
+
+    globalSearch.addEventListener("input", () => {
+      renderUsers(filterUsers(usersCache, globalSearch.value));
+    });
+
+    refreshBtn.addEventListener("click", async () => {
+      await loadUsers();
+      await loadPosts();
+      showMsg("Dados atualizados.");
+    });
+
+    goHomeBtn.addEventListener("click", () => {
+      window.location.href = "home.html";
+    });
+
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+
+    seedAdminHintBtn.addEventListener("click", () => {
+      showMsg("Para tornar alguém admin: selecione o usuário → role = admin → Salvar usuário → depois marque 'admin' em permissões.");
+    });
+
+    // === Guard: only admin
+    onAuthStateChanged(auth, async (user) => {
+      if(!user){
+        window.location.href = "index.html";
+        return;
+      }
+
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const data = snap.exists() ? snap.data() : {};
+
+      const isAdmin = (data.role === "admin") || (data.modules && data.modules.admin === true);
+
+      if(!isAdmin){
+        window.location.href = "home.html";
+        return;
+      }
+
+      sessionUser = user;
+      sessionProfile = data;
+
+      adminMeta.innerHTML = `
+        Você está logado como <strong>${(data.name || user.email || "Admin")}</strong>.<br>
+        Perfil: <strong>${(data.role || "admin")}</strong> • UID: <strong>${user.uid}</strong>
+      `;
+
+      // Load initial
+      await loadUsers();
+      await loadPosts();
+      showMsg("Acesso de administrador liberado.");
+    });
+  </script>
+</body>
+</html>
