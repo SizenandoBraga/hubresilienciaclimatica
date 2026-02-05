@@ -1,0 +1,481 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Plataforma Regenera • Login</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --green-regen:#1B7F5A;
+      --green-light:#4CAF8F;
+      --blue-deep:#0D3B66;
+
+      --yellow:#F2C94C;
+      --graphite:#2E2E2E;
+      --bg:#F5F7F6;
+      --white:#FFFFFF;
+
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,0.08);
+      --shadow-strong:0 18px 50px rgba(0,0,0,0.14);
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--graphite);
+      background:var(--bg);
+    }
+    h1,h2,h3{ font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; }
+    a{ color:inherit; text-decoration:none; }
+    a:hover{ text-decoration:underline; }
+
+    /* Animations */
+    @keyframes floatIn {
+      from { opacity:0; transform: translateY(10px); }
+      to   { opacity:1; transform: translateY(0); }
+    }
+    @keyframes softZoom {
+      from { transform: scale(1.02); opacity:0; }
+      to   { transform: scale(1); opacity:1; }
+    }
+    @media (prefers-reduced-motion: reduce){
+      *{ animation: none !important; transition:none !important; }
+    }
+
+    .page{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns: 1.1fr 0.9fr;
+    }
+
+    /* LEFT / HERO */
+    .hero{
+      position:relative;
+      padding:56px clamp(20px, 4vw, 56px);
+      background: linear-gradient(135deg, var(--green-regen), var(--blue-deep));
+      color:#fff;
+      overflow:hidden;
+      isolation:isolate;
+      animation: softZoom .55s ease-out both;
+    }
+
+    /* Logo grande como fundo */
+    .hero-logo-bg{
+      position:absolute;
+      inset:0;
+      background-image: url("img/Design_sem_nome__2_-removebg-preview.png");
+      background-repeat:no-repeat;
+      background-position:center 56%;
+      background-size: 620px; /* MAIS IMPACTO */
+      opacity:0.20;          /* MAIS VISÍVEL */
+      filter:
+        saturate(1.1)
+        contrast(1.05)
+        drop-shadow(0 22px 50px rgba(0,0,0,0.28));
+      pointer-events:none;
+      z-index:0;
+    }
+
+    /* Textura tech (grid) bem suave */
+    .hero-grid{
+      position:absolute;
+      inset:-2px;
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 34px 34px;
+      opacity:0.25;
+      mask-image: radial-gradient(circle at 35% 55%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    /* Brilhos */
+    .hero-glow-top{
+      position:absolute;
+      inset:-140px -140px auto auto;
+      width:420px;
+      height:420px;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(242,201,76,0.35), rgba(255,255,255,0) 62%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .hero-glow-bottom{
+      position:absolute;
+      inset:auto auto -180px -180px;
+      width:560px;
+      height:560px;
+      border-radius:999px;
+      background: radial-gradient(circle at 40% 40%, rgba(76,175,143,0.45), rgba(255,255,255,0) 62%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .hero > *{ position:relative; z-index:1; }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:16px;
+      margin-bottom:44px;
+      animation: floatIn .6s ease-out .05s both;
+    }
+
+    /* LOGO-SLOT MAIOR E COM MAIS PRESENÇA */
+    .logo-slot{
+      width:110px;        /* AUMENTADO */
+      height:110px;       /* AUMENTADO */
+      border-radius:28px; /* acompanha o tamanho */
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.30);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      backdrop-filter: blur(10px);
+      overflow:hidden;
+      padding:12px;       /* mais respiro */
+      box-shadow:
+        0 18px 45px rgba(0,0,0,0.22),
+        inset 0 0 0 1px rgba(242,201,76,0.10);
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .logo-slot:hover{
+      transform: translateY(-2px) scale(1.01);
+      box-shadow:
+        0 22px 60px rgba(0,0,0,0.26),
+        inset 0 0 0 1px rgba(242,201,76,0.18);
+    }
+    .logo-slot img{
+      width:100%;
+      height:100%;
+      object-fit: contain;
+      display:block;
+      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.28));
+    }
+
+    .brand-title{
+      display:flex;
+      flex-direction:column;
+      line-height:1.1;
+      gap:6px;
+    }
+    .brand-title strong{
+      font-weight:700;
+      font-size:20px;
+      letter-spacing:0.2px;
+    }
+    .brand-title span{
+      opacity:.92;
+      font-size:13px;
+    }
+
+    .hero-content{
+      max-width:620px;
+      padding-top:6px;
+      animation: floatIn .7s ease-out .10s both;
+    }
+    .hero h1{
+      font-size: clamp(30px, 3.3vw, 46px);
+      line-height:1.06;
+      letter-spacing:-0.02em;
+      margin-bottom:14px;
+    }
+    .hero p{
+      margin:0 0 22px 0;
+      font-size: clamp(14px, 1.2vw, 16px);
+      line-height:1.6;
+      opacity:.95;
+    }
+
+    .pill-row{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:10px;
+    }
+    .pill{
+      font-size:12.5px;
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid rgba(255,255,255,0.25);
+      background: rgba(255,255,255,0.10);
+      backdrop-filter: blur(10px);
+      display:flex;
+      align-items:center;
+      gap:8px;
+      user-select:none;
+      transition: transform .22s ease, background .22s ease;
+    }
+    .pill:hover{
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.14);
+    }
+    .dot{
+      width:8px; height:8px; border-radius:50%;
+      background: var(--yellow);
+      box-shadow: 0 0 0 3px rgba(242,201,76,0.18);
+    }
+
+    /* RIGHT / LOGIN */
+    .panel{
+      padding: 56px clamp(18px, 4vw, 56px);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      animation: floatIn .65s ease-out .10s both;
+    }
+
+    .card{
+      width:min(460px, 100%);
+      border-radius: 18px;
+      background: var(--white);
+      box-shadow: var(--shadow-strong);
+      padding: 24px;
+      border: 1px solid rgba(46,46,46,0.06);
+      transform-origin: center;
+      transition: transform .25s ease, box-shadow .25s ease;
+    }
+    .card:hover{
+      transform: translateY(-3px);
+      box-shadow: 0 22px 60px rgba(0,0,0,0.14);
+    }
+
+    .card header{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom:14px;
+    }
+    .card h2{
+      font-size: 20px;
+      margin-bottom:4px;
+    }
+    .card .subtitle{
+      font-size:13.5px;
+      color:#555;
+      line-height:1.4;
+    }
+
+    .badge{
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(76,175,143,0.12);
+      color: var(--green-regen);
+      border: 1px solid rgba(76,175,143,0.25);
+      white-space:nowrap;
+      font-weight:600;
+    }
+
+    .form{
+      display:grid;
+      gap:12px;
+      margin-top:14px;
+    }
+    .field label{
+      display:block;
+      font-size:12.5px;
+      margin-bottom:6px;
+      color:#444;
+      font-weight:600;
+    }
+    .input{
+      width:100%;
+      padding: 12px 12px;
+      border-radius: 12px;
+      border: 1px solid #E3E7E6;
+      background: #fff;
+      outline:none;
+      font-size:14px;
+      transition: all .2s ease;
+    }
+    .input:focus{
+      border-color: rgba(27,127,90,0.55);
+      box-shadow: 0 0 0 4px rgba(27,127,90,0.10);
+    }
+
+    .row{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-top:4px;
+      font-size:13px;
+    }
+    .checkbox{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      color:#555;
+      user-select:none;
+    }
+    .checkbox input{ accent-color: var(--green-regen); }
+
+    .link{
+      color: var(--blue-deep);
+      font-weight:700;
+    }
+
+    .btn{
+      width:100%;
+      border:none;
+      cursor:pointer;
+      padding: 12px 14px;
+      border-radius: 30px;
+      font-weight:700;
+      font-family:'Poppins', sans-serif;
+      letter-spacing:0.2px;
+      transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+    }
+    .btn-primary{
+      background: linear-gradient(135deg, var(--green-light), var(--green-regen));
+      color:#fff;
+      box-shadow: 0 12px 26px rgba(27,127,90,0.22);
+    }
+    .btn-primary:hover{ transform: translateY(-2px); }
+    .btn-primary:active{ transform: translateY(0px); opacity:.92; }
+
+    .divider{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      margin: 14px 0;
+      color:#777;
+      font-size:12px;
+    }
+    .divider::before, .divider::after{
+      content:"";
+      height:1px;
+      background:#E8ECEB;
+      flex:1;
+    }
+
+    .btn-secondary{
+      background: #fff;
+      border: 1px solid #E3E7E6;
+      color: var(--graphite);
+    }
+    .btn-secondary:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+    }
+
+    .footer-note{
+      margin-top:12px;
+      font-size:12px;
+      color:#666;
+      line-height:1.5;
+    }
+
+    /* RESPONSIVE */
+    @media (max-width: 920px){
+      .page{ grid-template-columns: 1fr; }
+
+      .hero-logo-bg{
+        background-size: 360px;
+        opacity:0.14;
+      }
+
+      .logo-slot{
+        width:88px;
+        height:88px;
+        border-radius:24px;
+        padding:10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <!-- HERO -->
+    <section class="hero">
+      <div class="hero-logo-bg" aria-hidden="true"></div>
+      <div class="hero-grid" aria-hidden="true"></div>
+      <div class="hero-glow-top" aria-hidden="true"></div>
+      <div class="hero-glow-bottom" aria-hidden="true"></div>
+
+      <div class="brand">
+        <div class="logo-slot" aria-label="Logo do projeto">
+          <img src="img/Design_sem_nome__2_-removebg-preview.png" alt="Logo Plataforma Regenera">
+        </div>
+        <div class="brand-title">
+          <strong>Plataforma Regenera</strong>
+          <span>Hub de Reciclagem & Territórios</span>
+        </div>
+      </div>
+
+      <div class="hero-content">
+        <h1>Regenerando territórios através da ação climática.</h1>
+        <p>
+          Conecte comunidade, dados e impacto ambiental em um só lugar — com foco em
+          <strong>economia circular</strong>, <strong>governança</strong> e <strong>capacitação</strong>.
+        </p>
+
+        <div class="pill-row" aria-label="Valores do projeto">
+          <div class="pill"><span class="dot"></span> Sustentabilidade real</div>
+          <div class="pill"><span class="dot"></span> Comunidade & territórios</div>
+          <div class="pill"><span class="dot"></span> Economia circular</div>
+          <div class="pill"><span class="dot"></span> Inovação social & tech</div>
+          <div class="pill"><span class="dot"></span> Regeneração ambiental</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOGIN -->
+    <section class="panel">
+      <div class="card" role="region" aria-label="Login">
+        <header>
+          <div>
+            <h2>Entrar</h2>
+            <div class="subtitle">Acesse sua conta para ver seu território, CRGR e atualizações.</div>
+          </div>
+          <div class="badge">Acesso seguro</div>
+        </header>
+
+        <form class="form" onsubmit="event.preventDefault(); alert('Login (mock) — integrar autenticação depois.');">
+          <div class="field">
+            <label for="email">E-mail</label>
+            <input class="input" id="email" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
+          </div>
+
+          <div class="field">
+            <label for="password">Senha</label>
+            <input class="input" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+          </div>
+
+          <div class="row">
+            <label class="checkbox">
+              <input type="checkbox" name="remember" />
+              Manter conectado
+            </label>
+            <a class="link" href="#" onclick="alert('Fluxo: solicitar e-mail e enviar link/token de recuperação.'); return false;">Esqueci minha senha</a>
+          </div>
+
+          <button class="btn btn-primary" type="submit">Entrar</button>
+
+          <div class="divider">ou</div>
+
+          <button class="btn btn-secondary" type="button" onclick="alert('Fluxo: cadastro guiado + associação a CRGR/território (via convite ou aprovação).');">
+            Criar conta
+          </button>
+
+          <div class="footer-note">
+            Ao entrar, você concorda com as políticas do projeto e boas práticas de uso comunitário.
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+</body>
+</html>
