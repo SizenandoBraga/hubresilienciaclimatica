@@ -1,7 +1,9 @@
 <!doctype html>
-<html lang="pt-BR">
+<html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Plataforma Regenera • Login</title>
 
@@ -15,12 +17,10 @@
       --green-regen:#1B7F5A;
       --green-light:#4CAF8F;
       --blue-deep:#0D3B66;
-
       --yellow:#F2C94C;
       --graphite:#2E2E2E;
       --bg:#F5F7F6;
       --white:#FFFFFF;
-
       --radius:16px;
       --shadow:0 10px 30px rgba(0,0,0,0.08);
     }
@@ -44,7 +44,6 @@
       grid-template-columns: 1.1fr 0.9fr;
     }
 
-    /* LEFT / HERO */
     .hero{
       position:relative;
       padding:56px clamp(20px, 4vw, 56px);
@@ -91,10 +90,7 @@
       z-index:0;
     }
 
-    .brand, .hero-content{
-      position:relative;
-      z-index:1;
-    }
+    .brand, .hero-content{ position:relative; z-index:1; }
 
     .brand{
       display:flex;
@@ -180,7 +176,6 @@
       box-shadow: 0 0 0 3px rgba(242,201,76,0.18);
     }
 
-    /* RIGHT / LOGIN */
     .panel{
       padding: 56px clamp(18px, 4vw, 56px);
       display:flex;
@@ -203,10 +198,7 @@
       gap:12px;
       margin-bottom:14px;
     }
-    .card h2{
-      font-size: 20px;
-      margin-bottom:4px;
-    }
+    .card h2{ font-size: 20px; margin-bottom:4px; }
     .card .subtitle{
       font-size:13.5px;
       color:#555;
@@ -327,7 +319,6 @@
       line-height:1.5;
     }
 
-    /* status / erro */
     .msg{
       display:none;
       margin-top:10px;
@@ -352,27 +343,22 @@
       .page{ grid-template-columns: 1fr; }
       .hero{ padding-bottom: 26px; }
       .panel{ padding-top: 22px; padding-bottom: 40px; }
-
-      .hero::before{
-        background-size: 280px;
-        opacity:0.12;
-      }
+      .hero::before{ background-size: 280px; opacity:0.12; }
     }
   </style>
 </head>
 
 <body>
   <main class="page">
-    <!-- HERO -->
     <section class="hero">
       <div class="hero-glow-top"></div>
 
       <div class="brand">
         <div class="logo-slot" aria-label="Logo do projeto">
-          <img src="img/Design sem nome (2) (1).png" alt="Logo Projeto">
+          <img src="img/Design sem nome (2) (1).png" alt="Logo do projeto" translate="no">
         </div>
-        <div class="brand-title">
-          <strong>Hub Resiliência Cimática</strong>
+        <div class="brand-title" translate="no">
+          <strong>Hub Resiliência Climática</strong>
           <span>Hub de Reciclagem & Territórios</span>
         </div>
       </div>
@@ -382,14 +368,14 @@
         <p>
           O <strong>Hub Resiliência Climática</strong> é um ponto de encontro digital que conecta cooperativas, comunidades,
           técnicos e gestores públicos. Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e
-          a resposta aos desafios climáticos nos territórios..
+          a resposta aos desafios climáticos nos territórios.
         </p>
         <p>
           Conecte comunidade, dados e impacto ambiental em um só lugar — com foco em
-          <strong>economia circular</strong>, <strong>governança</strong> e <strong>capacitação</strong>.
+          <strong>economia circular</strong>, <strong>governança</strong> e <strong>capacitação</strong>.
         </p>
 
-        <div class="pill-row" aria-label="Valores do projeto">
+        <div class="pill-row" aria-label="Valores do projeto" translate="no">
           <div class="pill"><span class="dot"></span> Sustentabilidade real</div>
           <div class="pill"><span class="dot"></span> Comunidade & territórios</div>
           <div class="pill"><span class="dot"></span> Economia circular</div>
@@ -399,10 +385,9 @@
       </div>
     </section>
 
-    <!-- LOGIN -->
     <section class="panel">
       <div class="card" role="region" aria-label="Login">
-        <header>
+        <header translate="no">
           <div>
             <h2>Entrar</h2>
             <div class="subtitle">Acesse sua conta para ver seu território, CRGR e atualizações.</div>
@@ -410,16 +395,15 @@
           <div class="badge">Acesso seguro</div>
         </header>
 
-        <!-- Mantém layout: apenas troca o onsubmit mock por id -->
-        <form class="form" id="loginForm">
+        <form class="form" id="loginForm" translate="no">
           <div class="field">
             <label for="email">E-mail</label>
-            <input class="input" id="email" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
+            <input class="input" id="email" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required translate="no">
           </div>
 
           <div class="field">
             <label for="password">Senha</label>
-            <input class="input" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+            <input class="input" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required translate="no">
           </div>
 
           <div class="row">
@@ -427,7 +411,6 @@
               <input type="checkbox" name="remember" />
               Manter conectado
             </label>
-            <!-- Mantém o link e só conecta no JS -->
             <a class="link" href="#" id="resetPwdLink">Esqueci minha senha</a>
           </div>
 
@@ -449,7 +432,6 @@
     </section>
   </main>
 
-  <!-- Firebase (somente integração, sem mexer no layout) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import {
@@ -466,7 +448,6 @@
       serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-    // Firebase config (o seu)
     const firebaseConfig = {
       apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
       authDomain: "hub-resiliencia-climatica.firebaseapp.com",
@@ -480,7 +461,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // UI helpers
     const msgBox = document.getElementById("msgBox");
     const loginBtn = document.getElementById("loginBtn");
     const emailInput = document.getElementById("email");
@@ -502,7 +482,6 @@
       msgBox.textContent = "";
     }
 
-    // cria perfil no Firestore se não existir
     async function ensureUserProfile(user){
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
@@ -515,13 +494,14 @@
           crgrIds: [],
           territoryId: null,
           orgId: null,
+          modules: { feed: true },     // base
+          bio: "Mini bio: descreva sua atuação no território.",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
       }
     }
 
-    // LOGIN
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
       e.preventDefault();
       hideMsg();
@@ -534,11 +514,9 @@
         const cred = await signInWithEmailAndPassword(auth, email, password);
         await ensureUserProfile(cred.user);
 
-        showMsg("success", "Login realizado com sucesso!");
-        // Descomente quando tiver home.html
-        // window.location.href = "home.html";
+        // ✅ redireciona para a home
+        window.location.href = "home.html";
       }catch(err){
-        // mensagens mais amigáveis
         const code = err?.code || "";
         let text = "Não foi possível entrar. Verifique seus dados.";
         if(code.includes("auth/invalid-credential")) text = "E-mail ou senha inválidos.";
@@ -551,7 +529,6 @@
       }
     });
 
-    // CADASTRO (usa os campos da tela)
     document.getElementById("registerBtn").addEventListener("click", async () => {
       hideMsg();
       setLoading(true);
@@ -568,7 +545,8 @@
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await ensureUserProfile(cred.user);
 
-        showMsg("success", "Conta criada! Você já pode acessar.");
+        // ✅ também vai para a home
+        window.location.href = "home.html";
       }catch(err){
         const code = err?.code || "";
         let text = "Não foi possível criar a conta.";
@@ -581,7 +559,6 @@
       }
     });
 
-    // RECUPERAÇÃO DE SENHA
     document.getElementById("resetPwdLink").addEventListener("click", async (e) => {
       e.preventDefault();
       hideMsg();
