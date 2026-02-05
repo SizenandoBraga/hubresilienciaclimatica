@@ -1,0 +1,771 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hub Resiliência Climática • Home</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <style>
+    :root{
+      --green-regen:#1B7F5A;
+      --green-light:#4CAF8F;
+      --blue-deep:#0D3B66;
+
+      --yellow:#F2C94C;
+      --graphite:#2E2E2E;
+      --bg:#F5F7F6;
+      --white:#FFFFFF;
+
+      --radius:16px;
+      --shadow:0 10px 30px rgba(0,0,0,0.08);
+      --border:#E7ECEA;
+    }
+
+    *{box-sizing:border-box}
+    body{
+      margin:0;
+      font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      color:var(--graphite);
+      background:var(--bg);
+    }
+    h1,h2,h3{
+      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0;
+    }
+    a{ color:inherit; text-decoration:none; }
+    button{ font-family:inherit; }
+
+    /* Layout */
+    .app{
+      min-height:100vh;
+      display:grid;
+      grid-template-columns: 280px 1fr 340px;
+      gap:18px;
+      padding:18px;
+      max-width: 1400px;
+      margin:0 auto;
+    }
+
+    /* Sidebar */
+    .sidebar{
+      position:sticky;
+      top:18px;
+      height: calc(100vh - 36px);
+      border-radius: 18px;
+      background: linear-gradient(180deg, rgba(13,59,102,0.98), rgba(27,127,90,0.98));
+      box-shadow: var(--shadow);
+      padding:16px;
+      color:#fff;
+      overflow:hidden;
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap:12px;
+      padding:10px 10px 16px;
+      border-bottom:1px solid rgba(255,255,255,0.14);
+      margin-bottom:14px;
+    }
+    .brand .logo{
+      width:44px;
+      height:44px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.16);
+      border: 1px solid rgba(255,255,255,0.22);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      padding:6px;
+    }
+    .brand .logo img{ width:100%; height:100%; object-fit:contain; display:block; }
+    .brand .t{
+      display:flex;
+      flex-direction:column;
+      line-height:1.05;
+    }
+    .brand .t strong{ font-size:14px; letter-spacing:0.2px; }
+    .brand .t span{ font-size:12px; opacity:.9; }
+
+    .nav{
+      display:grid;
+      gap:6px;
+      margin-top:12px;
+    }
+    .nav a, .nav button{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      color:#fff;
+      background: transparent;
+      border: 1px solid transparent;
+      cursor:pointer;
+      font-weight:600;
+      font-size:13.5px;
+      opacity:.96;
+    }
+    .nav a:hover, .nav button:hover{
+      background: rgba(255,255,255,0.12);
+      border-color: rgba(255,255,255,0.12);
+    }
+    .nav .active{
+      background: rgba(242,201,76,0.14);
+      border-color: rgba(242,201,76,0.28);
+    }
+    .nav .dot{
+      width:8px; height:8px; border-radius:999px;
+      background: var(--yellow);
+      box-shadow: 0 0 0 3px rgba(242,201,76,0.16);
+      flex: 0 0 auto;
+    }
+
+    .sidebar-footer{
+      position:absolute;
+      left:16px;
+      right:16px;
+      bottom:14px;
+      padding-top:12px;
+      border-top:1px solid rgba(255,255,255,0.14);
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      font-size:12px;
+      opacity:.9;
+    }
+
+    /* Feed column */
+    .feed{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .topbar{
+      position:sticky;
+      top:18px;
+      z-index:10;
+      background: rgba(245,247,246,0.78);
+      backdrop-filter: blur(10px);
+      border:1px solid var(--border);
+      border-radius: 18px;
+      padding:12px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+
+    .search{
+      flex:1;
+      display:flex;
+      align-items:center;
+      gap:10px;
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 999px;
+      padding:10px 12px;
+    }
+    .search input{
+      border:none;
+      outline:none;
+      width:100%;
+      font-size:14px;
+    }
+
+    .pill{
+      padding:10px 12px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-weight:700;
+      font-family:'Poppins';
+      font-size:12px;
+      color:var(--blue-deep);
+      cursor:pointer;
+    }
+
+    /* Instagram-like post card */
+    .post{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      overflow:hidden;
+    }
+    .post-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:12px 14px;
+    }
+    .userline{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      min-width:0;
+    }
+    .avatar{
+      width:38px;
+      height:38px;
+      border-radius:999px;
+      background: linear-gradient(135deg, rgba(76,175,143,0.28), rgba(13,59,102,0.18));
+      border:1px solid rgba(13,59,102,0.12);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      flex:0 0 auto;
+      color: var(--blue-deep);
+      font-weight:800;
+      font-family:'Poppins';
+      font-size:12px;
+    }
+    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .u-meta{
+      display:flex;
+      flex-direction:column;
+      min-width:0;
+      line-height:1.15;
+    }
+    .u-meta strong{
+      font-size:13.5px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .u-meta span{
+      font-size:12px;
+      color:#6a6a6a;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .kebab{
+      border:none;
+      background:transparent;
+      cursor:pointer;
+      font-size:20px;
+      line-height:1;
+      padding:6px 10px;
+      border-radius:12px;
+    }
+    .kebab:hover{ background:#f3f6f5; }
+
+    .post-media{
+      width:100%;
+      height: 320px;
+      background: linear-gradient(135deg, rgba(27,127,90,0.12), rgba(13,59,102,0.10));
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      color:#4b4b4b;
+      font-size:13px;
+      border-top:1px solid var(--border);
+      border-bottom:1px solid var(--border);
+    }
+
+    .post-body{
+      padding:12px 14px 10px;
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .post-text{
+      font-size:14px;
+      line-height:1.55;
+      color:#2f2f2f;
+    }
+    .tags{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      font-size:12px;
+      color: var(--green-regen);
+      font-weight:700;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:10px 14px 14px;
+    }
+    .actions .left{
+      display:flex;
+      gap:10px;
+    }
+    .iconbtn{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:999px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-weight:700;
+      font-size:12px;
+      color:#2d2d2d;
+    }
+    .iconbtn:hover{ background:#f3f6f5; }
+
+    /* Right profile panel */
+    .right{
+      position:sticky;
+      top:18px;
+      height: calc(100vh - 36px);
+      display:flex;
+      flex-direction:column;
+      gap:12px;
+    }
+
+    .profile{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      box-shadow: var(--shadow);
+      padding:14px;
+    }
+    .profile-top{
+      display:flex;
+      gap:12px;
+      align-items:center;
+    }
+    .profile .avatar{
+      width:56px;
+      height:56px;
+      font-size:14px;
+    }
+    .p-meta{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+      gap:2px;
+    }
+    .p-meta strong{
+      font-size:16px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .p-meta .small{
+      font-size:12.5px;
+      color:#666;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .bio{
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: #F7FAF9;
+      border:1px dashed rgba(13,59,102,0.18);
+      font-size:13px;
+      line-height:1.45;
+      color:#404040;
+    }
+
+    .attrib{
+      margin-top:10px;
+      display:grid;
+      gap:8px;
+    }
+    .chip{
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      padding:10px 12px;
+      border-radius:14px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12.5px;
+    }
+    .chip strong{ color: var(--blue-deep); font-family:'Poppins'; font-size:12px; }
+    .chip span{ color:#555; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+
+    .mini{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+    }
+    .mini h3{
+      font-size:14px;
+      margin-bottom:8px;
+    }
+    .mini .hint{
+      font-size:12.5px;
+      color:#666;
+      line-height:1.5;
+    }
+
+    .status{
+      display:none;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      line-height:1.4;
+      border:1px solid rgba(242,201,76,0.34);
+      background: rgba(242,201,76,0.16);
+      color:#5b4a12;
+    }
+    .status.show{ display:block; }
+
+    /* Responsive */
+    @media (max-width: 1180px){
+      .app{ grid-template-columns: 260px 1fr; }
+      .right{ display:none; }
+    }
+    @media (max-width: 860px){
+      .app{ grid-template-columns: 1fr; padding:12px; }
+      .sidebar{
+        position:relative;
+        height:auto;
+      }
+      .topbar{ top:12px; }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="logo">
+          <img src="img/Design sem nome (2) (1).png" alt="Logo">
+        </div>
+        <div class="t">
+          <strong>Hub Resiliência Climática</strong>
+          <span>Reciclagem & Territórios</span>
+        </div>
+      </div>
+
+      <nav class="nav" aria-label="Menu">
+        <a class="active" href="#"><span class="dot"></span> Início (Feed)</a>
+        <a href="#"><span class="dot"></span> Meu Território / CRGR</a>
+        <a href="#"><span class="dot"></span> Planos de Ação</a>
+        <a href="#"><span class="dot"></span> Biblioteca</a>
+        <a href="#"><span class="dot"></span> Agenda</a>
+        <a href="#"><span class="dot"></span> Fórum</a>
+        <a href="#"><span class="dot"></span> Dashboards</a>
+        <a href="#"><span class="dot"></span> Configurações</a>
+        <button id="logoutBtn"><span class="dot"></span> Sair</button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div>Plataforma Regenera • v0.1</div>
+        <div style="opacity:.9;">Conectando pessoas, dados e impacto.</div>
+      </div>
+    </aside>
+
+    <!-- Feed -->
+    <main class="feed">
+      <div class="topbar">
+        <div class="search">
+          <span style="opacity:.65;">🔎</span>
+          <input id="searchInput" placeholder="Pesquisar avisos, conteúdos, CRGR, pessoas..." />
+        </div>
+        <button class="pill" id="newPostBtn" type="button">+ Publicar</button>
+      </div>
+
+      <div id="status" class="status"></div>
+
+      <!-- Posts entram aqui -->
+      <div id="posts"></div>
+    </main>
+
+    <!-- Right panel (perfil) -->
+    <aside class="right">
+      <section class="profile">
+        <div class="profile-top">
+          <div class="avatar" id="profileAvatar">HR</div>
+          <div class="p-meta">
+            <strong id="profileName">Carregando...</strong>
+            <div class="small" id="profileEmail">—</div>
+          </div>
+        </div>
+
+        <div class="bio" id="profileBio">
+          Mini bio: conectando reciclagem, território e governança.
+        </div>
+
+        <div class="attrib" aria-label="Atribuições">
+          <div class="chip">
+            <strong>Perfil</strong>
+            <span id="profileRole">—</span>
+          </div>
+          <div class="chip">
+            <strong>CRGR</strong>
+            <span id="profileCrgr">—</span>
+          </div>
+          <div class="chip">
+            <strong>Organização</strong>
+            <span id="profileOrg">—</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="mini">
+        <h3>Atalhos</h3>
+        <div class="hint">
+          Aqui você verá avisos fixados, próximos eventos e oportunidades do seu território.
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc, getDoc,
+      collection, query, orderBy, limit, getDocs,
+      addDoc, serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
+      authDomain: "hub-resiliencia-climatica.firebaseapp.com",
+      projectId: "hub-resiliencia-climatica",
+      storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
+      messagingSenderId: "485694309026",
+      appId: "1:485694309026:web:771ed497d49861fa444dfb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    const postsEl = document.getElementById("posts");
+    const statusEl = document.getElementById("status");
+
+    const profileName = document.getElementById("profileName");
+    const profileEmail = document.getElementById("profileEmail");
+    const profileAvatar = document.getElementById("profileAvatar");
+    const profileBio = document.getElementById("profileBio");
+    const profileRole = document.getElementById("profileRole");
+    const profileCrgr = document.getElementById("profileCrgr");
+    const profileOrg = document.getElementById("profileOrg");
+
+    function showStatus(msg){
+      statusEl.textContent = msg;
+      statusEl.classList.add("show");
+      setTimeout(()=> statusEl.classList.remove("show"), 3500);
+    }
+
+    function initialsFrom(nameOrEmail){
+      const s = (nameOrEmail || "").trim();
+      if(!s) return "HR";
+      const parts = s.split(/\s+/).filter(Boolean);
+      if(parts.length === 1){
+        return parts[0].slice(0,2).toUpperCase();
+      }
+      return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+    }
+
+    function setAvatar(el, photoURL, fallbackText){
+      el.innerHTML = "";
+      if(photoURL){
+        const img = document.createElement("img");
+        img.src = photoURL;
+        img.alt = "Avatar";
+        el.appendChild(img);
+      }else{
+        el.textContent = fallbackText;
+      }
+    }
+
+    function formatRole(role){
+      if(!role) return "comunidade";
+      return role;
+    }
+
+    function escapeHtml(str){
+      return String(str ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function postCard({ authorName, authorRole, authorPhoto, text, tags = [], createdAtLabel = "agora" }){
+      const tagHtml = tags.map(t => `<span>#${escapeHtml(t)}</span>`).join("");
+      const avatarHtml = authorPhoto
+        ? `<img src="${escapeHtml(authorPhoto)}" alt="Avatar">`
+        : escapeHtml(initialsFrom(authorName));
+
+      return `
+        <article class="post">
+          <div class="post-head">
+            <div class="userline">
+              <div class="avatar">${avatarHtml}</div>
+              <div class="u-meta">
+                <strong>${escapeHtml(authorName)}</strong>
+                <span>${escapeHtml(authorRole)} • ${escapeHtml(createdAtLabel)}</span>
+              </div>
+            </div>
+            <button class="kebab" type="button" aria-label="Mais opções">⋯</button>
+          </div>
+
+          <div class="post-media">
+            (mídia opcional — imagem/vídeo entra aqui depois)
+          </div>
+
+          <div class="post-body">
+            <div class="post-text">${escapeHtml(text)}</div>
+            <div class="tags">${tagHtml}</div>
+          </div>
+
+          <div class="actions">
+            <div class="left">
+              <button class="iconbtn" type="button">❤ Curtir</button>
+              <button class="iconbtn" type="button">💬 Comentar</button>
+              <button class="iconbtn" type="button">↗ Compartilhar</button>
+            </div>
+            <button class="iconbtn" type="button">🔖 Salvar</button>
+          </div>
+        </article>
+      `;
+    }
+
+    async function loadFeed(){
+      postsEl.innerHTML = "";
+
+      // tenta buscar posts reais do Firestore
+      try{
+        const q = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(10));
+        const snap = await getDocs(q);
+
+        if(snap.empty){
+          // placeholders (enquanto não houver posts)
+          postsEl.innerHTML =
+            postCard({
+              authorName: "Equipe do Hub",
+              authorRole: "comunicação",
+              authorPhoto: null,
+              text: "Bem-vindo(a)! Aqui vai aparecer o feed de avisos, notícias e atualizações por território/CRGR.",
+              tags: ["hub", "boasvindas", "territorios"],
+              createdAtLabel: "hoje"
+            }) +
+            postCard({
+              authorName: "Governança",
+              authorRole: "gestão",
+              authorPhoto: null,
+              text: "Dica: use o botão “Publicar” para registrar comunicados, oportunidades e práticas locais.",
+              tags: ["governanca", "comunicacao"],
+              createdAtLabel: "hoje"
+            });
+          return;
+        }
+
+        let html = "";
+        snap.forEach(docu => {
+          const d = docu.data();
+          html += postCard({
+            authorName: d.authorName ?? "Usuário",
+            authorRole: d.authorRole ?? "comunidade",
+            authorPhoto: d.authorPhotoURL ?? null,
+            text: d.text ?? "",
+            tags: Array.isArray(d.tags) ? d.tags : [],
+            createdAtLabel: d.createdAt?.toDate ? "recente" : "—"
+          });
+        });
+
+        postsEl.innerHTML = html;
+      }catch(err){
+        // se rules ainda bloquearem ou não tiver índice, mostra placeholder
+        postsEl.innerHTML = postCard({
+          authorName: "Feed",
+          authorRole: "sistema",
+          authorPhoto: null,
+          text: "Ainda não foi possível carregar posts do Firestore (coleção 'posts'). Assim que as regras/coleção estiverem prontas, o feed aparece aqui.",
+          tags: ["firestore", "posts"],
+          createdAtLabel: "agora"
+        });
+      }
+    }
+
+    async function loadUserProfile(user){
+      // Puxa doc users/{uid}
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      const docData = snap.exists() ? snap.data() : {};
+
+      const displayName = docData.name || user.displayName || (user.email ? user.email.split("@")[0] : "Usuário");
+      const role = formatRole(docData.role);
+      const crgr = Array.isArray(docData.crgrIds) && docData.crgrIds.length ? docData.crgrIds.join(", ") : "—";
+      const org = docData.orgId || "—";
+      const bio = docData.bio || "Mini bio: conte quem você é e como atua no território/CRGR.";
+
+      profileName.textContent = displayName;
+      profileEmail.textContent = user.email || "—";
+      profileRole.textContent = role;
+      profileCrgr.textContent = crgr;
+      profileOrg.textContent = org;
+      profileBio.textContent = bio;
+
+      setAvatar(profileAvatar, user.photoURL || docData.photoURL || null, initialsFrom(displayName));
+    }
+
+    // Publicar (MVP): cria um post simples no Firestore
+    async function createQuickPost(user){
+      const text = prompt("Escreva sua publicação (aparece no feed):");
+      if(!text) return;
+
+      // busca perfil do usuário para preencher nome/role no post
+      const uref = doc(db, "users", user.uid);
+      const usnap = await getDoc(uref);
+      const udata = usnap.exists() ? usnap.data() : {};
+
+      const authorName = udata.name || user.displayName || (user.email ? user.email.split("@")[0] : "Usuário");
+      const authorRole = udata.role || "comunidade";
+      const authorPhotoURL = user.photoURL || udata.photoURL || null;
+
+      await addDoc(collection(db, "posts"), {
+        authorUid: user.uid,
+        authorName,
+        authorRole,
+        authorPhotoURL,
+        text,
+        tags: ["hub"],
+        createdAt: serverTimestamp()
+      });
+
+      showStatus("Publicado! Atualizando feed...");
+      await loadFeed();
+    }
+
+    // Guard de rota (precisa estar logado)
+    onAuthStateChanged(auth, async (user) => {
+      if(!user){
+        window.location.href = "index.html";
+        return;
+      }
+      await loadUserProfile(user);
+      await loadFeed();
+
+      document.getElementById("newPostBtn").onclick = () => createQuickPost(user);
+    });
+
+    // Logout
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "index.html";
+    });
+  </script>
+</body>
+</html>
