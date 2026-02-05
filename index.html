@@ -23,7 +23,6 @@
 
       --radius:16px;
       --shadow:0 10px 30px rgba(0,0,0,0.08);
-      --shadow-strong:0 18px 50px rgba(0,0,0,0.14);
     }
 
     *{box-sizing:border-box}
@@ -33,22 +32,11 @@
       color:var(--graphite);
       background:var(--bg);
     }
-    h1,h2,h3{ font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif; margin:0; }
-    a{ color:inherit; text-decoration:none; }
-    a:hover{ text-decoration:underline; }
-
-    /* Animations */
-    @keyframes floatIn {
-      from { opacity:0; transform: translateY(10px); }
-      to   { opacity:1; transform: translateY(0); }
+    h1,h2,h3{
+      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0;
     }
-    @keyframes softZoom {
-      from { transform: scale(1.02); opacity:0; }
-      to   { transform: scale(1); opacity:1; }
-    }
-    @media (prefers-reduced-motion: reduce){
-      *{ animation: none !important; transition:none !important; }
-    }
+    a{color:inherit}
 
     .page{
       min-height:100vh;
@@ -63,129 +51,105 @@
       background: linear-gradient(135deg, var(--green-regen), var(--blue-deep));
       color:#fff;
       overflow:hidden;
-      isolation:isolate;
-      animation: softZoom .55s ease-out both;
+      isolation:isolate; /* garante camadas certinhas */
     }
 
-    /* Logo grande como fundo */
-    .hero-logo-bg{
+    /* Logo watermark (fundo central) — AQUI é o ajuste certo */
+    .hero::before{
+      content:"";
       position:absolute;
       inset:0;
       background-image: url("img/Design_sem_nome__2_-removebg-preview.png");
       background-repeat:no-repeat;
-      background-position:center 56%;
-      background-size: 620px; /* MAIS IMPACTO */
-      opacity:0.20;          /* MAIS VISÍVEL */
-      filter:
-        saturate(1.1)
-        contrast(1.05)
-        drop-shadow(0 22px 50px rgba(0,0,0,0.28));
-      pointer-events:none;
+      background-position:center;
+      background-size: 2400px;   /* ajuste fino do tamanho */
+      opacity:0.14;             /* watermark suave */
+      filter: saturate(1.05) contrast(1.05);
       z-index:0;
+      pointer-events:none;
     }
 
-    /* Textura tech (grid) bem suave */
-    .hero-grid{
+    /* Brilhos decorativos (continuam funcionando) */
+    .hero::after{
+      content:"";
       position:absolute;
-      inset:-2px;
-      background-image:
-        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
-      background-size: 34px 34px;
-      opacity:0.25;
-      mask-image: radial-gradient(circle at 35% 55%, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 60%);
-      pointer-events:none;
-      z-index:0;
-    }
-
-    /* Brilhos */
-    .hero-glow-top{
-      position:absolute;
-      inset:-140px -140px auto auto;
-      width:420px;
-      height:420px;
-      border-radius:999px;
-      background: radial-gradient(circle at 30% 30%, rgba(242,201,76,0.35), rgba(255,255,255,0) 62%);
-      pointer-events:none;
-      z-index:0;
-    }
-    .hero-glow-bottom{
-      position:absolute;
-      inset:auto auto -180px -180px;
-      width:560px;
-      height:560px;
+      inset:auto auto -140px -140px;
+      width:520px;
+      height:520px;
       border-radius:999px;
       background: radial-gradient(circle at 40% 40%, rgba(76,175,143,0.45), rgba(255,255,255,0) 62%);
       pointer-events:none;
       z-index:0;
     }
 
-    .hero > *{ position:relative; z-index:1; }
+    /* Bolha do topo direito (antes era ::before — movi pra um pseudo extra via div) */
+    .hero-glow-top{
+      position:absolute;
+      inset:-120px -120px auto auto;
+      width:380px;
+      height:380px;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(242,201,76,0.35), rgba(255,255,255,0) 62%);
+      pointer-events:none;
+      z-index:0;
+    }
+
+    .brand, .hero-content{
+      position:relative;
+      z-index:1; /* conteúdo acima do watermark */
+    }
 
     .brand{
       display:flex;
       align-items:center;
-      gap:16px;
+      gap:14px;
       margin-bottom:44px;
-      animation: floatIn .6s ease-out .05s both;
     }
 
-    /* LOGO-SLOT MAIOR E COM MAIS PRESENÇA */
+    /* LOGO (canto superior) — versão final para esse arquivo */
     .logo-slot{
-      width:110px;        /* AUMENTADO */
-      height:110px;       /* AUMENTADO */
-      border-radius:28px; /* acompanha o tamanho */
+      width:64px;
+      height:64px;
+      border-radius:18px;
       background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.30);
+      border: 1px solid rgba(255,255,255,0.28);
       display:flex;
       align-items:center;
       justify-content:center;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
       overflow:hidden;
-      padding:12px;       /* mais respiro */
-      box-shadow:
-        0 18px 45px rgba(0,0,0,0.22),
-        inset 0 0 0 1px rgba(242,201,76,0.10);
-      transition: transform .25s ease, box-shadow .25s ease;
-    }
-    .logo-slot:hover{
-      transform: translateY(-2px) scale(1.01);
-      box-shadow:
-        0 22px 60px rgba(0,0,0,0.26),
-        inset 0 0 0 1px rgba(242,201,76,0.18);
+      padding:8px;
     }
     .logo-slot img{
       width:100%;
       height:100%;
       object-fit: contain;
       display:block;
-      filter: drop-shadow(0 6px 14px rgba(0,0,0,0.28));
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
     }
 
     .brand-title{
       display:flex;
       flex-direction:column;
       line-height:1.1;
-      gap:6px;
     }
     .brand-title strong{
       font-weight:700;
-      font-size:20px;
+      font-size:18px;
       letter-spacing:0.2px;
     }
     .brand-title span{
-      opacity:.92;
-      font-size:13px;
+      opacity:.9;
+      font-size:12.5px;
     }
 
     .hero-content{
-      max-width:620px;
-      padding-top:6px;
-      animation: floatIn .7s ease-out .10s both;
+      max-width:560px;
+      padding-top:10px;
     }
     .hero h1{
-      font-size: clamp(30px, 3.3vw, 46px);
-      line-height:1.06;
+      font-size: clamp(28px, 3.2vw, 44px);
+      line-height:1.08;
       letter-spacing:-0.02em;
       margin-bottom:14px;
     }
@@ -208,16 +172,11 @@
       border-radius:999px;
       border:1px solid rgba(255,255,255,0.25);
       background: rgba(255,255,255,0.10);
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(8px);
       display:flex;
       align-items:center;
       gap:8px;
       user-select:none;
-      transition: transform .22s ease, background .22s ease;
-    }
-    .pill:hover{
-      transform: translateY(-2px);
-      background: rgba(255,255,255,0.14);
     }
     .dot{
       width:8px; height:8px; border-radius:50%;
@@ -231,22 +190,14 @@
       display:flex;
       align-items:center;
       justify-content:center;
-      animation: floatIn .65s ease-out .10s both;
     }
 
     .card{
-      width:min(460px, 100%);
-      border-radius: 18px;
+      width:min(440px, 100%);
+      border-radius: var(--radius);
       background: var(--white);
-      box-shadow: var(--shadow-strong);
-      padding: 24px;
-      border: 1px solid rgba(46,46,46,0.06);
-      transform-origin: center;
-      transition: transform .25s ease, box-shadow .25s ease;
-    }
-    .card:hover{
-      transform: translateY(-3px);
-      box-shadow: 0 22px 60px rgba(0,0,0,0.14);
+      box-shadow: var(--shadow);
+      padding: 22px;
     }
 
     .card header{
@@ -323,8 +274,10 @@
 
     .link{
       color: var(--blue-deep);
-      font-weight:700;
+      text-decoration:none;
+      font-weight:600;
     }
+    .link:hover{ text-decoration:underline; }
 
     .btn{
       width:100%;
@@ -340,7 +293,7 @@
     .btn-primary{
       background: linear-gradient(135deg, var(--green-light), var(--green-regen));
       color:#fff;
-      box-shadow: 0 12px 26px rgba(27,127,90,0.22);
+      box-shadow: 0 10px 24px rgba(27,127,90,0.22);
     }
     .btn-primary:hover{ transform: translateY(-2px); }
     .btn-primary:active{ transform: translateY(0px); opacity:.92; }
@@ -377,20 +330,29 @@
       line-height:1.5;
     }
 
-    /* RESPONSIVE */
+    .logo-upload-hint{
+      margin-top:14px;
+      padding:12px;
+      border-radius: 14px;
+      background: #F7FAF9;
+      border: 1px dashed rgba(13,59,102,0.25);
+      font-size:12.5px;
+      color:#4a4a4a;
+    }
+    .logo-upload-hint strong{
+      color: var(--blue-deep);
+      font-family:'Poppins';
+    }
+
     @media (max-width: 920px){
       .page{ grid-template-columns: 1fr; }
+      .hero{ padding-bottom: 26px; }
+      .panel{ padding-top: 22px; padding-bottom: 40px; }
 
-      .hero-logo-bg{
-        background-size: 360px;
-        opacity:0.14;
-      }
-
-      .logo-slot{
-        width:88px;
-        height:88px;
-        border-radius:24px;
-        padding:10px;
+      /* watermark menor no mobile */
+      .hero::before{
+        background-size: 280px;
+        opacity:0.12;
       }
     }
   </style>
@@ -400,17 +362,14 @@
   <main class="page">
     <!-- HERO -->
     <section class="hero">
-      <div class="hero-logo-bg" aria-hidden="true"></div>
-      <div class="hero-grid" aria-hidden="true"></div>
-      <div class="hero-glow-top" aria-hidden="true"></div>
-      <div class="hero-glow-bottom" aria-hidden="true"></div>
+      <div class="hero-glow-top"></div>
 
       <div class="brand">
         <div class="logo-slot" aria-label="Logo do projeto">
-          <img src="img/Design_sem_nome__2_-removebg-preview.png" alt="Logo Plataforma Regenera">
+          <img src="img/Design sem nome (2) (1).png" alt="Logo Projeto">
         </div>
         <div class="brand-title">
-          <strong>Plataforma Regenera</strong>
+          <strong>Hub Resiliência Cimática</strong>
           <span>Hub de Reciclagem & Territórios</span>
         </div>
       </div>
@@ -418,6 +377,10 @@
       <div class="hero-content">
         <h1>Regenerando territórios através da ação climática.</h1>
         <p>
+            O <strong>Hub Resiliência Climática</strong> é um ponto de encontro digital que conecta cooperativas, comunidades, 
+            técnicos e gestores públicos.
+            Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e a resposta aos desafios 
+            climáticos nos territórios..
           Conecte comunidade, dados e impacto ambiental em um só lugar — com foco em
           <strong>economia circular</strong>, <strong>governança</strong> e <strong>capacitação</strong>.
         </p>
@@ -469,6 +432,8 @@
           <button class="btn btn-secondary" type="button" onclick="alert('Fluxo: cadastro guiado + associação a CRGR/território (via convite ou aprovação).');">
             Criar conta
           </button>
+
+         
 
           <div class="footer-note">
             Ao entrar, você concorda com as políticas do projeto e boas práticas de uso comunitário.
