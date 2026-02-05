@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Plataforma Hub Resiliência Climática • Login</title>
+  <title>Plataforma Regenera • Login</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -51,10 +51,9 @@
       background: linear-gradient(135deg, var(--green-regen), var(--blue-deep));
       color:#fff;
       overflow:hidden;
-      isolation:isolate; /* garante camadas certinhas */
+      isolation:isolate;
     }
 
-    /* Logo watermark (fundo central) — AQUI é o ajuste certo */
     .hero::before{
       content:"";
       position:absolute;
@@ -62,14 +61,13 @@
       background-image: url("img/Design_sem_nome__2_-removebg-preview.png");
       background-repeat:no-repeat;
       background-position:center;
-      background-size: 2400px;   /* ajuste fino do tamanho */
-      opacity:0.14;             /* watermark suave */
+      background-size: 2400px;
+      opacity:0.14;
       filter: saturate(1.05) contrast(1.05);
       z-index:0;
       pointer-events:none;
     }
 
-    /* Brilhos decorativos (continuam funcionando) */
     .hero::after{
       content:"";
       position:absolute;
@@ -82,7 +80,6 @@
       z-index:0;
     }
 
-    /* Bolha do topo direito (antes era ::before — movi pra um pseudo extra via div) */
     .hero-glow-top{
       position:absolute;
       inset:-120px -120px auto auto;
@@ -96,7 +93,7 @@
 
     .brand, .hero-content{
       position:relative;
-      z-index:1; /* conteúdo acima do watermark */
+      z-index:1;
     }
 
     .brand{
@@ -106,7 +103,6 @@
       margin-bottom:44px;
     }
 
-    /* LOGO (canto superior) — versão final para esse arquivo */
     .logo-slot{
       width:64px;
       height:64px;
@@ -276,6 +272,7 @@
       color: var(--blue-deep);
       text-decoration:none;
       font-weight:600;
+      cursor:pointer;
     }
     .link:hover{ text-decoration:underline; }
 
@@ -330,18 +327,25 @@
       line-height:1.5;
     }
 
-    .logo-upload-hint{
-      margin-top:14px;
-      padding:12px;
-      border-radius: 14px;
-      background: #F7FAF9;
-      border: 1px dashed rgba(13,59,102,0.25);
-      font-size:12.5px;
-      color:#4a4a4a;
+    /* status / erro */
+    .msg{
+      display:none;
+      margin-top:10px;
+      padding:10px 12px;
+      border-radius:12px;
+      font-size:13px;
+      line-height:1.35;
     }
-    .logo-upload-hint strong{
-      color: var(--blue-deep);
-      font-family:'Poppins';
+    .msg.show{ display:block; }
+    .msg.success{
+      background: rgba(76,175,143,0.14);
+      border: 1px solid rgba(76,175,143,0.28);
+      color: #135a41;
+    }
+    .msg.error{
+      background: rgba(242,201,76,0.18);
+      border: 1px solid rgba(242,201,76,0.34);
+      color: #5b4a12;
     }
 
     @media (max-width: 920px){
@@ -349,7 +353,6 @@
       .hero{ padding-bottom: 26px; }
       .panel{ padding-top: 22px; padding-bottom: 40px; }
 
-      /* watermark menor no mobile */
       .hero::before{
         background-size: 280px;
         opacity:0.12;
@@ -377,11 +380,12 @@
       <div class="hero-content">
         <h1>Regenerando territórios através da ação climática.</h1>
         <p>
-            O <strong>Hub Resiliência Climática</strong> é um ponto de encontro digital que conecta cooperativas, comunidades, 
-            técnicos e gestores públicos.
-            Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e a resposta aos desafios 
-            climáticos nos territórios..</p>
-          <p>Conecte comunidade, dados e impacto ambiental em um só lugar — com foco em
+          O <strong>Hub Resiliência Climática</strong> é um ponto de encontro digital que conecta cooperativas, comunidades,
+          técnicos e gestores públicos. Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e
+          a resposta aos desafios climáticos nos territórios..
+        </p>
+        <p>
+          Conecte comunidade, dados e impacto ambiental em um só lugar — com foco em
           <strong>economia circular</strong>, <strong>governança</strong> e <strong>capacitação</strong>.
         </p>
 
@@ -406,7 +410,8 @@
           <div class="badge">Acesso seguro</div>
         </header>
 
-        <form class="form" onsubmit="event.preventDefault(); alert('Login (mock) — integrar autenticação depois.');">
+        <!-- Mantém layout: apenas troca o onsubmit mock por id -->
+        <form class="form" id="loginForm">
           <div class="field">
             <label for="email">E-mail</label>
             <input class="input" id="email" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
@@ -422,18 +427,19 @@
               <input type="checkbox" name="remember" />
               Manter conectado
             </label>
-            <a class="link" href="#" onclick="alert('Fluxo: solicitar e-mail e enviar link/token de recuperação.'); return false;">Esqueci minha senha</a>
+            <!-- Mantém o link e só conecta no JS -->
+            <a class="link" href="#" id="resetPwdLink">Esqueci minha senha</a>
           </div>
 
-          <button class="btn btn-primary" type="submit">Entrar</button>
+          <button class="btn btn-primary" id="loginBtn" type="submit">Entrar</button>
+
+          <div id="msgBox" class="msg"></div>
 
           <div class="divider">ou</div>
 
-          <button class="btn btn-secondary" type="button" onclick="alert('Fluxo: cadastro guiado + associação a CRGR/território (via convite ou aprovação).');">
+          <button class="btn btn-secondary" id="registerBtn" type="button">
             Criar conta
           </button>
-
-         
 
           <div class="footer-note">
             Ao entrar, você concorda com as políticas do projeto e boas práticas de uso comunitário.
@@ -442,5 +448,158 @@
       </div>
     </section>
   </main>
+
+  <!-- Firebase (somente integração, sem mexer no layout) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getAuth,
+      signInWithEmailAndPassword,
+      createUserWithEmailAndPassword,
+      sendPasswordResetEmail
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      getDoc,
+      setDoc,
+      serverTimestamp
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    // Firebase config (o seu)
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
+      authDomain: "hub-resiliencia-climatica.firebaseapp.com",
+      projectId: "hub-resiliencia-climatica",
+      storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
+      messagingSenderId: "485694309026",
+      appId: "1:485694309026:web:771ed497d49861fa444dfb"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // UI helpers
+    const msgBox = document.getElementById("msgBox");
+    const loginBtn = document.getElementById("loginBtn");
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
+
+    function setLoading(isLoading){
+      loginBtn.disabled = isLoading;
+      loginBtn.style.opacity = isLoading ? "0.85" : "1";
+      loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
+    }
+
+    function showMsg(type, text){
+      msgBox.className = "msg show " + (type === "error" ? "error" : "success");
+      msgBox.textContent = text;
+    }
+
+    function hideMsg(){
+      msgBox.className = "msg";
+      msgBox.textContent = "";
+    }
+
+    // cria perfil no Firestore se não existir
+    async function ensureUserProfile(user){
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+
+      if(!snap.exists()){
+        await setDoc(ref, {
+          uid: user.uid,
+          email: user.email ?? null,
+          role: "comunidade",
+          crgrIds: [],
+          territoryId: null,
+          orgId: null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+      }
+    }
+
+    // LOGIN
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideMsg();
+      setLoading(true);
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      try{
+        const cred = await signInWithEmailAndPassword(auth, email, password);
+        await ensureUserProfile(cred.user);
+
+        showMsg("success", "Login realizado com sucesso!");
+        // Descomente quando tiver home.html
+        // window.location.href = "home.html";
+      }catch(err){
+        // mensagens mais amigáveis
+        const code = err?.code || "";
+        let text = "Não foi possível entrar. Verifique seus dados.";
+        if(code.includes("auth/invalid-credential")) text = "E-mail ou senha inválidos.";
+        if(code.includes("auth/user-not-found")) text = "Usuário não encontrado.";
+        if(code.includes("auth/wrong-password")) text = "Senha incorreta.";
+        if(code.includes("auth/too-many-requests")) text = "Muitas tentativas. Tente novamente mais tarde.";
+        showMsg("error", text);
+      }finally{
+        setLoading(false);
+      }
+    });
+
+    // CADASTRO (usa os campos da tela)
+    document.getElementById("registerBtn").addEventListener("click", async () => {
+      hideMsg();
+      setLoading(true);
+
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
+
+      if(!email || !password){
+        setLoading(false);
+        return showMsg("error", "Preencha e-mail e senha para criar a conta.");
+      }
+
+      try{
+        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await ensureUserProfile(cred.user);
+
+        showMsg("success", "Conta criada! Você já pode acessar.");
+      }catch(err){
+        const code = err?.code || "";
+        let text = "Não foi possível criar a conta.";
+        if(code.includes("auth/email-already-in-use")) text = "Este e-mail já está em uso.";
+        if(code.includes("auth/weak-password")) text = "Senha fraca. Use pelo menos 6 caracteres.";
+        if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
+        showMsg("error", text);
+      }finally{
+        setLoading(false);
+      }
+    });
+
+    // RECUPERAÇÃO DE SENHA
+    document.getElementById("resetPwdLink").addEventListener("click", async (e) => {
+      e.preventDefault();
+      hideMsg();
+
+      const email = emailInput.value.trim();
+      if(!email) return showMsg("error", "Digite seu e-mail para recuperar a senha.");
+
+      try{
+        await sendPasswordResetEmail(auth, email);
+        showMsg("success", "Enviamos um link de recuperação para seu e-mail.");
+      }catch(err){
+        const code = err?.code || "";
+        let text = "Não foi possível enviar o e-mail de recuperação.";
+        if(code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
+        if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
+        showMsg("error", text);
+      }
+    });
+  </script>
 </body>
 </html>
