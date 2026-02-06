@@ -419,10 +419,7 @@
         <button class="pillbtn" id="adminBtn" type="button" style="display:none;" translate="no">Admin</button>
       </div>
 
-      <div class="empty" id="infoBox" translate="no">
-        Carregando posts...
-      </div>
-
+      <div class="empty" id="infoBox" translate="no">Carregando posts...</div>
       <section class="feed" id="feed"></section>
     </main>
   </div>
@@ -475,6 +472,8 @@
     let sessionProfile = null;
     let feedCache = [];
 
+    function safeStr(v){ return (v ?? "").toString(); }
+
     function initialsFrom(str){
       const s = (str || "").trim();
       if(!s) return "HR";
@@ -495,8 +494,6 @@
       }
     }
 
-    function safeStr(v){ return (v ?? "").toString(); }
-
     function fmtDate(ts){
       try{
         if(!ts) return "—";
@@ -508,7 +505,7 @@
     function renderMenu(modules = {}, role = "comunidade"){
       const items = [
         { key:"feed", label:"Início (Feed)", href:"home.html", defaultOn:true },
-        { key:"territorio", label:"Meu território / CRGR", href:"#", defaultOn:false },
+        { key:"territorio", label:"Meu território / CRGR", href:"territorio.html", defaultOn:false },
         { key:"planos", label:"Planos de ação", href:"#", defaultOn:false },
         { key:"biblioteca", label:"Biblioteca", href:"#", defaultOn:false },
         { key:"agenda", label:"Agenda", href:"#", defaultOn:false },
@@ -521,6 +518,8 @@
         items.push({ key:"admin", label:"Painel de administração", href:"admin.html", defaultOn:true });
         adminBtn.style.display = "inline-flex";
         adminBtn.onclick = () => window.location.href = "admin.html";
+      }else{
+        adminBtn.style.display = "none";
       }
 
       navMenu.innerHTML = "";
@@ -535,25 +534,30 @@
       });
     }
 
-    // ✅ MVP: TODOS veem TODOS os posts (sem where, sem índice composto)
+    // ========= FEED =========
     async function fetchAllPosts(){
-      // Tentativa 1: ordenado por createdAt (padrão)
+      // Estratégia segura:
+      // 1) tenta orderBy(createdAt)
+      // 2) se falhar (posts sem createdAt), busca sem orderBy e ordena no client por createdAt/updatedAt
       try{
-        const qAll = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));
-        const snap = await getDocs(qAll);
+        const q1 = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));
+        const snap = await getDocs(q1);
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       }catch(err){
-        // fallback: sem orderBy (caso existam posts sem createdAt)
-        if(String(err?.message || "").includes("requires an index")){
-          throw err; // esse caso não deve acontecer aqui
-        }
-        const qFallback = query(collection(db, "posts"), limit(60));
-        const snap2 = await getDocs(qFallback);
-        return snap2.docs.map(d => ({ id: d.id, ...d.data() }));
+        console.warn("fetchAllPosts fallback (sem orderBy). Motivo:", err?.message || err);
+        const q2 = query(collection(db, "posts"), limit(60));
+        const snap2 = await getDocs(q2);
+        const arr = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
+        arr.sort((a,b) => {
+          const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return bt - at;
+        });
+        return arr;
       }
     }
 
-    // Likes/Comments (MVP)
+    // Likes/Comments: não travar o feed
     async function getLikeCount(postId){
       const likesCol = collection(db, "posts", postId, "likes");
       const snap = await getDocs(query(likesCol, limit(200)));
@@ -580,10 +584,8 @@
 
     async function loadComments(postId){
       const colRef = collection(db, "posts", postId, "comments");
-      // sem orderBy para evitar índice extra
       const snap = await getDocs(query(colRef, limit(50)));
       const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // ordena no client por createdAt
       arr.sort((a,b) => {
         const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
         const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
@@ -618,7 +620,7 @@
       return box;
     }
 
-    async function renderFeed(list){
+    function renderFeed(list){
       feedEl.innerHTML = "";
       infoBox.style.display = "none";
 
@@ -628,9 +630,11 @@
         return;
       }
 
-      for(const post of list){
+      // Render rápido: sem awaits aqui
+      list.forEach((post) => {
         const card = document.createElement("article");
         card.className = "post";
+        card.dataset.postId = post.id;
 
         const head = document.createElement("div");
         head.className = "post-head";
@@ -675,6 +679,7 @@
         const likeCountEl = document.createElement("span");
         likeCountEl.className = "muted";
         likeCountEl.style.marginLeft = "auto";
+        likeCountEl.textContent = "— curtida(s)";
 
         actions.appendChild(likeBtn);
         actions.appendChild(commentsBtn);
@@ -721,13 +726,19 @@
 
         feedEl.appendChild(card);
 
-        // likes initial
-        const [count, liked] = await Promise.all([
-          getLikeCount(post.id),
-          hasUserLiked(post.id, sessionUser.uid)
-        ]);
-        likeCountEl.textContent = `${count} curtida(s)`;
-        likeBtn.textContent = liked ? "❤️ Curtido" : "🤍 Curtir";
+        // Lazy load likes (sem travar)
+        (async () => {
+          try{
+            const [count, liked] = await Promise.all([
+              getLikeCount(post.id),
+              hasUserLiked(post.id, sessionUser.uid)
+            ]);
+            likeCountEl.textContent = `${count} curtida(s)`;
+            likeBtn.textContent = liked ? "❤️ Curtido" : "🤍 Curtir";
+          }catch{
+            likeCountEl.textContent = "— curtida(s)";
+          }
+        })();
 
         likeBtn.addEventListener("click", async () => {
           const nowLiked = await toggleLike(post.id, sessionUser.uid);
@@ -777,7 +788,7 @@
             cList.appendChild(el);
           });
         });
-      }
+      });
     }
 
     function filterFeedLocal(q){
@@ -821,15 +832,6 @@
         profile = again.data();
       }else{
         profile = usnap.data();
-        // garante feed true por padrão
-        if(!profile.modules || profile.modules.feed !== true){
-          await setDoc(uref, {
-            modules: { ...(profile.modules || {}), feed: true },
-            updatedAt: serverTimestamp()
-          }, { merge:true });
-          const again2 = await getDoc(uref);
-          profile = again2.data();
-        }
       }
 
       sessionProfile = profile;
@@ -850,22 +852,21 @@
       setAvatar(user.photoURL || profile.photoURL || null, initialsFrom(name));
       renderMenu(profile.modules || {}, role);
 
-      // feed
       infoBox.style.display = "block";
       infoBox.textContent = "Carregando posts...";
 
       try{
         feedCache = await fetchAllPosts();
-        await renderFeed(feedCache);
+        renderFeed(feedCache);
       }catch(err){
         console.error(err);
         infoBox.style.display = "block";
         infoBox.textContent = "Erro ao carregar o feed. Verifique as Rules e/ou índices.";
       }
 
-      searchInput.addEventListener("input", async () => {
+      searchInput.addEventListener("input", () => {
         const filtered = filterFeedLocal(searchInput.value);
-        await renderFeed(filtered);
+        renderFeed(filtered);
       });
     });
 
