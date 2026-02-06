@@ -7,7 +7,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hub Resiliência Climática • Território / CRGR</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
@@ -27,7 +26,6 @@
       --border:#E7ECEA;
       --radius:18px;
     }
-
     *{box-sizing:border-box}
     body{
       margin:0;
@@ -37,7 +35,7 @@
     }
     h1,h2,h3{ font-family:'Poppins', sans-serif; margin:0; }
     a{ color:inherit; text-decoration:none; }
-    button, input, textarea, select { font-family:inherit; }
+    button, input, textarea { font-family:inherit; }
 
     .app{
       min-height:100vh;
@@ -49,7 +47,7 @@
       margin:0 auto;
     }
 
-    /* Sidebar */
+    /* Sidebar (igual home) */
     .sidebar{
       position:sticky;
       top:16px;
@@ -70,11 +68,8 @@
     .sidebar-title span{ display:block; font-size:12.5px; opacity:.9; margin-top:4px; }
 
     .profile{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      padding:10px;
-      border-radius:16px;
+      display:flex; gap:12px; align-items:center;
+      padding:10px; border-radius:16px;
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.14);
     }
@@ -83,13 +78,9 @@
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.22);
       overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      font-family:'Poppins';
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800; font-family:'Poppins';
       letter-spacing:0.4px;
-      flex:0 0 auto;
     }
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
     .pmeta{ min-width:0; display:flex; flex-direction:column; gap:2px; line-height:1.1; }
@@ -98,12 +89,18 @@
 
     .nav{ margin-top:12px; display:grid; gap:6px; }
     .nav a{
-      cursor:pointer; color:#fff;
-      padding:10px 12px; border-radius:14px;
-      font-weight:900; font-size:13px;
+      cursor:pointer;
+      color:#fff;
+      padding:10px 12px;
+      border-radius:14px;
+      font-weight:900;
+      font-size:13px;
+      text-align:left;
       border: 1px solid transparent;
       opacity:.96;
-      display:flex; align-items:center; gap:10px;
+      display:flex;
+      align-items:center;
+      gap:10px;
     }
     .nav a:hover{ background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.12); }
     .nav .active{ background: rgba(242,201,76,0.14); border-color: rgba(242,201,76,0.28); }
@@ -130,7 +127,6 @@
       display:flex; align-items:center; gap:10px;
       text-align:left;
     }
-    .logoutBtn:hover{ background: rgba(255,255,255,0.14); }
 
     /* Content */
     .content{ display:flex; flex-direction:column; gap:12px; }
@@ -147,35 +143,8 @@
       justify-content:space-between;
       gap:12px;
     }
-    .leftTop{
-      min-width:240px;
-      display:flex;
-      flex-direction:column;
-      gap:4px;
-    }
     .topbar h2{ font-size:16px; }
     .muted{ color:#666; font-size:13px; line-height:1.5; }
-
-    .rightTop{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      flex-wrap:wrap;
-      justify-content:flex-end;
-    }
-
-    .select{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:10px 12px;
-      font-weight:700;
-      font-size:13px;
-      color:#0d3b66;
-      outline:none;
-      cursor:pointer;
-      max-width: 320px;
-    }
 
     .pillbtn{
       padding:10px 12px;
@@ -187,39 +156,14 @@
       font-size:12px;
       color:var(--blue-deep);
       cursor:pointer;
-    }
-    .pillbtn:hover{ box-shadow: 0 10px 20px rgba(0,0,0,0.05); transform: translateY(-1px); }
-    .pillbtn:active{ transform: translateY(0); opacity:.92; }
-
-    .tabs{
-      display:flex;
-      gap:8px;
-      flex-wrap:wrap;
-      padding: 2px 0 0;
-    }
-    .tab{
-      border:none;
-      cursor:pointer;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-weight:900;
-      font-family:'Poppins';
-      font-size:12px;
-      color:#0d3b66;
-      opacity:.92;
-    }
-    .tab.active{
-      background: linear-gradient(135deg, rgba(76,175,143,0.16), rgba(27,127,90,0.10));
-      border-color: rgba(27,127,90,0.22);
-      opacity:1;
+      white-space:nowrap;
     }
 
     .grid{
       display:grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1.2fr 0.8fr;
       gap:12px;
+      align-items:start;
     }
 
     .card{
@@ -250,30 +194,13 @@
     }
     .card-body{ padding:14px; }
 
-    .kline{ margin-top:10px; display:grid; gap:8px; }
-    .k{
-      display:flex; justify-content:space-between; gap:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-size:13px;
-    }
-    .k strong{ font-family:'Poppins'; font-size:12.5px; color:#0d3b66; }
-    .k span{ color:#444; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width: 60%; }
-
-    .list{
-      display:flex; flex-direction:column; gap:10px;
-    }
+    .list{ display:flex; flex-direction:column; gap:10px; }
     .item{
       padding:12px;
       border-radius:16px;
       border:1px solid var(--border);
       background:#fff;
-      cursor:pointer;
-      transition: transform .15s ease, box-shadow .15s ease;
     }
-    .item:hover{ transform: translateY(-1px); box-shadow: 0 12px 22px rgba(0,0,0,0.06); }
     .item strong{ font-family:'Poppins'; font-size:13.5px; display:block; }
     .item span{ display:block; margin-top:4px; font-size:12.5px; color:#666; white-space:pre-wrap; }
 
@@ -287,69 +214,23 @@
       line-height:1.5;
     }
 
-    .guard{
-      padding:14px;
+    /* mini feed style */
+    .post{
+      background:#fff;
+      border:1px solid var(--border);
       border-radius:18px;
-      border:1px solid rgba(242,201,76,0.35);
-      background: rgba(242,201,76,0.16);
-      color:#5b4a12;
-      font-size:13px;
-      line-height:1.45;
+      overflow:hidden;
     }
-
-    .split{
+    .post-head{
+      padding:12px;
       display:flex;
-      gap:10px;
       align-items:center;
       justify-content:space-between;
-      flex-wrap:wrap;
-      margin-top:10px;
+      gap:10px;
+      border-bottom:1px solid var(--border);
     }
-
-    .field{
-      display:grid;
-      gap:6px;
-      margin-top:10px;
-    }
-    .field label{
-      font-size:12.5px;
-      font-weight:900;
-      color:#0d3b66;
-      font-family:'Poppins';
-    }
-    .input, textarea{
-      width:100%;
-      padding:12px 12px;
-      border-radius:14px;
-      border: 1px solid var(--border);
-      outline:none;
-      font-size:14px;
-      background:#fff;
-    }
-    textarea{ min-height: 90px; resize: vertical; }
-
-    .msg{
-      display:none;
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      font-size:13px;
-      line-height:1.35;
-      border:1px solid var(--border);
-      background:#fff;
-      color:#2e2e2e;
-    }
-    .msg.show{ display:block; }
-    .msg.error{
-      background: rgba(242,201,76,0.18);
-      border-color: rgba(242,201,76,0.34);
-      color:#5b4a12;
-    }
-    .msg.success{
-      background: rgba(76,175,143,0.14);
-      border-color: rgba(76,175,143,0.28);
-      color:#135a41;
-    }
+    .post-head strong{ font-family:'Poppins'; font-size:13.5px; }
+    .post-body{ padding:12px; white-space:pre-wrap; line-height:1.55; }
 
     @media (max-width: 920px){
       .app{ grid-template-columns: 1fr; }
@@ -357,7 +238,6 @@
       .sidebar-bottom{ position:relative; left:0; right:0; bottom:0; margin-top:12px; }
       .grid{ grid-template-columns: 1fr; }
       .topbar{ top:12px; }
-      .select{ max-width: 100%; }
     }
   </style>
 </head>
@@ -367,7 +247,7 @@
     <aside class="sidebar">
       <div class="sidebar-title" translate="no">
         <strong>Hub Resiliência Climática</strong>
-        <span>Reciclagem • Territórios • Impacto</span>
+        <span>Território / CRGR</span>
       </div>
 
       <div class="profile" translate="no">
@@ -379,7 +259,11 @@
         </div>
       </div>
 
-      <nav class="nav" id="navMenu" aria-label="Menu lateral" translate="no"></nav>
+      <nav class="nav" id="navMenu" translate="no">
+        <a href="home.html"><span class="dot"></span> Início (Feed)</a>
+        <a class="active" href="territorio.html"><span class="dot"></span> Meu território / CRGR</a>
+        <a href="admin.html" id="adminLink" style="display:none;"><span class="dot"></span> Admin</a>
+      </nav>
 
       <div class="sidebar-bottom">
         <button id="logoutBtn" class="logoutBtn" translate="no">
@@ -391,39 +275,64 @@
 
     <main class="content">
       <div class="topbar" translate="no">
-        <div class="leftTop">
-          <h2>Meu território / CRGR</h2>
-          <div class="muted" id="subtitle">Selecione um CRGR para ver informações, materiais e planos.</div>
+        <div style="min-width:240px;">
+          <h2 id="title">Meu território / CRGR</h2>
+          <div class="muted" id="subtitle">Carregando informações...</div>
         </div>
 
-        <div class="rightTop">
-          <select class="select" id="crgrSelect" aria-label="Selecionar CRGR"></select>
-          <button class="pillbtn" id="adminBtn" type="button" style="display:none;">Admin</button>
-        </div>
+        <button class="pillbtn" id="goHomeBtn" type="button">Voltar ao Feed</button>
       </div>
 
-      <div class="tabs" id="tabs" translate="no"></div>
+      <div class="grid">
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h3 style="font-size:14px;">Visão geral da unidade</h3>
+              <div class="muted" style="margin-top:4px;" id="crgrMeta">—</div>
+            </div>
+            <div class="badge">CRGR</div>
+          </div>
+          <div class="card-body">
+            <div class="empty" id="crgrBox">Carregando CRGR...</div>
+          </div>
+        </section>
 
-      <div id="globalMsg" class="msg"></div>
+        <section class="card">
+          <div class="card-head">
+            <div>
+              <h3 style="font-size:14px;">Membros</h3>
+              <div class="muted" style="margin-top:4px;">UIDs vinculados à unidade</div>
+            </div>
+            <div class="badge" id="membersCount">0</div>
+          </div>
+          <div class="card-body">
+            <div id="membersList" class="list"></div>
+            <div id="membersEmpty" class="empty">Carregando membros...</div>
+          </div>
+        </section>
+      </div>
 
-      <!-- CONTEÚDO DAS ABAS -->
-      <section id="tabContent"></section>
+      <section class="card">
+        <div class="card-head">
+          <div>
+            <h3 style="font-size:14px;">Mural do território</h3>
+            <div class="muted" style="margin-top:4px;">Posts com escopo do seu CRGR (MVP)</div>
+          </div>
+          <div class="badge" id="muralCount">0</div>
+        </div>
+        <div class="card-body">
+          <div id="muralEmpty" class="empty">Carregando mural...</div>
+          <div id="muralList" class="list"></div>
+        </div>
+      </section>
+
     </main>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
     import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      collection,
-      getDocs,
-      limit,
-      addDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, collection, getDocs, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
@@ -438,39 +347,53 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // UI
+    // ===== Permissões (mesmo padrão)
+    const DEFAULT_MODULES_BY_ROLE = {
+      comunidade: { feed:true, territorio:true, biblioteca:true, forum:true, agenda:false, planos:false, dashboards:false, admin:false },
+      lideranca:  { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:false, admin:false },
+      tecnico:    { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  admin:false },
+      gestor:     { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  admin:false },
+      admin:      { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  admin:true  }
+    };
+    function resolveModules(profile){
+      const role = (profile?.role || "comunidade").toString();
+      const defaults = DEFAULT_MODULES_BY_ROLE[role] || DEFAULT_MODULES_BY_ROLE.comunidade;
+      const custom = (profile?.modules && typeof profile.modules === "object") ? profile.modules : {};
+      return { ...defaults, ...custom };
+    }
+    function isAdmin(profile){
+      const m = resolveModules(profile);
+      return profile?.role === "admin" || m.admin === true;
+    }
+    function canAccess(profile, key){
+      const m = resolveModules(profile);
+      return m[key] === true;
+    }
+
+    // ===== UI
     const avatarBox = document.getElementById("avatarBox");
     const userNameEl = document.getElementById("userName");
     const userRoleEl = document.getElementById("userRole");
     const userEmailEl = document.getElementById("userEmail");
-    const navMenu = document.getElementById("navMenu");
-    const adminBtn = document.getElementById("adminBtn");
+    const adminLink = document.getElementById("adminLink");
 
-    const crgrSelect = document.getElementById("crgrSelect");
-    const tabsEl = document.getElementById("tabs");
-    const tabContent = document.getElementById("tabContent");
-    const globalMsg = document.getElementById("globalMsg");
+    const titleEl = document.getElementById("title");
+    const subtitleEl = document.getElementById("subtitle");
 
-    // Session
-    let sessionUser = null;
-    let sessionProfile = null;
+    const crgrBox = document.getElementById("crgrBox");
+    const crgrMeta = document.getElementById("crgrMeta");
 
-    // CRGR state
-    let availableCrgrs = []; // [{id, ...data}]
-    let activeCrgr = null;   // {id, ...data}
-    let activeTabKey = "overview";
+    const membersList = document.getElementById("membersList");
+    const membersEmpty = document.getElementById("membersEmpty");
+    const membersCount = document.getElementById("membersCount");
+
+    const muralList = document.getElementById("muralList");
+    const muralEmpty = document.getElementById("muralEmpty");
+    const muralCount = document.getElementById("muralCount");
+
+    document.getElementById("goHomeBtn").addEventListener("click", () => window.location.href = "home.html");
 
     function safeStr(v){ return (v ?? "").toString(); }
-
-    function showMsg(type, text){
-      globalMsg.className = "msg show " + (type === "error" ? "error" : "success");
-      globalMsg.textContent = text;
-      setTimeout(() => {
-        globalMsg.className = "msg";
-        globalMsg.textContent = "";
-      }, 4200);
-    }
-
     function initialsFrom(str){
       const s = (str || "").trim();
       if(!s) return "HR";
@@ -478,7 +401,6 @@
       if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
-
     function setAvatar(photoURL, fallback){
       avatarBox.innerHTML = "";
       if(photoURL){
@@ -491,641 +413,161 @@
       }
     }
 
-    function isAdmin(){
-      const role = sessionProfile?.role || "comunidade";
-      const modules = sessionProfile?.modules || {};
-      return role === "admin" || modules.admin === true;
-    }
-
-    function can(key){
-      const modules = sessionProfile?.modules || {};
-      if(isAdmin()) return true;
-      return modules[key] === true;
-    }
-
-    function renderMenu(){
-      const modules = sessionProfile?.modules || {};
-      const role = sessionProfile?.role || "comunidade";
-
-      const items = [
-        { key:"feed", label:"Início (Feed)", href:"home.html", defaultOn:true },
-        { key:"territorio", label:"Meu território / CRGR", href:"territorio.html", defaultOn:true },
-        { key:"planos", label:"Planos de ação", href:"territorio.html#planos", defaultOn:false },
-        { key:"biblioteca", label:"Biblioteca", href:"territorio.html#materiais", defaultOn:false },
-        { key:"agenda", label:"Agenda", href:"territorio.html#agenda", defaultOn:false },
-        { key:"forum", label:"Fórum", href:"territorio.html#forum", defaultOn:false },
-        { key:"dashboards", label:"Dashboards", href:"territorio.html#dashboard", defaultOn:false },
-        { key:"ferramentas", label:"Ferramentas", href:"territorio.html#ferramentas", defaultOn:false },
-      ];
-
-      navMenu.innerHTML = "";
-      items.forEach((it) => {
-        const allowed = (modules[it.key] === true) || it.defaultOn === true;
-        if(!allowed) return;
-        const a = document.createElement("a");
-        a.href = it.href;
-        a.className = it.href.includes("territorio.html") && !it.href.includes("#") ? "active" : "";
-        a.innerHTML = `<span class="dot"></span> ${it.label}`;
-        navMenu.appendChild(a);
-      });
-
-      if(role === "admin" || modules.admin === true){
-        const a = document.createElement("a");
-        a.href = "admin.html";
-        a.innerHTML = `<span class="dot"></span> Painel de administração`;
-        navMenu.appendChild(a);
-
-        adminBtn.style.display = "inline-flex";
-        adminBtn.onclick = () => window.location.href = "admin.html";
-      }
-    }
-
-    function buildTabs(){
-      const allTabs = [
-        { key:"overview", label:"Visão geral", perm:"territorio" },
-        { key:"planos", label:"Planos", perm:"planos" },
-        { key:"materiais", label:"Materiais", perm:"biblioteca" },
-        { key:"agenda", label:"Agenda", perm:"agenda" },
-        { key:"forum", label:"Fórum", perm:"forum" },
-        { key:"ativos", label:"Ativos", perm:"ativos" },
-        { key:"decisoes", label:"Decisões", perm:"decisoes" },
-        { key:"dashboard", label:"Dashboard", perm:"dashboards" },
-        { key:"ferramentas", label:"Ferramentas", perm:"ferramentas" },
-        { key:"config", label:"Configurações", perm:"admin" }
-      ];
-
-      tabsEl.innerHTML = "";
-
-      // Hash -> aba inicial
-      const hash = (window.location.hash || "").replace("#","").trim();
-      if(hash) activeTabKey = hash;
-
-      allTabs.forEach(t => {
-        // Config só admin
-        if(t.key === "config" && !isAdmin()) return;
-
-        // Visão geral sempre aparece
-        const allowed = t.key === "overview" ? true : (isAdmin() ? true : can(t.perm));
-        if(!allowed) return;
-
-        const btn = document.createElement("button");
-        btn.className = "tab" + (t.key === activeTabKey ? " active" : "");
-        btn.type = "button";
-        btn.textContent = t.label;
-
-        btn.addEventListener("click", async () => {
-          activeTabKey = t.key;
-          window.location.hash = t.key;
-          refreshTabsActive();
-          await renderActiveTab();
+    async function ensureProfile(user){
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      if(!snap.exists()){
+        await setDoc(ref, {
+          uid: user.uid,
+          email: user.email ?? null,
+          name: user.displayName || (user.email ? user.email.split("@")[0] : "Usuário"),
+          role: "comunidade",
+          crgrIds: [],
+          orgId: null,
+          modules: {},
+          bio: "Mini bio: descreva sua atuação no território.",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
-
-        tabsEl.appendChild(btn);
-      });
-
-      refreshTabsActive();
-    }
-
-    function refreshTabsActive(){
-      Array.from(tabsEl.querySelectorAll(".tab")).forEach(b => b.classList.remove("active"));
-      const idx = Array.from(tabsEl.children).findIndex(el => el.textContent && mapLabelToKey(el.textContent) === activeTabKey);
-      if(idx >= 0) tabsEl.children[idx].classList.add("active");
-    }
-
-    function mapLabelToKey(label){
-      const m = {
-        "Visão geral":"overview",
-        "Planos":"planos",
-        "Materiais":"materiais",
-        "Agenda":"agenda",
-        "Fórum":"forum",
-        "Ativos":"ativos",
-        "Decisões":"decisoes",
-        "Dashboard":"dashboard",
-        "Ferramentas":"ferramentas",
-        "Configurações":"config"
-      };
-      return m[label] || "overview";
-    }
-
-    async function fetchUserCrgrs(crgrIds){
-      const results = [];
-      for(const id of crgrIds){
-        const ref = doc(db, "crgrs", id);
-        const snap = await getDoc(ref);
-        if(snap.exists()){
-          results.push({ id: snap.id, ...snap.data() });
-        }
+        const again = await getDoc(ref);
+        return again.data();
       }
-      return results;
+      return snap.data();
     }
 
-    function renderCrgrSelect(){
-      crgrSelect.innerHTML = "";
-      if(!availableCrgrs.length){
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "Nenhum CRGR associado";
-        crgrSelect.appendChild(opt);
-        crgrSelect.disabled = true;
+    function renderMembers(arr){
+      membersList.innerHTML = "";
+      if(!arr.length){
+        membersEmpty.style.display = "block";
+        membersEmpty.textContent = "Sem membros vinculados ainda.";
+        membersCount.textContent = "0";
+        return;
+      }
+      membersEmpty.style.display = "none";
+      membersCount.textContent = String(arr.length);
+
+      arr.forEach(uid => {
+        const div = document.createElement("div");
+        div.className = "item";
+        div.innerHTML = `<strong>${uid}</strong><span>UID vinculado ao CRGR</span>`;
+        membersList.appendChild(div);
+      });
+    }
+
+    function renderMural(posts){
+      muralList.innerHTML = "";
+      if(!posts.length){
+        muralEmpty.style.display = "block";
+        muralEmpty.textContent = "Ainda não há posts no mural do seu território.";
+        muralCount.textContent = "0";
+        return;
+      }
+      muralEmpty.style.display = "none";
+      muralCount.textContent = String(posts.length);
+
+      posts.forEach(p => {
+        const div = document.createElement("div");
+        div.className = "post";
+        div.innerHTML = `
+          <div class="post-head">
+            <strong>${safeStr(p.authorName || "Admin")}</strong>
+            <span class="muted">${safeStr(p.scope?.crgrId || "")}</span>
+          </div>
+          <div class="post-body">${safeStr(p.text || "")}</div>
+        `;
+        muralList.appendChild(div);
+      });
+    }
+
+    async function loadCrgrAndMural(profile){
+      const crgrIds = Array.isArray(profile.crgrIds) ? profile.crgrIds : [];
+      if(!crgrIds.length){
+        crgrBox.textContent = "Você ainda não está vinculado a nenhum CRGR. Peça ao admin para vincular seu usuário.";
+        crgrMeta.textContent = "—";
+        membersEmpty.textContent = "—";
+        muralEmpty.textContent = "—";
         return;
       }
 
-      availableCrgrs.forEach(c => {
-        const opt = document.createElement("option");
-        opt.value = c.id;
-        opt.textContent = `${safeStr(c.name || c.id)} • ${safeStr(c.territoryName || "Território")}`;
-        crgrSelect.appendChild(opt);
+      // MVP: pega o primeiro CRGR
+      const crgrId = crgrIds[0];
+      const crgrRef = doc(db, "crgrs", crgrId);
+      const crgrSnap = await getDoc(crgrRef);
+
+      if(!crgrSnap.exists()){
+        crgrBox.textContent = "CRGR não encontrado. Verifique com o admin se o ID está correto.";
+        crgrMeta.textContent = `ID: ${crgrId}`;
+        return;
+      }
+
+      const crgr = crgrSnap.data();
+      titleEl.textContent = safeStr(crgr.name || "Meu território / CRGR");
+      subtitleEl.textContent = `${safeStr(crgr.city || "—")}/${safeStr(crgr.state || "—")} • ${safeStr(crgr.territoryName || "Território")}`;
+      crgrMeta.textContent = `ID: ${crgrId}`;
+
+      crgrBox.innerHTML = `
+        <div class="item" style="border:none; padding:0;">
+          <strong>${safeStr(crgr.name || crgrId)}</strong>
+          <span><b>Cidade/UF:</b> ${safeStr(crgr.city || "—")}/${safeStr(crgr.state || "—")}</span>
+          <span><b>Território:</b> ${safeStr(crgr.territoryName || "—")}</span>
+          <span style="margin-top:8px;"><b>Descrição:</b><br/>${safeStr(crgr.description || "—")}</span>
+        </div>
+      `;
+
+      const members = Array.isArray(crgr.memberUids) ? crgr.memberUids : [];
+      renderMembers(members);
+
+      // ===== Mural (MVP sem índice): carrega posts e filtra no cliente
+      const postsSnap = await getDocs(collection(db, "posts"));
+      const allPosts = postsSnap.docs.map(d => ({ id: d.id, ...d.data() }));
+
+      // filtra: escopo all OU escopo crgrId
+      const muralPosts = allPosts.filter(p => {
+        const st = p.scope?.type;
+        if(st === "all") return true;
+        if(st === "crgr" && p.scope?.crgrId === crgrId) return true;
+        return false;
       });
 
-      crgrSelect.disabled = availableCrgrs.length <= 1;
-      crgrSelect.value = activeCrgr?.id || availableCrgrs[0].id;
-
-      crgrSelect.addEventListener("change", async () => {
-        const id = crgrSelect.value;
-        activeCrgr = availableCrgrs.find(x => x.id === id) || availableCrgrs[0];
-        await renderActiveTab();
-      });
-    }
-
-    function guardBox(text){
-      const div = document.createElement("div");
-      div.className = "guard";
-      div.textContent = text;
-      return div;
-    }
-
-    function emptyBox(text){
-      const div = document.createElement("div");
-      div.className = "empty";
-      div.innerHTML = text;
-      return div;
-    }
-
-    // ------- Helpers para subcoleções (sem índice composto) -------
-    async function fetchSub(crgrId, subName, max = 50){
-      const colRef = collection(db, "crgrs", crgrId, subName);
-      const snap = await getDocs(colRef, limit(max));
-      const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      // ordenação client por createdAt
-      arr.sort((a,b) => {
+      // ordena client-side por createdAt
+      muralPosts.sort((a,b) => {
         const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
         const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
         return bt - at;
       });
-      return arr;
+
+      renderMural(muralPosts.slice(0, 60));
     }
 
-    // ------- Render de cada aba -------
-    async function renderOverview(){
-      tabContent.innerHTML = "";
-      if(!activeCrgr) return tabContent.appendChild(emptyBox("Sem CRGR selecionado."));
-
-      const left = document.createElement("section");
-      left.className = "card";
-      left.innerHTML = `
-        <div class="card-head">
-          <div>
-            <h3 style="font-size:14px;">Resumo do CRGR</h3>
-            <div class="muted" style="margin-top:4px;">Informações principais do território</div>
-          </div>
-          <div class="badge">${activeCrgr.isActive === false ? "Inativo" : "Ativo"}</div>
-        </div>
-        <div class="card-body">
-          <h3 style="font-size:18px; margin-bottom:6px;">${safeStr(activeCrgr.name || activeCrgr.id)}</h3>
-          <div class="muted">${safeStr(activeCrgr.description || "Sem descrição cadastrada.")}</div>
-
-          <div class="kline" style="margin-top:12px;">
-            <div class="k"><strong>Território</strong> <span>${safeStr(activeCrgr.territoryName || "—")}</span></div>
-            <div class="k"><strong>Cidade/UF</strong> <span>${[activeCrgr.city, activeCrgr.state].filter(Boolean).join("/") || "—"}</span></div>
-            <div class="k"><strong>Contato</strong> <span>${
-              [
-                activeCrgr.contacts?.email ? `Email: ${activeCrgr.contacts.email}` : "",
-                activeCrgr.contacts?.whatsapp ? `WhatsApp: ${activeCrgr.contacts.whatsapp}` : ""
-              ].filter(Boolean).join(" • ") || "—"
-            }</span></div>
-          </div>
-        </div>
-      `;
-
-      const right = document.createElement("section");
-      right.className = "card";
-      right.innerHTML = `
-        <div class="card-head">
-          <div>
-            <h3 style="font-size:14px;">Atalhos rápidos</h3>
-            <div class="muted" style="margin-top:4px;">Acesso rápido às áreas do CRGR</div>
-          </div>
-          <div class="badge">Navegação</div>
-        </div>
-        <div class="card-body">
-          <div class="list">
-            <div class="item" data-go="planos"><strong>Planos de ação</strong><span>Metas, responsáveis e prazos</span></div>
-            <div class="item" data-go="materiais"><strong>Biblioteca / Materiais</strong><span>PDFs, vídeos e documentos do CRGR</span></div>
-            <div class="item" data-go="agenda"><strong>Agenda</strong><span>Oficinas, reuniões e mutirões</span></div>
-            <div class="item" data-go="decisoes"><strong>Decisões</strong><span>Encaminhamentos e aprendizados</span></div>
-          </div>
-        </div>
-      `;
-
-      const wrap = document.createElement("div");
-      wrap.className = "grid";
-      wrap.appendChild(left);
-      wrap.appendChild(right);
-
-      tabContent.appendChild(wrap);
-
-      tabContent.querySelectorAll("[data-go]").forEach(el => {
-        el.addEventListener("click", async () => {
-          activeTabKey = el.getAttribute("data-go");
-          window.location.hash = activeTabKey;
-          buildTabs();
-          await renderActiveTab();
-        });
-      });
-    }
-
-    function permsGuard(tabKey){
-      const map = {
-        planos: "planos",
-        materiais: "biblioteca",
-        agenda: "agenda",
-        forum: "forum",
-        ativos: "ativos",
-        decisoes: "decisoes",
-        dashboard: "dashboards",
-        ferramentas: "ferramentas",
-        config: "admin"
-      };
-      const needed = map[tabKey];
-      if(!needed) return null;
-      if(tabKey === "config" && !isAdmin()) return guardBox("Apenas administradores podem acessar Configurações do CRGR.");
-      if(!isAdmin() && !can(needed)){
-        return guardBox("Você não tem permissão para acessar esta área. Peça ao admin para habilitar no seu perfil.");
-      }
-      return null;
-    }
-
-    async function renderGenericList(tabKey, title, subtitle, subcollectionName, fields){
-      tabContent.innerHTML = "";
-      if(!activeCrgr) return tabContent.appendChild(emptyBox("Sem CRGR selecionado."));
-
-      const guard = permsGuard(tabKey);
-      if(guard) return tabContent.appendChild(guard);
-
-      const card = document.createElement("section");
-      card.className = "card";
-
-      card.innerHTML = `
-        <div class="card-head">
-          <div>
-            <h3 style="font-size:14px;">${title}</h3>
-            <div class="muted" style="margin-top:4px;">${subtitle}</div>
-          </div>
-          <div class="badge" id="countBadge">...</div>
-        </div>
-        <div class="card-body">
-          <div class="split">
-            <div class="muted">CRGR: <strong>${safeStr(activeCrgr.name || activeCrgr.id)}</strong></div>
-            ${isAdmin() ? `<button class="pillbtn" id="newBtn" type="button">+ Novo</button>` : ``}
-          </div>
-          <div id="newForm" style="display:none;"></div>
-          <div id="list" class="list" style="margin-top:12px;"></div>
-          <div id="empty" class="empty" style="display:none; margin-top:12px;"></div>
-        </div>
-      `;
-
-      tabContent.appendChild(card);
-
-      const countBadge = card.querySelector("#countBadge");
-      const listEl = card.querySelector("#list");
-      const emptyEl = card.querySelector("#empty");
-      const newBtn = card.querySelector("#newBtn");
-      const newForm = card.querySelector("#newForm");
-
-      // carregar
-      let items = [];
-      try{
-        items = await fetchSub(activeCrgr.id, subcollectionName, 60);
-      }catch(err){
-        console.error(err);
-        countBadge.textContent = "Erro";
-        emptyEl.style.display = "block";
-        emptyEl.textContent = "Erro ao carregar dados. Verifique Rules/permissões do CRGR.";
-        return;
-      }
-
-      countBadge.textContent = String(items.length);
-
-      if(!items.length){
-        emptyEl.style.display = "block";
-        emptyEl.innerHTML = `Nenhum item cadastrado em <code>crgrs/${activeCrgr.id}/${subcollectionName}</code>.`;
-        return;
-      }
-
-      listEl.innerHTML = "";
-      items.forEach(it => {
-        const el = document.createElement("div");
-        el.className = "item";
-        const lines = fields.map(f => {
-          const v = it[f.key];
-          const text = f.format ? f.format(v, it) : safeStr(v || "—");
-          return `<div><strong style="font-size:12px; opacity:.9;">${f.label}</strong><span style="display:block; margin-top:2px;">${text}</span></div>`;
-        }).join(`<div style="height:10px;"></div>`);
-
-        el.innerHTML = `
-          <strong>${safeStr(it.title || it.name || it.subject || "Item")}</strong>
-          <span>${lines}</span>
-        `;
-        listEl.appendChild(el);
-      });
-
-      // form admin (MVP)
-      if(isAdmin() && newBtn){
-        newBtn.addEventListener("click", () => {
-          newForm.style.display = newForm.style.display === "none" ? "block" : "none";
-          if(newForm.innerHTML.trim()) return;
-
-          newForm.innerHTML = `
-            <div style="margin-top:12px; border-top:1px solid var(--border); padding-top:12px;">
-              <div class="field">
-                <label>Título</label>
-                <input class="input" id="fTitle" placeholder="Ex.: Oficina de reciclagem" />
-              </div>
-              <div class="field">
-                <label>Descrição</label>
-                <textarea id="fDesc" placeholder="Detalhes..."></textarea>
-              </div>
-              <div class="split">
-                <button class="pillbtn" id="saveBtn" type="button">Salvar</button>
-                <span class="muted">Salva em <code>${subcollectionName}</code></span>
-              </div>
-            </div>
-          `;
-
-          newForm.querySelector("#saveBtn").addEventListener("click", async () => {
-            const titleV = newForm.querySelector("#fTitle").value.trim();
-            const descV  = newForm.querySelector("#fDesc").value.trim();
-            if(!titleV) return showMsg("error", "Preencha um título.");
-
-            try{
-              const colRef = collection(db, "crgrs", activeCrgr.id, subcollectionName);
-              await addDoc(colRef, { title: titleV, description: descV, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
-              showMsg("success", "Item criado! Recarregue a página para ver na lista (MVP).");
-            }catch(err){
-              console.error(err);
-              showMsg("error", "Sem permissão para criar (verifique Rules).");
-            }
-          });
-        });
-      }
-    }
-
-    async function renderDashboard(){
-      tabContent.innerHTML = "";
-      if(!activeCrgr) return tabContent.appendChild(emptyBox("Sem CRGR selecionado."));
-
-      const guard = permsGuard("dashboard");
-      if(guard) return tabContent.appendChild(guard);
-
-      const card = document.createElement("section");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="card-head">
-          <div>
-            <h3 style="font-size:14px;">Dashboard do CRGR</h3>
-            <div class="muted" style="margin-top:4px;">Indicadores e resultados do território (MVP)</div>
-          </div>
-          <div class="badge">Em breve</div>
-        </div>
-        <div class="card-body">
-          <div class="empty">
-            Aqui entram os indicadores do CRGR (ex.: domicílios cadastrados, catadores capacitados, volume comercializado).
-            <br><br>
-            Próximo passo: criar coleção <code>crgrs/${safeStr(activeCrgr.id)}/indicators</code> ou um doc <code>crgrs/${safeStr(activeCrgr.id)}/dashboard</code>.
-          </div>
-        </div>
-      `;
-      tabContent.appendChild(card);
-    }
-
-    async function renderFerramentas(){
-      tabContent.innerHTML = "";
-      if(!activeCrgr) return tabContent.appendChild(emptyBox("Sem CRGR selecionado."));
-
-      const guard = permsGuard("ferramentas");
-      if(guard) return tabContent.appendChild(guard);
-
-      const card = document.createElement("section");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="card-head">
-          <div>
-            <h3 style="font-size:14px;">Ferramentas</h3>
-            <div class="muted" style="margin-top:4px;">Formulários e Observatório Ecoar (links / integração)</div>
-          </div>
-          <div class="badge">Links</div>
-        </div>
-        <div class="card-body">
-          <div class="list">
-            <div class="item">
-              <strong>Formulários (execução de serviços)</strong>
-              <span>Atalho para os formulários do CRGR (vamos conectar depois).</span>
-            </div>
-            <div class="item">
-              <strong>Observatório do Cluster Ecoar</strong>
-              <span>Gravimetria / simulação / rastreabilidade via plataforma ECOAR.</span>
-            </div>
-          </div>
-        </div>
-      `;
-      tabContent.appendChild(card);
-    }
-
-    async function renderConfig(){
-      tabContent.innerHTML = "";
-      if(!activeCrgr) return tabContent.appendChild(emptyBox("Sem CRGR selecionado."));
-
-      const guard = permsGuard("config");
-      if(guard) return tabContent.appendChild(guard);
-
-      const card = document.createElement("section");
-      card.className = "card";
-      card.innerHTML = `
-        <div class="card-head">
-          <div>
-            <h3 style="font-size:14px;">Configurações do CRGR</h3>
-            <div class="muted" style="margin-top:4px;">Administração do território (MVP)</div>
-          </div>
-          <div class="badge">Admin</div>
-        </div>
-        <div class="card-body">
-          <div class="empty">
-            Aqui ficará a gestão do CRGR: descrição, contatos, ativar/inativar, responsáveis, e permissões por CRGR.
-            <br><br>
-            Próximo passo: editar o doc <code>crgrs/${safeStr(activeCrgr.id)}</code> e gerir membros vinculados.
-          </div>
-        </div>
-      `;
-      tabContent.appendChild(card);
-    }
-
-    async function renderActiveTab(){
-      // ativa classe no tab
-      Array.from(tabsEl.querySelectorAll(".tab")).forEach(b => {
-        b.classList.toggle("active", mapLabelToKey(b.textContent) === activeTabKey);
-      });
-
-      if(activeTabKey === "overview") return renderOverview();
-      if(activeTabKey === "planos"){
-        return renderGenericList(
-          "planos",
-          "Planos de ação",
-          "Metas, responsáveis, prazos e status (planejada / em andamento / concluída).",
-          "actionPlans",
-          [
-            { label:"Status", key:"status", format:(v)=> safeStr(v || "—") },
-            { label:"Responsável", key:"ownerName", format:(v)=> safeStr(v || "—") },
-            { label:"Prazo", key:"dueDate", format:(v)=> safeStr(v || "—") },
-            { label:"Descrição", key:"description", format:(v)=> safeStr(v || "—") }
-          ]
-        );
-      }
-      if(activeTabKey === "materiais"){
-        return renderGenericList(
-          "materiais",
-          "Biblioteca / Materiais",
-          "PDFs, vídeos, cartilhas e documentos do CRGR.",
-          "materials",
-          [
-            { label:"Tipo", key:"type", format:(v)=> safeStr(v || "—") },
-            { label:"Link/Arquivo", key:"url", format:(v)=> safeStr(v || "—") },
-            { label:"Descrição", key:"description", format:(v)=> safeStr(v || "—") }
-          ]
-        );
-      }
-      if(activeTabKey === "agenda"){
-        return renderGenericList(
-          "agenda",
-          "Agenda do CRGR",
-          "Oficinas, reuniões e mutirões.",
-          "agenda",
-          [
-            { label:"Data/Hora", key:"dateTime", format:(v)=> safeStr(v || "—") },
-            { label:"Local", key:"location", format:(v)=> safeStr(v || "—") },
-            { label:"Descrição", key:"description", format:(v)=> safeStr(v || "—") }
-          ]
-        );
-      }
-      if(activeTabKey === "forum"){
-        return renderGenericList(
-          "forum",
-          "Fórum do CRGR",
-          "Tópicos e discussões por território.",
-          "forumThreads",
-          [
-            { label:"Autor", key:"authorName", format:(v)=> safeStr(v || "—") },
-            { label:"Mensagem", key:"text", format:(v)=> safeStr(v || "—") }
-          ]
-        );
-      }
-      if(activeTabKey === "ativos"){
-        return renderGenericList(
-          "ativos",
-          "Ativos locais",
-          "Pessoas, organizações e recursos do território.",
-          "assets",
-          [
-            { label:"Categoria", key:"category", format:(v)=> safeStr(v || "—") },
-            { label:"Contato", key:"contact", format:(v)=> safeStr(v || "—") },
-            { label:"Descrição", key:"description", format:(v)=> safeStr(v || "—") }
-          ]
-        );
-      }
-      if(activeTabKey === "decisoes"){
-        return renderGenericList(
-          "decisoes",
-          "Decisões e aprendizados",
-          "Registro de decisões, encaminhamentos e aprendizados.",
-          "decisions",
-          [
-            { label:"Resumo", key:"summary", format:(v)=> safeStr(v || "—") },
-            { label:"Encaminhamentos", key:"actions", format:(v)=> safeStr(v || "—") }
-          ]
-        );
-      }
-      if(activeTabKey === "dashboard") return renderDashboard();
-      if(activeTabKey === "ferramentas") return renderFerramentas();
-      if(activeTabKey === "config") return renderConfig();
-
-      // fallback
-      activeTabKey = "overview";
-      return renderOverview();
-    }
-
-    // --------- Auth bootstrap ---------
     onAuthStateChanged(auth, async (user) => {
       if(!user){
         window.location.href = "index.html";
         return;
       }
-      sessionUser = user;
 
-      // perfil
-      const uref = doc(db, "users", user.uid);
-      const usnap = await getDoc(uref);
-      if(!usnap.exists()){
-        window.location.href = "index.html";
+      const profile = await ensureProfile(user);
+
+      // gate permissão
+      if(!canAccess(profile, "territorio")){
+        window.location.href = "home.html";
         return;
       }
-      sessionProfile = usnap.data();
 
-      // UI user
-      const name = sessionProfile.name || user.displayName || (user.email ? user.email.split("@")[0] : "Usuário");
-      const role = sessionProfile.role || "comunidade";
-
+      const name = profile.name || user.displayName || (user.email ? user.email.split("@")[0] : "Usuário");
       userNameEl.textContent = name;
-      userRoleEl.textContent = `Perfil: ${role}`;
+      userRoleEl.textContent = `Perfil: ${safeStr(profile.role || "comunidade")}`;
       userEmailEl.textContent = user.email || "—";
-      setAvatar(user.photoURL || sessionProfile.photoURL || null, initialsFrom(name));
+      setAvatar(user.photoURL || profile.photoURL || null, initialsFrom(name));
 
-      renderMenu();
-
-      // CRGRs do user
-      const crgrIds = Array.isArray(sessionProfile.crgrIds) ? sessionProfile.crgrIds : [];
-      if(!crgrIds.length){
-        availableCrgrs = [];
-        activeCrgr = null;
-        renderCrgrSelect();
-        buildTabs();
-        tabContent.innerHTML = "";
-        tabContent.appendChild(emptyBox(
-          `Nenhum CRGR associado ao seu usuário. Peça ao admin para adicionar seu <strong>crgrId</strong> em <code>users/${user.uid}.crgrIds</code>.`
-        ));
-        return;
-      }
+      if(isAdmin(profile)) adminLink.style.display = "flex";
 
       try{
-        availableCrgrs = await fetchUserCrgrs(crgrIds);
+        await loadCrgrAndMural(profile);
       }catch(err){
         console.error(err);
-        showMsg("error", "Erro ao carregar CRGRs. Verifique Rules/permissões.");
-        availableCrgrs = [];
+        crgrBox.textContent = "Erro ao carregar CRGR. Verifique permissões/rules.";
+        muralEmpty.textContent = "Erro ao carregar mural.";
       }
-
-      if(!availableCrgrs.length){
-        activeCrgr = null;
-        renderCrgrSelect();
-        buildTabs();
-        tabContent.innerHTML = "";
-        tabContent.appendChild(emptyBox("Você tem CRGRs no perfil, mas não foi possível ler os documentos em <code>crgrs</code>. Confira as Rules."));
-        return;
-      }
-
-      activeCrgr = availableCrgrs[0];
-      renderCrgrSelect();
-      buildTabs();
-      await renderActiveTab();
     });
 
     document.getElementById("logoutBtn").addEventListener("click", async () => {

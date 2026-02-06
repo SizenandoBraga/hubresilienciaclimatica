@@ -5,9 +5,8 @@
   <meta http-equiv="Content-Language" content="pt-BR">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Plataforma Hub Resiliência Climática • Login</title>
+  <title>Plataforma Regenera • Login</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
@@ -17,10 +16,12 @@
       --green-regen:#1B7F5A;
       --green-light:#4CAF8F;
       --blue-deep:#0D3B66;
+
       --yellow:#F2C94C;
       --graphite:#2E2E2E;
       --bg:#F5F7F6;
       --white:#FFFFFF;
+
       --radius:16px;
       --shadow:0 10px 30px rgba(0,0,0,0.08);
     }
@@ -90,7 +91,10 @@
       z-index:0;
     }
 
-    .brand, .hero-content{ position:relative; z-index:1; }
+    .brand, .hero-content{
+      position:relative;
+      z-index:1;
+    }
 
     .brand{
       display:flex;
@@ -99,27 +103,7 @@
       margin-bottom:44px;
     }
 
-    .logo-slot{
-      width:64px;
-      height:64px;
-      border-radius:18px;
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.28);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      backdrop-filter: blur(8px);
-      overflow:hidden;
-      padding:8px;
-    }
-    .logo-slot img{
-      width:100%;
-      height:100%;
-      object-fit: contain;
-      display:block;
-      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.25));
-    }
-
+    /* sem logo pequeno aqui conforme você pediu */
     .brand-title{
       display:flex;
       flex-direction:column;
@@ -127,7 +111,7 @@
     }
     .brand-title strong{
       font-weight:700;
-      font-size:18px;
+      font-size:20px;
       letter-spacing:0.2px;
     }
     .brand-title span{
@@ -198,7 +182,10 @@
       gap:12px;
       margin-bottom:14px;
     }
-    .card h2{ font-size: 20px; margin-bottom:4px; }
+    .card h2{
+      font-size: 20px;
+      margin-bottom:4px;
+    }
     .card .subtitle{
       font-size:13.5px;
       color:#555;
@@ -343,7 +330,10 @@
       .page{ grid-template-columns: 1fr; }
       .hero{ padding-bottom: 26px; }
       .panel{ padding-top: 22px; padding-bottom: 40px; }
-      .hero::before{ background-size: 280px; opacity:0.12; }
+      .hero::before{
+        background-size: 280px;
+        opacity:0.12;
+      }
     }
   </style>
 </head>
@@ -353,11 +343,8 @@
     <section class="hero">
       <div class="hero-glow-top"></div>
 
-      <div class="brand">
-        <div class="logo-slot" aria-label="Logo do projeto">
-          <img src="img/Design sem nome (2) (1).png" alt="Logo do projeto" translate="no">
-        </div>
-        <div class="brand-title" translate="no">
+      <div class="brand" translate="no">
+        <div class="brand-title">
           <strong>Hub Resiliência Climática</strong>
           <span>Hub de Reciclagem & Territórios</span>
         </div>
@@ -366,13 +353,9 @@
       <div class="hero-content">
         <h1>Regenerando territórios através da ação climática.</h1>
         <p>
-          O <strong>Hub Resiliência Climática</strong> é um ponto de encontro digital que conecta cooperativas, comunidades,
-          técnicos e gestores públicos. Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e
-          a resposta aos desafios climáticos nos territórios.
-        </p>
-        <p>
-          Conecte comunidade, dados e impacto ambiental em um só lugar — com foco em
-          <strong>economia circular</strong>, <strong>governança</strong> e <strong>capacitação</strong>.
+          O <strong>Hub Resiliência Climática</strong> conecta cooperativas, comunidades,
+          técnicos e gestores públicos — com foco em <strong>economia circular</strong>, <strong>governança</strong> e
+          <strong>capacitação</strong>.
         </p>
 
         <div class="pill-row" aria-label="Valores do projeto" translate="no">
@@ -386,8 +369,8 @@
     </section>
 
     <section class="panel">
-      <div class="card" role="region" aria-label="Login">
-        <header translate="no">
+      <div class="card" role="region" aria-label="Login" translate="no">
+        <header>
           <div>
             <h2>Entrar</h2>
             <div class="subtitle">Acesse sua conta para ver seu território, CRGR e atualizações.</div>
@@ -395,15 +378,15 @@
           <div class="badge">Acesso seguro</div>
         </header>
 
-        <form class="form" id="loginForm" translate="no">
+        <form class="form" id="loginForm">
           <div class="field">
             <label for="email">E-mail</label>
-            <input class="input" id="email" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required translate="no">
+            <input class="input" id="email" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
           </div>
 
           <div class="field">
             <label for="password">Senha</label>
-            <input class="input" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required translate="no">
+            <input class="input" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
           </div>
 
           <div class="row">
@@ -485,20 +468,35 @@
     async function ensureUserProfile(user){
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
-
       if(!snap.exists()){
         await setDoc(ref, {
           uid: user.uid,
           email: user.email ?? null,
+          name: user.displayName || (user.email ? user.email.split("@")[0] : "Usuário"),
           role: "comunidade",
           crgrIds: [],
-          territoryId: null,
           orgId: null,
-          modules: { feed: true },     // base
+          modules: {},
           bio: "Mini bio: descreva sua atuação no território.",
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
+      }
+    }
+
+    function isAdminProfile(profile){
+      const modules = profile?.modules || {};
+      return profile?.role === "admin" || modules.admin === true;
+    }
+
+    async function redirectAfterLogin(user){
+      const ref = doc(db, "users", user.uid);
+      const snap = await getDoc(ref);
+      const profile = snap.exists() ? snap.data() : null;
+      if(profile && isAdminProfile(profile)){
+        window.location.href = "admin.html";
+      }else{
+        window.location.href = "home.html";
       }
     }
 
@@ -513,9 +511,7 @@
       try{
         const cred = await signInWithEmailAndPassword(auth, email, password);
         await ensureUserProfile(cred.user);
-
-        // ✅ redireciona para a home
-        window.location.href = "home.html";
+        await redirectAfterLogin(cred.user);
       }catch(err){
         const code = err?.code || "";
         let text = "Não foi possível entrar. Verifique seus dados.";
@@ -544,9 +540,8 @@
       try{
         const cred = await createUserWithEmailAndPassword(auth, email, password);
         await ensureUserProfile(cred.user);
-
-        // ✅ também vai para a home
-        window.location.href = "home.html";
+        showMsg("success", "Conta criada! Redirecionando...");
+        await redirectAfterLogin(cred.user);
       }catch(err){
         const code = err?.code || "";
         let text = "Não foi possível criar a conta.";
