@@ -7,6 +7,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Hub Resiliência Climática • Início</title>
 
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
@@ -17,9 +18,11 @@
       --green-light:#4CAF8F;
       --blue-deep:#0D3B66;
       --yellow:#F2C94C;
+
       --graphite:#2E2E2E;
       --bg:#F5F7F6;
       --white:#FFFFFF;
+
       --shadow:0 10px 30px rgba(0,0,0,0.08);
       --border:#E7ECEA;
     }
@@ -145,6 +148,7 @@
     }
     .nav a:hover{ background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.12); }
     .nav .active{ background: rgba(242,201,76,0.14); border-color: rgba(242,201,76,0.28); }
+
     .dot{
       width:8px; height:8px; border-radius:999px;
       background: var(--yellow);
@@ -270,17 +274,6 @@
     .post-meta{ min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
     .post-meta strong{ font-size:13.5px; font-family:'Poppins'; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .post-meta span{ font-size:12px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-    .scope-badge{
-      font-size:11px;
-      font-weight:900;
-      padding:7px 10px;
-      border-radius:999px;
-      background: rgba(242,201,76,0.18);
-      border: 1px solid rgba(242,201,76,0.32);
-      color:#5b4a12;
-      white-space:nowrap;
-    }
 
     .post-body{
       padding: 0 12px 12px;
@@ -415,7 +408,7 @@
       <div class="topbar" translate="no">
         <div style="min-width:220px;">
           <h2>Início</h2>
-          <div class="muted" id="subtitle">Atualizações do seu território e CRGR</div>
+          <div class="muted" id="subtitle">Feed de atualizações (todos os posts)</div>
         </div>
 
         <div class="search" aria-label="Pesquisar">
@@ -443,7 +436,6 @@
       getDoc,
       collection,
       query,
-      where,
       orderBy,
       limit,
       getDocs,
@@ -478,7 +470,6 @@
     const infoBox = document.getElementById("infoBox");
     const searchInput = document.getElementById("searchInput");
     const adminBtn = document.getElementById("adminBtn");
-    const subtitle = document.getElementById("subtitle");
 
     let sessionUser = null;
     let sessionProfile = null;
@@ -491,6 +482,7 @@
       if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
+
     function setAvatar(photoURL, fallback){
       avatarBox.innerHTML = "";
       if(photoURL){
@@ -502,7 +494,9 @@
         avatarBox.textContent = fallback;
       }
     }
+
     function safeStr(v){ return (v ?? "").toString(); }
+
     function fmtDate(ts){
       try{
         if(!ts) return "—";
@@ -541,62 +535,28 @@
       });
     }
 
-    // ===== Feed queries (global + crgr)
-    async function fetchFeedPostsForUser(profile){
-      const crgrIds = Array.isArray(profile.crgrIds) ? profile.crgrIds.filter(Boolean) : [];
-      subtitle.textContent = crgrIds.length
-        ? `Atualizações do(s) seu(s) CRGR: ${crgrIds.join(", ")}`
-        : "Atualizações globais (sem CRGR associado)";
-
-      const results = [];
-
-      // 1) global
-      const qGlobal = query(
-        collection(db, "posts"),
-        where("scope.type", "==", "global"),
-        orderBy("createdAt", "desc"),
-        limit(30)
-      );
-      const snapG = await getDocs(qGlobal);
-      snapG.docs.forEach(d => results.push({ id: d.id, ...d.data() }));
-
-      // 2) crgr
-      // OBS: array-contains-any limita 10 valores
-      if(crgrIds.length){
-        const slice = crgrIds.slice(0, 10);
-        const qCrgr = query(
-          collection(db, "posts"),
-          where("scope.type", "==", "crgr"),
-          where("scope.crgrIds", "array-contains-any", slice),
-          orderBy("createdAt", "desc"),
-          limit(50)
-        );
-        const snapC = await getDocs(qCrgr);
-        snapC.docs.forEach(d => results.push({ id: d.id, ...d.data() }));
+    // ✅ MVP: TODOS veem TODOS os posts (sem where, sem índice composto)
+    async function fetchAllPosts(){
+      // Tentativa 1: ordenado por createdAt (padrão)
+      try{
+        const qAll = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));
+        const snap = await getDocs(qAll);
+        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      }catch(err){
+        // fallback: sem orderBy (caso existam posts sem createdAt)
+        if(String(err?.message || "").includes("requires an index")){
+          throw err; // esse caso não deve acontecer aqui
+        }
+        const qFallback = query(collection(db, "posts"), limit(60));
+        const snap2 = await getDocs(qFallback);
+        return snap2.docs.map(d => ({ id: d.id, ...d.data() }));
       }
-
-      // remove duplicados e ordena por createdAt desc
-      const seen = new Set();
-      const merged = [];
-      for(const p of results){
-        if(seen.has(p.id)) continue;
-        seen.add(p.id);
-        merged.push(p);
-      }
-
-      merged.sort((a,b) => {
-        const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-        const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-        return bt - at;
-      });
-
-      return merged.slice(0, 60);
     }
 
-    // ===== Likes / Comments (MVP)
+    // Likes/Comments (MVP)
     async function getLikeCount(postId){
       const likesCol = collection(db, "posts", postId, "likes");
-      const snap = await getDocs(query(likesCol, limit(200))); // MVP
+      const snap = await getDocs(query(likesCol, limit(200)));
       return snap.size;
     }
 
@@ -620,8 +580,16 @@
 
     async function loadComments(postId){
       const colRef = collection(db, "posts", postId, "comments");
-      const snap = await getDocs(query(colRef, orderBy("createdAt", "desc"), limit(50)));
-      return snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // sem orderBy para evitar índice extra
+      const snap = await getDocs(query(colRef, limit(50)));
+      const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      // ordena no client por createdAt
+      arr.sort((a,b) => {
+        const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+        const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+        return bt - at;
+      });
+      return arr;
     }
 
     async function addComment(postId, user, profile, text){
@@ -633,15 +601,6 @@
         text,
         createdAt: serverTimestamp()
       });
-    }
-
-    function scopeBadge(post){
-      const type = post?.scope?.type || "global";
-      if(type === "crgr"){
-        const ids = Array.isArray(post.scope?.crgrIds) ? post.scope.crgrIds : [];
-        return `CRGR: ${ids.join(", ") || "—"}`;
-      }
-      return "Global";
     }
 
     function postAvatarEl(post){
@@ -665,7 +624,7 @@
 
       if(!list.length){
         infoBox.style.display = "block";
-        infoBox.textContent = "Ainda não há publicações para o seu CRGR. Aguarde conteúdos do administrador.";
+        infoBox.textContent = "Ainda não há publicações no feed.";
         return;
       }
 
@@ -673,7 +632,6 @@
         const card = document.createElement("article");
         card.className = "post";
 
-        // header
         const head = document.createElement("div");
         head.className = "post-head";
         head.appendChild(postAvatarEl(post));
@@ -685,19 +643,12 @@
           <span>${safeStr(post.authorRole || "—")} • ${fmtDate(post.createdAt)}</span>
         `;
 
-        const badge = document.createElement("div");
-        badge.className = "scope-badge";
-        badge.textContent = scopeBadge(post);
-
         head.appendChild(meta);
-        head.appendChild(badge);
 
-        // body
         const body = document.createElement("div");
         body.className = "post-body";
         body.textContent = safeStr(post.text || "");
 
-        // tags
         const tagsWrap = document.createElement("div");
         tagsWrap.className = "tags";
         const tags = Array.isArray(post.tags) ? post.tags : [];
@@ -708,7 +659,6 @@
           tagsWrap.appendChild(el);
         });
 
-        // actions
         const actions = document.createElement("div");
         actions.className = "post-actions";
 
@@ -717,20 +667,19 @@
         likeBtn.type = "button";
         likeBtn.textContent = "🤍 Curtir";
 
-        const likeCountEl = document.createElement("span");
-        likeCountEl.className = "muted";
-        likeCountEl.style.marginLeft = "auto";
-
         const commentsBtn = document.createElement("button");
         commentsBtn.className = "iconbtn";
         commentsBtn.type = "button";
         commentsBtn.textContent = "💬 Comentários";
 
+        const likeCountEl = document.createElement("span");
+        likeCountEl.className = "muted";
+        likeCountEl.style.marginLeft = "auto";
+
         actions.appendChild(likeBtn);
         actions.appendChild(commentsBtn);
         actions.appendChild(likeCountEl);
 
-        // comments box
         const cbox = document.createElement("div");
         cbox.className = "commentbox";
 
@@ -764,15 +713,15 @@
         cbox.appendChild(cRow);
         cbox.appendChild(cList);
 
-        // assemble
         card.appendChild(head);
         card.appendChild(body);
         if(tags.length) card.appendChild(tagsWrap);
         card.appendChild(actions);
         card.appendChild(cbox);
+
         feedEl.appendChild(card);
 
-        // initial like state
+        // likes initial
         const [count, liked] = await Promise.all([
           getLikeCount(post.id),
           hasUserLiked(post.id, sessionUser.uid)
@@ -783,8 +732,7 @@
         likeBtn.addEventListener("click", async () => {
           const nowLiked = await toggleLike(post.id, sessionUser.uid);
           likeBtn.textContent = nowLiked ? "❤️ Curtido" : "🤍 Curtir";
-          const newCount = await getLikeCount(post.id);
-          likeCountEl.textContent = `${newCount} curtida(s)`;
+          likeCountEl.textContent = `${await getLikeCount(post.id)} curtida(s)`;
         });
 
         commentsBtn.addEventListener("click", async () => {
@@ -809,16 +757,13 @@
           }
         });
 
-        cClose.addEventListener("click", () => {
-          cbox.classList.remove("show");
-        });
+        cClose.addEventListener("click", () => cbox.classList.remove("show"));
 
         cSend.addEventListener("click", async () => {
           const text = cInput.value.trim();
           if(!text) return;
           await addComment(post.id, sessionUser, sessionProfile, text);
           cInput.value = "";
-          // reload
           const comments = await loadComments(post.id);
           cList.innerHTML = comments.length ? "" : `<div class="muted">Nenhum comentário ainda.</div>`;
           comments.forEach(c => {
@@ -841,9 +786,7 @@
       return feedCache.filter(p => {
         const hay = [
           p.authorName, p.authorRole, p.text,
-          Array.isArray(p.tags) ? p.tags.join(" ") : "",
-          p.scope?.type,
-          Array.isArray(p.scope?.crgrIds) ? p.scope.crgrIds.join(" ") : ""
+          Array.isArray(p.tags) ? p.tags.join(" ") : ""
         ].join(" ").toLowerCase();
         return hay.includes(s);
       });
@@ -856,10 +799,39 @@
       }
       sessionUser = user;
 
-      // perfil do Firestore
+      // profile doc (cria se não existir)
       const uref = doc(db, "users", user.uid);
       const usnap = await getDoc(uref);
-      const profile = usnap.exists() ? usnap.data() : {};
+
+      let profile = {};
+      if(!usnap.exists()){
+        await setDoc(uref, {
+          uid: user.uid,
+          email: user.email ?? null,
+          name: user.displayName || (user.email ? user.email.split("@")[0] : "Usuário"),
+          role: "comunidade",
+          crgrIds: [],
+          orgId: null,
+          modules: { feed: true },
+          bio: "Mini bio: descreva sua atuação no território.",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        const again = await getDoc(uref);
+        profile = again.data();
+      }else{
+        profile = usnap.data();
+        // garante feed true por padrão
+        if(!profile.modules || profile.modules.feed !== true){
+          await setDoc(uref, {
+            modules: { ...(profile.modules || {}), feed: true },
+            updatedAt: serverTimestamp()
+          }, { merge:true });
+          const again2 = await getDoc(uref);
+          profile = again2.data();
+        }
+      }
+
       sessionProfile = profile;
 
       const name = profile.name || user.displayName || (user.email ? user.email.split("@")[0] : "Usuário");
@@ -883,12 +855,12 @@
       infoBox.textContent = "Carregando posts...";
 
       try{
-        feedCache = await fetchFeedPostsForUser(profile);
+        feedCache = await fetchAllPosts();
         await renderFeed(feedCache);
       }catch(err){
         console.error(err);
         infoBox.style.display = "block";
-        infoBox.textContent = "Erro ao carregar o feed. Verifique as Rules do Firestore e os índices.";
+        infoBox.textContent = "Erro ao carregar o feed. Verifique as Rules e/ou índices.";
       }
 
       searchInput.addEventListener("input", async () => {
