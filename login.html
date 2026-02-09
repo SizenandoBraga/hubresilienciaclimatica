@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Language" content="pt-BR">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Plataforma Hub hub-resiliencia-climatica • Login</title>
+  <title>Hub Resiliência Climática • Login</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,9 +159,7 @@
       box-shadow: 0 0 0 3px rgba(242,201,76,0.18);
     }
 
-    /* =========================
-       PARCEIROS (ATUALIZADO)
-    ========================= */
+    /* PARCEIROS */
     .partners{
       margin-top: 22px;
       border-radius: 18px;
@@ -242,7 +240,7 @@
     .partner-card[data-broken="true"] .partner-fallback{ display:flex; }
 
     .partners-foot{
-      margin-top: 30px;
+      margin-top: 12px;
       font-size: 12px;
       opacity: .9;
       line-height:1.4;
@@ -255,10 +253,7 @@
       .page{ grid-template-columns: 1fr; }
       .hero{ padding-bottom: 26px; }
       .panel{ padding-top: 22px; padding-bottom: 40px; }
-      .hero::before{
-        background-size: 280px;
-        opacity:0.12;
-      }
+      .hero::before{ background-size: 280px; opacity:0.12; }
       .partners-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .partner-card{ height: 84px; }
     }
@@ -266,8 +261,8 @@
       .partners-grid{ grid-template-columns: 1fr; }
       .partner-card{ height: 92px; }
     }
-    /* ========================= */
 
+    /* CARD / FORM */
     .panel{
       padding: 56px clamp(18px, 4vw, 56px);
       display:flex;
@@ -276,7 +271,7 @@
     }
 
     .card{
-      width:min(440px, 100%);
+      width:min(520px, 100%);
       border-radius: var(--radius);
       background: var(--white);
       box-shadow: var(--shadow);
@@ -290,15 +285,8 @@
       gap:12px;
       margin-bottom:14px;
     }
-    .card h2{
-      font-size: 20px;
-      margin-bottom:4px;
-    }
-    .card .subtitle{
-      font-size:13.5px;
-      color:#555;
-      line-height:1.4;
-    }
+    .card h2{ font-size: 20px; margin-bottom:4px; }
+    .card .subtitle{ font-size:13.5px; color:#555; line-height:1.4; }
 
     .badge{
       font-size:12px;
@@ -311,11 +299,25 @@
       font-weight:600;
     }
 
-    .form{
-      display:grid;
-      gap:12px;
-      margin-top:14px;
+    .tabs{ display:flex; gap:10px; margin: 10px 0 6px; }
+    .tab{
+      flex:1;
+      border-radius: 999px;
+      border: 1px solid #E3E7E6;
+      background:#fff;
+      padding:10px 12px;
+      font-weight:800;
+      cursor:pointer;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
     }
+    .tab:hover{ transform: translateY(-1px); box-shadow: 0 10px 18px rgba(0,0,0,0.06); }
+    .tab.active{ border-color: rgba(27,127,90,0.35); background: rgba(76,175,143,0.10); }
+
+    .form{ display:grid; gap:12px; margin-top:14px; }
+
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
+    @media (max-width: 520px){ .grid2{ grid-template-columns: 1fr; } }
+
     .field label{
       display:block;
       font-size:12.5px;
@@ -323,7 +325,7 @@
       color:#444;
       font-weight:600;
     }
-    .input{
+    .input, .select{
       width:100%;
       padding: 12px 12px;
       border-radius: 12px;
@@ -333,7 +335,7 @@
       font-size:14px;
       transition: all .2s ease;
     }
-    .input:focus{
+    .input:focus, .select:focus{
       border-color: rgba(27,127,90,0.55);
       box-shadow: 0 0 0 4px rgba(27,127,90,0.10);
     }
@@ -346,21 +348,10 @@
       margin-top:4px;
       font-size:13px;
     }
-    .checkbox{
-      display:flex;
-      align-items:center;
-      gap:8px;
-      color:#555;
-      user-select:none;
-    }
+    .checkbox{ display:flex; align-items:center; gap:8px; color:#555; user-select:none; }
     .checkbox input{ accent-color: var(--green-regen); }
 
-    .link{
-      color: var(--blue-deep);
-      text-decoration:none;
-      font-weight:600;
-      cursor:pointer;
-    }
+    .link{ color: var(--blue-deep); text-decoration:none; font-weight:600; cursor:pointer; }
     .link:hover{ text-decoration:underline; }
 
     .btn{
@@ -390,12 +381,7 @@
       color:#777;
       font-size:12px;
     }
-    .divider::before, .divider::after{
-      content:"";
-      height:1px;
-      background:#E8ECEB;
-      flex:1;
-    }
+    .divider::before, .divider::after{ content:""; height:1px; background:#E8ECEB; flex:1; }
 
     .btn-secondary{
       background: #fff;
@@ -407,12 +393,7 @@
       box-shadow: 0 10px 20px rgba(0,0,0,0.06);
     }
 
-    .footer-note{
-      margin-top:12px;
-      font-size:12px;
-      color:#666;
-      line-height:1.5;
-    }
+    .footer-note{ margin-top:12px; font-size:12px; color:#666; line-height:1.5; }
 
     .msg{
       display:none;
@@ -432,6 +413,35 @@
       background: rgba(242,201,76,0.18);
       border: 1px solid rgba(242,201,76,0.34);
       color: #5b4a12;
+    }
+
+    .hint{ font-size:12px; opacity:.75; line-height:1.35; margin-top:6px; }
+
+    .loadingbar{
+      height:4px;
+      border-radius:999px;
+      background: rgba(27,127,90,0.12);
+      overflow:hidden;
+      margin-top:12px;
+      display:none;
+    }
+    .loadingbar.show{ display:block; }
+    .loadingbar > div{
+      height:100%;
+      width:35%;
+      border-radius:999px;
+      background: linear-gradient(90deg, rgba(27,127,90,.35), rgba(76,175,143,.95));
+      animation: move 1s infinite ease-in-out;
+    }
+    @keyframes move{
+      0%{ transform: translateX(-120%); }
+      100%{ transform: translateX(340%); }
+    }
+
+    .authed-actions{
+      display:grid;
+      gap:10px;
+      margin-top:12px;
     }
   </style>
 </head>
@@ -465,7 +475,6 @@
           <div class="pill"><span class="dot"></span> Regeneração ambiental</div>
         </div>
 
-        <!-- ✅ PARCEIROS -->
         <div class="partners" aria-label="Empresas participantes" translate="no">
           <div class="partners-head">
             <div>
@@ -481,35 +490,39 @@
             Quer inserir sua organização? Fale com a equipe de governança para inclusão de logo e informações.
           </div>
         </div>
-        <!-- /PARCEIROS -->
-
       </div>
     </section>
 
     <section class="panel">
-      <div class="card" role="region" aria-label="Login" translate="no">
+      <div class="card" role="region" aria-label="Autenticação" translate="no">
         <header>
           <div>
-            <h2>Entrar</h2>
-            <div class="subtitle">Acesse sua conta para ver seu território, CRGR e atualizações.</div>
+            <h2 id="cardTitle">Entrar</h2>
+            <div class="subtitle" id="cardSubtitle">Acesse sua conta para ver seu território, CRGR e atualizações.</div>
           </div>
           <div class="badge">Acesso seguro</div>
         </header>
 
-        <form class="form" id="loginForm">
+        <div class="tabs" role="tablist" aria-label="Abas">
+          <button class="tab active" id="tabLogin" type="button" role="tab" aria-selected="true">Entrar</button>
+          <button class="tab" id="tabSignup" type="button" role="tab" aria-selected="false">Criar conta</button>
+        </div>
+
+        <!-- LOGIN -->
+        <form class="form" id="loginForm" autocomplete="on">
           <div class="field">
-            <label for="email">E-mail</label>
-            <input class="input" id="email" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
+            <label for="loginEmail">E-mail</label>
+            <input class="input" id="loginEmail" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
           </div>
 
           <div class="field">
-            <label for="password">Senha</label>
-            <input class="input" id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+            <label for="loginPassword">Senha</label>
+            <input class="input" id="loginPassword" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
           </div>
 
           <div class="row">
             <label class="checkbox">
-              <input type="checkbox" name="remember" />
+              <input type="checkbox" id="rememberMe" />
               Manter conectado
             </label>
             <a class="link" href="#" id="resetPwdLink">Esqueci minha senha</a>
@@ -517,17 +530,74 @@
 
           <button class="btn btn-primary" id="loginBtn" type="submit">Entrar</button>
 
+          <div class="loadingbar" id="loadingbar"><div></div></div>
           <div id="msgBox" class="msg"></div>
 
           <div class="divider">ou</div>
-
-          <button class="btn btn-secondary" id="registerBtn" type="button">
-            Criar conta
-          </button>
+          <button class="btn btn-secondary" id="goSignupBtn" type="button">Criar conta</button>
 
           <div class="footer-note">
             Ao entrar, você concorda com as políticas do projeto e boas práticas de uso comunitário.
           </div>
+
+          <!-- onde vão aparecer os botões "Continuar" e "Sair" quando já estiver logado -->
+          <div class="authed-actions" id="authedActions" style="display:none;"></div>
+        </form>
+
+        <!-- SIGNUP -->
+        <form class="form" id="signupForm" style="display:none;" autocomplete="on">
+          <div class="field">
+            <label for="signupName">Nome</label>
+            <input class="input" id="signupName" type="text" placeholder="Seu nome" autocomplete="name" required>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label for="signupEmail">E-mail</label>
+              <input class="input" id="signupEmail" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
+            </div>
+
+            <div class="field">
+              <label for="signupRole">Perfil</label>
+              <select class="select" id="signupRole" required>
+                <option value="comunidade">Comunidade</option>
+                <option value="lideranca">Liderança comunitária</option>
+                <option value="tecnico">Técnico</option>
+                <option value="gestor">Gestor</option>
+              </select>
+              <div class="hint">Admins devem ser promovidos pela gestão (não via cadastro público).</div>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label for="signupTerritory">Território / CRC (opcional)</label>
+              <input class="input" id="signupTerritory" type="text" placeholder="Ex.: CRC Centro / Bairro X">
+            </div>
+            <div class="field">
+              <label for="signupCrgr">CRGR / Unidade (opcional)</label>
+              <input class="input" id="signupCrgr" type="text" placeholder="Ex.: CRGR 01">
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label for="signupPassword">Senha</label>
+              <input class="input" id="signupPassword" type="password" placeholder="mínimo 6 caracteres" autocomplete="new-password" required>
+            </div>
+            <div class="field">
+              <label for="signupPassword2">Confirmar senha</label>
+              <input class="input" id="signupPassword2" type="password" placeholder="repita a senha" autocomplete="new-password" required>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="signupBtn" type="submit">Criar conta</button>
+
+          <div class="loadingbar" id="loadingbar2"><div></div></div>
+          <div id="msgBox2" class="msg"></div>
+
+          <div class="divider">ou</div>
+          <button class="btn btn-secondary" id="goLoginBtn" type="button">Já tenho conta</button>
         </form>
       </div>
     </section>
@@ -539,7 +609,13 @@
       getAuth,
       signInWithEmailAndPassword,
       createUserWithEmailAndPassword,
-      sendPasswordResetEmail
+      sendPasswordResetEmail,
+      onAuthStateChanged,
+      setPersistence,
+      browserLocalPersistence,
+      browserSessionPersistence,
+      updateProfile,
+      signOut
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
     import {
       getFirestore,
@@ -558,18 +634,43 @@
       appId: "1:485694309026:web:771ed497d49861fa444dfb"
     };
 
+    const HOME_URL = "home.html";
+
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
     const db = getFirestore(app);
 
+    // ===== UI refs =====
+    const tabLogin = document.getElementById("tabLogin");
+    const tabSignup = document.getElementById("tabSignup");
+    const loginForm = document.getElementById("loginForm");
+    const signupForm = document.getElementById("signupForm");
+    const cardTitle = document.getElementById("cardTitle");
+    const cardSubtitle = document.getElementById("cardSubtitle");
+    const goSignupBtn = document.getElementById("goSignupBtn");
+    const goLoginBtn = document.getElementById("goLoginBtn");
     const msgBox = document.getElementById("msgBox");
+    const msgBox2 = document.getElementById("msgBox2");
+    const loadingbar = document.getElementById("loadingbar");
+    const loadingbar2 = document.getElementById("loadingbar2");
     const loginBtn = document.getElementById("loginBtn");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
+    const signupBtn = document.getElementById("signupBtn");
+    const rememberMe = document.getElementById("rememberMe");
+    const resetPwdLink = document.getElementById("resetPwdLink");
+    const authedActions = document.getElementById("authedActions");
 
-    // =========================
-    // ✅ PARCEIROS (ATUALIZADO)
-    // =========================
+    const loginEmail = document.getElementById("loginEmail");
+    const loginPassword = document.getElementById("loginPassword");
+
+    const signupName = document.getElementById("signupName");
+    const signupEmail = document.getElementById("signupEmail");
+    const signupRole = document.getElementById("signupRole");
+    const signupTerritory = document.getElementById("signupTerritory");
+    const signupCrgr = document.getElementById("signupCrgr");
+    const signupPassword = document.getElementById("signupPassword");
+    const signupPassword2 = document.getElementById("signupPassword2");
+
+    // ===== Parceiros =====
     const PARTNERS = [
       { name: "Mãos Verdes", logo: "img/empresas/maos verdes.png" },
       { name: "Helice Consultoria", logo: "img/empresas/helice_consultoria_ufrgs_logo.jpg" },
@@ -583,7 +684,6 @@
       if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
       return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
     }
-
     function renderPartners(){
       const grid = document.getElementById("partnersGrid");
       if(!grid) return;
@@ -602,74 +702,142 @@
       });
     }
     renderPartners();
-    // =========================
 
-    function setLoading(isLoading){
-      loginBtn.disabled = isLoading;
-      loginBtn.style.opacity = isLoading ? "0.85" : "1";
-      loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
+    // ===== Helpers =====
+    function showMsg(el, type, text){
+      el.className = "msg show " + (type === "error" ? "error" : "success");
+      el.textContent = text;
     }
-
-    function showMsg(type, text){
-      msgBox.className = "msg show " + (type === "error" ? "error" : "success");
-      msgBox.textContent = text;
+    function hideMsg(el){
+      el.className = "msg";
+      el.textContent = "";
     }
-
-    function hideMsg(){
-      msgBox.className = "msg";
-      msgBox.textContent = "";
+    function setLoading(which, isLoading){
+      if(which === "login"){
+        loginBtn.disabled = isLoading;
+        loginBtn.style.opacity = isLoading ? "0.86" : "1";
+        loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
+        loadingbar.classList.toggle("show", isLoading);
+      } else {
+        signupBtn.disabled = isLoading;
+        signupBtn.style.opacity = isLoading ? "0.86" : "1";
+        signupBtn.textContent = isLoading ? "Criando..." : "Criar conta";
+        loadingbar2.classList.toggle("show", isLoading);
+      }
     }
-
     function niceError(err){
       const code = err?.code || "";
       const msg = err?.message || "";
       return `${code}${msg ? " • " + msg : ""}`.trim();
     }
 
-    async function ensureUserProfile(user){
+    function goTab(mode){
+      const isLogin = mode === "login";
+      tabLogin.classList.toggle("active", isLogin);
+      tabSignup.classList.toggle("active", !isLogin);
+      tabLogin.setAttribute("aria-selected", String(isLogin));
+      tabSignup.setAttribute("aria-selected", String(!isLogin));
+      loginForm.style.display = isLogin ? "" : "none";
+      signupForm.style.display = isLogin ? "none" : "";
+      cardTitle.textContent = isLogin ? "Entrar" : "Criar conta";
+      cardSubtitle.textContent = isLogin
+        ? "Acesse sua conta para ver seu território, CRGR e atualizações."
+        : "Crie sua conta e comece a participar do Hub.";
+      hideMsg(msgBox); hideMsg(msgBox2);
+    }
+
+    tabLogin.addEventListener("click", () => goTab("login"));
+    tabSignup.addEventListener("click", () => goTab("signup"));
+    goSignupBtn.addEventListener("click", () => goTab("signup"));
+    goLoginBtn.addEventListener("click", () => goTab("login"));
+
+    async function redirectAfterLogin(){
+      window.location.href = HOME_URL;
+    }
+
+    async function upsertUserProfile(user, payload){
       const ref = doc(db, "users", user.uid);
       const snap = await getDoc(ref);
 
-      if(!snap.exists()){
-        const email = user.email ?? null;
-        const defaultName = user.displayName || (email ? email.split("@")[0] : "Usuário");
+      const base = {
+        uid: user.uid,
+        email: user.email ?? null,
+        name: user.displayName || payload?.name || null,
+        role: payload?.role || "comunidade",
+        territoryLabel: payload?.territoryLabel || null,
+        crgrLabel: payload?.crgrLabel || null,
+        crgrIds: Array.isArray(payload?.crgrIds) ? payload.crgrIds : [],
+        orgId: payload?.orgId ?? null,
+        modules: payload?.modules ?? { feed: true },
+        bio: payload?.bio ?? "Mini bio: descreva sua atuação no território.",
+        updatedAt: serverTimestamp()
+      };
 
-        await setDoc(ref, {
-          uid: user.uid,
-          email,
-          name: defaultName,
-          role: "comunidade",
-          crgrIds: [],
-          orgId: null,
-          modules: { feed: true },
-          bio: "Mini bio: descreva sua atuação no território.",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        }, { merge: true });
+      if(!snap.exists()){
+        await setDoc(ref, { ...base, createdAt: serverTimestamp() }, { merge: true });
+      } else {
+        await setDoc(ref, base, { merge: true });
       }
     }
 
-    async function redirectAfterLogin(){
-      window.location.href = "home.html";
-    }
+    // ========= OPÇÃO A: se já estiver logado, NÃO redireciona.
+    // Mostra "Continuar" + "Sair desta conta".
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        authedActions.style.display = "none";
+        return;
+      }
 
-    // LOGIN
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      // força ficar na aba de login para ver a mensagem
+      goTab("login");
+
+      showMsg(msgBox, "success", `Você já está conectado como ${user.email}.`);
+
+      authedActions.innerHTML = "";
+      authedActions.style.display = "grid";
+
+      const continueBtn = document.createElement("button");
+      continueBtn.type = "button";
+      continueBtn.className = "btn btn-primary";
+      continueBtn.textContent = "Continuar";
+      continueBtn.addEventListener("click", () => redirectAfterLogin());
+
+      const logoutBtn = document.createElement("button");
+      logoutBtn.type = "button";
+      logoutBtn.className = "btn btn-secondary";
+      logoutBtn.textContent = "Sair desta conta";
+      logoutBtn.addEventListener("click", async () => {
+        try{
+          await signOut(auth);
+          window.location.reload();
+        }catch(e){
+          showMsg(msgBox, "error", "Não consegui sair. Tente novamente.");
+        }
+      });
+
+      authedActions.appendChild(continueBtn);
+      authedActions.appendChild(logoutBtn);
+    });
+
+    // ===== LOGIN =====
+    loginForm.addEventListener("submit", async (e) => {
       e.preventDefault();
-      hideMsg();
-      setLoading(true);
+      hideMsg(msgBox);
+      setLoading("login", true);
 
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
+      const email = loginEmail.value.trim();
+      const password = loginPassword.value;
 
       try{
+        await setPersistence(auth, rememberMe.checked ? browserLocalPersistence : browserSessionPersistence);
+
         const cred = await signInWithEmailAndPassword(auth, email, password);
 
         try{
-          await ensureUserProfile(cred.user);
+          await upsertUserProfile(cred.user, {});
         }catch(profileErr){
           console.warn("PROFILE ERROR (login continues) =>", profileErr);
-          showMsg("error", "Login OK, mas não consegui ler/criar seu perfil no Firestore (rules). Mesmo assim você vai entrar.");
+          showMsg(msgBox, "error", "Login OK, mas não consegui ler/criar seu perfil no Firestore (rules). Mesmo assim você vai entrar.");
         }
 
         await redirectAfterLogin();
@@ -689,36 +857,52 @@
         else if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
         else text = "Erro no login: " + niceError(err);
 
-        showMsg("error", text);
+        showMsg(msgBox, "error", text);
       }finally{
-        setLoading(false);
+        setLoading("login", false);
       }
     });
 
-    // CADASTRO
-    document.getElementById("registerBtn").addEventListener("click", async () => {
-      hideMsg();
-      setLoading(true);
+    // ===== SIGNUP =====
+    signupForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      hideMsg(msgBox2);
 
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
+      const name = signupName.value.trim();
+      const email = signupEmail.value.trim();
+      const role = signupRole.value;
+      const territoryLabel = signupTerritory.value.trim() || null;
+      const crgrLabel = signupCrgr.value.trim() || null;
+      const pass1 = signupPassword.value;
+      const pass2 = signupPassword2.value;
 
-      if(!email || !password){
-        setLoading(false);
-        return showMsg("error", "Preencha e-mail e senha para criar a conta.");
-      }
+      if(pass1.length < 6) return showMsg(msgBox2, "error", "Senha fraca. Use pelo menos 6 caracteres.");
+      if(pass1 !== pass2) return showMsg(msgBox2, "error", "As senhas não conferem.");
+
+      setLoading("signup", true);
 
       try{
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
+        await setPersistence(auth, browserLocalPersistence);
+
+        const cred = await createUserWithEmailAndPassword(auth, email, pass1);
+
+        try{ await updateProfile(cred.user, { displayName: name }); } catch {}
 
         try{
-          await ensureUserProfile(cred.user);
+          await upsertUserProfile(cred.user, {
+            name,
+            role,
+            territoryLabel,
+            crgrLabel,
+            crgrIds: [],
+            modules: { feed: true }
+          });
         }catch(profileErr){
           console.warn("PROFILE ERROR (signup continues) =>", profileErr);
-          showMsg("error", "Conta criada, mas sem permissão para salvar perfil no Firestore (rules). Você ainda vai entrar.");
+          showMsg(msgBox2, "error", "Conta criada, mas sem permissão para salvar perfil no Firestore (rules). Você ainda vai entrar.");
         }
 
-        showMsg("success", "Conta criada! Redirecionando...");
+        showMsg(msgBox2, "success", "Conta criada! Redirecionando...");
         await redirectAfterLogin();
       }catch(err){
         console.error("SIGNUP ERROR =>", err);
@@ -731,30 +915,30 @@
         else if(code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
         else text = "Erro no cadastro: " + niceError(err);
 
-        showMsg("error", text);
+        showMsg(msgBox2, "error", text);
       }finally{
-        setLoading(false);
+        setLoading("signup", false);
       }
     });
 
-    // RESET SENHA
-    document.getElementById("resetPwdLink").addEventListener("click", async (e) => {
+    // ===== RESET SENHA =====
+    resetPwdLink.addEventListener("click", async (e) => {
       e.preventDefault();
-      hideMsg();
+      hideMsg(msgBox);
 
-      const email = emailInput.value.trim();
-      if(!email) return showMsg("error", "Digite seu e-mail para recuperar a senha.");
+      const email = loginEmail.value.trim();
+      if(!email) return showMsg(msgBox, "error", "Digite seu e-mail para recuperar a senha.");
 
       try{
         await sendPasswordResetEmail(auth, email);
-        showMsg("success", "Enviamos um link de recuperação para seu e-mail.");
+        showMsg(msgBox, "success", "Enviamos um link de recuperação para seu e-mail.");
       }catch(err){
         console.error("RESET ERROR =>", err);
         const code = err?.code || "";
         let text = "Não foi possível enviar o e-mail de recuperação.";
         if(code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
         if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
-        showMsg("error", text);
+        showMsg(msgBox, "error", text);
       }
     });
   </script>
