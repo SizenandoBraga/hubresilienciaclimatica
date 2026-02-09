@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Language" content="pt-BR">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hub Resiliência Climática • Governança</title>
+  <title>Hub Resiliência Climática • Governança (Admin)</title>
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -35,17 +35,22 @@
       background:var(--bg);
       color:var(--graphite);
     }
-    h1,h2,h3{ font-family:'Poppins', sans-serif; margin:0; }
+    h1,h2,h3{
+      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      margin:0;
+    }
     a{ color:inherit; text-decoration:none; }
     button, input, textarea, select { font-family:inherit; }
+    .muted{ color:#666; font-size:13px; line-height:1.5; }
 
+    /* Layout */
     .app{
       min-height:100vh;
       display:grid;
-      grid-template-columns: 300px 1fr;
+      grid-template-columns: 310px 1fr;
       gap:16px;
       padding:16px;
-      max-width:1300px;
+      max-width:1280px;
       margin:0 auto;
     }
 
@@ -54,13 +59,26 @@
       position:sticky;
       top:16px;
       height: calc(100vh - 32px);
-      border-radius:18px;
+      border-radius: var(--radius);
       background: linear-gradient(180deg, rgba(13,59,102,0.98), rgba(27,127,90,0.98));
       box-shadow: var(--shadow);
       color:#fff;
       padding:14px;
       overflow:hidden;
+      isolation:isolate;
     }
+    .sidebar::before{
+      content:"";
+      position:absolute;
+      inset:-120px -120px auto auto;
+      width:380px;
+      height:380px;
+      border-radius:999px;
+      background: radial-gradient(circle at 30% 30%, rgba(242,201,76,0.22), rgba(255,255,255,0) 62%);
+      pointer-events:none;
+      z-index:0;
+    }
+    .sidebar > *{ position:relative; z-index:1; }
 
     .sidebar-title{
       padding:10px 10px 12px;
@@ -78,10 +96,10 @@
       border-radius:16px;
       background: rgba(255,255,255,0.12);
       border: 1px solid rgba(255,255,255,0.14);
+      margin-bottom:10px;
     }
     .avatar{
-      width:50px;
-      height:50px;
+      width:54px; height:54px;
       border-radius:999px;
       background: rgba(255,255,255,0.18);
       border: 1px solid rgba(255,255,255,0.22);
@@ -95,9 +113,21 @@
       flex:0 0 auto;
     }
     .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
     .pmeta{ min-width:0; display:flex; flex-direction:column; gap:2px; line-height:1.1; }
-    .pmeta strong{ font-size:13.5px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .pmeta strong{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .pmeta .sub{ font-size:12px; opacity:.92; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+    .bio{
+      margin-top:8px;
+      padding:10px 12px;
+      border-radius:14px;
+      background: rgba(255,255,255,0.10);
+      border: 1px dashed rgba(255,255,255,0.20);
+      font-size:12.5px;
+      line-height:1.45;
+      opacity:.95;
+    }
 
     .nav{
       margin-top:12px;
@@ -117,12 +147,14 @@
       display:flex;
       align-items:center;
       gap:10px;
+      user-select:none;
     }
     .nav a:hover{ background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.12); }
     .nav a.active{ background: rgba(242,201,76,0.14); border-color: rgba(242,201,76,0.28); }
 
     .dot{
-      width:8px; height:8px; border-radius:999px;
+      width:8px; height:8px;
+      border-radius:999px;
       background: var(--yellow);
       box-shadow: 0 0 0 3px rgba(242,201,76,0.16);
       flex:0 0 auto;
@@ -139,9 +171,9 @@
       flex-direction:column;
       gap:8px;
       font-size:12px;
-      opacity:.9;
+      opacity:.92;
     }
-    .btnGhost{
+    .btn-ghost{
       width:100%;
       border:none;
       cursor:pointer;
@@ -156,7 +188,7 @@
       gap:10px;
       text-align:left;
     }
-    .btnGhost:hover{ background: rgba(255,255,255,0.14); }
+    .btn-ghost:hover{ background: rgba(255,255,255,0.14); }
 
     /* Content */
     .content{
@@ -166,23 +198,23 @@
       min-width:0;
     }
 
-    /* TOPBAR (Governança) */
     .topbar{
       position:sticky;
       top:16px;
-      z-index:5;
-      background: rgba(245,247,246,0.82);
+      z-index:10;
+      background: rgba(245,247,246,0.86);
       backdrop-filter: blur(10px);
       border:1px solid var(--border);
-      border-radius:18px;
+      border-radius: var(--radius);
       padding:12px;
       display:flex;
       align-items:center;
       justify-content:space-between;
       gap:12px;
     }
+    .top-left{ min-width:240px; }
     .topbar h2{ font-size:16px; }
-    .muted{ color:#666; font-size:13px; line-height:1.5; }
+    .top-sub{ margin-top:2px; }
 
     .search{
       flex:1;
@@ -193,9 +225,15 @@
       border:1px solid var(--border);
       border-radius:999px;
       padding:10px 12px;
-      min-width: 240px;
+      min-width:180px;
     }
-    .search input{ border:none; outline:none; width:100%; font-size:14px; }
+    .search input{
+      border:none;
+      outline:none;
+      width:100%;
+      font-size:14px;
+      background:transparent;
+    }
 
     .pillbtn{
       padding:10px 12px;
@@ -207,98 +245,75 @@
       font-size:12px;
       color:var(--blue-deep);
       cursor:pointer;
-      white-space:nowrap;
-    }
-
-    /* Sections */
-    .section{
-      display:none;
-      gap:12px;
-    }
-    .section.active{ display:flex; flex-direction:column; }
-
-    .card{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-      overflow:hidden;
-    }
-    .cardHead{
-      padding:14px;
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      border-bottom:1px solid var(--border);
-    }
-    .cardHead h3{ font-size:14px; }
-    .cardBody{ padding:14px; }
-
-    .kpis{
-      display:grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap:12px;
-    }
-    .kpi{
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:14px;
-      background:#fff;
-    }
-    .kpi .label{ font-size:12px; color:#666; }
-    .kpi .value{
-      font-family:'Poppins';
-      font-size:22px;
-      margin-top:6px;
-      letter-spacing:-0.02em;
-    }
-    .kpi .hint{ font-size:12px; color:#666; margin-top:6px; }
-
-    .alertBox{
-      margin-top:12px;
-      border:1px solid rgba(242,201,76,0.35);
-      background: rgba(242,201,76,0.16);
-      border-radius:18px;
-      padding:12px 14px;
-      font-size:13px;
-      line-height:1.5;
-      color:#5b4a12;
-    }
-
-    .grid2{
-      display:grid;
-      grid-template-columns: 1fr 1fr;
-      gap:12px;
-    }
-
-    .table{
-      width:100%;
-      border-collapse:separate;
-      border-spacing:0;
-      overflow:hidden;
-      border:1px solid var(--border);
-      border-radius:16px;
-    }
-    .table th, .table td{
-      padding:10px 12px;
-      font-size:13px;
-      border-bottom:1px solid var(--border);
-      vertical-align:top;
-    }
-    .table th{
-      text-align:left;
-      font-family:'Poppins';
-      font-size:12.5px;
-      background: rgba(245,247,246,0.75);
-      color:#2e2e2e;
-    }
-    .table tr:last-child td{ border-bottom:none; }
-
-    .badge{
       display:inline-flex;
       align-items:center;
       gap:8px;
+      white-space:nowrap;
+    }
+    .pillbtn:hover{
+      box-shadow: 0 10px 20px rgba(0,0,0,0.06);
+      transform: translateY(-1px);
+    }
+    .pillbtn:active{ transform: translateY(0); opacity:.92; }
+    .pillbtn.primary{
+      color:#fff;
+      border-color: rgba(27,127,90,0.22);
+      background: linear-gradient(135deg, var(--green-light), var(--green-regen));
+      box-shadow: 0 12px 24px rgba(27,127,90,0.18);
+    }
+
+    .panel{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      padding:14px;
+      min-width:0;
+    }
+
+    .grid{
+      display:grid;
+      gap:12px;
+    }
+    .grid.cols-4{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .grid.cols-2{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.cols-3{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+
+    .kpi{
+      border:1px solid var(--border);
+      border-radius: 16px;
+      background: linear-gradient(180deg, #fff, #fbfcfb);
+      padding:14px;
+      display:flex;
+      flex-direction:column;
+      gap:6px;
+      min-height:96px;
+    }
+    .kpi strong{
+      font-family:'Poppins';
+      font-size:13px;
+      color:#0d3b66;
+    }
+    .kpi .num{
+      font-family:'Poppins';
+      font-size:28px;
+      letter-spacing:-0.02em;
+    }
+    .kpi .hint{
+      font-size:12.5px;
+      color:#666;
+      margin-top:auto;
+    }
+
+    .section-title{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .section-title h3{ font-size:14px; }
+    .badge{
       font-size:12px;
       padding:8px 10px;
       border-radius:999px;
@@ -306,53 +321,210 @@
       color: var(--green-regen);
       border: 1px solid rgba(76,175,143,0.25);
       white-space:nowrap;
+      font-weight:700;
+    }
+
+    /* Tabs */
+    .tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-bottom:10px;
+    }
+    .tab{
+      border:1px solid var(--border);
+      background:#fff;
+      border-radius:999px;
+      padding:8px 10px;
       font-weight:900;
       font-family:'Poppins';
+      font-size:12px;
+      color:#0d3b66;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+    }
+    .tab.active{
+      background: rgba(13,59,102,0.08);
+      border-color: rgba(13,59,102,0.18);
+    }
+
+    /* Lists / rows */
+    .list{
+      display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+    .rowcard{
+      border:1px solid var(--border);
+      border-radius:16px;
+      padding:12px;
+      display:flex;
+      gap:12px;
+      align-items:flex-start;
+      background:#fff;
+      min-width:0;
+    }
+    .mini-avatar{
+      width:44px; height:44px;
+      border-radius:999px;
+      flex:0 0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-family:'Poppins';
+      font-weight:900;
+      color:#0d3b66;
+      background: linear-gradient(135deg, rgba(76,175,143,0.20), rgba(27,127,90,0.20));
+      border:1px solid rgba(27,127,90,0.18);
+      overflow:hidden;
+    }
+    .mini-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
+
+    .rowmain{ flex:1; min-width:0; }
+    .rowmain strong{
+      display:block;
+      font-family:'Poppins';
+      font-size:13.5px;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .rowmain .meta{
+      margin-top:4px;
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      color:#666;
+      font-size:12.5px;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:7px 10px;
+      border-radius:999px;
+      border:1px solid var(--border);
+      background:#fff;
+      font-size:12px;
+      font-weight:800;
+      color:#0d3b66;
+      max-width: 100%;
+    }
+    .chip span{
+      opacity:.9;
+      font-weight:700;
+      color:#2e2e2e;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+      max-width: 220px;
+    }
+
+    .controls{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+      align-items:flex-end;
+      flex:0 0 auto;
+    }
+    .ctrl-row{
+      display:flex;
+      gap:8px;
+      align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+    .select, .input{
+      border:1px solid var(--border);
+      border-radius:12px;
+      padding:10px 10px;
+      background:#fff;
+      font-size:13px;
+      outline:none;
+      min-width: 160px;
+    }
+    .input{ min-width: 220px; }
+    .select:focus, .input:focus{
+      border-color: rgba(27,127,90,0.55);
+      box-shadow: 0 0 0 4px rgba(27,127,90,0.10);
+    }
+
+    /* Forms */
+    .formgrid{
+      display:grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap:10px;
+    }
+    .field label{
+      display:block;
+      font-size:12.5px;
+      font-weight:800;
+      color:#444;
+      margin: 0 0 6px;
+    }
+    .field small{
+      display:block;
+      margin-top:6px;
+      font-size:12px;
+      color:#666;
+      line-height:1.35;
+    }
+    textarea.input{ min-height: 96px; resize: vertical; }
+
+    .msg{
+      display:none;
+      padding:10px 12px;
+      border-radius:14px;
+      font-size:13px;
+      line-height:1.35;
+      margin-top:10px;
+      border:1px solid var(--border);
+    }
+    .msg.show{ display:block; }
+    .msg.success{
+      background: rgba(76,175,143,0.14);
+      border-color: rgba(76,175,143,0.28);
+      color:#135a41;
+    }
+    .msg.error{
+      background: rgba(242,201,76,0.18);
+      border-color: rgba(242,201,76,0.34);
+      color:#5b4a12;
     }
 
     .empty{
-      padding:16px;
+      padding:14px;
       border:1px dashed rgba(13,59,102,0.25);
-      border-radius:18px;
+      border-radius:16px;
       background:#fff;
       color:#4a4a4a;
       font-size:13px;
       line-height:1.5;
     }
 
-    .rowActions{
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-    }
-
-    .danger{
-      background: rgba(208, 62, 62, 0.08);
-      border-color: rgba(208, 62, 62, 0.18);
-      color:#8a1f1f;
-    }
-
-    @media (max-width: 1100px){
-      .kpis{ grid-template-columns: repeat(2, 1fr); }
-      .grid2{ grid-template-columns: 1fr; }
+    /* Responsive */
+    @media (max-width: 1050px){
+      .grid.cols-4{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
     }
     @media (max-width: 920px){
       .app{ grid-template-columns: 1fr; }
       .sidebar{ position:relative; height:auto; }
       .sidebar-bottom{ position:relative; left:0; right:0; bottom:0; margin-top:12px; }
-      .topbar{ top:12px; }
-      .kpis{ grid-template-columns: 1fr; }
+      .formgrid{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <!-- MENU LATERAL – GOVERNANÇA -->
+    <!-- Sidebar -->
     <aside class="sidebar">
       <div class="sidebar-title" translate="no">
         <strong>Governança</strong>
-        <span>Hub Resiliência Climática</span>
+        <span>Administração do Hub</span>
       </div>
 
       <div class="profile" aria-label="Perfil do administrador" translate="no">
@@ -364,220 +536,287 @@
         </div>
       </div>
 
-      <nav class="nav" id="navMenu" aria-label="Menu lateral" translate="no">
-        <a class="active" data-page="dashboard" href="#"><span class="dot"></span> Painel geral</a>
-        <a data-page="users" href="#"><span class="dot"></span> Gestão de Usuários</a>
-        <a data-page="feed" href="#"><span class="dot"></span> Feed (Posts)</a>
-        <a data-page="territorios" href="#"><span class="dot"></span> Gestão de Territórios / CRGR</a>
-        <a data-page="planos" href="#"><span class="dot"></span> Gestão de Planos de ação</a>
-        <a data-page="conteudos" href="#"><span class="dot"></span> Gestão de Conteúdos</a>
+      <div class="bio" id="adminBio" translate="no">
+        Carregando...
+      </div>
+
+      <nav class="nav" id="navMenu" aria-label="Menu Governança" translate="no">
+        <a data-view="dashboard" class="active"><span class="dot"></span> Painel geral</a>
+        <a data-view="users"><span class="dot"></span> Gestão de Usuários</a>
+        <a data-view="posts"><span class="dot"></span> Feed (Posts)</a>
+        <a data-view="crgr"><span class="dot"></span> Gestão de Territórios / CRGR</a>
+        <a data-view="plans"><span class="dot"></span> Gestão de Planos de ação</a>
+        <a data-view="contents"><span class="dot"></span> Gestão de Conteúdos</a>
       </nav>
 
       <div class="sidebar-bottom">
-        <button id="backHomeBtn" class="btnGhost" translate="no"><span class="dot"></span> Voltar para Home</button>
-        <button id="logoutBtn" class="btnGhost" translate="no"><span class="dot"></span> Sair</button>
+        <button id="goHomeBtn" class="btn-ghost" translate="no"><span class="dot"></span> Voltar para Home</button>
+        <button id="logoutBtn" class="btn-ghost" translate="no"><span class="dot"></span> Sair</button>
         <div translate="no">Plataforma Regenera • v0.1</div>
       </div>
     </aside>
 
-    <!-- ÁREA LOGADA GOVERNANÇA -->
+    <!-- Content -->
     <main class="content">
-      <!-- TOPBAR -->
+      <!-- Topbar -->
       <div class="topbar" translate="no">
-        <div style="min-width:240px;">
-          <h2 id="pageTitle">Painel geral</h2>
-          <div class="muted" id="pageSubtitle">Visão geral do Hub</div>
+        <div class="top-left">
+          <h2 id="viewTitle">Painel geral</h2>
+          <div class="muted top-sub" id="viewSubtitle">Visão geral do Hub + acompanhamento + feed recente</div>
         </div>
 
         <div class="search" aria-label="Pesquisar">
           <span style="opacity:.65;">🔎</span>
-          <input id="globalSearch" placeholder="Buscar no painel..." />
+          <input id="searchInput" placeholder="Pesquisar (usuários, posts, CRGR)..." />
         </div>
 
-        <div class="rowActions">
-          <span class="badge" id="badgeStatus">Admin</span>
-          <button class="pillbtn" id="refreshBtn" type="button">Atualizar</button>
-        </div>
+        <button class="pillbtn primary" id="primaryActionBtn" type="button">➕ Criar</button>
       </div>
 
-      <!-- PAINEL GERAL -->
-      <section class="section active" id="page-dashboard" translate="no">
-        <div class="card">
-          <div class="cardHead">
+      <!-- Views -->
+      <section id="view-dashboard" class="view">
+        <div class="panel">
+          <div class="section-title">
             <div>
-              <h3>Painel Geral: Visão geral do Hub</h3>
-              <div class="muted">Painel de acompanhamento</div>
+              <h3>Painel Geral: visão geral do Hub</h3>
+              <div class="muted">Contadores são carregados do Firestore. (MVP: contagem via leitura)</div>
             </div>
+            <div class="badge" id="badgeLive">Ao vivo</div>
           </div>
-          <div class="cardBody">
-            <div class="kpis">
-              <div class="kpi">
-                <div class="label">Nº de CRGR ativos</div>
-                <div class="value" id="kpiCrgr">—</div>
-                <div class="hint">Coleção: <code>crgrs</code></div>
-              </div>
-              <div class="kpi">
-                <div class="label">Nº de usuários cadastrados</div>
-                <div class="value" id="kpiUsers">—</div>
-                <div class="hint">Coleção: <code>users</code></div>
-              </div>
-              <div class="kpi">
-                <div class="label">Planos de ação em andamento</div>
-                <div class="value" id="kpiPlans">—</div>
-                <div class="hint">Placeholder: <code>plans</code> (status)</div>
-              </div>
-              <div class="kpi">
-                <div class="label">Indicadores críticos em alerta</div>
-                <div class="value" id="kpiAlerts">—</div>
-                <div class="hint">Placeholder: <code>alerts</code></div>
-              </div>
-            </div>
 
-            <div class="alertBox" id="alertsBox">
-              <b>Indicadores críticos:</b> ainda não configurados. (Quando criarmos a coleção <code>alerts</code>,
-              este espaço vai listar alertas por território/CRGR.)
+          <div class="grid cols-4">
+            <div class="kpi">
+              <strong>Nº de CRGR ativos</strong>
+              <div class="num" id="kpiCrgrActive">—</div>
+              <div class="hint">CRGR com status “ativo”</div>
+            </div>
+            <div class="kpi">
+              <strong>Nº de usuários cadastrados</strong>
+              <div class="num" id="kpiUsers">—</div>
+              <div class="hint">Perfis na coleção users</div>
+            </div>
+            <div class="kpi">
+              <strong>Planos de ação em andamento</strong>
+              <div class="num" id="kpiPlans">—</div>
+              <div class="hint">status “em_andamento”</div>
+            </div>
+            <div class="kpi">
+              <strong>Indicadores críticos em alerta</strong>
+              <div class="num" id="kpiAlerts">—</div>
+              <div class="hint">MVP: coleção “alerts” (opcional)</div>
             </div>
           </div>
         </div>
 
-        <div class="grid2">
-          <div class="card">
-            <div class="cardHead">
-              <div>
-                <h3>Últimos usuários cadastrados</h3>
-                <div class="muted">Amostra (últimos 10)</div>
-              </div>
-              <button class="pillbtn" data-jump="users" type="button">Ver gestão</button>
+        <div class="panel">
+          <div class="section-title">
+            <div>
+              <h3>Feed recente (posts)</h3>
+              <div class="muted">Mostra os últimos posts publicados.</div>
             </div>
-            <div class="cardBody">
-              <div class="empty" id="dashUsersBox">Carregando...</div>
-              <div id="dashUsersTableWrap" style="display:none;"></div>
-            </div>
+            <button class="pillbtn" id="refreshDashboardBtn" type="button">🔄 Atualizar</button>
           </div>
 
-          <div class="card">
-            <div class="cardHead">
-              <div>
-                <h3>Últimas CRGR / cooperativas</h3>
-                <div class="muted">Amostra (últimas 10)</div>
-              </div>
-              <button class="pillbtn" data-jump="territorios" type="button">Ver gestão</button>
-            </div>
-            <div class="cardBody">
-              <div class="empty" id="dashCrgrBox">Carregando...</div>
-              <div id="dashCrgrTableWrap" style="display:none;"></div>
-            </div>
-          </div>
+          <div id="dashboardPosts" class="list"></div>
+          <div id="dashboardPostsEmpty" class="empty" style="display:none;">Ainda não há posts.</div>
         </div>
       </section>
 
-      <!-- GESTÃO DE USUÁRIOS -->
-      <section class="section" id="page-users" translate="no">
-        <div class="card">
-          <div class="cardHead">
+      <section id="view-users" class="view" style="display:none;">
+        <div class="panel">
+          <div class="section-title">
             <div>
               <h3>Gestão de Usuários</h3>
-              <div class="muted">Listagem e edição de permissões por perfil</div>
+              <div class="muted">Liste, filtre por perfil e edite role / território / CRGR / módulos.</div>
             </div>
-            <div class="rowActions">
-              <button class="pillbtn" id="reloadUsersBtn" type="button">Recarregar</button>
-            </div>
+            <button class="pillbtn" id="refreshUsersBtn" type="button">🔄 Atualizar</button>
           </div>
-          <div class="cardBody">
-            <div class="empty" id="usersBox">Carregando usuários...</div>
-            <div id="usersTableWrap" style="display:none;"></div>
-          </div>
+
+          <div class="tabs" id="roleTabs"></div>
+
+          <div id="usersList" class="list"></div>
+          <div id="usersEmpty" class="empty" style="display:none;">Nenhum usuário encontrado.</div>
+
+          <div class="msg" id="usersMsg"></div>
         </div>
       </section>
 
-      <!-- FEED (POSTS) -->
-      <section class="section" id="page-feed" translate="no">
-        <div class="card">
-          <div class="cardHead">
+      <section id="view-posts" class="view" style="display:none;">
+        <div class="panel">
+          <div class="section-title">
             <div>
               <h3>Feed (Posts)</h3>
-              <div class="muted">Somente admin cria/edita; usuários visualizam</div>
+              <div class="muted">Somente admin cria/edita. Todos logados leem (conforme rules).</div>
             </div>
-            <button class="pillbtn" id="reloadPostsBtn" type="button">Recarregar</button>
+            <button class="pillbtn" id="refreshPostsBtn" type="button">🔄 Atualizar</button>
           </div>
-          <div class="cardBody">
-            <div class="empty">Aqui vamos colocar: lista de posts + botão “Criar post” (admin) + moderação.</div>
+
+          <div class="grid cols-2">
+            <div class="panel" style="padding:12px;">
+              <h3 style="font-size:14px; margin-bottom:8px;">Criar novo post</h3>
+              <div class="muted" style="margin-bottom:10px;">Scope (visibilidade) opcional. MVP: global.</div>
+
+              <div class="formgrid">
+                <div class="field">
+                  <label>Autor (nome)</label>
+                  <input class="input" id="postAuthorName" placeholder="Ex: Governança" />
+                </div>
+                <div class="field">
+                  <label>Autor (cargo)</label>
+                  <input class="input" id="postAuthorRole" placeholder="Ex: Administração" />
+                </div>
+                <div class="field" style="grid-column:1 / -1;">
+                  <label>Texto</label>
+                  <textarea class="input" id="postText" placeholder="Escreva o comunicado..."></textarea>
+                </div>
+                <div class="field">
+                  <label>Tags (separadas por vírgula)</label>
+                  <input class="input" id="postTags" placeholder="governanca, reciclagem, alerta" />
+                </div>
+                <div class="field">
+                  <label>Scope</label>
+                  <select class="select" id="postScopeType">
+                    <option value="global">Global</option>
+                    <option value="territory">Território</option>
+                    <option value="crgr">CRGR</option>
+                  </select>
+                  <small>Se escolher território/CRGR, informe o ID abaixo.</small>
+                </div>
+                <div class="field" style="grid-column:1 / -1;">
+                  <label>Scope ID (opcional)</label>
+                  <input class="input" id="postScopeId" placeholder="Ex: porto-alegre ou vila-pinto" />
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                <button class="pillbtn primary" id="createPostBtn" type="button">➕ Publicar</button>
+                <button class="pillbtn" id="clearPostFormBtn" type="button">🧹 Limpar</button>
+              </div>
+
+              <div class="msg" id="postsMsg"></div>
+            </div>
+
+            <div class="panel" style="padding:12px;">
+              <h3 style="font-size:14px; margin-bottom:8px;">Posts existentes</h3>
+              <div class="muted" style="margin-bottom:10px;">Lista dos últimos 60 posts.</div>
+
+              <div id="postsList" class="list"></div>
+              <div id="postsEmpty" class="empty" style="display:none;">Ainda não há posts.</div>
+            </div>
           </div>
         </div>
       </section>
 
-      <!-- TERRITÓRIOS / CRGR -->
-      <section class="section" id="page-territorios" translate="no">
-        <div class="card">
-          <div class="cardHead">
+      <section id="view-crgr" class="view" style="display:none;">
+        <div class="panel">
+          <div class="section-title">
             <div>
               <h3>Gestão de Territórios / CRGR</h3>
-              <div class="muted">Seleciona um território/CRGR e vê o dashboard (nº usuários por território)</div>
+              <div class="muted">Cadastre CRGR, marque ativo/inativo e mantenha dados principais.</div>
             </div>
-            <button class="pillbtn" id="reloadCrgrBtn" type="button">Recarregar</button>
+            <button class="pillbtn" id="refreshCrgrBtn" type="button">🔄 Atualizar</button>
           </div>
-          <div class="cardBody">
-            <div class="empty">
-              Próximo: criar <code>crgrs</code> (unidades/cooperativas) e <code>territorios</code>.
-              Depois: selecionar CRGR e calcular <b>nº de usuários</b> associados via <code>users.crgrIds</code>.
+
+          <div class="grid cols-2">
+            <div class="panel" style="padding:12px;">
+              <h3 style="font-size:14px; margin-bottom:8px;">Cadastrar / Atualizar CRGR</h3>
+
+              <div class="formgrid">
+                <div class="field">
+                  <label>ID do CRGR (slug)</label>
+                  <input class="input" id="crgrId" placeholder="Ex: vila-pinto" />
+                  <small>Use hífen e minúsculas. Esse vira o docId.</small>
+                </div>
+                <div class="field">
+                  <label>Status</label>
+                  <select class="select" id="crgrStatus">
+                    <option value="ativo">Ativo</option>
+                    <option value="inativo">Inativo</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label>Nome</label>
+                  <input class="input" id="crgrName" placeholder="Ex: CRGR Vila Pinto" />
+                </div>
+                <div class="field">
+                  <label>TerritoryId</label>
+                  <input class="input" id="crgrTerritoryId" placeholder="Ex: porto-alegre" />
+                </div>
+
+                <div class="field">
+                  <label>OrgId</label>
+                  <input class="input" id="crgrOrgId" placeholder="Ex: cooperativa-vila-pinto" />
+                </div>
+                <div class="field">
+                  <label>Cidade / UF</label>
+                  <input class="input" id="crgrCityUf" placeholder="Ex: Porto Alegre / RS" />
+                </div>
+
+                <div class="field" style="grid-column:1 / -1;">
+                  <label>Endereço (opcional)</label>
+                  <input class="input" id="crgrAddress" placeholder="Rua..., bairro..., nº..." />
+                </div>
+
+                <div class="field">
+                  <label>Contato (telefone)</label>
+                  <input class="input" id="crgrPhone" placeholder="(51) ..." />
+                </div>
+                <div class="field">
+                  <label>Contato (email)</label>
+                  <input class="input" id="crgrEmail" placeholder="contato@..." />
+                </div>
+              </div>
+
+              <div style="display:flex; gap:10px; margin-top:10px; flex-wrap:wrap;">
+                <button class="pillbtn primary" id="saveCrgrBtn" type="button">💾 Salvar CRGR</button>
+                <button class="pillbtn" id="loadCrgrBtn" type="button">📥 Carregar por ID</button>
+                <button class="pillbtn" id="clearCrgrFormBtn" type="button">🧹 Limpar</button>
+              </div>
+
+              <div class="msg" id="crgrMsg"></div>
+            </div>
+
+            <div class="panel" style="padding:12px;">
+              <h3 style="font-size:14px; margin-bottom:8px;">CRGR cadastrados</h3>
+              <div class="muted" style="margin-bottom:10px;">Clique em um item para carregar no formulário.</div>
+
+              <div id="crgrList" class="list"></div>
+              <div id="crgrEmpty" class="empty" style="display:none;">Nenhum CRGR cadastrado.</div>
             </div>
           </div>
         </div>
       </section>
 
-      <!-- PLANOS DE AÇÃO -->
-      <section class="section" id="page-planos" translate="no">
-        <div class="card">
-          <div class="cardHead">
+      <section id="view-plans" class="view" style="display:none;">
+        <div class="panel">
+          <div class="section-title">
             <div>
               <h3>Gestão de Planos de ação</h3>
-              <div class="muted">Criação, status e acompanhamento</div>
+              <div class="muted">Vamos ligar em seguida: planos por CRGR, metas, responsáveis, status e prazos.</div>
             </div>
-            <button class="pillbtn" type="button">Em breve</button>
+            <span class="badge">Em implementação</span>
           </div>
-          <div class="cardBody">
-            <div class="empty">Placeholder para coleção <code>plans</code> (status: em_andamento, concluido, etc.).</div>
-          </div>
+          <div class="empty">Próximo passo: criar coleção <strong>plans</strong> (ou subcoleção em crgr) e renderizar em Kanban simples.</div>
         </div>
       </section>
 
-      <!-- CONTEÚDOS -->
-      <section class="section" id="page-conteudos" translate="no">
-        <div class="card">
-          <div class="cardHead">
+      <section id="view-contents" class="view" style="display:none;">
+        <div class="panel">
+          <div class="section-title">
             <div>
               <h3>Gestão de Conteúdos</h3>
-              <div class="muted">Trilhas, biblioteca, materiais</div>
+              <div class="muted">Biblioteca, temas, trilhas e registro de participação.</div>
             </div>
-            <button class="pillbtn" type="button">Em breve</button>
+            <span class="badge">Em implementação</span>
           </div>
-          <div class="cardBody">
-            <div class="empty">Placeholder para coleções <code>contents</code> e <code>tracks</code>.</div>
-          </div>
+          <div class="empty">Próximo passo: coleção <strong>contents</strong>, temas, trilhas e logs de acesso em <strong>logs</strong>.</div>
         </div>
       </section>
 
-      <!-- ACESSO NEGADO -->
-      <section class="section" id="page-denied" translate="no">
-        <div class="card">
-          <div class="cardHead">
-            <div>
-              <h3>Acesso negado</h3>
-              <div class="muted">Você não tem permissão para acessar a governança.</div>
-            </div>
-          </div>
-          <div class="cardBody">
-            <div class="empty danger">
-              Seu usuário não está com perfil <b>admin</b>. Peça para um administrador habilitar:
-              <code>users/{uid}.role = "admin"</code> ou <code>users/{uid}.modules.admin = true</code>.
-            </div>
-            <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-              <button class="pillbtn" id="goHomeDenied" type="button">Voltar para Home</button>
-              <button class="pillbtn" id="logoutDenied" type="button">Sair</button>
-            </div>
-          </div>
-        </div>
-      </section>
+      <div class="panel" id="globalMsgPanel" style="display:none;">
+        <div class="msg show error" id="globalMsg"></div>
+      </div>
     </main>
   </div>
 
@@ -588,13 +827,19 @@
       getFirestore,
       doc,
       getDoc,
+      setDoc,
+      updateDoc,
       collection,
       query,
       orderBy,
       limit,
-      getDocs
+      getDocs,
+      serverTimestamp
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+    // =========================
+    // Firebase config (o seu)
+    // =========================
     const firebaseConfig = {
       apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
       authDomain: "hub-resiliencia-climatica.firebaseapp.com",
@@ -608,42 +853,24 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // UI refs
-    const avatarBox = document.getElementById("avatarBox");
-    const adminName = document.getElementById("adminName");
-    const adminRole = document.getElementById("adminRole");
-    const adminEmail = document.getElementById("adminEmail");
+    // =========================
+    // Defaults / Permissões
+    // =========================
+    const DEFAULT_MODULES_BY_ROLE = {
+      comunidade: { feed:true, territorio:true, biblioteca:true, forum:true, agenda:false, planos:false, dashboards:false, forms:true, observatorio:false, admin:false },
+      lideranca:  { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:false, forms:true, observatorio:false, admin:false },
+      tecnico:    { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  forms:true, observatorio:true,  admin:false },
+      gestor:     { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  forms:true, observatorio:true,  admin:false },
+      admin:      { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  forms:true, observatorio:true,  admin:true  }
+    };
 
-    const pageTitle = document.getElementById("pageTitle");
-    const pageSubtitle = document.getElementById("pageSubtitle");
-    const globalSearch = document.getElementById("globalSearch");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const badgeStatus = document.getElementById("badgeStatus");
+    function resolveModules(profile){
+      const role = (profile?.role || "comunidade").toString();
+      const defaults = DEFAULT_MODULES_BY_ROLE[role] || DEFAULT_MODULES_BY_ROLE.comunidade;
+      const custom = (profile?.modules && typeof profile.modules === "object") ? profile.modules : {};
+      return { ...defaults, ...custom };
+    }
 
-    const kpiCrgr = document.getElementById("kpiCrgr");
-    const kpiUsers = document.getElementById("kpiUsers");
-    const kpiPlans = document.getElementById("kpiPlans");
-    const kpiAlerts = document.getElementById("kpiAlerts");
-
-    const dashUsersBox = document.getElementById("dashUsersBox");
-    const dashUsersTableWrap = document.getElementById("dashUsersTableWrap");
-    const dashCrgrBox = document.getElementById("dashCrgrBox");
-    const dashCrgrTableWrap = document.getElementById("dashCrgrTableWrap");
-
-    const usersBox = document.getElementById("usersBox");
-    const usersTableWrap = document.getElementById("usersTableWrap");
-
-    const reloadUsersBtn = document.getElementById("reloadUsersBtn");
-    const reloadPostsBtn = document.getElementById("reloadPostsBtn");
-    const reloadCrgrBtn = document.getElementById("reloadCrgrBtn");
-
-    const backHomeBtn = document.getElementById("backHomeBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-
-    let sessionUser = null;
-    let sessionProfile = null;
-
-    function safeStr(v){ return (v ?? "").toString(); }
     function initialsFrom(str){
       const s = (str || "").trim();
       if(!s) return "AD";
@@ -651,270 +878,904 @@
       if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
       return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
     }
-    function setAvatar(photoURL, fallback){
-      avatarBox.innerHTML = "";
+
+    function setAvatar(el, photoURL, fallback){
+      el.innerHTML = "";
       if(photoURL){
         const img = document.createElement("img");
         img.src = photoURL;
         img.alt = "Avatar";
-        avatarBox.appendChild(img);
+        el.appendChild(img);
       }else{
-        avatarBox.textContent = fallback;
+        el.textContent = fallback;
       }
     }
 
-    function showPage(key){
-      document.querySelectorAll(".section").forEach(s => s.classList.remove("active"));
-      document.querySelectorAll(".nav a").forEach(a => a.classList.remove("active"));
+    function safeStr(v){ return (v ?? "").toString(); }
 
-      const target = document.getElementById("page-" + key);
-      if(target) target.classList.add("active");
+    function fmtDate(ts){
+      try{
+        if(!ts) return "—";
+        if(ts.toDate) return ts.toDate().toLocaleString("pt-BR");
+        return String(ts);
+      }catch{ return "—"; }
+    }
 
-      const nav = document.querySelector(`.nav a[data-page="${key}"]`);
-      if(nav) nav.classList.add("active");
+    function showMsg(el, type, text){
+      el.className = "msg show " + (type === "error" ? "error" : "success");
+      el.textContent = text;
+    }
+    function hideMsg(el){
+      el.className = "msg";
+      el.textContent = "";
+    }
 
-      const titles = {
-        dashboard: { t:"Painel geral", s:"Visão geral do Hub" },
-        users: { t:"Gestão de Usuários", s:"Cadastrados, perfis e permissões" },
-        feed: { t:"Feed (Posts)", s:"Publicações e moderação" },
-        territorios: { t:"Territórios / CRGR", s:"Unidades, territórios e indicadores" },
-        planos: { t:"Planos de ação", s:"Acompanhamento e status" },
-        conteudos: { t:"Conteúdos", s:"Trilhas, biblioteca e materiais" },
-        denied: { t:"Acesso negado", s:"Sem permissão para governança" }
+    // =========================
+    // UI refs
+    // =========================
+    const avatarBox = document.getElementById("avatarBox");
+    const adminNameEl = document.getElementById("adminName");
+    const adminRoleEl = document.getElementById("adminRole");
+    const adminEmailEl = document.getElementById("adminEmail");
+    const adminBioEl = document.getElementById("adminBio");
+
+    const navMenu = document.getElementById("navMenu");
+    const viewTitle = document.getElementById("viewTitle");
+    const viewSubtitle = document.getElementById("viewSubtitle");
+    const searchInput = document.getElementById("searchInput");
+    const primaryActionBtn = document.getElementById("primaryActionBtn");
+
+    const views = {
+      dashboard: document.getElementById("view-dashboard"),
+      users: document.getElementById("view-users"),
+      posts: document.getElementById("view-posts"),
+      crgr: document.getElementById("view-crgr"),
+      plans: document.getElementById("view-plans"),
+      contents: document.getElementById("view-contents")
+    };
+
+    const globalMsgPanel = document.getElementById("globalMsgPanel");
+    const globalMsg = document.getElementById("globalMsg");
+
+    // Dashboard KPIs
+    const kpiCrgrActive = document.getElementById("kpiCrgrActive");
+    const kpiUsers = document.getElementById("kpiUsers");
+    const kpiPlans = document.getElementById("kpiPlans");
+    const kpiAlerts = document.getElementById("kpiAlerts");
+    const dashboardPosts = document.getElementById("dashboardPosts");
+    const dashboardPostsEmpty = document.getElementById("dashboardPostsEmpty");
+
+    // Users
+    const roleTabs = document.getElementById("roleTabs");
+    const usersList = document.getElementById("usersList");
+    const usersEmpty = document.getElementById("usersEmpty");
+    const usersMsg = document.getElementById("usersMsg");
+    const refreshUsersBtn = document.getElementById("refreshUsersBtn");
+
+    // Posts
+    const postsList = document.getElementById("postsList");
+    const postsEmpty = document.getElementById("postsEmpty");
+    const postsMsg = document.getElementById("postsMsg");
+    const refreshPostsBtn = document.getElementById("refreshPostsBtn");
+
+    const postAuthorName = document.getElementById("postAuthorName");
+    const postAuthorRole = document.getElementById("postAuthorRole");
+    const postText = document.getElementById("postText");
+    const postTags = document.getElementById("postTags");
+    const postScopeType = document.getElementById("postScopeType");
+    const postScopeId = document.getElementById("postScopeId");
+    const createPostBtn = document.getElementById("createPostBtn");
+    const clearPostFormBtn = document.getElementById("clearPostFormBtn");
+
+    // CRGR
+    const crgrList = document.getElementById("crgrList");
+    const crgrEmpty = document.getElementById("crgrEmpty");
+    const crgrMsg = document.getElementById("crgrMsg");
+    const refreshCrgrBtn = document.getElementById("refreshCrgrBtn");
+
+    const crgrId = document.getElementById("crgrId");
+    const crgrStatus = document.getElementById("crgrStatus");
+    const crgrName = document.getElementById("crgrName");
+    const crgrTerritoryId = document.getElementById("crgrTerritoryId");
+    const crgrOrgId = document.getElementById("crgrOrgId");
+    const crgrCityUf = document.getElementById("crgrCityUf");
+    const crgrAddress = document.getElementById("crgrAddress");
+    const crgrPhone = document.getElementById("crgrPhone");
+    const crgrEmail = document.getElementById("crgrEmail");
+    const saveCrgrBtn = document.getElementById("saveCrgrBtn");
+    const loadCrgrBtn = document.getElementById("loadCrgrBtn");
+    const clearCrgrFormBtn = document.getElementById("clearCrgrFormBtn");
+
+    const refreshDashboardBtn = document.getElementById("refreshDashboardBtn");
+
+    let sessionUser = null;
+    let sessionProfile = null;
+
+    // =========================
+    // Navegação (views)
+    // =========================
+    const VIEW_META = {
+      dashboard: { title:"Painel geral", subtitle:"Visão geral do Hub + acompanhamento + feed recente", action:"🔄 Atualizar" },
+      users: { title:"Gestão de Usuários", subtitle:"Perfis, permissões, territórios e CRGR", action:"➕ (em breve) Convidar" },
+      posts: { title:"Feed (Posts)", subtitle:"Publicações oficiais (admin cria)", action:"➕ Criar post" },
+      crgr: { title:"Gestão de Territórios / CRGR", subtitle:"Cadastro e controle de CRGR", action:"➕ Cadastrar CRGR" },
+      plans: { title:"Gestão de Planos de ação", subtitle:"Planos por CRGR (Kanban simples)", action:"➕ Criar plano" },
+      contents: { title:"Gestão de Conteúdos", subtitle:"Biblioteca, temas e trilhas", action:"➕ Adicionar conteúdo" }
+    };
+
+    function setActiveView(viewKey){
+      Object.keys(views).forEach(k => views[k].style.display = (k === viewKey ? "block" : "none"));
+      viewTitle.textContent = VIEW_META[viewKey]?.title || "Admin";
+      viewSubtitle.textContent = VIEW_META[viewKey]?.subtitle || "";
+
+      // menu highlight
+      [...navMenu.querySelectorAll("a[data-view]")].forEach(a => {
+        a.classList.toggle("active", a.getAttribute("data-view") === viewKey);
+      });
+
+      // Primary action
+      const actionLabel = VIEW_META[viewKey]?.action || "➕ Criar";
+      primaryActionBtn.textContent = actionLabel;
+
+      primaryActionBtn.onclick = async () => {
+        if(viewKey === "dashboard"){
+          await loadDashboard();
+        }else if(viewKey === "posts"){
+          // foca no form
+          postText?.focus();
+        }else if(viewKey === "crgr"){
+          crgrId?.focus();
+        }else{
+          alert("Essa ação será implementada no próximo passo.");
+        }
       };
-
-      const meta = titles[key] || titles.dashboard;
-      pageTitle.textContent = meta.t;
-      pageSubtitle.textContent = meta.s;
-      globalSearch.value = "";
     }
 
-    function isAdmin(profile){
-      const role = (profile?.role || "").toString();
-      const modules = (profile?.modules && typeof profile.modules === "object") ? profile.modules : {};
-      return role === "admin" || modules.admin === true;
+    navMenu.addEventListener("click", (e) => {
+      const a = e.target.closest("a[data-view]");
+      if(!a) return;
+      const viewKey = a.getAttribute("data-view");
+      setActiveView(viewKey);
+    });
+
+    // =========================
+    // Firestore helpers
+    // =========================
+    async function ensureProfile(user){
+      const uref = doc(db, "users", user.uid);
+      const snap = await getDoc(uref);
+
+      if(!snap.exists()){
+        const email = user.email ?? null;
+        const defaultName = user.displayName || (email ? email.split("@")[0] : "Usuário");
+        await setDoc(uref, {
+          uid: user.uid,
+          email,
+          name: defaultName,
+          role: "comunidade",
+          crgrIds: [],
+          territoryId: null,
+          orgId: null,
+          modules: {},
+          bio: "Mini bio: descreva sua atuação no território.",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+        const again = await getDoc(uref);
+        return again.data();
+      }
+
+      // garante módulos default (merge)
+      const data = snap.data();
+      const role = (data?.role || "comunidade").toString();
+      const resolved = resolveModules(data);
+
+      // se não tiver modules, aplica defaults sem sobrescrever custom
+      if(!data.modules || typeof data.modules !== "object"){
+        await setDoc(uref, { modules: resolved, updatedAt: serverTimestamp() }, { merge:true });
+        const again = await getDoc(uref);
+        return again.data();
+      }
+
+      // se não tiver admin true e role admin, garante admin
+      if(role === "admin" && data?.modules?.admin !== true){
+        await setDoc(uref, { modules: { ...(data.modules||{}), admin:true }, updatedAt: serverTimestamp() }, { merge:true });
+        const again = await getDoc(uref);
+        return again.data();
+      }
+
+      return data;
     }
 
-    // KPIs simples (contagem por limite) — ok para MVP
-    async function countCollection(colName, max=1000){
-      const snap = await getDocs(query(collection(db, colName), limit(max)));
+    function profileIsAdmin(profile){
+      const modules = resolveModules(profile);
+      return profile?.role === "admin" || modules.admin === true;
+    }
+
+    // =========================
+    // Dashboard
+    // =========================
+    async function countUsers(){
+      const snap = await getDocs(query(collection(db, "users"), limit(5000)));
       return snap.size;
     }
 
-    async function loadKPIs(){
-      try{
-        const [crgrCount, usersCount] = await Promise.all([
-          countCollection("crgrs", 1000),
-          countCollection("users", 2000)
-        ]);
-
-        kpiCrgr.textContent = String(crgrCount);
-        kpiUsers.textContent = String(usersCount);
-
-        // placeholders (vamos ligar depois)
-        kpiPlans.textContent = "—";
-        kpiAlerts.textContent = "—";
-      }catch(err){
-        console.error(err);
-        kpiCrgr.textContent = "—";
-        kpiUsers.textContent = "—";
-        kpiPlans.textContent = "—";
-        kpiAlerts.textContent = "—";
-      }
+    async function countCrgrActive(){
+      // MVP: lê até 5000 e filtra no client (sem index)
+      const snap = await getDocs(query(collection(db, "crgr"), limit(5000)));
+      let active = 0;
+      snap.forEach(d => {
+        const s = (d.data()?.status || "ativo").toString();
+        if(s === "ativo") active++;
+      });
+      return { total: snap.size, active };
     }
 
-    function renderSimpleTable(container, rows, cols){
-      // cols: [{key,label,render?}]
-      const table = document.createElement("table");
-      table.className = "table";
-      const thead = document.createElement("thead");
-      const trh = document.createElement("tr");
-      cols.forEach(c => {
-        const th = document.createElement("th");
-        th.textContent = c.label;
-        trh.appendChild(th);
-      });
-      thead.appendChild(trh);
-      table.appendChild(thead);
-
-      const tbody = document.createElement("tbody");
-      rows.forEach(r => {
-        const tr = document.createElement("tr");
-        cols.forEach(c => {
-          const td = document.createElement("td");
-          td.textContent = c.render ? c.render(r) : safeStr(r[c.key]);
-          tr.appendChild(td);
+    async function countPlansInProgress(){
+      // se não existir coleção plans ainda, retorna 0 sem quebrar
+      try{
+        const snap = await getDocs(query(collection(db, "plans"), limit(5000)));
+        let c = 0;
+        snap.forEach(d => {
+          if((d.data()?.status || "") === "em_andamento") c++;
         });
-        tbody.appendChild(tr);
+        return c;
+      }catch{
+        return 0;
+      }
+    }
+
+    async function countAlerts(){
+      // opcional: se não existir coleção alerts, retorna 0
+      try{
+        const snap = await getDocs(query(collection(db, "alerts"), limit(5000)));
+        let c = 0;
+        snap.forEach(d => {
+          if((d.data()?.status || "ativo") === "ativo") c++;
+        });
+        return c;
+      }catch{
+        return 0;
+      }
+    }
+
+    async function fetchRecentPosts(){
+      try{
+        const qAll = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(8));
+        const snap = await getDocs(qAll);
+        return snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      }catch{
+        const snap = await getDocs(query(collection(db, "posts"), limit(8)));
+        const arr = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+        arr.sort((a,b) => {
+          const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return bt - at;
+        });
+        return arr;
+      }
+    }
+
+    function renderSmallPost(targetEl, post){
+      const card = document.createElement("div");
+      card.className = "rowcard";
+
+      const av = document.createElement("div");
+      av.className = "mini-avatar";
+      av.textContent = initialsFrom(post.authorName || "Admin");
+
+      const main = document.createElement("div");
+      main.className = "rowmain";
+      main.innerHTML = `
+        <strong>${safeStr(post.authorName || "Admin")}</strong>
+        <div class="meta">
+          <span>${safeStr(post.authorRole || "—")}</span>
+          <span>•</span>
+          <span>${fmtDate(post.createdAt)}</span>
+        </div>
+        <div class="muted" style="margin-top:8px; white-space:pre-wrap;">${safeStr(post.text || "").slice(0, 220)}${(safeStr(post.text||"").length>220)?"…":""}</div>
+      `;
+
+      card.appendChild(av);
+      card.appendChild(main);
+      targetEl.appendChild(card);
+    }
+
+    async function loadDashboard(){
+      dashboardPosts.innerHTML = "";
+      dashboardPostsEmpty.style.display = "none";
+
+      const [usersCount, crgrInfo, plansCount, alertsCount, recentPosts] = await Promise.all([
+        countUsers(),
+        countCrgrActive(),
+        countPlansInProgress(),
+        countAlerts(),
+        fetchRecentPosts()
+      ]);
+
+      kpiUsers.textContent = usersCount;
+      kpiCrgrActive.textContent = crgrInfo.active;
+      kpiPlans.textContent = plansCount;
+      kpiAlerts.textContent = alertsCount;
+
+      if(!recentPosts.length){
+        dashboardPostsEmpty.style.display = "block";
+      }else{
+        recentPosts.forEach(p => renderSmallPost(dashboardPosts, p));
+      }
+    }
+
+    refreshDashboardBtn.addEventListener("click", loadDashboard);
+
+    // =========================
+    // Users management
+    // =========================
+    const ROLE_ORDER = ["todos","comunidade","lideranca","tecnico","gestor","admin"];
+    const ROLE_LABEL = {
+      todos:"Todos",
+      comunidade:"Comunidade",
+      lideranca:"Liderança comunitária",
+      tecnico:"Técnico",
+      gestor:"Gestor",
+      admin:"Administrador"
+    };
+
+    let currentRoleFilter = "todos";
+    let usersCache = [];
+
+    function renderRoleTabs(){
+      roleTabs.innerHTML = "";
+      ROLE_ORDER.forEach(r => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "tab" + (r === currentRoleFilter ? " active" : "");
+        b.textContent = ROLE_LABEL[r] || r;
+        b.addEventListener("click", () => {
+          currentRoleFilter = r;
+          renderRoleTabs();
+          renderUsersList();
+        });
+        roleTabs.appendChild(b);
       });
-      table.appendChild(tbody);
-
-      container.innerHTML = "";
-      container.appendChild(table);
     }
 
-    async function loadDashboardTables(){
-      // Últimos usuários (MVP: por updatedAt/createdAt se existir, senão sem order)
-      try{
-        dashUsersBox.style.display = "block";
-        dashUsersTableWrap.style.display = "none";
-        dashUsersBox.textContent = "Carregando...";
+    async function fetchUsers(){
+      const snap = await getDocs(query(collection(db, "users"), limit(5000)));
+      const arr = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      arr.sort((a,b) => (safeStr(a.name)).localeCompare(safeStr(b.name), "pt-BR"));
+      return arr;
+    }
 
-        let users = [];
-        try{
-          const qUsers = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(10));
-          const snap = await getDocs(qUsers);
-          users = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        }catch{
-          const snap = await getDocs(query(collection(db, "users"), limit(10)));
-          users = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        }
+    function userMatchesSearch(u, q){
+      const s = (q||"").trim().toLowerCase();
+      if(!s) return true;
+      const hay = [
+        u.name, u.email, u.role, u.territoryId,
+        Array.isArray(u.crgrIds) ? u.crgrIds.join(" ") : "",
+        u.orgId
+      ].join(" ").toLowerCase();
+      return hay.includes(s);
+    }
 
-        if(!users.length){
-          dashUsersBox.textContent = "Nenhum usuário encontrado.";
-        }else{
-          dashUsersBox.style.display = "none";
-          dashUsersTableWrap.style.display = "block";
-          renderSimpleTable(dashUsersTableWrap, users, [
-            { key:"name", label:"Nome", render: r => safeStr(r.name || "—") },
-            { key:"email", label:"E-mail", render: r => safeStr(r.email || "—") },
-            { key:"role", label:"Perfil", render: r => safeStr(r.role || "comunidade") }
-          ]);
-        }
-      }catch(err){
-        console.error(err);
-        dashUsersBox.textContent = "Erro ao carregar usuários (dashboard).";
+    function renderUsersList(){
+      usersList.innerHTML = "";
+      usersEmpty.style.display = "none";
+
+      const q = searchInput.value;
+      let list = usersCache.filter(u => userMatchesSearch(u, q));
+      if(currentRoleFilter !== "todos"){
+        list = list.filter(u => (u.role || "comunidade") === currentRoleFilter);
       }
 
-      // Últimas CRGR
-      try{
-        dashCrgrBox.style.display = "block";
-        dashCrgrTableWrap.style.display = "none";
-        dashCrgrBox.textContent = "Carregando...";
+      if(!list.length){
+        usersEmpty.style.display = "block";
+        return;
+      }
 
-        let crgrs = [];
-        try{
-          const qCrgr = query(collection(db, "crgrs"), orderBy("createdAt", "desc"), limit(10));
-          const snap = await getDocs(qCrgr);
-          crgrs = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        }catch{
-          const snap = await getDocs(query(collection(db, "crgrs"), limit(10)));
-          crgrs = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        }
+      list.forEach(u => {
+        const row = document.createElement("div");
+        row.className = "rowcard";
 
-        if(!crgrs.length){
-          dashCrgrBox.textContent = "Nenhuma CRGR cadastrada ainda.";
+        const av = document.createElement("div");
+        av.className = "mini-avatar";
+        if(u.photoURL){
+          const img = document.createElement("img");
+          img.src = u.photoURL;
+          img.alt = "Avatar";
+          av.appendChild(img);
         }else{
-          dashCrgrBox.style.display = "none";
-          dashCrgrTableWrap.style.display = "block";
-          renderSimpleTable(dashCrgrTableWrap, crgrs, [
-            { key:"name", label:"CRGR / Unidade", render: r => safeStr(r.name || r.title || "—") },
-            { key:"city", label:"Cidade", render: r => safeStr(r.city || "—") },
-            { key:"state", label:"UF", render: r => safeStr(r.state || "—") }
-          ]);
+          av.textContent = initialsFrom(u.name || u.email || "U");
         }
+
+        const main = document.createElement("div");
+        main.className = "rowmain";
+
+        const crgrText = Array.isArray(u.crgrIds) && u.crgrIds.length ? u.crgrIds.join(", ") : "—";
+        const territoryText = u.territoryId || "—";
+
+        main.innerHTML = `
+          <strong>${safeStr(u.name || "Sem nome")}</strong>
+          <div class="meta">
+            <span>${safeStr(u.email || "—")}</span>
+            <span>•</span>
+            <span>${safeStr(u.role || "comunidade")}</span>
+          </div>
+
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+            <div class="chip"><strong>Território</strong> <span title="${safeStr(territoryText)}">${safeStr(territoryText)}</span></div>
+            <div class="chip"><strong>CRGR</strong> <span title="${safeStr(crgrText)}">${safeStr(crgrText)}</span></div>
+          </div>
+        `;
+
+        const controls = document.createElement("div");
+        controls.className = "controls";
+
+        const roleSel = document.createElement("select");
+        roleSel.className = "select";
+        ["comunidade","lideranca","tecnico","gestor","admin"].forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r;
+          opt.textContent = ROLE_LABEL[r] || r;
+          if((u.role || "comunidade") === r) opt.selected = true;
+          roleSel.appendChild(opt);
+        });
+
+        const territoryInput = document.createElement("input");
+        territoryInput.className = "input";
+        territoryInput.placeholder = "territoryId (ex: porto-alegre)";
+        territoryInput.value = safeStr(u.territoryId || "");
+
+        const crgrInput = document.createElement("input");
+        crgrInput.className = "input";
+        crgrInput.placeholder = "crgrIds (ex: vila-pinto, outro-crgr)";
+        crgrInput.value = Array.isArray(u.crgrIds) ? u.crgrIds.join(", ") : "";
+
+        const saveBtn = document.createElement("button");
+        saveBtn.className = "pillbtn primary";
+        saveBtn.type = "button";
+        saveBtn.textContent = "💾 Salvar";
+
+        saveBtn.addEventListener("click", async () => {
+          hideMsg(usersMsg);
+          saveBtn.disabled = true;
+          saveBtn.style.opacity = "0.85";
+
+          try{
+            const newRole = roleSel.value;
+            const newTerritoryId = territoryInput.value.trim() || null;
+            const rawCrgr = crgrInput.value.split(",").map(s => s.trim()).filter(Boolean);
+            const newCrgrIds = rawCrgr.length ? rawCrgr : [];
+
+            // se mudar role, atualiza defaults e mantém custom
+            const defaults = DEFAULT_MODULES_BY_ROLE[newRole] || DEFAULT_MODULES_BY_ROLE.comunidade;
+            const existingModules = (u.modules && typeof u.modules === "object") ? u.modules : {};
+            const mergedModules = { ...defaults, ...existingModules };
+
+            // garante admin module se role admin
+            if(newRole === "admin") mergedModules.admin = true;
+
+            await updateDoc(doc(db, "users", u.id), {
+              role: newRole,
+              territoryId: newTerritoryId,
+              crgrIds: newCrgrIds,
+              modules: mergedModules,
+              updatedAt: serverTimestamp()
+            });
+
+            // atualiza cache local
+            u.role = newRole;
+            u.territoryId = newTerritoryId;
+            u.crgrIds = newCrgrIds;
+            u.modules = mergedModules;
+
+            showMsg(usersMsg, "success", "Usuário atualizado com sucesso!");
+            renderUsersList();
+          }catch(err){
+            console.error(err);
+            showMsg(usersMsg, "error", "Erro ao salvar usuário. Verifique rules/permissões.");
+          }finally{
+            saveBtn.disabled = false;
+            saveBtn.style.opacity = "1";
+          }
+        });
+
+        const mini = document.createElement("div");
+        mini.className = "ctrl-row";
+        mini.appendChild(roleSel);
+
+        const mini2 = document.createElement("div");
+        mini2.className = "ctrl-row";
+        mini2.appendChild(territoryInput);
+
+        const mini3 = document.createElement("div");
+        mini3.className = "ctrl-row";
+        mini3.appendChild(crgrInput);
+
+        const mini4 = document.createElement("div");
+        mini4.className = "ctrl-row";
+        mini4.appendChild(saveBtn);
+
+        controls.appendChild(mini);
+        controls.appendChild(mini2);
+        controls.appendChild(mini3);
+        controls.appendChild(mini4);
+
+        row.appendChild(av);
+        row.appendChild(main);
+        row.appendChild(controls);
+        usersList.appendChild(row);
+      });
+    }
+
+    async function loadUsers(){
+      hideMsg(usersMsg);
+      usersList.innerHTML = "";
+      usersEmpty.style.display = "none";
+      usersEmpty.textContent = "Carregando...";
+
+      try{
+        usersCache = await fetchUsers();
+        renderRoleTabs();
+        renderUsersList();
       }catch(err){
         console.error(err);
-        dashCrgrBox.textContent = "Erro ao carregar CRGRs (dashboard).";
+        usersEmpty.style.display = "block";
+        usersEmpty.textContent = "Erro ao carregar usuários. Verifique permissões / rules.";
       }
     }
 
-    async function loadUsersPage(){
+    refreshUsersBtn.addEventListener("click", loadUsers);
+
+    // =========================
+    // Posts management (create + list)
+    // =========================
+    async function fetchPosts(){
       try{
-        usersBox.style.display = "block";
-        usersTableWrap.style.display = "none";
-        usersBox.textContent = "Carregando usuários...";
+        const snap = await getDocs(query(collection(db, "posts"), orderBy("createdAt","desc"), limit(60)));
+        return snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      }catch{
+        const snap = await getDocs(query(collection(db, "posts"), limit(60)));
+        const arr = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+        arr.sort((a,b) => {
+          const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
+          const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
+          return bt - at;
+        });
+        return arr;
+      }
+    }
 
-        let users = [];
-        try{
-          const qUsers = query(collection(db, "users"), orderBy("createdAt", "desc"), limit(60));
-          const snap = await getDocs(qUsers);
-          users = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        }catch{
-          const snap = await getDocs(query(collection(db, "users"), limit(60)));
-          users = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-        }
+    function renderPostRow(targetEl, post){
+      const row = document.createElement("div");
+      row.className = "rowcard";
 
-        if(!users.length){
-          usersBox.textContent = "Nenhum usuário encontrado.";
+      const av = document.createElement("div");
+      av.className = "mini-avatar";
+      av.textContent = initialsFrom(post.authorName || "Admin");
+
+      const main = document.createElement("div");
+      main.className = "rowmain";
+      const tags = Array.isArray(post.tags) ? post.tags.slice(0,8).map(t => `#${t}`).join(" ") : "";
+      const scopeType = post?.scope?.type || "global";
+      const scopeId = post?.scope?.id || "";
+      main.innerHTML = `
+        <strong>${safeStr(post.authorName || "Admin")}</strong>
+        <div class="meta">
+          <span>${safeStr(post.authorRole || "—")}</span>
+          <span>•</span>
+          <span>${fmtDate(post.createdAt)}</span>
+          <span>•</span>
+          <span>scope: ${safeStr(scopeType)}${scopeId ? " ("+safeStr(scopeId)+")" : ""}</span>
+        </div>
+        <div class="muted" style="margin-top:8px; white-space:pre-wrap;">${safeStr(post.text || "")}</div>
+        ${tags ? `<div style="margin-top:8px;" class="muted">${tags}</div>` : ""}
+      `;
+
+      row.appendChild(av);
+      row.appendChild(main);
+      targetEl.appendChild(row);
+    }
+
+    async function loadPosts(){
+      hideMsg(postsMsg);
+      postsList.innerHTML = "";
+      postsEmpty.style.display = "none";
+
+      try{
+        const posts = await fetchPosts();
+        if(!posts.length){
+          postsEmpty.style.display = "block";
           return;
         }
-
-        usersBox.style.display = "none";
-        usersTableWrap.style.display = "block";
-        renderSimpleTable(usersTableWrap, users, [
-          { key:"name", label:"Nome", render: r => safeStr(r.name || "—") },
-          { key:"email", label:"E-mail", render: r => safeStr(r.email || "—") },
-          { key:"role", label:"Perfil", render: r => safeStr(r.role || "comunidade") },
-          { key:"crgrIds", label:"CRGR", render: r => Array.isArray(r.crgrIds) && r.crgrIds.length ? r.crgrIds.join(", ") : "—" }
-        ]);
+        posts.forEach(p => renderPostRow(postsList, p));
       }catch(err){
         console.error(err);
-        usersBox.textContent = "Erro ao carregar usuários.";
+        postsEmpty.style.display = "block";
+        postsEmpty.textContent = "Erro ao carregar posts. Verifique rules/permissões.";
       }
     }
 
-    function wireNav(){
-      document.querySelectorAll(".nav a[data-page]").forEach(a => {
-        a.addEventListener("click", async (e) => {
-          e.preventDefault();
-          const key = a.getAttribute("data-page");
-          showPage(key);
+    refreshPostsBtn.addEventListener("click", loadPosts);
 
-          // carregar dados básicos conforme seção
-          if(key === "dashboard"){
-            await loadKPIs();
-            await loadDashboardTables();
-          }
-          if(key === "users"){
-            await loadUsersPage();
-          }
-        });
-      });
+    clearPostFormBtn.addEventListener("click", () => {
+      postAuthorName.value = "";
+      postAuthorRole.value = "";
+      postText.value = "";
+      postTags.value = "";
+      postScopeType.value = "global";
+      postScopeId.value = "";
+      hideMsg(postsMsg);
+    });
 
-      document.querySelectorAll("[data-jump]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-          const key = btn.getAttribute("data-jump");
-          showPage(key);
-          const nav = document.querySelector(`.nav a[data-page="${key}"]`);
-          if(nav) nav.classList.add("active");
-          if(key === "users") await loadUsersPage();
+    createPostBtn.addEventListener("click", async () => {
+      hideMsg(postsMsg);
+
+      const text = postText.value.trim();
+      if(!text) return showMsg(postsMsg, "error", "Escreva o texto do post.");
+
+      const authorName = postAuthorName.value.trim() || (sessionProfile?.name || "Admin");
+      const authorRole = postAuthorRole.value.trim() || "Governança";
+      const tags = postTags.value.split(",").map(s => s.trim()).filter(Boolean);
+      const scopeType = postScopeType.value;
+      const scopeId = postScopeId.value.trim() || null;
+
+      // cria docId automático via setDoc em doc() com id random? (vamos usar add via setDoc com doc auto)
+      // Como estamos usando imports minimalistas, vamos usar setDoc(doc(collection...)) com docId auto.
+      // (o firebase v10 permite doc(collectionRef) gerar id auto)
+      try{
+        createPostBtn.disabled = true;
+        createPostBtn.style.opacity = "0.85";
+
+        const colRef = collection(db, "posts");
+        const newRef = doc(colRef); // auto-id
+        await setDoc(newRef, {
+          text,
+          tags,
+          scope: { type: scopeType, id: scopeId },
+          authorUid: sessionUser.uid,
+          authorName,
+          authorRole,
+          authorPhotoURL: sessionUser.photoURL || sessionProfile?.photoURL || null,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
         });
+
+        showMsg(postsMsg, "success", "Post publicado!");
+        postText.value = "";
+        await Promise.all([loadPosts(), loadDashboard()]);
+      }catch(err){
+        console.error(err);
+        showMsg(postsMsg, "error", "Erro ao publicar. Confirme se você é admin nas rules.");
+      }finally{
+        createPostBtn.disabled = false;
+        createPostBtn.style.opacity = "1";
+      }
+    });
+
+    // =========================
+    // CRGR management
+    // =========================
+    function clearCrgrForm(){
+      crgrId.value = "";
+      crgrStatus.value = "ativo";
+      crgrName.value = "";
+      crgrTerritoryId.value = "";
+      crgrOrgId.value = "";
+      crgrCityUf.value = "";
+      crgrAddress.value = "";
+      crgrPhone.value = "";
+      crgrEmail.value = "";
+      hideMsg(crgrMsg);
+    }
+    clearCrgrFormBtn.addEventListener("click", clearCrgrForm);
+
+    async function fetchCrgr(){
+      const snap = await getDocs(query(collection(db, "crgr"), limit(5000)));
+      const arr = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+      arr.sort((a,b) => (safeStr(a.name)).localeCompare(safeStr(b.name), "pt-BR"));
+      return arr;
+    }
+
+    function renderCrgrList(list){
+      crgrList.innerHTML = "";
+      crgrEmpty.style.display = "none";
+      if(!list.length){
+        crgrEmpty.style.display = "block";
+        return;
+      }
+
+      list.forEach(c => {
+        const row = document.createElement("div");
+        row.className = "rowcard";
+        row.style.cursor = "pointer";
+
+        const av = document.createElement("div");
+        av.className = "mini-avatar";
+        av.textContent = initialsFrom(c.name || c.id);
+
+        const main = document.createElement("div");
+        main.className = "rowmain";
+        main.innerHTML = `
+          <strong>${safeStr(c.name || c.id)}</strong>
+          <div class="meta">
+            <span>id: ${safeStr(c.id)}</span>
+            <span>•</span>
+            <span>status: ${safeStr(c.status || "ativo")}</span>
+            <span>•</span>
+            <span>território: ${safeStr(c.territoryId || "—")}</span>
+          </div>
+          <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:10px;">
+            <div class="chip"><strong>Org</strong> <span title="${safeStr(c.orgId||"—")}">${safeStr(c.orgId||"—")}</span></div>
+            <div class="chip"><strong>Cidade</strong> <span title="${safeStr(c.address?.city || "")}">${safeStr(c.address?.city || "—")}</span></div>
+          </div>
+        `;
+
+        row.appendChild(av);
+        row.appendChild(main);
+
+        row.addEventListener("click", () => {
+          crgrId.value = c.id;
+          crgrStatus.value = c.status || "ativo";
+          crgrName.value = c.name || "";
+          crgrTerritoryId.value = c.territoryId || "";
+          crgrOrgId.value = c.orgId || "";
+          const city = c.address?.city || "";
+          const uf = c.address?.uf || "";
+          crgrCityUf.value = (city || uf) ? `${city}${uf ? " / " + uf : ""}` : "";
+          crgrAddress.value = c.address?.street || "";
+          crgrPhone.value = c.contacts?.phone || "";
+          crgrEmail.value = c.contacts?.email || "";
+          showMsg(crgrMsg, "success", "CRGR carregado no formulário.");
+        });
+
+        crgrList.appendChild(row);
       });
     }
 
-    async function loadAll(){
-      await loadKPIs();
-      await loadDashboardTables();
+    async function loadCrgrList(){
+      hideMsg(crgrMsg);
+      crgrList.innerHTML = "";
+      crgrEmpty.style.display = "none";
+
+      try{
+        const arr = await fetchCrgr();
+        // aplica busca (topbar)
+        const q = (searchInput.value || "").trim().toLowerCase();
+        const filtered = !q ? arr : arr.filter(c => {
+          const hay = [
+            c.id, c.name, c.territoryId, c.orgId,
+            c.address?.city, c.address?.uf, c.status
+          ].join(" ").toLowerCase();
+          return hay.includes(q);
+        });
+
+        renderCrgrList(filtered);
+      }catch(err){
+        console.error(err);
+        crgrEmpty.style.display = "block";
+        crgrEmpty.textContent = "Erro ao carregar CRGR. Verifique rules/permissões.";
+      }
     }
 
-    // Buttons
-    backHomeBtn.addEventListener("click", () => window.location.href = "home.html");
-    logoutBtn.addEventListener("click", async () => {
+    refreshCrgrBtn.addEventListener("click", loadCrgrList);
+
+    loadCrgrBtn.addEventListener("click", async () => {
+      hideMsg(crgrMsg);
+      const id = crgrId.value.trim();
+      if(!id) return showMsg(crgrMsg, "error", "Informe o ID do CRGR para carregar.");
+
+      try{
+        const snap = await getDoc(doc(db, "crgr", id));
+        if(!snap.exists()) return showMsg(crgrMsg, "error", "CRGR não encontrado.");
+        const c = { id:snap.id, ...snap.data() };
+
+        crgrStatus.value = c.status || "ativo";
+        crgrName.value = c.name || "";
+        crgrTerritoryId.value = c.territoryId || "";
+        crgrOrgId.value = c.orgId || "";
+        const city = c.address?.city || "";
+        const uf = c.address?.uf || "";
+        crgrCityUf.value = (city || uf) ? `${city}${uf ? " / " + uf : ""}` : "";
+        crgrAddress.value = c.address?.street || "";
+        crgrPhone.value = c.contacts?.phone || "";
+        crgrEmail.value = c.contacts?.email || "";
+
+        showMsg(crgrMsg, "success", "CRGR carregado.");
+      }catch(err){
+        console.error(err);
+        showMsg(crgrMsg, "error", "Erro ao carregar CRGR. Verifique rules.");
+      }
+    });
+
+    saveCrgrBtn.addEventListener("click", async () => {
+      hideMsg(crgrMsg);
+
+      const id = crgrId.value.trim();
+      if(!id) return showMsg(crgrMsg, "error", "Informe o ID do CRGR (slug).");
+
+      const status = crgrStatus.value;
+      const name = crgrName.value.trim() || id;
+      const territoryId = crgrTerritoryId.value.trim() || null;
+      const orgId = crgrOrgId.value.trim() || null;
+
+      const cityUf = crgrCityUf.value.trim();
+      let city = "", uf = "";
+      if(cityUf.includes("/")){
+        const parts = cityUf.split("/");
+        city = (parts[0]||"").trim();
+        uf = (parts[1]||"").trim().toUpperCase();
+      }else{
+        city = cityUf;
+      }
+
+      const street = crgrAddress.value.trim() || null;
+      const phone = crgrPhone.value.trim() || null;
+      const email = crgrEmail.value.trim() || null;
+
+      try{
+        saveCrgrBtn.disabled = true;
+        saveCrgrBtn.style.opacity = "0.85";
+
+        const ref = doc(db, "crgr", id);
+
+        // se já existe, mantém createdAt; se não, cria
+        const snap = await getDoc(ref);
+        const createdAt = snap.exists() ? (snap.data()?.createdAt || serverTimestamp()) : serverTimestamp();
+
+        await setDoc(ref, {
+          name,
+          status,
+          territoryId,
+          orgId,
+          address: { city: city || null, uf: uf || null, street },
+          contacts: { phone, email },
+          createdAt,
+          updatedAt: serverTimestamp()
+        }, { merge:true });
+
+        showMsg(crgrMsg, "success", "CRGR salvo com sucesso!");
+        await Promise.all([loadCrgrList(), loadDashboard()]);
+      }catch(err){
+        console.error(err);
+        showMsg(crgrMsg, "error", "Erro ao salvar CRGR. Confirme se você é admin nas rules.");
+      }finally{
+        saveCrgrBtn.disabled = false;
+        saveCrgrBtn.style.opacity = "1";
+      }
+    });
+
+    // =========================
+    // Search behavior (topbar)
+    // =========================
+    searchInput.addEventListener("input", () => {
+      const visibleKey = Object.keys(views).find(k => views[k].style.display !== "none") || "dashboard";
+      if(visibleKey === "users"){
+        renderUsersList();
+      }else if(visibleKey === "posts"){
+        // recarrega posts filtrando (MVP: refetch pra simplicidade)
+        loadPosts();
+      }else if(visibleKey === "crgr"){
+        loadCrgrList();
+      }else if(visibleKey === "dashboard"){
+        // opcional: dashboard não filtra; mantemos como está
+      }
+    });
+
+    // =========================
+    // Buttons: home / logout
+    // =========================
+    document.getElementById("goHomeBtn").addEventListener("click", () => {
+      window.location.href = "home.html";
+    });
+
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
       await signOut(auth);
       window.location.href = "index.html";
     });
 
-    document.getElementById("goHomeDenied")?.addEventListener("click", () => window.location.href = "home.html");
-    document.getElementById("logoutDenied")?.addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "index.html";
-    });
-
-    refreshBtn.addEventListener("click", async () => {
-      const active = document.querySelector(".section.active")?.id || "page-dashboard";
-      await loadKPIs();
-      if(active === "page-dashboard") await loadDashboardTables();
-      if(active === "page-users") await loadUsersPage();
-    });
-
-    reloadUsersBtn.addEventListener("click", loadUsersPage);
-    reloadPostsBtn.addEventListener("click", () => alert("Em seguida: implementar lista + criar/editar posts no admin."));
-    reloadCrgrBtn.addEventListener("click", () => alert("Em seguida: implementar cadastro/edição de CRGR e dashboard por território."));
-
-    // Auth + gate
-    wireNav();
-
+    // =========================
+    // Auth gate (ADMIN ONLY)
+    // =========================
     onAuthStateChanged(auth, async (user) => {
       if(!user){
         window.location.href = "index.html";
@@ -922,53 +1783,43 @@
       }
       sessionUser = user;
 
-      // carrega perfil
-      const uref = doc(db, "users", user.uid);
-      const usnap = await getDoc(uref);
-      sessionProfile = usnap.exists() ? usnap.data() : null;
+      try{
+        sessionProfile = await ensureProfile(user);
 
-      // gate admin
-      if(!isAdmin(sessionProfile)){
-        badgeStatus.textContent = "Sem permissão";
-        showPage("denied");
-        return;
-      }
+        const name = sessionProfile?.name || user.displayName || (user.email ? user.email.split("@")[0] : "Admin");
+        const role = sessionProfile?.role || "comunidade";
+        const bio = sessionProfile?.bio || "Painel de governança para administração do Hub.";
+        const email = user.email || "—";
 
-      // profile header
-      const name = sessionProfile?.name || user.displayName || (user.email ? user.email.split("@")[0] : "Admin");
-      const role = sessionProfile?.role || "admin";
+        setAvatar(avatarBox, user.photoURL || sessionProfile?.photoURL || null, initialsFrom(name));
+        adminNameEl.textContent = name;
+        adminRoleEl.textContent = `Perfil: ${role}`;
+        adminEmailEl.textContent = email;
+        adminBioEl.textContent = bio;
 
-      adminName.textContent = name;
-      adminRole.textContent = `Perfil: ${role}`;
-      adminEmail.textContent = user.email || "—";
-      setAvatar(user.photoURL || sessionProfile?.photoURL || null, initialsFrom(name));
+        // bloqueia se não for admin
+        if(!profileIsAdmin(sessionProfile)){
+          globalMsgPanel.style.display = "block";
+          globalMsg.textContent = "Acesso negado: você não é administrador. Retornando para a home...";
+          setTimeout(() => window.location.href = "home.html", 900);
+          return;
+        }
 
-      badgeStatus.textContent = "Admin";
+        // Inicializa view e carrega dados
+        setActiveView("dashboard");
+        renderRoleTabs();
 
-      // default page
-      showPage("dashboard");
-      await loadAll();
-    });
+        await Promise.all([
+          loadDashboard(),
+          loadUsers(),
+          loadPosts(),
+          loadCrgrList()
+        ]);
 
-    // Global search (MVP: só navega por palavra-chave)
-    globalSearch.addEventListener("input", () => {
-      const q = safeStr(globalSearch.value).trim().toLowerCase();
-      if(!q) return;
-
-      // atalhos simples
-      const map = [
-        { key:"dashboard", terms:["painel","dashboard","visão","geral","kpi"] },
-        { key:"users", terms:["usuário","usuarios","users","perfil","permiss"] },
-        { key:"feed", terms:["feed","post","posts","publica","modera"] },
-        { key:"territorios", terms:["crgr","territorio","territórios","cooperativa","unidade"] },
-        { key:"planos", terms:["plano","planos","ação","acoes"] },
-        { key:"conteudos", terms:["conteudo","conteúdos","trilha","biblioteca","material"] }
-      ];
-
-      const hit = map.find(m => m.terms.some(t => q.includes(t)));
-      if(hit){
-        showPage(hit.key);
-        if(hit.key === "users") loadUsersPage();
+      }catch(err){
+        console.error(err);
+        globalMsgPanel.style.display = "block";
+        globalMsg.textContent = "Erro ao carregar painel admin. Verifique permissões (rules) e conexão.";
       }
     });
   </script>
