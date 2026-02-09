@@ -2,1196 +2,573 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR">
-  <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hub Resiliência Climática • Início</title>
+  <title>Plataforma Regenera • Home</title>
 
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
 
   <style>
     :root{
       --green-regen:#1B7F5A;
       --green-light:#4CAF8F;
       --blue-deep:#0D3B66;
-      --yellow:#F2C94C;
 
+      --yellow:#F2C94C;
       --graphite:#2E2E2E;
       --bg:#F5F7F6;
       --white:#FFFFFF;
 
-      --shadow:0 10px 30px rgba(0,0,0,0.08);
-      --border:#E7ECEA;
-      --radius:18px;
+      --shadow: 0 10px 30px rgba(13, 59, 102, .12);
+      --shadow-soft: 0 8px 18px rgba(46, 46, 46, .10);
+      --radius: 18px;
+      --max: 1100px;
     }
 
-    *{box-sizing:border-box}
+    *{ box-sizing:border-box; }
     body{
       margin:0;
-      font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background:var(--bg);
+      font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:var(--graphite);
+      background:var(--bg);
     }
-    h1,h2,h3{ font-family:'Poppins', sans-serif; margin:0; }
     a{ color:inherit; text-decoration:none; }
-    button, input, textarea { font-family:inherit; }
+    .wrap{ max-width:var(--max); margin:0 auto; padding:0 20px; }
 
-    .app{
-      min-height:100vh;
-      display:grid;
-      grid-template-columns: 300px 1fr;
-      gap:16px;
-      padding:16px;
-      max-width:1200px;
-      margin:0 auto;
-    }
-
-    /* Sidebar */
-    .sidebar{
-      position:sticky;
-      top:16px;
-      height: calc(100vh - 32px);
-      border-radius:18px;
-      background: linear-gradient(180deg, rgba(13,59,102,0.98), rgba(27,127,90,0.98));
-      box-shadow: var(--shadow);
-      color:#fff;
-      padding:14px;
+    /* ========= HERO “QUE RESPIRA” ========= */
+    header.hero{
+      position:relative;
       overflow:hidden;
+      background: radial-gradient(1200px 600px at 20% 10%, rgba(76,175,143,.22), transparent 60%),
+                  radial-gradient(900px 500px at 85% 25%, rgba(27,127,90,.18), transparent 55%),
+                  linear-gradient(135deg, rgba(13,59,102,.10), rgba(27,127,90,.08));
+      border-bottom:1px solid rgba(46,46,46,.08);
+    }
+    .hero::before{
+      content:"";
+      position:absolute; inset:-50%;
+      background: conic-gradient(from 180deg, rgba(76,175,143,.20), rgba(242,201,76,.12), rgba(13,59,102,.14), rgba(76,175,143,.20));
+      filter: blur(40px);
+      animation: drift 14s ease-in-out infinite;
+      opacity:.55;
+    }
+    @keyframes drift{
+      0%{ transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1.02); }
+      50%{ transform: translate3d(2%, 1.5%, 0) rotate(12deg) scale(1.06); }
+      100%{ transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1.02); }
     }
 
-    .sidebar-title{
-      padding:10px 10px 12px;
-      border-bottom:1px solid rgba(255,255,255,0.14);
-      margin-bottom:12px;
+    .hero-top{
+      position:relative;
+      padding:26px 0 0;
+      display:flex; align-items:center; justify-content:space-between;
     }
-    .sidebar-title strong{ display:block; font-size:15px; letter-spacing:0.2px; }
-    .sidebar-title span{ display:block; font-size:12.5px; opacity:.9; margin-top:4px; }
-
-    .profile{
-      display:flex;
-      gap:12px;
-      align-items:center;
-      padding:10px;
-      border-radius:16px;
-      background: rgba(255,255,255,0.12);
-      border: 1px solid rgba(255,255,255,0.14);
+    .brand{
+      display:flex; gap:10px; align-items:center;
+      font-weight:700; letter-spacing:.2px;
+      font-family:Poppins, Inter, sans-serif;
     }
-
-    .avatar{
-      width:56px;
-      height:56px;
-      border-radius:999px;
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.22);
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:800;
-      font-family:'Poppins';
-      letter-spacing:0.4px;
-    }
-    .avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-    .pmeta{ min-width:0; display:flex; flex-direction:column; gap:2px; line-height:1.1; }
-    .pmeta strong{ font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .pmeta .sub{ font-size:12px; opacity:.92; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-    .bio{
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:14px;
-      background: rgba(255,255,255,0.10);
-      border: 1px dashed rgba(255,255,255,0.20);
-      font-size:12.5px;
-      line-height:1.45;
-      opacity:.95;
-    }
-
-    .chips{ margin-top:10px; display:grid; gap:8px; }
-    .chip{
-      padding:10px 12px;
-      border-radius:14px;
-      background: rgba(255,255,255,0.10);
-      border: 1px solid rgba(255,255,255,0.14);
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      font-size:12.5px;
-    }
-    .chip strong{ font-family:'Poppins'; font-size:12px; }
-    .chip span{
-      opacity:.95;
-      text-align:right;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      white-space:nowrap;
-      max-width: 170px;
-    }
-
-    .nav{ margin-top:12px; display:grid; gap:6px; }
-    .nav a{
-      cursor:pointer;
-      color:#fff;
-      padding:10px 12px;
-      border-radius:14px;
-      font-weight:900;
-      font-size:13px;
-      text-align:left;
-      border: 1px solid transparent;
-      opacity:.96;
-      display:flex;
-      align-items:center;
-      gap:10px;
-    }
-    .nav a:hover{ background: rgba(255,255,255,0.12); border-color: rgba(255,255,255,0.12); }
-    .nav .active{ background: rgba(242,201,76,0.14); border-color: rgba(242,201,76,0.28); }
-
     .dot{
-      width:8px; height:8px; border-radius:999px;
+      width:12px; height:12px; border-radius:999px;
+      background:var(--green-regen);
+      box-shadow:0 0 0 6px rgba(76,175,143,.18);
+    }
+    nav.links{ display:flex; gap:18px; align-items:center; }
+    nav.links a{ font-weight:600; opacity:.9; }
+    nav.links a:hover{ opacity:1; }
+
+    .hero-grid{
+      position:relative;
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:26px;
+      padding:48px 0 46px;
+      align-items:center;
+    }
+    .kicker{
+      display:inline-flex; gap:10px; align-items:center;
+      padding:8px 12px;
+      background: rgba(255,255,255,.55);
+      border:1px solid rgba(46,46,46,.10);
+      border-radius:999px;
+      font-weight:600;
+      backdrop-filter: blur(8px);
+    }
+    .kicker .pill{
+      width:10px; height:10px; border-radius:999px;
       background: var(--yellow);
-      box-shadow: 0 0 0 3px rgba(242,201,76,0.16);
-      flex:0 0 auto;
+      box-shadow:0 0 0 5px rgba(242,201,76,.18);
+    }
+    h1{
+      margin:16px 0 10px;
+      font-family:Poppins, Inter, sans-serif;
+      font-size: clamp(30px, 4vw, 44px);
+      line-height:1.08;
+      letter-spacing:-.6px;
+      color: #0b2d4f;
+    }
+    .lead{
+      margin:0 0 18px;
+      font-size: 16.5px;
+      line-height:1.55;
+      max-width:56ch;
+      opacity:.95;
     }
 
-    .sidebar-bottom{
-      position:absolute;
-      left:14px;
-      right:14px;
-      bottom:12px;
-      padding-top:10px;
-      border-top:1px solid rgba(255,255,255,0.14);
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      font-size:12px;
-      opacity:.9;
-    }
-    .logoutBtn{
-      width:100%;
-      border:none;
+    .cta-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .btn{
+      display:inline-flex; align-items:center; justify-content:center; gap:10px;
+      padding:12px 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(46,46,46,.12);
+      font-weight:700;
       cursor:pointer;
-      border-radius:14px;
-      padding:10px 12px;
-      background: rgba(255,255,255,0.10);
-      border:1px solid rgba(255,255,255,0.14);
-      color:#fff;
-      font-weight:900;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      text-align:left;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      background: rgba(255,255,255,.72);
+      backdrop-filter: blur(8px);
     }
-    .logoutBtn:hover{ background: rgba(255,255,255,0.14); }
-
-    /* Content */
-    .content{ display:flex; flex-direction:column; gap:12px; }
-
-    .topbar{
-      position:sticky;
-      top:16px;
-      z-index:5;
-      background: rgba(245,247,246,0.82);
-      backdrop-filter: blur(10px);
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:12px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:12px;
+    .btn.primary{
+      background: linear-gradient(135deg, var(--green-regen), var(--green-light));
+      color: white;
+      border-color: transparent;
+      box-shadow: 0 12px 26px rgba(27,127,90,.25);
     }
-    .topbar h2{ font-size:16px; }
-    .muted{ color:#666; font-size:13px; line-height:1.5; }
+    .btn:hover{ transform: translateY(-2px); box-shadow: var(--shadow-soft); }
+    .btn.primary:hover{ box-shadow: 0 14px 30px rgba(27,127,90,.30); }
 
-    .search{
-      flex:1;
-      display:flex;
-      align-items:center;
-      gap:10px;
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:10px 12px;
-    }
-    .search input{
-      border:none;
-      outline:none;
-      width:100%;
-      font-size:14px;
-    }
-
-    .pillbtn{
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:#fff;
-      font-weight:900;
-      font-family:'Poppins';
-      font-size:12px;
-      color:var(--blue-deep);
-      cursor:pointer;
-      white-space:nowrap;
-    }
-
-    /* NEW: Sections layout (3 partes) */
-    .mainstack{ display:flex; flex-direction:column; gap:12px; }
-
-    .card{
-      background:#fff;
-      border:1px solid var(--border);
+    .hero-card{
+      background: rgba(255,255,255,.68);
+      border: 1px solid rgba(46,46,46,.10);
       border-radius: var(--radius);
-      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-      overflow:hidden;
+      box-shadow: var(--shadow);
+      padding:16px;
+      backdrop-filter: blur(12px);
     }
-    .cardHead{
-      padding:14px;
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      border-bottom:1px solid var(--border);
-    }
-    .cardHead h3{ font-size:14px; }
-    .cardBody{ padding:14px; }
-
-    .projectHero{
+    .mini{
       display:grid;
-      grid-template-columns: 1.15fr 0.85fr;
+      grid-template-columns: 1fr 1fr;
       gap:12px;
-      align-items:stretch;
     }
-    .projectBox{
-      background: linear-gradient(135deg, rgba(27,127,90,0.12), rgba(13,59,102,0.08));
-      border:1px solid rgba(13,59,102,0.10);
-      border-radius:18px;
-      padding:14px;
-      min-height: 180px;
+    .mini .tile{
+      background: rgba(255,255,255,.7);
+      border: 1px solid rgba(46,46,46,.10);
+      border-radius: 14px;
+      padding:12px;
+      transition: transform .18s ease, box-shadow .18s ease;
+      min-height:84px;
     }
-    .projectBox h1{
-      font-size:22px;
-      letter-spacing:-0.02em;
-      line-height:1.15;
-      margin-bottom:8px;
+    .mini .tile:hover{
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-soft);
     }
-    .projectBox p{
-      margin:0;
-      font-size:13.5px;
-      line-height:1.6;
-      color:#2e2e2e;
-    }
-    .pillrow{
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-      margin-top:10px;
-    }
-    .pill{
-      font-size:12px;
-      padding:8px 10px;
-      border-radius:999px;
-      background:#fff;
-      border:1px solid rgba(13,59,102,0.12);
-      color:#0d3b66;
-      font-weight:900;
-      font-family:'Poppins';
-    }
+    .tile strong{ display:block; font-size:20px; font-family:Poppins, Inter, sans-serif; color:#0b2d4f; }
+    .tile span{ opacity:.85; font-weight:600; font-size:13px; }
 
-    .demoBox{
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:14px;
-      background:#fff;
-      min-height: 180px;
+    /* ========= SEÇÕES ========= */
+    section{ padding:56px 0; }
+    .section-title{
+      font-family:Poppins, Inter, sans-serif;
+      font-size: 24px;
+      margin:0 0 8px;
+      color:#0b2d4f;
+      letter-spacing:-.3px;
     }
-    .demoList{
-      margin-top:10px;
-      display:grid;
-      gap:8px;
-    }
-    .demoItem{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px 12px;
-      display:flex;
-      justify-content:space-between;
-      gap:10px;
-      align-items:center;
-    }
-    .demoItem b{ font-family:'Poppins'; font-size:12.5px; }
-    .demoItem span{ color:#666; font-size:12.5px; }
+    .section-sub{ margin:0 0 18px; opacity:.9; max-width:70ch; line-height:1.55; }
 
-    .kpis{
+    /* Cards “o que é” */
+    .cards{
       display:grid;
       grid-template-columns: repeat(4, 1fr);
-      gap:12px;
+      gap:14px;
     }
-    .kpi{
-      border:1px solid var(--border);
-      border-radius:18px;
-      padding:14px;
-      background:#fff;
-    }
-    .kpi .label{ font-size:12px; color:#666; }
-    .kpi .value{
-      font-family:'Poppins';
-      font-size:22px;
-      margin-top:6px;
-      letter-spacing:-0.02em;
-    }
-    .kpi .hint{ font-size:12px; color:#666; margin-top:6px; }
-
-    .alerts{
-      margin-top:12px;
-      border:1px solid rgba(242,201,76,0.35);
-      background: rgba(242,201,76,0.16);
-      border-radius:18px;
-      padding:12px 14px;
-      font-size:13px;
-      line-height:1.5;
-      color:#5b4a12;
-    }
-
-    /* Instagram-like feed cards */
-    .feed{
-      display:flex;
-      flex-direction:column;
-      gap:12px;
-    }
-    .post{
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:18px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-      overflow:hidden;
-    }
-    .post-head{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      padding:12px 12px 10px;
-    }
-    .post-avatar{
-      width:40px;
-      height:40px;
-      border-radius:999px;
-      background: linear-gradient(135deg, rgba(76,175,143,0.25), rgba(27,127,90,0.25));
-      border:1px solid rgba(27,127,90,0.20);
-      overflow:hidden;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      font-weight:900;
-      font-family:'Poppins';
-      color:#0d3b66;
-      flex:0 0 auto;
-    }
-    .post-avatar img{ width:100%; height:100%; object-fit:cover; display:block; }
-
-    .post-meta{ min-width:0; flex:1; display:flex; flex-direction:column; gap:2px; }
-    .post-meta strong{ font-size:13.5px; font-family:'Poppins'; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-    .post-meta span{ font-size:12px; color:#666; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-
-    .post-body{
-      padding: 0 12px 12px;
-      font-size:14px;
-      line-height:1.55;
-      color:#2E2E2E;
-      white-space:pre-wrap;
-    }
-
-    .tags{
-      padding: 0 12px 12px;
-      display:flex;
-      flex-wrap:wrap;
-      gap:8px;
-    }
-    .tag{
-      font-size:12px;
-      padding:7px 10px;
-      border-radius:999px;
-      border:1px solid var(--border);
-      background:#fff;
-      color:#0d3b66;
-      font-weight:800;
-    }
-
-    .post-actions{
-      display:flex;
-      gap:10px;
-      align-items:center;
-      padding: 10px 12px 12px;
-      border-top:1px solid var(--border);
-    }
-    .iconbtn{
-      border:none;
-      cursor:pointer;
-      background:#fff;
-      border:1px solid var(--border);
-      border-radius:999px;
-      padding:8px 10px;
-      font-weight:900;
-      font-family:'Poppins';
-      font-size:12px;
-      display:flex;
-      align-items:center;
-      gap:8px;
-    }
-    .iconbtn:hover{
-      box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-      transform: translateY(-1px);
-    }
-    .iconbtn:active{ transform: translateY(0); opacity:.92; }
-
-    .commentbox{
-      padding: 0 12px 12px;
-      display:none;
-    }
-    .commentbox.show{ display:block; }
-
-    .commentlist{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-      margin: 10px 0 0;
-      max-height: 220px;
-      overflow:auto;
-      padding-right:4px;
-    }
-    .comment{
-      border:1px solid var(--border);
-      border-radius:14px;
-      padding:10px 12px;
-      background:#fff;
-    }
-    .comment strong{ font-family:'Poppins'; font-size:12.5px; }
-    .comment span{ display:block; font-size:12.5px; color:#2e2e2e; margin-top:2px; white-space:pre-wrap; }
-    .comment small{ display:block; margin-top:6px; font-size:11.5px; color:#777; }
-
-    .empty{
+    .card{
+      background: var(--white);
+      border: 1px solid rgba(46,46,46,.10);
+      border-radius: var(--radius);
       padding:16px;
-      border:1px dashed rgba(13,59,102,0.25);
-      border-radius:18px;
-      background:#fff;
-      color:#4a4a4a;
-      font-size:13px;
-      line-height:1.5;
+      box-shadow: 0 6px 18px rgba(13,59,102,.08);
+      transition: transform .18s ease, box-shadow .18s ease;
+      position:relative;
+      overflow:hidden;
+    }
+    .card::after{
+      content:"";
+      position:absolute; inset:auto -30% -60% -30%;
+      height:180px;
+      background: radial-gradient(closest-side, rgba(76,175,143,.18), transparent 70%);
+      transform: rotate(8deg);
+    }
+    .card:hover{ transform: translateY(-6px); box-shadow: var(--shadow); }
+    .icon{
+      width:42px; height:42px; border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(76,175,143,.18);
+      border:1px solid rgba(76,175,143,.35);
+      margin-bottom:10px;
+      font-size:20px;
+    }
+    .card h3{ margin:0 0 6px; font-family:Poppins, Inter, sans-serif; font-size:16px; color:#0b2d4f; }
+    .card p{ margin:0; opacity:.9; line-height:1.45; font-size:14px; }
+
+    /* Linha do impacto */
+    .steps{
+      display:grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap:12px;
+    }
+    .step{
+      background: rgba(255,255,255,.8);
+      border: 1px dashed rgba(27,127,90,.35);
+      border-radius: var(--radius);
+      padding:14px;
+      position:relative;
+      min-height:104px;
+      transition: transform .18s ease, box-shadow .18s ease;
+    }
+    .step:hover{ transform: translateY(-4px); box-shadow: var(--shadow-soft); }
+    .step .n{
+      display:inline-flex; align-items:center; justify-content:center;
+      width:30px; height:30px; border-radius:10px;
+      background: rgba(27,127,90,.12);
+      border: 1px solid rgba(27,127,90,.25);
+      font-weight:800;
+      color: var(--green-regen);
+      margin-bottom:8px;
+    }
+    .step strong{ display:block; font-family:Poppins, Inter, sans-serif; color:#0b2d4f; font-size:14px; margin-bottom:4px; }
+    .step span{ opacity:.9; font-size:13px; line-height:1.35; }
+
+    /* Stats */
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap:12px;
+    }
+    .stat{
+      background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
+      border: 1px solid rgba(46,46,46,.10);
+      border-radius: var(--radius);
+      padding:18px;
+      box-shadow: 0 8px 18px rgba(13,59,102,.08);
+    }
+    .stat .big{
+      font-family:Poppins, Inter, sans-serif;
+      font-size:34px;
+      margin:0;
+      color:#0b2d4f;
+      letter-spacing:-.6px;
+    }
+    .stat .label{ margin:6px 0 0; font-weight:700; opacity:.9; }
+    .stat .hint{ margin:6px 0 0; opacity:.85; font-size:13px; line-height:1.4; }
+
+    /* Parceiros (placeholders) */
+    .logos{
+      display:grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap:10px;
+      align-items:center;
+      opacity:.9;
+    }
+    .logo{
+      height:46px;
+      border-radius:14px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.75);
+      display:flex; align-items:center; justify-content:center;
+      font-weight:800;
+      letter-spacing:.6px;
+      color: rgba(13,59,102,.70);
+      user-select:none;
     }
 
-    @media (max-width: 1040px){
-      .projectHero{ grid-template-columns: 1fr; }
-      .kpis{ grid-template-columns: repeat(2, 1fr); }
+    /* CTA Final */
+    .final-cta{
+      background: linear-gradient(135deg, rgba(13,59,102,.10), rgba(27,127,90,.12));
+      border-top:1px solid rgba(46,46,46,.08);
+      border-bottom:1px solid rgba(46,46,46,.08);
     }
-    @media (max-width: 920px){
-      .app{ grid-template-columns: 1fr; }
-      .sidebar{ position:relative; height:auto; }
-      .topbar{ top:12px; }
-      .sidebar-bottom{ position:relative; left:0; right:0; bottom:0; margin-top:12px; }
-      .kpis{ grid-template-columns: 1fr; }
+    .cta-box{
+      background: rgba(255,255,255,.75);
+      border:1px solid rgba(46,46,46,.10);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+      padding:22px;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:18px;
+      backdrop-filter: blur(10px);
+    }
+    .cta-box h2{
+      margin:0;
+      font-family:Poppins, Inter, sans-serif;
+      color:#0b2d4f;
+      letter-spacing:-.4px;
+      font-size:22px;
+    }
+    .cta-box p{ margin:8px 0 0; opacity:.9; max-width:62ch; line-height:1.45; }
+
+    footer{
+      padding:24px 0 40px;
+      opacity:.9;
+    }
+    footer .foot{
+      display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
+      border-top:1px solid rgba(46,46,46,.10);
+      padding-top:16px;
+    }
+
+    /* ========= Animação on-scroll ========= */
+    .reveal{
+      opacity:0;
+      transform: translateY(14px);
+      transition: opacity .5s ease, transform .5s ease;
+    }
+    .reveal.show{
+      opacity:1;
+      transform:none;
+    }
+
+    /* ========= Responsivo ========= */
+    @media (max-width: 980px){
+      .hero-grid{ grid-template-columns: 1fr; }
+      .cards{ grid-template-columns: repeat(2, 1fr); }
+      .steps{ grid-template-columns: 1fr; }
+      .logos{ grid-template-columns: repeat(3, 1fr); }
+      .cta-box{ flex-direction:column; align-items:flex-start; }
+    }
+    @media (max-width: 520px){
+      nav.links{ display:none; }
+      .cards{ grid-template-columns: 1fr; }
+      .mini{ grid-template-columns: 1fr; }
+      .stats{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
 
 <body>
-  <div class="app">
-    <aside class="sidebar">
-      <div class="sidebar-title" translate="no">
-        <strong>Hub Resiliência Climática</strong>
-        <span>Reciclagem • Territórios • Impacto</span>
-      </div>
 
-      <div class="profile" aria-label="Perfil do usuário" translate="no">
-        <div class="avatar" id="avatarBox">HR</div>
-        <div class="pmeta">
-          <strong id="userName">Carregando...</strong>
-          <div class="sub" id="userRole">Perfil: —</div>
-          <div class="sub" id="userEmail">—</div>
+<header class="hero">
+  <div class="wrap">
+    <div class="hero-top">
+      <div class="brand"><span class="dot"></span> Plataforma Regenera</div>
+      <nav class="links">
+        <a href="#como-funciona">Como funciona</a>
+        <a href="#impacto">Impacto</a>
+        <a href="#parceiros">Parceiros</a>
+        <a class="btn" href="/login">Entrar</a>
+      </nav>
+    </div>
+
+    <div class="hero-grid">
+      <div>
+        <div class="kicker"><span class="pill"></span> Tecnologia com propósito • dados + território</div>
+        <h1>Conectamos pessoas, projetos e dados para regenerar territórios.</h1>
+        <p class="lead">
+          A Plataforma Regenera organiza iniciativas, conecta atores e acompanha resultados com clareza.
+          Menos ruído. Mais ação real.
+        </p>
+
+        <div class="cta-row">
+          <a class="btn primary" href="#como-funciona">Explorar a plataforma →</a>
+          <a class="btn" href="#parceiros">Ver parceiros</a>
         </div>
       </div>
 
-      <div class="bio" id="userBio" translate="no">Carregando mini bio...</div>
-
-      <div class="chips" aria-label="Atribuições" translate="no">
-        <div class="chip"><strong>CRGR</strong> <span id="userCrgr">—</span></div>
-        <div class="chip"><strong>Organização</strong> <span id="userOrg">—</span></div>
-      </div>
-
-      <nav class="nav" id="navMenu" aria-label="Menu lateral" translate="no"></nav>
-
-      <div class="sidebar-bottom">
-        <button id="logoutBtn" class="logoutBtn" translate="no">
-          <span class="dot"></span> Sair
-        </button>
-        <div translate="no">Plataforma Regenera • v0.1</div>
-      </div>
-    </aside>
-
-    <main class="content">
-      <div class="topbar" translate="no">
-        <div style="min-width:220px;">
-          <h2>Início</h2>
-          <div class="muted" id="subtitle">Hub • Visão geral</div>
+      <aside class="hero-card reveal">
+        <div class="mini">
+          <div class="tile">
+            <strong><span data-count="1280">0</span>+</strong>
+            <span>pessoas conectadas</span>
+          </div>
+          <div class="tile">
+            <strong><span data-count="64">0</span></strong>
+            <span>iniciativas mapeadas</span>
+          </div>
+          <div class="tile">
+            <strong><span data-count="12">0</span></strong>
+            <span>territórios ativos</span>
+          </div>
+          <div class="tile">
+            <strong><span data-count="96">0</span>%</strong>
+            <span>transparência do progresso</span>
+          </div>
         </div>
-
-        <div class="search" aria-label="Pesquisar">
-          <span style="opacity:.65;">🔎</span>
-          <input id="searchInput" placeholder="Pesquisar no feed..." translate="no" />
-        </div>
-
-        <button class="pillbtn" id="adminBtn" type="button" style="display:none;" translate="no">Admin</button>
-      </div>
-
-      <div class="mainstack">
-        <!-- 1) ESPAÇO SOBRE O PROJETO -->
-        <section class="card" id="aboutCard" translate="no">
-          <div class="cardHead">
-            <div>
-              <h3>Sobre o projeto</h3>
-              <div class="muted">Visão, foco e demonstrativos</div>
-            </div>
-            <button class="pillbtn" id="learnMoreBtn" type="button">Saiba mais</button>
-          </div>
-          <div class="cardBody">
-            <div class="projectHero">
-              <div class="projectBox">
-                <h1>Regenerando territórios através da ação climática.</h1>
-                <p>
-                O <strong>Hub Resiliência Climática</strong> nasceu a partir de uma constatação simples e urgente:
- em situações de crise climática, o lixo vira um problema antes, durante e depois do desastre.</p>
-
-<p>As enchentes no Rio Grande do Sul deixaram isso evidente. Faltavam informação, coordenação, espaços de 
-  referência e apoio técnico nos territórios. Ao mesmo tempo, cooperativas, catadores e lideranças comunitárias 
-  estavam na linha de frente, muitas vezes sem estrutura e reconhecimento.</p>
-
-<p>Foi nesse contexto que o Hub começou a ser construído, a partir da articulação entre organizações com trajetórias
- complementares na gestão de resíduos, na mobilização social e na economia circular.</p>
-
-<p>A <strong>Mãos Verdes</strong> contribui com sua experiência em educação ambiental, organização comunitária e 
-  gestão de projetos sociais. </p>
- <p>A <strong>Hélice</strong> atua na articulação institucional, na gestão estratégica e na conexão com políticas públicas.</p>
- <p>A <strong>VAUS</strong> aporta inteligência técnica, visão sistêmica e metodologias de economia circular aplicadas aos territórios. </p>
-
-<p>Juntas, essas organizações estruturam o Hub como uma plataforma viva, conectada aos <strong>Centros de Referência na Gestão 
-  de Resíduos (CRGR)</strong>, fortalecendo a reciclagem, a economia circular e a capacidade dos territórios de se prevenir, 
-  responder e se recuperar de eventos climáticos.</p>
-
- <p>Mais do que uma plataforma, o Hub é uma rede.</p>
- <p>Uma rede que acredita que cidades mais resilientes se constroem com participação, informação acessível e ação coletiva.</p>
-
-                </p>
-                <div class="pillrow" aria-label="Pilares">
-                  <span class="pill">Sustentabilidade real</span>
-                  <span class="pill">Economia circular</span>
-                  <span class="pill">Governança</span>
-                  <span class="pill">Capacitação</span>
-                  <span class="pill">Dados & impacto</span>
-                </div>
-              </div>
-
-              <div class="demoBox">
-                <h3 style="font-size:14px;">Demonstrativos</h3>
-                <div class="muted" style="margin-top:6px;">Exemplos do que o hub oferece (placeholder)</div>
-
-                <div class="demoList">
-                  <div class="demoItem">
-                    <b>Boletins e atualizações</b>
-                    <span>Feed geral</span>
-                  </div>
-                  <div class="demoItem">
-                    <b>Mapeamento CRGR</b>
-                    <span>Territórios</span>
-                  </div>
-                  <div class="demoItem">
-                    <b>Trilhas formativas</b>
-                    <span>Conteúdos</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- 2) PAINEL DE ACOMPANHAMENTO -->
-        <section class="card" id="monitorCard" translate="no">
-          <div class="cardHead">
-            <div>
-              <h3>Painel de acompanhamento</h3>
-              <div class="muted">CRGR, usuários, planos e alertas</div>
-            </div>
-            <button class="pillbtn" id="refreshBtn" type="button">Atualizar</button>
-          </div>
-
-          <div class="cardBody">
-            <div class="kpis">
-              <div class="kpi">
-                <div class="label">CRGR ativos</div>
-                <div class="value" id="kpiCrgr">—</div>
-                <div class="hint">Total em /crgrs</div>
-              </div>
-              <div class="kpi">
-                <div class="label">Usuários cadastrados</div>
-                <div class="value" id="kpiUsers">—</div>
-                <div class="hint">Total em /users</div>
-              </div>
-              <div class="kpi">
-                <div class="label">Planos de ação em andamento</div>
-                <div class="value" id="kpiPlans">—</div>
-                <div class="hint">Placeholder: /plans (status)</div>
-              </div>
-              <div class="kpi">
-                <div class="label">Alertas críticos</div>
-                <div class="value" id="kpiAlerts">—</div>
-                <div class="hint">Placeholder: /alerts</div>
-              </div>
-            </div>
-
-            <div class="alerts" id="alertsBox">
-              <b>Indicadores críticos:</b> ainda não configurados. (Quando criarmos a coleção <code>alerts</code>,
-              este espaço mostra os alertas do território e do hub.)
-            </div>
-          </div>
-        </section>
-
-        <!-- 3) FEEDS -->
-        <div class="empty" id="infoBox" translate="no">Carregando...</div>
-        <section class="feed" id="feed"></section>
-      </div>
-    </main>
+      </aside>
+    </div>
   </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      collection,
-      query,
-      orderBy,
-      limit,
-      getDocs,
-      setDoc,
-      deleteDoc,
-      addDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
-      authDomain: "hub-resiliencia-climatica.firebaseapp.com",
-      projectId: "hub-resiliencia-climatica",
-      storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
-      messagingSenderId: "485694309026",
-      appId: "1:485694309026:web:771ed497d49861fa444dfb"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // ====== Permissões
-    const DEFAULT_MODULES_BY_ROLE = {
-      comunidade: { feed:true, territorio:true, biblioteca:true, forum:true, agenda:false, planos:false, dashboards:false, admin:false },
-      lideranca:  { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:false, admin:false },
-      tecnico:    { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  admin:false },
-      gestor:     { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  admin:false },
-      admin:      { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:true,  admin:true  }
-    };
-
-    function resolveModules(profile){
-      const role = (profile?.role || "comunidade").toString();
-      const defaults = DEFAULT_MODULES_BY_ROLE[role] || DEFAULT_MODULES_BY_ROLE.comunidade;
-      const custom = (profile?.modules && typeof profile.modules === "object") ? profile.modules : {};
-      return { ...defaults, ...custom };
-    }
-    function isAdmin(profile){
-      const m = resolveModules(profile);
-      return profile?.role === "admin" || m.admin === true;
-    }
-    function canAccess(profile, key){
-      const m = resolveModules(profile);
-      return m[key] === true;
-    }
-
-    // ===== UI refs
-    const avatarBox = document.getElementById("avatarBox");
-    const userNameEl = document.getElementById("userName");
-    const userRoleEl = document.getElementById("userRole");
-    const userEmailEl = document.getElementById("userEmail");
-    const userBioEl = document.getElementById("userBio");
-    const userCrgrEl = document.getElementById("userCrgr");
-    const userOrgEl = document.getElementById("userOrg");
-    const navMenu = document.getElementById("navMenu");
-
-    const feedEl = document.getElementById("feed");
-    const infoBox = document.getElementById("infoBox");
-    const searchInput = document.getElementById("searchInput");
-    const adminBtn = document.getElementById("adminBtn");
-    const subtitleEl = document.getElementById("subtitle");
-
-    // KPIs
-    const kpiCrgr = document.getElementById("kpiCrgr");
-    const kpiUsers = document.getElementById("kpiUsers");
-    const kpiPlans = document.getElementById("kpiPlans");
-    const kpiAlerts = document.getElementById("kpiAlerts");
-    const alertsBox = document.getElementById("alertsBox");
-
-    const refreshBtn = document.getElementById("refreshBtn");
-    const learnMoreBtn = document.getElementById("learnMoreBtn");
-
-    let sessionUser = null;
-    let sessionProfile = null;
-    let feedCache = [];
-
-    function initialsFrom(str){
-      const s = (str || "").trim();
-      if(!s) return "HR";
-      const parts = s.split(/\s+/).filter(Boolean);
-      if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
-      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-    }
-
-    function setAvatar(photoURL, fallback){
-      avatarBox.innerHTML = "";
-      if(photoURL){
-        const img = document.createElement("img");
-        img.src = photoURL;
-        img.alt = "Avatar";
-        avatarBox.appendChild(img);
-      }else{
-        avatarBox.textContent = fallback;
-      }
-    }
-
-    function safeStr(v){ return (v ?? "").toString(); }
-
-    function fmtDate(ts){
-      try{
-        if(!ts) return "—";
-        if(ts.toDate) return ts.toDate().toLocaleString("pt-BR");
-        return String(ts);
-      }catch{ return "—"; }
-    }
-
-    function renderMenu(modulesResolved){
-      const items = [
-        { key:"feed", label:"Início (Feed)", href:"home.html" },
-        { key:"territorio", label:"Meu território / CRGR", href:"territorio.html" },
-        { key:"planos", label:"Planos de ação", href:"#", disabled:true },
-        { key:"biblioteca", label:"Biblioteca", href:"#", disabled:true },
-        { key:"agenda", label:"Agenda", href:"#", disabled:true },
-        { key:"forum", label:"Fórum", href:"#", disabled:true },
-        { key:"dashboards", label:"Dashboards", href:"#", disabled:true }
-      ];
-
-      navMenu.innerHTML = "";
-
-      items.forEach((it) => {
-        if(modulesResolved[it.key] !== true) return;
-        const a = document.createElement("a");
-        a.href = it.href;
-        a.className = (it.key === "feed") ? "active" : "";
-        a.innerHTML = `<span class="dot"></span> ${it.label}`;
-        navMenu.appendChild(a);
-      });
-
-      if(isAdmin(sessionProfile)){
-        const a = document.createElement("a");
-        a.href = "admin.html";
-        a.innerHTML = `<span class="dot"></span> Painel de administração`;
-        navMenu.appendChild(a);
-        adminBtn.style.display = "inline-flex";
-        adminBtn.onclick = () => window.location.href = "admin.html";
-      }else{
-        adminBtn.style.display = "none";
-      }
-    }
-
-    // ===== KPI loaders (simples, sem índice composto)
-    async function countCollection(colName, max=500){
-      const snap = await getDocs(query(collection(db, colName), limit(max)));
-      return snap.size;
-    }
-
-    async function loadKPIs(){
-      try{
-        const [crgrCount, usersCount] = await Promise.all([
-          countCollection("crgrs", 500),
-          countCollection("users", 1000)
-        ]);
-
-        kpiCrgr.textContent = String(crgrCount);
-        kpiUsers.textContent = String(usersCount);
-
-        // placeholders (vamos ligar depois)
-        kpiPlans.textContent = "—";
-        kpiAlerts.textContent = "—";
-      }catch(err){
-        console.error(err);
-        kpiCrgr.textContent = "—";
-        kpiUsers.textContent = "—";
-      }
-    }
-
-    // ===== POSTS (SEM where + SEM índice composto)
-    async function fetchAllPosts(){
-      try{
-        const qAll = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));
-        const snap = await getDocs(qAll);
-        return snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      }catch(err){
-        const qFallback = query(collection(db, "posts"), limit(60));
-        const snap2 = await getDocs(qFallback);
-        const arr = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
-        arr.sort((a,b) => {
-          const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-          const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-          return bt - at;
-        });
-        return arr;
-      }
-    }
-
-    async function getLikeCount(postId){
-      const likesCol = collection(db, "posts", postId, "likes");
-      const snap = await getDocs(query(likesCol, limit(200)));
-      return snap.size;
-    }
-
-    async function hasUserLiked(postId, uid){
-      const ref = doc(db, "posts", postId, "likes", uid);
-      const snap = await getDoc(ref);
-      return snap.exists();
-    }
-
-    async function toggleLike(postId, uid){
-      const ref = doc(db, "posts", postId, "likes", uid);
-      const snap = await getDoc(ref);
-      if(snap.exists()){
-        await deleteDoc(ref);
-        return false;
-      }else{
-        await setDoc(ref, { uid, createdAt: serverTimestamp() });
-        return true;
-      }
-    }
-
-    async function loadComments(postId){
-      const colRef = collection(db, "posts", postId, "comments");
-      const snap = await getDocs(query(colRef, limit(50)));
-      const arr = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-      arr.sort((a,b) => {
-        const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
-        const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
-        return bt - at;
-      });
-      return arr;
-    }
-
-    async function addComment(postId, user, profile, text){
-      const colRef = collection(db, "posts", postId, "comments");
-      const authorName = profile.name || user.displayName || (user.email ? user.email.split("@")[0] : "Usuário");
-      await addDoc(colRef, {
-        authorUid: user.uid,
-        authorName,
-        text,
-        createdAt: serverTimestamp()
-      });
-    }
-
-    function postAvatarEl(post){
-      const box = document.createElement("div");
-      box.className = "post-avatar";
-      if(post.authorPhotoURL){
-        const img = document.createElement("img");
-        img.src = post.authorPhotoURL;
-        img.alt = "Autor";
-        box.appendChild(img);
-      }else{
-        box.textContent = initialsFrom(post.authorName || "Autor");
-      }
-      return box;
-    }
-
-    async function renderFeed(list){
-      feedEl.innerHTML = "";
-      infoBox.style.display = "none";
-
-      if(!list.length){
-        infoBox.style.display = "block";
-        infoBox.textContent = "Ainda não há publicações no feed.";
-        return;
-      }
-
-      for(const post of list){
-        const card = document.createElement("article");
-        card.className = "post";
-
-        const head = document.createElement("div");
-        head.className = "post-head";
-        head.appendChild(postAvatarEl(post));
-
-        const meta = document.createElement("div");
-        meta.className = "post-meta";
-        meta.innerHTML = `
-          <strong>${safeStr(post.authorName || "Admin")}</strong>
-          <span>${safeStr(post.authorRole || "—")} • ${fmtDate(post.createdAt)}</span>
-        `;
-        head.appendChild(meta);
-
-        const body = document.createElement("div");
-        body.className = "post-body";
-        body.textContent = safeStr(post.text || "");
-
-        const tagsWrap = document.createElement("div");
-        tagsWrap.className = "tags";
-        const tags = Array.isArray(post.tags) ? post.tags : [];
-        tags.slice(0, 10).forEach(t => {
-          const el = document.createElement("span");
-          el.className = "tag";
-          el.textContent = `#${t}`;
-          tagsWrap.appendChild(el);
-        });
-
-        const actions = document.createElement("div");
-        actions.className = "post-actions";
-
-        const likeBtn = document.createElement("button");
-        likeBtn.className = "iconbtn";
-        likeBtn.type = "button";
-        likeBtn.textContent = "🤍 Curtir";
-
-        const commentsBtn = document.createElement("button");
-        commentsBtn.className = "iconbtn";
-        commentsBtn.type = "button";
-        commentsBtn.textContent = "💬 Comentários";
-
-        const likeCountEl = document.createElement("span");
-        likeCountEl.className = "muted";
-        likeCountEl.style.marginLeft = "auto";
-
-        actions.appendChild(likeBtn);
-        actions.appendChild(commentsBtn);
-        actions.appendChild(likeCountEl);
-
-        const cbox = document.createElement("div");
-        cbox.className = "commentbox";
-
-        const cInput = document.createElement("textarea");
-        cInput.placeholder = "Escreva um comentário...";
-        cInput.style.width = "100%";
-        cInput.style.padding = "12px";
-        cInput.style.borderRadius = "14px";
-        cInput.style.border = "1px solid var(--border)";
-        cInput.style.marginTop = "10px";
-        cInput.style.minHeight = "78px";
-
-        const cRow = document.createElement("div");
-        cRow.style.display = "flex";
-        cRow.style.gap = "10px";
-        cRow.style.marginTop = "10px";
-
-        const mkBtn = (label) => {
-          const b = document.createElement("button");
-          b.className = "pillbtn";
-          b.type = "button";
-          b.textContent = label;
-          return b;
-        };
-
-        const cSend = mkBtn("Publicar comentário");
-        const cClose = mkBtn("Fechar");
-
-        cRow.appendChild(cSend);
-        cRow.appendChild(cClose);
-
-        const cList = document.createElement("div");
-        cList.className = "commentlist";
-
-        cbox.appendChild(cInput);
-        cbox.appendChild(cRow);
-        cbox.appendChild(cList);
-
-        card.appendChild(head);
-        card.appendChild(body);
-        if(tags.length) card.appendChild(tagsWrap);
-        card.appendChild(actions);
-        card.appendChild(cbox);
-
-        feedEl.appendChild(card);
-
-        const [count, liked] = await Promise.all([
-          getLikeCount(post.id),
-          hasUserLiked(post.id, sessionUser.uid)
-        ]);
-        likeCountEl.textContent = `${count} curtida(s)`;
-        likeBtn.textContent = liked ? "❤️ Curtido" : "🤍 Curtir";
-
-        likeBtn.addEventListener("click", async () => {
-          const nowLiked = await toggleLike(post.id, sessionUser.uid);
-          likeBtn.textContent = nowLiked ? "❤️ Curtido" : "🤍 Curtir";
-          likeCountEl.textContent = `${await getLikeCount(post.id)} curtida(s)`;
-        });
-
-        commentsBtn.addEventListener("click", async () => {
-          cbox.classList.add("show");
-          cList.innerHTML = `<div class="muted">Carregando comentários...</div>`;
-          const comments = await loadComments(post.id);
-
-          if(!comments.length){
-            cList.innerHTML = `<div class="muted">Nenhum comentário ainda.</div>`;
-          }else{
-            cList.innerHTML = "";
-            comments.forEach(c => {
-              const el = document.createElement("div");
-              el.className = "comment";
-              el.innerHTML = `
-                <strong>${safeStr(c.authorName || "Usuário")}</strong>
-                <span>${safeStr(c.text || "")}</span>
-                <small>${fmtDate(c.createdAt)}</small>
-              `;
-              cList.appendChild(el);
-            });
-          }
-        });
-
-        cClose.addEventListener("click", () => cbox.classList.remove("show"));
-
-        cSend.addEventListener("click", async () => {
-          const text = cInput.value.trim();
-          if(!text) return;
-          await addComment(post.id, sessionUser, sessionProfile, text);
-          cInput.value = "";
-          const comments = await loadComments(post.id);
-          cList.innerHTML = comments.length ? "" : `<div class="muted">Nenhum comentário ainda.</div>`;
-          comments.forEach(c => {
-            const el = document.createElement("div");
-            el.className = "comment";
-            el.innerHTML = `
-              <strong>${safeStr(c.authorName || "Usuário")}</strong>
-              <span>${safeStr(c.text || "")}</span>
-              <small>${fmtDate(c.createdAt)}</small>
-            `;
-            cList.appendChild(el);
-          });
-        });
-      }
-    }
-
-    function filterFeedLocal(q){
-      const s = safeStr(q).trim().toLowerCase();
-      if(!s) return feedCache;
-      return feedCache.filter(p => {
-        const hay = [
-          p.authorName, p.authorRole, p.text,
-          Array.isArray(p.tags) ? p.tags.join(" ") : ""
-        ].join(" ").toLowerCase();
-        return hay.includes(s);
-      });
-    }
-
-    async function loadFeed(){
-      infoBox.style.display = "block";
-      infoBox.textContent = "Carregando posts...";
-      try{
-        feedCache = await fetchAllPosts();
-        await renderFeed(feedCache);
-      }catch(err){
-        console.error(err);
-        infoBox.style.display = "block";
-        infoBox.textContent = "Erro ao carregar o feed. Verifique permissões / regras.";
-      }
-    }
-
-    onAuthStateChanged(auth, async (user) => {
-      if(!user){
-        window.location.href = "index.html";
-        return;
-      }
-      sessionUser = user;
-
-      const uref = doc(db, "users", user.uid);
-      const usnap = await getDoc(uref);
-
-      let profile = {};
-      if(!usnap.exists()){
-        await setDoc(uref, {
-          uid: user.uid,
-          email: user.email ?? null,
-          name: user.displayName || (user.email ? user.email.split("@")[0] : "Usuário"),
-          role: "comunidade",
-          crgrIds: [],
-          orgId: null,
-          modules: {},
-          bio: "Mini bio: descreva sua atuação no território.",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-        const again = await getDoc(uref);
-        profile = again.data();
-      }else{
-        profile = usnap.data();
-      }
-
-      sessionProfile = profile;
-
-      const name = profile.name || user.displayName || (user.email ? user.email.split("@")[0] : "Usuário");
-      const role = profile.role || "comunidade";
-      const bio  = profile.bio || "Mini bio: descreva sua atuação no território.";
-      const crgr = Array.isArray(profile.crgrIds) && profile.crgrIds.length ? profile.crgrIds.join(", ") : "—";
-      const org  = profile.orgId || "—";
-
-      userNameEl.textContent = name;
-      userRoleEl.textContent = `Perfil: ${role}`;
-      userEmailEl.textContent = user.email || "—";
-      userBioEl.textContent = bio;
-      userCrgrEl.textContent = crgr;
-      userOrgEl.textContent = org;
-
-      setAvatar(user.photoURL || profile.photoURL || null, initialsFrom(name));
-
-      const modulesResolved = resolveModules(profile);
-      renderMenu(modulesResolved);
-
-      // KPIs
-      await loadKPIs();
-
-      // BLOQUEIO DO FEED
-      if(!canAccess(profile, "feed")){
-        subtitleEl.textContent = "Feed bloqueado para seu perfil";
-        infoBox.style.display = "block";
-        infoBox.textContent = "Você não tem permissão para visualizar o feed.";
-        feedEl.innerHTML = "";
-        return;
-      }
-
-      subtitleEl.textContent = "Hub • Visão geral";
-      await loadFeed();
-
-      searchInput.addEventListener("input", async () => {
-        const filtered = filterFeedLocal(searchInput.value);
-        await renderFeed(filtered);
-      });
+</header>
+
+<main>
+  <!-- O que é -->
+  <section class="wrap reveal">
+    <h2 class="section-title">O que a Regenera entrega</h2>
+    <p class="section-sub">Blocos rápidos, visuais e objetivos — pra dar clareza do valor em segundos.</p>
+
+    <div class="cards">
+      <div class="card">
+        <div class="icon">🌱</div>
+        <h3>Regeneração social</h3>
+        <p>Organize ações e metas com foco no que melhora vidas no território.</p>
+      </div>
+      <div class="card">
+        <div class="icon">📊</div>
+        <h3>Dados com propósito</h3>
+        <p>Indicadores simples que mostram avanço real, sem “dashboard vazio”.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🤝</div>
+        <h3>Conexão de atores</h3>
+        <p>Quem faz, quem apoia e quem precisa — tudo no mesmo fluxo.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🚀</div>
+        <h3>Ação contínua</h3>
+        <p>Planos, execução e acompanhamento — do começo ao impacto.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Como funciona -->
+  <section id="como-funciona" class="wrap reveal">
+    <h2 class="section-title">Como funciona</h2>
+    <p class="section-sub">Uma linha do tempo curta, para transformar conceito em sensação de produto.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="n">1</div>
+        <strong>Diagnóstico</strong>
+        <span>Levantamos desafios, recursos e prioridades do território.</span>
+      </div>
+      <div class="step">
+        <div class="n">2</div>
+        <strong>Conexões</strong>
+        <span>Unimos organizações, lideranças, projetos e apoiadores.</span>
+      </div>
+      <div class="step">
+        <div class="n">3</div>
+        <strong>Plano de ação</strong>
+        <span>Metas claras, responsabilidades e cronograma executável.</span>
+      </div>
+      <div class="step">
+        <div class="n">4</div>
+        <strong>Monitoramento</strong>
+        <span>Acompanhamento com indicadores e registros simples.</span>
+      </div>
+      <div class="step">
+        <div class="n">5</div>
+        <strong>Regeneração</strong>
+        <span>Aprendizado contínuo e melhoria baseada em evidências.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Impacto / números -->
+  <section id="impacto" class="wrap reveal">
+    <h2 class="section-title">Impacto em tempo real</h2>
+    <p class="section-sub">Números que contam história. Você pode ligar esses valores ao seu backend depois.</p>
+
+    <div class="stats">
+      <div class="stat">
+        <p class="big"><span data-count="247">0</span></p>
+        <p class="label">ações em andamento</p>
+        <p class="hint">Acompanhamento do que está vivo no território.</p>
+      </div>
+      <div class="stat">
+        <p class="big"><span data-count="38">0</span></p>
+        <p class="label">parceiros ativos</p>
+        <p class="hint">Rede colaborativa, com papéis claros e objetivos.</p>
+      </div>
+      <div class="stat">
+        <p class="big"><span data-count="19">0</span></p>
+        <p class="label">indicadores monitorados</p>
+        <p class="hint">Menos complexidade, mais consistência.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Parceiros -->
+  <section id="parceiros" class="wrap reveal">
+    <h2 class="section-title">Parceiros e rede</h2>
+    <p class="section-sub">Mesmo como placeholder, isso dá “prova social” e deixa a página mais viva.</p>
+
+    <div class="logos">
+      <div class="logo">PARCEIRO</div>
+      <div class="logo">REDE</div>
+      <div class="logo">ONG</div>
+      <div class="logo">INSTITUTO</div>
+      <div class="logo">CIDADE</div>
+      <div class="logo">COMUNIDADE</div>
+    </div>
+  </section>
+
+  <!-- CTA final -->
+  <section class="final-cta">
+    <div class="wrap reveal" style="padding:42px 20px;">
+      <div class="cta-box">
+        <div>
+          <h2>Quer ativar a Regenera no seu território?</h2>
+          <p>Entre, explore as iniciativas e veja como a plataforma organiza o caminho do diagnóstico ao impacto.</p>
+        </div>
+        <div class="cta-row">
+          <a class="btn primary" href="/cadastro">Quero fazer parte</a>
+          <a class="btn" href="/login">Acessar</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="wrap">
+    <div class="foot">
+      <div><strong>Plataforma Regenera</strong><div style="opacity:.85; margin-top:6px;">Regeneração com dados, rede e ação.</div></div>
+      <div style="opacity:.85;">
+        <div><strong>Contato</strong></div>
+        <div style="margin-top:6px;">contato@regenera.org (exemplo)</div>
+      </div>
+    </div>
+  </footer>
+</main>
+
+<script>
+  // Reveal on scroll
+  const revealEls = document.querySelectorAll('.reveal');
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) e.target.classList.add('show');
     });
+  }, { threshold: 0.12 });
+  revealEls.forEach(el => io.observe(el));
 
-    // Actions
-    document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await signOut(auth);
-      window.location.href = "index.html";
-    });
+  // Count up (quando aparece)
+  function animateCount(el, to, duration=900){
+    const start = 0;
+    const startTime = performance.now();
+    const isPercent = (el.parentElement?.textContent || '').includes('%');
 
-    refreshBtn.addEventListener("click", async () => {
-      await loadKPIs();
-      await loadFeed();
-    });
+    function tick(now){
+      const t = Math.min(1, (now - startTime) / duration);
+      const val = Math.floor(start + (to - start) * (t*t*(3-2*t))); // easeInOut
+      el.textContent = val.toLocaleString('pt-BR');
+      if (t < 1) requestAnimationFrame(tick);
+      else el.textContent = to.toLocaleString('pt-BR');
+    }
+    requestAnimationFrame(tick);
+  }
 
-    learnMoreBtn.addEventListener("click", () => {
-      alert("Aqui podemos abrir uma página 'sobre.html' ou um modal com mais informações do projeto.");
+  const countEls = document.querySelectorAll('[data-count]');
+  const ioCount = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      if (el.dataset.done) return;
+      el.dataset.done = "1";
+      animateCount(el, Number(el.dataset.count));
     });
-  </script>
+  }, { threshold: 0.35 });
+
+  countEls.forEach(el => ioCount.observe(el));
+</script>
+
 </body>
 </html>
