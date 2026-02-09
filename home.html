@@ -2,8 +2,10 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Plataforma Regenera • Home</title>
+  <title>Hub Resiliência Climática • Home</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,27 +25,252 @@
       --shadow: 0 10px 30px rgba(13, 59, 102, .12);
       --shadow-soft: 0 8px 18px rgba(46, 46, 46, .10);
       --radius: 18px;
-      --max: 1100px;
+
+      --sidebar-w: 290px;
+      --topbar-h: 66px;
     }
 
     *{ box-sizing:border-box; }
+    html, body{ height:100%; }
     body{
       margin:0;
       font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
       color:var(--graphite);
       background:var(--bg);
     }
-    a{ color:inherit; text-decoration:none; }
-    .wrap{ max-width:var(--max); margin:0 auto; padding:0 20px; }
 
-    /* ========= HERO “QUE RESPIRA” ========= */
-    header.hero{
+    a{ color:inherit; text-decoration:none; }
+    button{ font-family:inherit; }
+
+    /* ============ LAYOUT ============ */
+    .app{
+      min-height:100%;
+      display:grid;
+      grid-template-columns: var(--sidebar-w) 1fr;
+    }
+
+    /* ============ SIDEBAR (mantém padrão lateral) ============ */
+    .sidebar{
+      position:sticky;
+      top:0;
+      height:100vh;
+      padding:18px 14px;
+      background: linear-gradient(180deg, rgba(255,255,255,.88), rgba(255,255,255,.74));
+      border-right:1px solid rgba(46,46,46,.10);
+      backdrop-filter: blur(10px);
+      overflow:auto;
+    }
+
+    .brand{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius: 16px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.72);
+      box-shadow: 0 8px 16px rgba(13,59,102,.08);
+      margin-bottom:14px;
+    }
+
+    .brand .dot{
+      width:12px; height:12px; border-radius:999px;
+      background:var(--green-regen);
+      box-shadow:0 0 0 6px rgba(76,175,143,.18);
+      flex:0 0 auto;
+    }
+
+    .brand .title{
+      font-family:Poppins, Inter, sans-serif;
+      font-weight:700;
+      letter-spacing:-.2px;
+      line-height:1.1;
+    }
+    .brand .subtitle{
+      font-size:12px;
+      opacity:.75;
+      margin-top:2px;
+      font-weight:600;
+    }
+
+    .side-section{
+      margin-top:12px;
+      padding:10px 10px 2px;
+      font-size:12px;
+      font-weight:800;
+      opacity:.65;
+      text-transform:uppercase;
+      letter-spacing:.8px;
+    }
+
+    .side-nav{
+      display:grid;
+      gap:6px;
+      margin-bottom:10px;
+    }
+
+    .side-link{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.60);
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
+      font-weight:700;
+      opacity:.92;
+    }
+    .side-link:hover{
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft);
+      background: rgba(255,255,255,.78);
+      opacity:1;
+    }
+    .side-link.active{
+      border-color: rgba(27,127,90,.25);
+      background: rgba(76,175,143,.14);
+    }
+
+    .side-link .ico{
+      width:32px; height:32px;
+      border-radius: 12px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(76,175,143,.18);
+      border:1px solid rgba(76,175,143,.35);
+      flex:0 0 auto;
+      font-size:16px;
+    }
+
+    .side-footer{
+      margin-top:14px;
+      padding:12px;
+      border-radius: 16px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.62);
+      box-shadow: 0 8px 16px rgba(13,59,102,.06);
+    }
+    .side-footer .small{
+      font-size:12px;
+      opacity:.8;
+      line-height:1.45;
+      margin:0;
+    }
+    .side-footer .btn{
+      margin-top:10px;
+      width:100%;
+      display:inline-flex;
+      justify-content:center;
+      align-items:center;
+      gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(46,46,46,.12);
+      font-weight:800;
+      cursor:pointer;
+      background: rgba(255,255,255,.72);
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+    .side-footer .btn:hover{
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft);
+    }
+    .side-footer .btn.primary{
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--green-regen), var(--green-light));
+      color:#fff;
+      box-shadow: 0 12px 26px rgba(27,127,90,.22);
+    }
+
+    /* ============ MAIN ============ */
+    .main{
+      min-width:0;
+      display:flex;
+      flex-direction:column;
+    }
+
+    .topbar{
+      position:sticky;
+      top:0;
+      z-index:10;
+      height: var(--topbar-h);
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding: 0 18px;
+      border-bottom:1px solid rgba(46,46,46,.10);
+      background: rgba(245,247,246,.70);
+      backdrop-filter: blur(10px);
+    }
+
+    .topbar .left{
+      display:flex; align-items:center; gap:10px;
+      min-width:0;
+    }
+
+    .burger{
+      display:none;
+      width:42px; height:42px;
+      border-radius: 14px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.70);
+      cursor:pointer;
+      align-items:center; justify-content:center;
+    }
+
+    .search{
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px;
+      border-radius: 14px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.70);
+      min-width: min(520px, 55vw);
+    }
+    .search input{
+      border:none;
+      outline:none;
+      width:100%;
+      background: transparent;
+      font-weight:600;
+      color:var(--graphite);
+    }
+
+    .top-actions{
+      display:flex; align-items:center; gap:10px;
+    }
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:10px 12px;
+      border-radius: 999px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.70);
+      font-weight:800;
+      cursor:pointer;
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+    .chip:hover{
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .content{
+      padding: 18px;
+      max-width: 1180px;
+      width:100%;
+    }
+
+    /* ============ HERO NO CONTEÚDO (vida sem mexer no menu) ============ */
+    .hero{
       position:relative;
       overflow:hidden;
-      background: radial-gradient(1200px 600px at 20% 10%, rgba(76,175,143,.22), transparent 60%),
-                  radial-gradient(900px 500px at 85% 25%, rgba(27,127,90,.18), transparent 55%),
-                  linear-gradient(135deg, rgba(13,59,102,.10), rgba(27,127,90,.08));
-      border-bottom:1px solid rgba(46,46,46,.08);
+      border-radius: 22px;
+      border:1px solid rgba(46,46,46,.10);
+      background:
+        radial-gradient(1200px 600px at 20% 10%, rgba(76,175,143,.22), transparent 60%),
+        radial-gradient(900px 500px at 85% 25%, rgba(27,127,90,.18), transparent 55%),
+        linear-gradient(135deg, rgba(13,59,102,.10), rgba(27,127,90,.08));
+      box-shadow: var(--shadow);
+      padding: 18px;
     }
     .hero::before{
       content:"";
@@ -59,40 +286,21 @@
       100%{ transform: translate3d(-2%, -1%, 0) rotate(0deg) scale(1.02); }
     }
 
-    .hero-top{
-      position:relative;
-      padding:26px 0 0;
-      display:flex; align-items:center; justify-content:space-between;
-    }
-    .brand{
-      display:flex; gap:10px; align-items:center;
-      font-weight:700; letter-spacing:.2px;
-      font-family:Poppins, Inter, sans-serif;
-    }
-    .dot{
-      width:12px; height:12px; border-radius:999px;
-      background:var(--green-regen);
-      box-shadow:0 0 0 6px rgba(76,175,143,.18);
-    }
-    nav.links{ display:flex; gap:18px; align-items:center; }
-    nav.links a{ font-weight:600; opacity:.9; }
-    nav.links a:hover{ opacity:1; }
-
     .hero-grid{
       position:relative;
       display:grid;
       grid-template-columns: 1.2fr .8fr;
-      gap:26px;
-      padding:48px 0 46px;
-      align-items:center;
+      gap:14px;
+      align-items:stretch;
     }
+
     .kicker{
       display:inline-flex; gap:10px; align-items:center;
       padding:8px 12px;
       background: rgba(255,255,255,.55);
       border:1px solid rgba(46,46,46,.10);
       border-radius:999px;
-      font-weight:600;
+      font-weight:800;
       backdrop-filter: blur(8px);
     }
     .kicker .pill{
@@ -100,95 +308,118 @@
       background: var(--yellow);
       box-shadow:0 0 0 5px rgba(242,201,76,.18);
     }
-    h1{
-      margin:16px 0 10px;
+
+    .hero h1{
+      margin:14px 0 8px;
       font-family:Poppins, Inter, sans-serif;
-      font-size: clamp(30px, 4vw, 44px);
-      line-height:1.08;
+      font-size: clamp(26px, 3.6vw, 40px);
+      line-height:1.1;
       letter-spacing:-.6px;
       color: #0b2d4f;
     }
-    .lead{
-      margin:0 0 18px;
-      font-size: 16.5px;
-      line-height:1.55;
-      max-width:56ch;
+    .hero .lead{
+      margin:0 0 14px;
+      font-size: 16px;
+      line-height:1.6;
+      max-width:62ch;
       opacity:.95;
+      position:relative;
+      z-index:1;
     }
 
-    .cta-row{ display:flex; gap:12px; flex-wrap:wrap; align-items:center; }
+    .btn-row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+
     .btn{
       display:inline-flex; align-items:center; justify-content:center; gap:10px;
-      padding:12px 16px;
+      padding:12px 14px;
       border-radius: 14px;
       border: 1px solid rgba(46,46,46,.12);
-      font-weight:700;
+      font-weight:900;
       cursor:pointer;
-      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      transition: transform .16s ease, box-shadow .16s ease, background .16s ease;
       background: rgba(255,255,255,.72);
       backdrop-filter: blur(8px);
     }
+    .btn:hover{ transform: translateY(-2px); box-shadow: var(--shadow-soft); }
     .btn.primary{
       background: linear-gradient(135deg, var(--green-regen), var(--green-light));
       color: white;
       border-color: transparent;
-      box-shadow: 0 12px 26px rgba(27,127,90,.25);
+      box-shadow: 0 12px 26px rgba(27,127,90,.22);
     }
-    .btn:hover{ transform: translateY(-2px); box-shadow: var(--shadow-soft); }
-    .btn.primary:hover{ box-shadow: 0 14px 30px rgba(27,127,90,.30); }
+    .btn.primary:hover{ box-shadow: 0 14px 30px rgba(27,127,90,.28); }
 
     .hero-card{
       background: rgba(255,255,255,.68);
       border: 1px solid rgba(46,46,46,.10);
       border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      padding:16px;
+      box-shadow: 0 10px 22px rgba(13,59,102,.10);
+      padding:14px;
       backdrop-filter: blur(12px);
+      position:relative;
+      z-index:1;
     }
+
     .mini{
       display:grid;
       grid-template-columns: 1fr 1fr;
-      gap:12px;
+      gap:10px;
     }
-    .mini .tile{
-      background: rgba(255,255,255,.7);
+    .tile{
+      background: rgba(255,255,255,.74);
       border: 1px solid rgba(46,46,46,.10);
       border-radius: 14px;
       padding:12px;
-      transition: transform .18s ease, box-shadow .18s ease;
-      min-height:84px;
+      transition: transform .16s ease, box-shadow .16s ease;
+      min-height:82px;
     }
-    .mini .tile:hover{
-      transform: translateY(-4px);
-      box-shadow: var(--shadow-soft);
-    }
-    .tile strong{ display:block; font-size:20px; font-family:Poppins, Inter, sans-serif; color:#0b2d4f; }
-    .tile span{ opacity:.85; font-weight:600; font-size:13px; }
-
-    /* ========= SEÇÕES ========= */
-    section{ padding:56px 0; }
-    .section-title{
+    .tile:hover{ transform: translateY(-3px); box-shadow: var(--shadow-soft); }
+    .tile strong{
+      display:block;
+      font-size:20px;
       font-family:Poppins, Inter, sans-serif;
-      font-size: 24px;
-      margin:0 0 8px;
       color:#0b2d4f;
-      letter-spacing:-.3px;
     }
-    .section-sub{ margin:0 0 18px; opacity:.9; max-width:70ch; line-height:1.55; }
+    .tile span{
+      opacity:.86;
+      font-weight:800;
+      font-size:12.5px;
+    }
 
-    /* Cards “o que é” */
+    /* ============ SEÇÕES ============ */
+    .section{
+      margin-top: 14px;
+      padding: 18px;
+      border-radius: 22px;
+      border:1px solid rgba(46,46,46,.10);
+      background: rgba(255,255,255,.76);
+      box-shadow: 0 10px 22px rgba(13,59,102,.08);
+    }
+    .section h2{
+      margin:0 0 6px;
+      font-family:Poppins, Inter, sans-serif;
+      color:#0b2d4f;
+      letter-spacing:-.4px;
+    }
+    .section .sub{
+      margin:0 0 14px;
+      opacity:.9;
+      line-height:1.55;
+      max-width: 80ch;
+    }
+
     .cards{
       display:grid;
       grid-template-columns: repeat(4, 1fr);
-      gap:14px;
+      gap:12px;
     }
     .card{
-      background: var(--white);
+      background: rgba(255,255,255,.86);
       border: 1px solid rgba(46,46,46,.10);
-      border-radius: var(--radius);
-      padding:16px;
-      box-shadow: 0 6px 18px rgba(13,59,102,.08);
-      transition: transform .18s ease, box-shadow .18s ease;
+      border-radius: 18px;
+      padding:14px;
+      box-shadow: 0 8px 18px rgba(13,59,102,.06);
+      transition: transform .16s ease, box-shadow .16s ease;
       position:relative;
       overflow:hidden;
     }
@@ -198,8 +429,9 @@
       height:180px;
       background: radial-gradient(closest-side, rgba(76,175,143,.18), transparent 70%);
       transform: rotate(8deg);
+      pointer-events:none;
     }
-    .card:hover{ transform: translateY(-6px); box-shadow: var(--shadow); }
+    .card:hover{ transform: translateY(-4px); box-shadow: var(--shadow-soft); }
     .icon{
       width:42px; height:42px; border-radius:14px;
       display:flex; align-items:center; justify-content:center;
@@ -208,49 +440,189 @@
       margin-bottom:10px;
       font-size:20px;
     }
-    .card h3{ margin:0 0 6px; font-family:Poppins, Inter, sans-serif; font-size:16px; color:#0b2d4f; }
-    .card p{ margin:0; opacity:.9; line-height:1.45; font-size:14px; }
+    .card h3{
+      margin:0 0 6px;
+      font-family:Poppins, Inter, sans-serif;
+      font-size:15px;
+      color:#0b2d4f;
+    }
+    .card p{ margin:0; opacity:.9; line-height:1.45; font-size:13.5px; }
 
-    /* Linha do impacto */
-    .steps{
+    /* ============ SOBRE O PROJETO ============ */
+    .about-grid{
+      display:grid;
+      grid-template-columns: 1.2fr .8fr;
+      gap:12px;
+      align-items:start;
+    }
+    .panel{
+      background: rgba(255,255,255,.86);
+      border: 1px solid rgba(46,46,46,.10);
+      border-radius: 18px;
+      padding: 16px;
+      box-shadow: 0 10px 18px rgba(13,59,102,.06);
+      position:relative;
+      overflow:hidden;
+    }
+    .panel::after{
+      content:"";
+      position:absolute;
+      inset: auto -35% -70% -35%;
+      height: 220px;
+      background: radial-gradient(closest-side, rgba(76,175,143,.20), transparent 70%);
+      transform: rotate(10deg);
+      pointer-events:none;
+    }
+    .badge{
+      display:inline-flex;
+      padding:6px 10px;
+      border-radius:999px;
+      font-weight:900;
+      font-size:12px;
+      background: rgba(242,201,76,.22);
+      border: 1px solid rgba(242,201,76,.35);
+      position:relative;
+      z-index:1;
+    }
+    .panel h3{
+      margin:10px 0 10px;
+      font-family:Poppins, Inter, sans-serif;
+      color:#0b2d4f;
+      position:relative;
+      z-index:1;
+    }
+    .panel .lead{
+      margin:0;
+      line-height:1.65;
+      opacity:.95;
+      position:relative;
+      z-index:1;
+      white-space:pre-line;
+    }
+    .mini-points{
+      position:relative;
+      z-index:1;
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:14px;
+    }
+    .pill{
+      padding:8px 10px;
+      border-radius:999px;
+      background: rgba(255,255,255,.75);
+      border: 1px solid rgba(46,46,46,.10);
+      font-weight:900;
+      font-size:12px;
+      opacity:.95;
+    }
+    .stack{
+      display:grid;
+      gap:10px;
+    }
+    .cardy{
+      display:grid;
+      grid-template-columns: 42px 1fr;
+      gap:10px;
+      align-items:start;
+      padding:14px;
+      border-radius: 18px;
+      background: rgba(255,255,255,.86);
+      border: 1px solid rgba(46,46,46,.10);
+      box-shadow: 0 8px 18px rgba(13,59,102,.06);
+      transition: transform .16s ease, box-shadow .16s ease;
+    }
+    .cardy:hover{
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-soft);
+    }
+    .cardy-ico{
+      width:42px; height:42px;
+      border-radius:14px;
+      display:flex; align-items:center; justify-content:center;
+      background: rgba(76,175,143,.18);
+      border: 1px solid rgba(76,175,143,.35);
+      font-size:18px;
+    }
+    .cardy strong{
+      display:block;
+      color:#0b2d4f;
+      font-family:Poppins, Inter, sans-serif;
+      margin-bottom:4px;
+    }
+    .cardy p{
+      margin:0;
+      line-height:1.45;
+      opacity:.9;
+      font-size:13.5px;
+    }
+
+    .flow{
+      margin-top: 12px;
+      padding: 16px;
+      border-radius: 18px;
+      background: linear-gradient(135deg, rgba(13,59,102,.08), rgba(27,127,90,.10));
+      border: 1px solid rgba(46,46,46,.10);
+    }
+    .flow-title{
+      margin:0 0 12px;
+      font-family:Poppins, Inter, sans-serif;
+      color:#0b2d4f;
+    }
+    .flow-steps{
       display:grid;
       grid-template-columns: repeat(5, 1fr);
-      gap:12px;
+      gap:10px;
     }
     .step{
-      background: rgba(255,255,255,.8);
+      background: rgba(255,255,255,.85);
       border: 1px dashed rgba(27,127,90,.35);
-      border-radius: var(--radius);
-      padding:14px;
-      position:relative;
-      min-height:104px;
-      transition: transform .18s ease, box-shadow .18s ease;
+      border-radius: 18px;
+      padding: 12px;
+      min-height: 92px;
+      transition: transform .16s ease, box-shadow .16s ease;
     }
-    .step:hover{ transform: translateY(-4px); box-shadow: var(--shadow-soft); }
+    .step:hover{
+      transform: translateY(-3px);
+      box-shadow: var(--shadow-soft);
+    }
     .step .n{
-      display:inline-flex; align-items:center; justify-content:center;
-      width:30px; height:30px; border-radius:10px;
+      display:inline-flex;
+      width:28px; height:28px;
+      align-items:center; justify-content:center;
+      border-radius:10px;
       background: rgba(27,127,90,.12);
-      border: 1px solid rgba(27,127,90,.25);
-      font-weight:800;
+      border:1px solid rgba(27,127,90,.25);
+      font-weight:900;
       color: var(--green-regen);
       margin-bottom:8px;
     }
-    .step strong{ display:block; font-family:Poppins, Inter, sans-serif; color:#0b2d4f; font-size:14px; margin-bottom:4px; }
-    .step span{ opacity:.9; font-size:13px; line-height:1.35; }
+    .step strong{
+      display:block;
+      color:#0b2d4f;
+      font-family:Poppins, Inter, sans-serif;
+      font-size:13px;
+      margin-bottom:4px;
+    }
+    .step p{
+      margin:0;
+      font-size:12.5px;
+      opacity:.9;
+      line-height:1.35;
+    }
 
-    /* Stats */
+    /* ============ STATS + LOGOS ============ */
     .stats{
       display:grid;
       grid-template-columns: repeat(3, 1fr);
       gap:12px;
     }
     .stat{
-      background: linear-gradient(135deg, rgba(255,255,255,.92), rgba(255,255,255,.70));
+      background: rgba(255,255,255,.86);
       border: 1px solid rgba(46,46,46,.10);
-      border-radius: var(--radius);
-      padding:18px;
-      box-shadow: 0 8px 18px rgba(13,59,102,.08);
+      border-radius: 18px;
+      padding:16px;
+      box-shadow: 0 8px 18px rgba(13,59,102,.06);
     }
     .stat .big{
       font-family:Poppins, Inter, sans-serif;
@@ -259,70 +631,32 @@
       color:#0b2d4f;
       letter-spacing:-.6px;
     }
-    .stat .label{ margin:6px 0 0; font-weight:700; opacity:.9; }
+    .stat .label{ margin:6px 0 0; font-weight:900; opacity:.9; }
     .stat .hint{ margin:6px 0 0; opacity:.85; font-size:13px; line-height:1.4; }
 
-    /* Parceiros (placeholders) */
     .logos{
       display:grid;
       grid-template-columns: repeat(6, 1fr);
       gap:10px;
       align-items:center;
-      opacity:.9;
+      opacity:.95;
     }
     .logo{
       height:46px;
       border-radius:14px;
       border:1px solid rgba(46,46,46,.10);
-      background: rgba(255,255,255,.75);
+      background: rgba(255,255,255,.82);
       display:flex; align-items:center; justify-content:center;
-      font-weight:800;
+      font-weight:900;
       letter-spacing:.6px;
       color: rgba(13,59,102,.70);
       user-select:none;
     }
 
-    /* CTA Final */
-    .final-cta{
-      background: linear-gradient(135deg, rgba(13,59,102,.10), rgba(27,127,90,.12));
-      border-top:1px solid rgba(46,46,46,.08);
-      border-bottom:1px solid rgba(46,46,46,.08);
-    }
-    .cta-box{
-      background: rgba(255,255,255,.75);
-      border:1px solid rgba(46,46,46,.10);
-      border-radius: 22px;
-      box-shadow: var(--shadow);
-      padding:22px;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:18px;
-      backdrop-filter: blur(10px);
-    }
-    .cta-box h2{
-      margin:0;
-      font-family:Poppins, Inter, sans-serif;
-      color:#0b2d4f;
-      letter-spacing:-.4px;
-      font-size:22px;
-    }
-    .cta-box p{ margin:8px 0 0; opacity:.9; max-width:62ch; line-height:1.45; }
-
-    footer{
-      padding:24px 0 40px;
-      opacity:.9;
-    }
-    footer .foot{
-      display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap;
-      border-top:1px solid rgba(46,46,46,.10);
-      padding-top:16px;
-    }
-
-    /* ========= Animação on-scroll ========= */
+    /* ============ REVEAL ============ */
     .reveal{
       opacity:0;
-      transform: translateY(14px);
+      transform: translateY(12px);
       transition: opacity .5s ease, transform .5s ease;
     }
     .reveal.show{
@@ -330,245 +664,437 @@
       transform:none;
     }
 
-    /* ========= Responsivo ========= */
+    /* ============ MOBILE ============ */
+    .overlay{
+      display:none;
+      position:fixed;
+      inset:0;
+      background: rgba(0,0,0,.25);
+      z-index: 30;
+    }
+
     @media (max-width: 980px){
+      .app{ grid-template-columns: 1fr; }
+
+      .sidebar{
+        position:fixed;
+        top:0; left:0;
+        width: min(var(--sidebar-w), 86vw);
+        transform: translateX(-110%);
+        transition: transform .2s ease;
+        z-index: 40;
+      }
+      .sidebar.open{ transform: translateX(0); }
+
+      .overlay.show{ display:block; }
+
+      .burger{ display:inline-flex; }
+
+      .search{ min-width: 0; width: min(520px, 48vw); }
+
       .hero-grid{ grid-template-columns: 1fr; }
       .cards{ grid-template-columns: repeat(2, 1fr); }
-      .steps{ grid-template-columns: 1fr; }
-      .logos{ grid-template-columns: repeat(3, 1fr); }
-      .cta-box{ flex-direction:column; align-items:flex-start; }
-    }
-    @media (max-width: 520px){
-      nav.links{ display:none; }
-      .cards{ grid-template-columns: 1fr; }
-      .mini{ grid-template-columns: 1fr; }
+      .about-grid{ grid-template-columns: 1fr; }
+      .flow-steps{ grid-template-columns: 1fr; }
       .stats{ grid-template-columns: 1fr; }
+      .logos{ grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 520px){
+      .cards{ grid-template-columns: 1fr; }
+      .logos{ grid-template-columns: repeat(2, 1fr); }
+      .search{ width: 56vw; }
+      .topbar{ padding: 0 12px; }
+      .content{ padding: 12px; }
     }
   </style>
 </head>
 
 <body>
-
-<header class="hero">
-  <div class="wrap">
-    <div class="hero-top">
-      <div class="brand"><span class="dot"></span> Plataforma Regenera</div>
-      <nav class="links">
-        <a href="#como-funciona">Como funciona</a>
-        <a href="#impacto">Impacto</a>
-        <a href="#parceiros">Parceiros</a>
-        <a class="btn" href="/login">Entrar</a>
-      </nav>
-    </div>
-
-    <div class="hero-grid">
-      <div>
-        <div class="kicker"><span class="pill"></span> Tecnologia com propósito • dados + território</div>
-        <h1>Conectamos pessoas, projetos e dados para regenerar territórios.</h1>
-        <p class="lead">
-          A Plataforma Regenera organiza iniciativas, conecta atores e acompanha resultados com clareza.
-          Menos ruído. Mais ação real.
-        </p>
-
-        <div class="cta-row">
-          <a class="btn primary" href="#como-funciona">Explorar a plataforma →</a>
-          <a class="btn" href="#parceiros">Ver parceiros</a>
+  <div class="app">
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <span class="dot"></span>
+        <div>
+          <div class="title">Hub Resiliência Climática</div>
+          <div class="subtitle">Rede • dados • ação no território</div>
         </div>
       </div>
 
-      <aside class="hero-card reveal">
-        <div class="mini">
-          <div class="tile">
-            <strong><span data-count="1280">0</span>+</strong>
-            <span>pessoas conectadas</span>
-          </div>
-          <div class="tile">
-            <strong><span data-count="64">0</span></strong>
-            <span>iniciativas mapeadas</span>
-          </div>
-          <div class="tile">
-            <strong><span data-count="12">0</span></strong>
-            <span>territórios ativos</span>
-          </div>
-          <div class="tile">
-            <strong><span data-count="96">0</span>%</strong>
-            <span>transparência do progresso</span>
+      <div class="side-section">Navegação</div>
+      <nav class="side-nav" id="sideNav">
+        <a class="side-link active" href="#inicio" data-nav>
+          <span class="ico">🏠</span><span>Início</span>
+        </a>
+        <a class="side-link" href="#sobre-projeto" data-nav>
+          <span class="ico">📘</span><span>Sobre o Projeto</span>
+        </a>
+        <a class="side-link" href="#o-que-entrega" data-nav>
+          <span class="ico">✨</span><span>O que entrega</span>
+        </a>
+        <a class="side-link" href="#como-funciona" data-nav>
+          <span class="ico">🧭</span><span>Como funciona</span>
+        </a>
+        <a class="side-link" href="#impacto" data-nav>
+          <span class="ico">📈</span><span>Impacto</span>
+        </a>
+        <a class="side-link" href="#parceiros" data-nav>
+          <span class="ico">🤝</span><span>Parceiros</span>
+        </a>
+      </nav>
+
+      <div class="side-section">Acesso</div>
+      <div class="side-footer">
+        <p class="small">
+          Quer entrar no Hub? Acesse seu painel ou crie uma conta para começar.
+        </p>
+        <a class="btn primary" href="/login">Acessar</a>
+        <a class="btn" href="/cadastro">Criar conta</a>
+      </div>
+    </aside>
+
+    <div class="overlay" id="overlay"></div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="left">
+          <button class="burger" id="burger" aria-label="Abrir menu">☰</button>
+
+          <div class="search" title="Busca (placeholder)">
+            🔎
+            <input type="text" placeholder="Buscar iniciativas, territórios, parceiros..." />
           </div>
         </div>
-      </aside>
+
+        <div class="top-actions">
+          <button class="chip" type="button" onclick="location.href='#sobre-projeto'">📘 Sobre</button>
+          <button class="chip" type="button" onclick="location.href='/login'">➡️ Entrar</button>
+        </div>
+      </header>
+
+      <!-- CONTENT -->
+      <main class="content">
+        <!-- HERO -->
+        <section id="inicio" class="hero reveal">
+          <div class="hero-grid">
+            <div style="position:relative; z-index:1;">
+              <div class="kicker"><span class="pill"></span> Tecnologia com propósito • clima • território</div>
+              <h1>Conectamos pessoas, projetos e dados para fortalecer a resiliência climática.</h1>
+              <p class="lead">
+                O Hub organiza iniciativas, integra atores e acompanha resultados com clareza.
+                Menos ruído. Mais ação coordenada.
+              </p>
+
+              <div class="btn-row">
+                <a class="btn primary" href="#sobre-projeto">Conhecer o projeto →</a>
+                <a class="btn" href="#como-funciona">Ver como funciona</a>
+                <a class="btn" href="#impacto">Ver impacto</a>
+              </div>
+            </div>
+
+            <aside class="hero-card reveal">
+              <div class="mini">
+                <div class="tile">
+                  <strong><span data-count="1280">0</span>+</strong>
+                  <span>pessoas conectadas</span>
+                </div>
+                <div class="tile">
+                  <strong><span data-count="64">0</span></strong>
+                  <span>iniciativas mapeadas</span>
+                </div>
+                <div class="tile">
+                  <strong><span data-count="12">0</span></strong>
+                  <span>territórios ativos</span>
+                </div>
+                <div class="tile">
+                  <strong><span data-count="96">0</span>%</strong>
+                  <span>visibilidade do progresso</span>
+                </div>
+              </div>
+            </aside>
+          </div>
+        </section>
+
+        <!-- SOBRE O PROJETO -->
+        <section id="sobre-projeto" class="section reveal">
+          <h2>Sobre o Hub Resiliência Climática</h2>
+          <p class="sub">
+            Esta aba explica a visão, missão e como o Hub se organiza. Substitua o texto abaixo pelo “texto de abertura do projeto”.
+          </p>
+
+          <div class="about-grid">
+            <article class="panel">
+              <div class="badge">Visão geral</div>
+              <h3>Por que o Hub existe</h3>
+
+              <!-- ✅ COLE AQUI O TEXTO DE ABERTURA DO PROJETO -->
+              <p class="lead" id="textoAbertura">
+Cole aqui o texto de abertura do projeto.
+
+Dica: se você colar o texto aqui no chat, eu devolvo ele revisado e já formatado com parágrafos perfeitos, mantendo o tom do Hub.
+              </p>
+
+              <div class="mini-points">
+                <div class="pill">🌱 Resiliência</div>
+                <div class="pill">📍 Território</div>
+                <div class="pill">📊 Dados</div>
+                <div class="pill">🤝 Rede</div>
+              </div>
+            </article>
+
+            <aside class="stack">
+              <div class="cardy">
+                <div class="cardy-ico">🎯</div>
+                <div>
+                  <strong>Missão</strong>
+                  <p>Fortalecer capacidades e conexões para enfrentar riscos climáticos com ação coordenada.</p>
+                </div>
+              </div>
+
+              <div class="cardy">
+                <div class="cardy-ico">🧩</div>
+                <div>
+                  <strong>Como atua</strong>
+                  <p>Organiza iniciativas, integra atores e dá visibilidade ao progresso em entregas e indicadores.</p>
+                </div>
+              </div>
+
+              <div class="cardy">
+                <div class="cardy-ico">🗺️</div>
+                <div>
+                  <strong>Para quem</strong>
+                  <p>Gestão pública, organizações, lideranças e parceiros que atuam no território.</p>
+                </div>
+              </div>
+
+              <div class="cardy">
+                <div class="cardy-ico">🚀</div>
+                <div>
+                  <strong>O que entrega</strong>
+                  <p>Clareza de prioridades, rede organizada, ações acompanhadas e transparência de resultados.</p>
+                </div>
+              </div>
+            </aside>
+          </div>
+
+          <div class="flow">
+            <h3 class="flow-title">Como o Hub funciona na prática</h3>
+            <div class="flow-steps">
+              <div class="step">
+                <span class="n">1</span>
+                <div>
+                  <strong>Mapear</strong>
+                  <p>Diagnóstico de desafios, ativos e riscos.</p>
+                </div>
+              </div>
+              <div class="step">
+                <span class="n">2</span>
+                <div>
+                  <strong>Conectar</strong>
+                  <p>Atores e iniciativas com papéis claros.</p>
+                </div>
+              </div>
+              <div class="step">
+                <span class="n">3</span>
+                <div>
+                  <strong>Planejar</strong>
+                  <p>Metas, responsáveis e cronogramas.</p>
+                </div>
+              </div>
+              <div class="step">
+                <span class="n">4</span>
+                <div>
+                  <strong>Executar</strong>
+                  <p>Ações em campo com registro simples.</p>
+                </div>
+              </div>
+              <div class="step">
+                <span class="n">5</span>
+                <div>
+                  <strong>Monitorar</strong>
+                  <p>Indicadores e evolução transparente.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- O QUE ENTREGA -->
+        <section id="o-que-entrega" class="section reveal">
+          <h2>O que o Hub entrega</h2>
+          <p class="sub">Blocos rápidos, visuais e objetivos — para dar clareza do valor em segundos.</p>
+
+          <div class="cards">
+            <div class="card">
+              <div class="icon">🌱</div>
+              <h3>Resiliência no território</h3>
+              <p>Organize ações e metas com foco no que reduz vulnerabilidades e melhora vidas.</p>
+            </div>
+            <div class="card">
+              <div class="icon">📊</div>
+              <h3>Dados com propósito</h3>
+              <p>Indicadores simples que mostram avanço real, sem “dashboard vazio”.</p>
+            </div>
+            <div class="card">
+              <div class="icon">🤝</div>
+              <h3>Conexão de atores</h3>
+              <p>Quem faz, quem apoia e quem precisa — tudo no mesmo fluxo.</p>
+            </div>
+            <div class="card">
+              <div class="icon">🧭</div>
+              <h3>Coordenação de ações</h3>
+              <p>Planejamento, execução e acompanhamento — do começo ao impacto.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- COMO FUNCIONA -->
+        <section id="como-funciona" class="section reveal">
+          <h2>Como funciona</h2>
+          <p class="sub">Um caminho simples para transformar informação em ação coordenada.</p>
+
+          <div class="flow" style="margin-top:0;">
+            <h3 class="flow-title" style="margin-bottom:10px;">Fluxo operacional</h3>
+            <div class="flow-steps">
+              <div class="step"><span class="n">1</span><div><strong>Diagnóstico</strong><p>Levantamento de riscos, exposição e capacidade local.</p></div></div>
+              <div class="step"><span class="n">2</span><div><strong>Priorizar</strong><p>Definição do que é crítico, com critérios transparentes.</p></div></div>
+              <div class="step"><span class="n">3</span><div><strong>Articular</strong><p>Rede de parceiros com papéis claros e coordenação.</p></div></div>
+              <div class="step"><span class="n">4</span><div><strong>Implementar</strong><p>Ações e projetos com acompanhamento e registros.</p></div></div>
+              <div class="step"><span class="n">5</span><div><strong>Avaliar</strong><p>Resultados, ajustes e aprendizagem contínua.</p></div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- IMPACTO -->
+        <section id="impacto" class="section reveal">
+          <h2>Impacto</h2>
+          <p class="sub">Números que contam história. Você pode ligar esses valores ao seu backend depois.</p>
+
+          <div class="stats">
+            <div class="stat">
+              <p class="big"><span data-count="247">0</span></p>
+              <p class="label">ações em andamento</p>
+              <p class="hint">Acompanhamento do que está vivo no território.</p>
+            </div>
+            <div class="stat">
+              <p class="big"><span data-count="38">0</span></p>
+              <p class="label">parceiros ativos</p>
+              <p class="hint">Rede colaborativa com objetivos e rotas claras.</p>
+            </div>
+            <div class="stat">
+              <p class="big"><span data-count="19">0</span></p>
+              <p class="label">indicadores monitorados</p>
+              <p class="hint">Menos complexidade, mais consistência.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- PARCEIROS -->
+        <section id="parceiros" class="section reveal">
+          <h2>Parceiros e rede</h2>
+          <p class="sub">Mesmo como placeholder, isso dá prova social e deixa a página mais viva.</p>
+
+          <div class="logos">
+            <div class="logo">PARCEIRO</div>
+            <div class="logo">REDE</div>
+            <div class="logo">ONG</div>
+            <div class="logo">INSTITUTO</div>
+            <div class="logo">CIDADE</div>
+            <div class="logo">COMUNIDADE</div>
+          </div>
+        </section>
+
+        <!-- FOOT -->
+        <section class="section reveal" style="margin-bottom:18px;">
+          <h2>Pronto para participar?</h2>
+          <p class="sub">Acesse agora e veja como o Hub organiza o caminho do diagnóstico ao impacto.</p>
+          <div class="btn-row">
+            <a class="btn primary" href="/cadastro">Quero fazer parte</a>
+            <a class="btn" href="/login">Acessar</a>
+          </div>
+        </section>
+      </main>
     </div>
   </div>
-</header>
 
-<main>
-  <!-- O que é -->
-  <section class="wrap reveal">
-    <h2 class="section-title">O que a Regenera entrega</h2>
-    <p class="section-sub">Blocos rápidos, visuais e objetivos — pra dar clareza do valor em segundos.</p>
+  <script>
+    // ====== Sidebar mobile ======
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+    const burger = document.getElementById('burger');
 
-    <div class="cards">
-      <div class="card">
-        <div class="icon">🌱</div>
-        <h3>Regeneração social</h3>
-        <p>Organize ações e metas com foco no que melhora vidas no território.</p>
-      </div>
-      <div class="card">
-        <div class="icon">📊</div>
-        <h3>Dados com propósito</h3>
-        <p>Indicadores simples que mostram avanço real, sem “dashboard vazio”.</p>
-      </div>
-      <div class="card">
-        <div class="icon">🤝</div>
-        <h3>Conexão de atores</h3>
-        <p>Quem faz, quem apoia e quem precisa — tudo no mesmo fluxo.</p>
-      </div>
-      <div class="card">
-        <div class="icon">🚀</div>
-        <h3>Ação contínua</h3>
-        <p>Planos, execução e acompanhamento — do começo ao impacto.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Como funciona -->
-  <section id="como-funciona" class="wrap reveal">
-    <h2 class="section-title">Como funciona</h2>
-    <p class="section-sub">Uma linha do tempo curta, para transformar conceito em sensação de produto.</p>
-
-    <div class="steps">
-      <div class="step">
-        <div class="n">1</div>
-        <strong>Diagnóstico</strong>
-        <span>Levantamos desafios, recursos e prioridades do território.</span>
-      </div>
-      <div class="step">
-        <div class="n">2</div>
-        <strong>Conexões</strong>
-        <span>Unimos organizações, lideranças, projetos e apoiadores.</span>
-      </div>
-      <div class="step">
-        <div class="n">3</div>
-        <strong>Plano de ação</strong>
-        <span>Metas claras, responsabilidades e cronograma executável.</span>
-      </div>
-      <div class="step">
-        <div class="n">4</div>
-        <strong>Monitoramento</strong>
-        <span>Acompanhamento com indicadores e registros simples.</span>
-      </div>
-      <div class="step">
-        <div class="n">5</div>
-        <strong>Regeneração</strong>
-        <span>Aprendizado contínuo e melhoria baseada em evidências.</span>
-      </div>
-    </div>
-  </section>
-
-  <!-- Impacto / números -->
-  <section id="impacto" class="wrap reveal">
-    <h2 class="section-title">Impacto em tempo real</h2>
-    <p class="section-sub">Números que contam história. Você pode ligar esses valores ao seu backend depois.</p>
-
-    <div class="stats">
-      <div class="stat">
-        <p class="big"><span data-count="247">0</span></p>
-        <p class="label">ações em andamento</p>
-        <p class="hint">Acompanhamento do que está vivo no território.</p>
-      </div>
-      <div class="stat">
-        <p class="big"><span data-count="38">0</span></p>
-        <p class="label">parceiros ativos</p>
-        <p class="hint">Rede colaborativa, com papéis claros e objetivos.</p>
-      </div>
-      <div class="stat">
-        <p class="big"><span data-count="19">0</span></p>
-        <p class="label">indicadores monitorados</p>
-        <p class="hint">Menos complexidade, mais consistência.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Parceiros -->
-  <section id="parceiros" class="wrap reveal">
-    <h2 class="section-title">Parceiros e rede</h2>
-    <p class="section-sub">Mesmo como placeholder, isso dá “prova social” e deixa a página mais viva.</p>
-
-    <div class="logos">
-      <div class="logo">PARCEIRO</div>
-      <div class="logo">REDE</div>
-      <div class="logo">ONG</div>
-      <div class="logo">INSTITUTO</div>
-      <div class="logo">CIDADE</div>
-      <div class="logo">COMUNIDADE</div>
-    </div>
-  </section>
-
-  <!-- CTA final -->
-  <section class="final-cta">
-    <div class="wrap reveal" style="padding:42px 20px;">
-      <div class="cta-box">
-        <div>
-          <h2>Quer ativar a Regenera no seu território?</h2>
-          <p>Entre, explore as iniciativas e veja como a plataforma organiza o caminho do diagnóstico ao impacto.</p>
-        </div>
-        <div class="cta-row">
-          <a class="btn primary" href="/cadastro">Quero fazer parte</a>
-          <a class="btn" href="/login">Acessar</a>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <footer class="wrap">
-    <div class="foot">
-      <div><strong>Plataforma Regenera</strong><div style="opacity:.85; margin-top:6px;">Regeneração com dados, rede e ação.</div></div>
-      <div style="opacity:.85;">
-        <div><strong>Contato</strong></div>
-        <div style="margin-top:6px;">contato@regenera.org (exemplo)</div>
-      </div>
-    </div>
-  </footer>
-</main>
-
-<script>
-  // Reveal on scroll
-  const revealEls = document.querySelectorAll('.reveal');
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) e.target.classList.add('show');
-    });
-  }, { threshold: 0.12 });
-  revealEls.forEach(el => io.observe(el));
-
-  // Count up (quando aparece)
-  function animateCount(el, to, duration=900){
-    const start = 0;
-    const startTime = performance.now();
-    const isPercent = (el.parentElement?.textContent || '').includes('%');
-
-    function tick(now){
-      const t = Math.min(1, (now - startTime) / duration);
-      const val = Math.floor(start + (to - start) * (t*t*(3-2*t))); // easeInOut
-      el.textContent = val.toLocaleString('pt-BR');
-      if (t < 1) requestAnimationFrame(tick);
-      else el.textContent = to.toLocaleString('pt-BR');
+    function openSidebar(){
+      sidebar.classList.add('open');
+      overlay.classList.add('show');
     }
-    requestAnimationFrame(tick);
-  }
+    function closeSidebar(){
+      sidebar.classList.remove('open');
+      overlay.classList.remove('show');
+    }
 
-  const countEls = document.querySelectorAll('[data-count]');
-  const ioCount = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (!e.isIntersecting) return;
-      const el = e.target;
-      if (el.dataset.done) return;
-      el.dataset.done = "1";
-      animateCount(el, Number(el.dataset.count));
+    burger?.addEventListener('click', () => {
+      if (sidebar.classList.contains('open')) closeSidebar();
+      else openSidebar();
     });
-  }, { threshold: 0.35 });
+    overlay?.addEventListener('click', closeSidebar);
 
-  countEls.forEach(el => ioCount.observe(el));
-</script>
+    // Fecha sidebar ao clicar em link (mobile)
+    document.querySelectorAll('[data-nav]').forEach(a => {
+      a.addEventListener('click', () => {
+        if (window.matchMedia('(max-width: 980px)').matches) closeSidebar();
+      });
+    });
 
+    // ====== Reveal on scroll ======
+    const revealEls = document.querySelectorAll('.reveal');
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('show'); });
+    }, { threshold: 0.12 });
+    revealEls.forEach(el => io.observe(el));
+
+    // ====== Count up (quando aparece) ======
+    function animateCount(el, to, duration=900){
+      const start = 0;
+      const startTime = performance.now();
+      function tick(now){
+        const t = Math.min(1, (now - startTime) / duration);
+        const eased = t*t*(3-2*t); // easeInOut
+        const val = Math.floor(start + (to - start) * eased);
+        el.textContent = val.toLocaleString('pt-BR');
+        if (t < 1) requestAnimationFrame(tick);
+        else el.textContent = to.toLocaleString('pt-BR');
+      }
+      requestAnimationFrame(tick);
+    }
+
+    const countEls = document.querySelectorAll('[data-count]');
+    const ioCount = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        if (el.dataset.done) return;
+        el.dataset.done = "1";
+        animateCount(el, Number(el.dataset.count));
+      });
+    }, { threshold: 0.35 });
+    countEls.forEach(el => ioCount.observe(el));
+
+    // ====== Ativar item do menu conforme scroll ======
+    const sections = Array.from(document.querySelectorAll('main .content section[id]'));
+    const navLinks = Array.from(document.querySelectorAll('#sideNav a[data-nav]'));
+
+    const ioNav = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (!entry.isIntersecting) return;
+        const id = entry.target.getAttribute('id');
+        navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + id));
+      });
+    }, { rootMargin: "-40% 0px -55% 0px", threshold: 0.01 });
+
+    sections.forEach(sec => ioNav.observe(sec));
+  </script>
 </body>
 </html>
