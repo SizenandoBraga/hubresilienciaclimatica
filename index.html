@@ -103,7 +103,6 @@
       margin-bottom:44px;
     }
 
-    /* sem logo pequeno aqui conforme você pediu */
     .brand-title{
       display:flex;
       flex-direction:column;
@@ -159,6 +158,112 @@
       background: var(--yellow);
       box-shadow: 0 0 0 3px rgba(242,201,76,0.18);
     }
+
+    /* =========================
+       PARCEIROS (NOVO)
+    ========================= */
+    .partners{
+      margin-top: 22px;
+      border-radius: 18px;
+      border: 1px solid rgba(255,255,255,0.20);
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(10px);
+      padding: 14px;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.10);
+    }
+    .partners-head{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      margin-bottom: 10px;
+    }
+    .partners-head strong{
+      font-family:'Poppins';
+      font-size: 13px;
+      letter-spacing:0.2px;
+    }
+    .partners-head span{
+      font-size: 12px;
+      opacity: .9;
+    }
+
+    .partners-grid{
+      display:grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .partner-card{
+      border-radius: 14px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      height: 54px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+      cursor: default;
+      position:relative;
+    }
+    .partner-card:hover{
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.16);
+      border-color: rgba(242,201,76,0.28);
+    }
+
+    .partner-card img{
+      max-width: 88%;
+      max-height: 70%;
+      object-fit: contain;
+      display:block;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.22));
+    }
+
+    .partner-fallback{
+      width: 100%;
+      height: 100%;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      font-family:'Poppins';
+      font-weight: 800;
+      letter-spacing: 0.3px;
+      color: rgba(255,255,255,0.92);
+      background:
+        radial-gradient(120px 80px at 30% 30%, rgba(242,201,76,0.18), rgba(255,255,255,0)),
+        radial-gradient(120px 80px at 80% 20%, rgba(76,175,143,0.18), rgba(255,255,255,0));
+    }
+
+    .partner-card[data-broken="true"] img{ display:none; }
+    .partner-card[data-broken="true"] .partner-fallback{ display:flex; }
+
+    .partners-foot{
+      margin-top: 10px;
+      font-size: 12px;
+      opacity: .9;
+      line-height:1.4;
+    }
+
+    @media (max-width: 1100px){
+      .partners-grid{ grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    }
+    @media (max-width: 920px){
+      .page{ grid-template-columns: 1fr; }
+      .hero{ padding-bottom: 26px; }
+      .panel{ padding-top: 22px; padding-bottom: 40px; }
+      .hero::before{
+        background-size: 280px;
+        opacity:0.12;
+      }
+      .partners-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    @media (max-width: 420px){
+      .partners-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    /* ========================= */
 
     .panel{
       padding: 56px clamp(18px, 4vw, 56px);
@@ -325,16 +430,6 @@
       border: 1px solid rgba(242,201,76,0.34);
       color: #5b4a12;
     }
-
-    @media (max-width: 920px){
-      .page{ grid-template-columns: 1fr; }
-      .hero{ padding-bottom: 26px; }
-      .panel{ padding-top: 22px; padding-bottom: 40px; }
-      .hero::before{
-        background-size: 280px;
-        opacity:0.12;
-      }
-    }
   </style>
 </head>
 
@@ -353,8 +448,10 @@
       <div class="hero-content">
         <h1>Regenerando territórios através da ação climática.</h1>
         <p>
-          O <strong>Hub Resiliência Climática</strong> conecta cooperativas, comunidades,
-          técnicos e gestores públicos — com foco em <strong>economia circular</strong>, <strong>governança</strong> e
+          O <strong>Hub Resiliência Climática</strong> é um ponto de encontro digital que conecta <strong>cooperativas</strong>, <strong>comunidades</strong>,
+           <strong>técnicos</strong> e <strong>gestores públicos</strong> .
+ Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e a resposta aos desafios climáticos nos territórios..
+          Com foco em <strong>economia circular</strong>, <strong>governança</strong> e
           <strong>capacitação</strong>.
         </p>
 
@@ -365,6 +462,27 @@
           <div class="pill"><span class="dot"></span> Inovação social & tech</div>
           <div class="pill"><span class="dot"></span> Regeneração ambiental</div>
         </div>
+
+        <!-- ✅ NOVO BLOCO: Empresas participantes -->
+        <div class="partners" aria-label="Empresas participantes" translate="no">
+          <div class="partners-head">
+            <div>
+              <strong>Empresas participantes</strong><br>
+              <span>Organizações que apoiam e constroem este projeto</span>
+            </div>
+            <span style="opacity:.95;">🤝</span>
+          </div>
+
+          <div class="partners-grid" id="partnersGrid">
+            <!-- preenchido via JS -->
+          </div>
+
+          <div class="partners-foot">
+            Quer inserir sua organização? Fale com a equipe de governança para inclusão de logo e informações.
+          </div>
+        </div>
+        <!-- /NOVO BLOCO -->
+
       </div>
     </section>
 
@@ -414,164 +532,248 @@
       </div>
     </section>
   </main>
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+  import {
+    getAuth,
+    signInWithEmailAndPassword,
+    createUserWithEmailAndPassword,
+    sendPasswordResetEmail
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+  import {
+    getFirestore,
+    doc,
+    getDoc,
+    setDoc,
+    serverTimestamp
+  } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+  const firebaseConfig = {
+    apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
+    authDomain: "hub-resiliencia-climatica.firebaseapp.com",
+    projectId: "hub-resiliencia-climatica",
+    storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
+    messagingSenderId: "485694309026",
+    appId: "1:485694309026:web:771ed497d49861fa444dfb"
+  };
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
-      authDomain: "hub-resiliencia-climatica.firebaseapp.com",
-      projectId: "hub-resiliencia-climatica",
-      storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
-      messagingSenderId: "485694309026",
-      appId: "1:485694309026:web:771ed497d49861fa444dfb"
-    };
+  const app = initializeApp(firebaseConfig);
+  const auth = getAuth(app);
+  const db = getFirestore(app);
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  const msgBox = document.getElementById("msgBox");
+  const loginBtn = document.getElementById("loginBtn");
+  const emailInput = document.getElementById("email");
+  const passwordInput = document.getElementById("password");
 
-    const msgBox = document.getElementById("msgBox");
-    const loginBtn = document.getElementById("loginBtn");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
+  // =========================
+  // ✅ PARCEIROS (NOVO)
+  // =========================
+  const PARTNERS = [
+    { name: "Mãos Verdes", logo: "img/empresas/maos verdes.png" },
+    { name: "Helice Consultoria", logo: "img/empresas/helice_consultoria_ufrgs_logo.jpg" },
+    { name: "Universidade", logo: "img/parceiros/universidade.png" },
+    { name: "ONG Parceira", logo: "img/parceiros/ong.png" },
+    { name: "Empresa Y", logo: "img/parceiros/empresa-y.png" },
+  ];
 
-    function setLoading(isLoading){
-      loginBtn.disabled = isLoading;
-      loginBtn.style.opacity = isLoading ? "0.85" : "1";
-      loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
+  function initials(name){
+    const n = (name || "").trim();
+    if(!n) return "OK";
+    const parts = n.split(/\s+/).filter(Boolean);
+    if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
+    return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
+  }
+
+  function renderPartners(){
+    const grid = document.getElementById("partnersGrid");
+    if(!grid) return;
+    grid.innerHTML = "";
+    PARTNERS.forEach(p => {
+      const card = document.createElement("div");
+      card.className = "partner-card";
+      card.title = p.name;
+      card.innerHTML = `
+        <img src="${p.logo}" alt="${p.name}">
+        <div class="partner-fallback">${initials(p.name)}</div>
+      `;
+      const img = card.querySelector("img");
+      img.addEventListener("error", () => card.setAttribute("data-broken", "true"));
+      grid.appendChild(card);
+    });
+  }
+  renderPartners();
+  // =========================
+
+  function setLoading(isLoading){
+    loginBtn.disabled = isLoading;
+    loginBtn.style.opacity = isLoading ? "0.85" : "1";
+    loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
+  }
+
+  function showMsg(type, text){
+    msgBox.className = "msg show " + (type === "error" ? "error" : "success");
+    msgBox.textContent = text;
+  }
+
+  function hideMsg(){
+    msgBox.className = "msg";
+    msgBox.textContent = "";
+  }
+
+  function niceError(err){
+    const code = err?.code || "";
+    const msg = err?.message || "";
+    return `${code}${msg ? " • " + msg : ""}`.trim();
+  }
+
+  async function ensureUserProfile(user){
+    const ref = doc(db, "users", user.uid);
+
+    // tenta ler; se der permission-denied aqui, é rule
+    const snap = await getDoc(ref);
+
+    // cria somente se não existe
+    if(!snap.exists()){
+      const email = user.email ?? null;
+      const defaultName = user.displayName || (email ? email.split("@")[0] : "Usuário");
+
+      await setDoc(ref, {
+        uid: user.uid,
+        email,
+        name: defaultName,
+        role: "comunidade",
+        crgrIds: [],
+        orgId: null,
+        modules: { feed: true },
+        bio: "Mini bio: descreva sua atuação no território.",
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      }, { merge: true }); // ✅ merge evita conflito e é mais seguro
     }
+  }
 
-    function showMsg(type, text){
-      msgBox.className = "msg show " + (type === "error" ? "error" : "success");
-      msgBox.textContent = text;
-    }
+  async function redirectAfterLogin(){
+    // ✅ Todo mundo vai pra home; admin vê card lá.
+    window.location.href = "home.html";
+  }
 
-    function hideMsg(){
-      msgBox.className = "msg";
-      msgBox.textContent = "";
-    }
+  // =========================
+  // LOGIN
+  // =========================
+  document.getElementById("loginForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    hideMsg();
+    setLoading(true);
 
-    async function ensureUserProfile(user){
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      if(!snap.exists()){
-        await setDoc(ref, {
-          uid: user.uid,
-          email: user.email ?? null,
-          name: user.displayName || (user.email ? user.email.split("@")[0] : "Usuário"),
-          role: "comunidade",
-          crgrIds: [],
-          orgId: null,
-          modules: {},
-          bio: "Mini bio: descreva sua atuação no território.",
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp()
-        });
-      }
-    }
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
 
-    function isAdminProfile(profile){
-      const modules = profile?.modules || {};
-      return profile?.role === "admin" || modules.admin === true;
-    }
+    try{
+      const cred = await signInWithEmailAndPassword(auth, email, password);
 
-    async function redirectAfterLogin(user){
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-      const profile = snap.exists() ? snap.data() : null;
-      if(profile && isAdminProfile(profile)){
-        window.location.href = "admin.html";
-      }else{
-        window.location.href = "home.html";
-      }
-    }
-
-    document.getElementById("loginForm").addEventListener("submit", async (e) => {
-      e.preventDefault();
-      hideMsg();
-      setLoading(true);
-
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
-
+      // ✅ tenta criar perfil, mas NÃO bloqueia login se rules falharem
       try{
-        const cred = await signInWithEmailAndPassword(auth, email, password);
         await ensureUserProfile(cred.user);
-        await redirectAfterLogin(cred.user);
-      }catch(err){
-        const code = err?.code || "";
-        let text = "Não foi possível entrar. Verifique seus dados.";
-        if(code.includes("auth/invalid-credential")) text = "E-mail ou senha inválidos.";
-        if(code.includes("auth/user-not-found")) text = "Usuário não encontrado.";
-        if(code.includes("auth/wrong-password")) text = "Senha incorreta.";
-        if(code.includes("auth/too-many-requests")) text = "Muitas tentativas. Tente novamente mais tarde.";
-        showMsg("error", text);
-      }finally{
-        setLoading(false);
+      }catch(profileErr){
+        console.warn("PROFILE ERROR (login continues) =>", profileErr);
+        showMsg("error", "Login OK, mas não consegui ler/criar seu perfil no Firestore (rules). Mesmo assim você vai entrar.");
       }
-    });
 
-    document.getElementById("registerBtn").addEventListener("click", async () => {
-      hideMsg();
-      setLoading(true);
+      await redirectAfterLogin();
+    }catch(err){
+      console.error("LOGIN ERROR =>", err);
 
-      const email = emailInput.value.trim();
-      const password = passwordInput.value;
+      const code = err?.code || "";
+      let text = "Não foi possível entrar. Verifique seus dados.";
 
-      if(!email || !password){
-        setLoading(false);
-        return showMsg("error", "Preencha e-mail e senha para criar a conta.");
+      // Auth
+      if(code.includes("auth/invalid-credential")) text = "E-mail ou senha inválidos.";
+      else if(code.includes("auth/user-not-found")) text = "Usuário não encontrado.";
+      else if(code.includes("auth/wrong-password")) text = "Senha incorreta.";
+      else if(code.includes("auth/too-many-requests")) text = "Muitas tentativas. Tente novamente mais tarde.";
+      else if(code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
+      else if(code.includes("auth/network-request-failed")) text = "Falha de rede. Verifique internet.";
+      else if(code.includes("auth/invalid-api-key")) text = "API Key inválida no firebaseConfig.";
+      else if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
+      else {
+        // Mostra detalhe técnico (ajuda MUITO)
+        text = "Erro no login: " + niceError(err);
       }
+
+      showMsg("error", text);
+    }finally{
+      setLoading(false);
+    }
+  });
+
+  // =========================
+  // CADASTRO
+  // =========================
+  document.getElementById("registerBtn").addEventListener("click", async () => {
+    hideMsg();
+    setLoading(true);
+
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    if(!email || !password){
+      setLoading(false);
+      return showMsg("error", "Preencha e-mail e senha para criar a conta.");
+    }
+
+    try{
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
 
       try{
-        const cred = await createUserWithEmailAndPassword(auth, email, password);
         await ensureUserProfile(cred.user);
-        showMsg("success", "Conta criada! Redirecionando...");
-        await redirectAfterLogin(cred.user);
-      }catch(err){
-        const code = err?.code || "";
-        let text = "Não foi possível criar a conta.";
-        if(code.includes("auth/email-already-in-use")) text = "Este e-mail já está em uso.";
-        if(code.includes("auth/weak-password")) text = "Senha fraca. Use pelo menos 6 caracteres.";
-        if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
-        showMsg("error", text);
-      }finally{
-        setLoading(false);
+      }catch(profileErr){
+        console.warn("PROFILE ERROR (signup continues) =>", profileErr);
+        showMsg("error", "Conta criada, mas sem permissão para salvar perfil no Firestore (rules). Você ainda vai entrar.");
       }
-    });
 
-    document.getElementById("resetPwdLink").addEventListener("click", async (e) => {
-      e.preventDefault();
-      hideMsg();
+      showMsg("success", "Conta criada! Redirecionando...");
+      await redirectAfterLogin();
+    }catch(err){
+      console.error("SIGNUP ERROR =>", err);
 
-      const email = emailInput.value.trim();
-      if(!email) return showMsg("error", "Digite seu e-mail para recuperar a senha.");
+      const code = err?.code || "";
+      let text = "Não foi possível criar a conta.";
+      if(code.includes("auth/email-already-in-use")) text = "Este e-mail já está em uso.";
+      else if(code.includes("auth/weak-password")) text = "Senha fraca. Use pelo menos 6 caracteres.";
+      else if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
+      else if(code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
+      else text = "Erro no cadastro: " + niceError(err);
 
-      try{
-        await sendPasswordResetEmail(auth, email);
-        showMsg("success", "Enviamos um link de recuperação para seu e-mail.");
-      }catch(err){
-        const code = err?.code || "";
-        let text = "Não foi possível enviar o e-mail de recuperação.";
-        if(code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
-        if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
-        showMsg("error", text);
-      }
-    });
-  </script>
+      showMsg("error", text);
+    }finally{
+      setLoading(false);
+    }
+  });
+
+  // =========================
+  // RESET SENHA
+  // =========================
+  document.getElementById("resetPwdLink").addEventListener("click", async (e) => {
+    e.preventDefault();
+    hideMsg();
+
+    const email = emailInput.value.trim();
+    if(!email) return showMsg("error", "Digite seu e-mail para recuperar a senha.");
+
+    try{
+      await sendPasswordResetEmail(auth, email);
+      showMsg("success", "Enviamos um link de recuperação para seu e-mail.");
+    }catch(err){
+      console.error("RESET ERROR =>", err);
+      const code = err?.code || "";
+      let text = "Não foi possível enviar o e-mail de recuperação.";
+      if(code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
+      if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
+      showMsg("error", text);
+    }
+  });
+</script>
+
 </body>
 </html>

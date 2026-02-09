@@ -25,6 +25,7 @@
 
       --shadow:0 10px 30px rgba(0,0,0,0.08);
       --border:#E7ECEA;
+      --radius:18px;
     }
 
     *{box-sizing:border-box}
@@ -233,6 +234,125 @@
       font-size:12px;
       color:var(--blue-deep);
       cursor:pointer;
+      white-space:nowrap;
+    }
+
+    /* NEW: Sections layout (3 partes) */
+    .mainstack{ display:flex; flex-direction:column; gap:12px; }
+
+    .card{
+      background:#fff;
+      border:1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+      overflow:hidden;
+    }
+    .cardHead{
+      padding:14px;
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px solid var(--border);
+    }
+    .cardHead h3{ font-size:14px; }
+    .cardBody{ padding:14px; }
+
+    .projectHero{
+      display:grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap:12px;
+      align-items:stretch;
+    }
+    .projectBox{
+      background: linear-gradient(135deg, rgba(27,127,90,0.12), rgba(13,59,102,0.08));
+      border:1px solid rgba(13,59,102,0.10);
+      border-radius:18px;
+      padding:14px;
+      min-height: 180px;
+    }
+    .projectBox h1{
+      font-size:22px;
+      letter-spacing:-0.02em;
+      line-height:1.15;
+      margin-bottom:8px;
+    }
+    .projectBox p{
+      margin:0;
+      font-size:13.5px;
+      line-height:1.6;
+      color:#2e2e2e;
+    }
+    .pillrow{
+      display:flex;
+      flex-wrap:wrap;
+      gap:8px;
+      margin-top:10px;
+    }
+    .pill{
+      font-size:12px;
+      padding:8px 10px;
+      border-radius:999px;
+      background:#fff;
+      border:1px solid rgba(13,59,102,0.12);
+      color:#0d3b66;
+      font-weight:900;
+      font-family:'Poppins';
+    }
+
+    .demoBox{
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
+      min-height: 180px;
+    }
+    .demoList{
+      margin-top:10px;
+      display:grid;
+      gap:8px;
+    }
+    .demoItem{
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:10px 12px;
+      display:flex;
+      justify-content:space-between;
+      gap:10px;
+      align-items:center;
+    }
+    .demoItem b{ font-family:'Poppins'; font-size:12.5px; }
+    .demoItem span{ color:#666; font-size:12.5px; }
+
+    .kpis{
+      display:grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap:12px;
+    }
+    .kpi{
+      border:1px solid var(--border);
+      border-radius:18px;
+      padding:14px;
+      background:#fff;
+    }
+    .kpi .label{ font-size:12px; color:#666; }
+    .kpi .value{
+      font-family:'Poppins';
+      font-size:22px;
+      margin-top:6px;
+      letter-spacing:-0.02em;
+    }
+    .kpi .hint{ font-size:12px; color:#666; margin-top:6px; }
+
+    .alerts{
+      margin-top:12px;
+      border:1px solid rgba(242,201,76,0.35);
+      background: rgba(242,201,76,0.16);
+      border-radius:18px;
+      padding:12px 14px;
+      font-size:13px;
+      line-height:1.5;
+      color:#5b4a12;
     }
 
     /* Instagram-like feed cards */
@@ -361,11 +481,16 @@
       line-height:1.5;
     }
 
+    @media (max-width: 1040px){
+      .projectHero{ grid-template-columns: 1fr; }
+      .kpis{ grid-template-columns: repeat(2, 1fr); }
+    }
     @media (max-width: 920px){
       .app{ grid-template-columns: 1fr; }
       .sidebar{ position:relative; height:auto; }
       .topbar{ top:12px; }
       .sidebar-bottom{ position:relative; left:0; right:0; bottom:0; margin-top:12px; }
+      .kpis{ grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -408,7 +533,7 @@
       <div class="topbar" translate="no">
         <div style="min-width:220px;">
           <h2>Início</h2>
-          <div class="muted" id="subtitle">Feed de atualizações</div>
+          <div class="muted" id="subtitle">Hub • Visão geral</div>
         </div>
 
         <div class="search" aria-label="Pesquisar">
@@ -419,8 +544,121 @@
         <button class="pillbtn" id="adminBtn" type="button" style="display:none;" translate="no">Admin</button>
       </div>
 
-      <div class="empty" id="infoBox" translate="no">Carregando...</div>
-      <section class="feed" id="feed"></section>
+      <div class="mainstack">
+        <!-- 1) ESPAÇO SOBRE O PROJETO -->
+        <section class="card" id="aboutCard" translate="no">
+          <div class="cardHead">
+            <div>
+              <h3>Sobre o projeto</h3>
+              <div class="muted">Visão, foco e demonstrativos</div>
+            </div>
+            <button class="pillbtn" id="learnMoreBtn" type="button">Saiba mais</button>
+          </div>
+          <div class="cardBody">
+            <div class="projectHero">
+              <div class="projectBox">
+                <h1>Regenerando territórios através da ação climática.</h1>
+                <p>
+                O <strong>Hub Resiliência Climática</strong> nasceu a partir de uma constatação simples e urgente:
+ em situações de crise climática, o lixo vira um problema antes, durante e depois do desastre.</p>
+
+<p>As enchentes no Rio Grande do Sul deixaram isso evidente. Faltavam informação, coordenação, espaços de 
+  referência e apoio técnico nos territórios. Ao mesmo tempo, cooperativas, catadores e lideranças comunitárias 
+  estavam na linha de frente, muitas vezes sem estrutura e reconhecimento.</p>
+
+<p>Foi nesse contexto que o Hub começou a ser construído, a partir da articulação entre organizações com trajetórias
+ complementares na gestão de resíduos, na mobilização social e na economia circular.</p>
+
+<p>A <strong>Mãos Verdes</strong> contribui com sua experiência em educação ambiental, organização comunitária e 
+  gestão de projetos sociais. </p>
+ <p>A <strong>Hélice</strong> atua na articulação institucional, na gestão estratégica e na conexão com políticas públicas.</p>
+ <p>A <strong>VAUS</strong> aporta inteligência técnica, visão sistêmica e metodologias de economia circular aplicadas aos territórios. </p>
+
+<p>Juntas, essas organizações estruturam o Hub como uma plataforma viva, conectada aos <strong>Centros de Referência na Gestão 
+  de Resíduos (CRGR)</strong>, fortalecendo a reciclagem, a economia circular e a capacidade dos territórios de se prevenir, 
+  responder e se recuperar de eventos climáticos.</p>
+
+ <p>Mais do que uma plataforma, o Hub é uma rede.</p>
+ <p>Uma rede que acredita que cidades mais resilientes se constroem com participação, informação acessível e ação coletiva.</p>
+
+                </p>
+                <div class="pillrow" aria-label="Pilares">
+                  <span class="pill">Sustentabilidade real</span>
+                  <span class="pill">Economia circular</span>
+                  <span class="pill">Governança</span>
+                  <span class="pill">Capacitação</span>
+                  <span class="pill">Dados & impacto</span>
+                </div>
+              </div>
+
+              <div class="demoBox">
+                <h3 style="font-size:14px;">Demonstrativos</h3>
+                <div class="muted" style="margin-top:6px;">Exemplos do que o hub oferece (placeholder)</div>
+
+                <div class="demoList">
+                  <div class="demoItem">
+                    <b>Boletins e atualizações</b>
+                    <span>Feed geral</span>
+                  </div>
+                  <div class="demoItem">
+                    <b>Mapeamento CRGR</b>
+                    <span>Territórios</span>
+                  </div>
+                  <div class="demoItem">
+                    <b>Trilhas formativas</b>
+                    <span>Conteúdos</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2) PAINEL DE ACOMPANHAMENTO -->
+        <section class="card" id="monitorCard" translate="no">
+          <div class="cardHead">
+            <div>
+              <h3>Painel de acompanhamento</h3>
+              <div class="muted">CRGR, usuários, planos e alertas</div>
+            </div>
+            <button class="pillbtn" id="refreshBtn" type="button">Atualizar</button>
+          </div>
+
+          <div class="cardBody">
+            <div class="kpis">
+              <div class="kpi">
+                <div class="label">CRGR ativos</div>
+                <div class="value" id="kpiCrgr">—</div>
+                <div class="hint">Total em /crgrs</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Usuários cadastrados</div>
+                <div class="value" id="kpiUsers">—</div>
+                <div class="hint">Total em /users</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Planos de ação em andamento</div>
+                <div class="value" id="kpiPlans">—</div>
+                <div class="hint">Placeholder: /plans (status)</div>
+              </div>
+              <div class="kpi">
+                <div class="label">Alertas críticos</div>
+                <div class="value" id="kpiAlerts">—</div>
+                <div class="hint">Placeholder: /alerts</div>
+              </div>
+            </div>
+
+            <div class="alerts" id="alertsBox">
+              <b>Indicadores críticos:</b> ainda não configurados. (Quando criarmos a coleção <code>alerts</code>,
+              este espaço mostra os alertas do território e do hub.)
+            </div>
+          </div>
+        </section>
+
+        <!-- 3) FEEDS -->
+        <div class="empty" id="infoBox" translate="no">Carregando...</div>
+        <section class="feed" id="feed"></section>
+      </div>
     </main>
   </div>
 
@@ -455,7 +693,7 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // ====== Permissões (NOVO)
+    // ====== Permissões
     const DEFAULT_MODULES_BY_ROLE = {
       comunidade: { feed:true, territorio:true, biblioteca:true, forum:true, agenda:false, planos:false, dashboards:false, admin:false },
       lideranca:  { feed:true, territorio:true, biblioteca:true, forum:true, agenda:true,  planos:true,  dashboards:false, admin:false },
@@ -488,11 +726,22 @@
     const userCrgrEl = document.getElementById("userCrgr");
     const userOrgEl = document.getElementById("userOrg");
     const navMenu = document.getElementById("navMenu");
+
     const feedEl = document.getElementById("feed");
     const infoBox = document.getElementById("infoBox");
     const searchInput = document.getElementById("searchInput");
     const adminBtn = document.getElementById("adminBtn");
     const subtitleEl = document.getElementById("subtitle");
+
+    // KPIs
+    const kpiCrgr = document.getElementById("kpiCrgr");
+    const kpiUsers = document.getElementById("kpiUsers");
+    const kpiPlans = document.getElementById("kpiPlans");
+    const kpiAlerts = document.getElementById("kpiAlerts");
+    const alertsBox = document.getElementById("alertsBox");
+
+    const refreshBtn = document.getElementById("refreshBtn");
+    const learnMoreBtn = document.getElementById("learnMoreBtn");
 
     let sessionUser = null;
     let sessionProfile = null;
@@ -528,7 +777,7 @@
       }catch{ return "—"; }
     }
 
-    function renderMenu(modulesResolved, role){
+    function renderMenu(modulesResolved){
       const items = [
         { key:"feed", label:"Início (Feed)", href:"home.html" },
         { key:"territorio", label:"Meu território / CRGR", href:"territorio.html" },
@@ -541,9 +790,8 @@
 
       navMenu.innerHTML = "";
 
-      items.forEach((it, idx) => {
+      items.forEach((it) => {
         if(modulesResolved[it.key] !== true) return;
-
         const a = document.createElement("a");
         a.href = it.href;
         a.className = (it.key === "feed") ? "active" : "";
@@ -563,18 +811,42 @@
       }
     }
 
-    // ====== POSTS (SEM where + SEM índice composto)
+    // ===== KPI loaders (simples, sem índice composto)
+    async function countCollection(colName, max=500){
+      const snap = await getDocs(query(collection(db, colName), limit(max)));
+      return snap.size;
+    }
+
+    async function loadKPIs(){
+      try{
+        const [crgrCount, usersCount] = await Promise.all([
+          countCollection("crgrs", 500),
+          countCollection("users", 1000)
+        ]);
+
+        kpiCrgr.textContent = String(crgrCount);
+        kpiUsers.textContent = String(usersCount);
+
+        // placeholders (vamos ligar depois)
+        kpiPlans.textContent = "—";
+        kpiAlerts.textContent = "—";
+      }catch(err){
+        console.error(err);
+        kpiCrgr.textContent = "—";
+        kpiUsers.textContent = "—";
+      }
+    }
+
+    // ===== POSTS (SEM where + SEM índice composto)
     async function fetchAllPosts(){
       try{
         const qAll = query(collection(db, "posts"), orderBy("createdAt", "desc"), limit(60));
         const snap = await getDocs(qAll);
         return snap.docs.map(d => ({ id: d.id, ...d.data() }));
       }catch(err){
-        // fallback sem orderBy se algum post não tem createdAt
         const qFallback = query(collection(db, "posts"), limit(60));
         const snap2 = await getDocs(qFallback);
         const arr = snap2.docs.map(d => ({ id: d.id, ...d.data() }));
-        // ordena client-side
         arr.sort((a,b) => {
           const at = a.createdAt?.toMillis ? a.createdAt.toMillis() : 0;
           const bt = b.createdAt?.toMillis ? b.createdAt.toMillis() : 0;
@@ -822,6 +1094,19 @@
       });
     }
 
+    async function loadFeed(){
+      infoBox.style.display = "block";
+      infoBox.textContent = "Carregando posts...";
+      try{
+        feedCache = await fetchAllPosts();
+        await renderFeed(feedCache);
+      }catch(err){
+        console.error(err);
+        infoBox.style.display = "block";
+        infoBox.textContent = "Erro ao carregar o feed. Verifique permissões / regras.";
+      }
+    }
+
     onAuthStateChanged(auth, async (user) => {
       if(!user){
         window.location.href = "index.html";
@@ -870,9 +1155,12 @@
       setAvatar(user.photoURL || profile.photoURL || null, initialsFrom(name));
 
       const modulesResolved = resolveModules(profile);
-      renderMenu(modulesResolved, role);
+      renderMenu(modulesResolved);
 
-      // ✅ BLOQUEIO DO FEED (NOVO)
+      // KPIs
+      await loadKPIs();
+
+      // BLOQUEIO DO FEED
       if(!canAccess(profile, "feed")){
         subtitleEl.textContent = "Feed bloqueado para seu perfil";
         infoBox.style.display = "block";
@@ -881,19 +1169,8 @@
         return;
       }
 
-      // feed
-      subtitleEl.textContent = "Feed de atualizações (todos os posts)";
-      infoBox.style.display = "block";
-      infoBox.textContent = "Carregando posts...";
-
-      try{
-        feedCache = await fetchAllPosts();
-        await renderFeed(feedCache);
-      }catch(err){
-        console.error(err);
-        infoBox.style.display = "block";
-        infoBox.textContent = "Erro ao carregar o feed. Verifique permissões / regras.";
-      }
+      subtitleEl.textContent = "Hub • Visão geral";
+      await loadFeed();
 
       searchInput.addEventListener("input", async () => {
         const filtered = filterFeedLocal(searchInput.value);
@@ -901,9 +1178,19 @@
       });
     });
 
+    // Actions
     document.getElementById("logoutBtn").addEventListener("click", async () => {
       await signOut(auth);
       window.location.href = "index.html";
+    });
+
+    refreshBtn.addEventListener("click", async () => {
+      await loadKPIs();
+      await loadFeed();
+    });
+
+    learnMoreBtn.addEventListener("click", () => {
+      alert("Aqui podemos abrir uma página 'sobre.html' ou um modal com mais informações do projeto.");
     });
   </script>
 </body>
