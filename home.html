@@ -49,7 +49,7 @@
       grid-template-columns: var(--sidebar-w) 1fr;
     }
 
-    /* ============ SIDEBAR (mantém padrão lateral) ============ */
+    /* ============ SIDEBAR ============ */
     .sidebar{
       position:sticky;
       top:0;
@@ -259,7 +259,7 @@
       width:100%;
     }
 
-    /* ============ HERO NO CONTEÚDO (vida sem mexer no menu) ============ */
+    /* ============ HERO ============ */
     .hero{
       position:relative;
       overflow:hidden;
@@ -516,10 +516,7 @@
       font-size:12px;
       opacity:.95;
     }
-    .stack{
-      display:grid;
-      gap:10px;
-    }
+    .stack{ display:grid; gap:10px; }
     .cardy{
       display:grid;
       grid-template-columns: 42px 1fr;
@@ -746,11 +743,16 @@
 
       <div class="side-section">Acesso</div>
       <div class="side-footer">
-        <p class="small">
+        <p class="small" id="accessText">
           Quer entrar no Hub? Acesse seu painel ou crie uma conta para começar.
         </p>
-        <a class="btn primary" href="index.html">Acessar</a>
-        <a class="btn" href="index.html">Criar conta</a>
+
+        <!-- NÃO LOGADO -->
+        <a class="btn primary" id="accessLoginBtn" href="index.html">Acessar</a>
+        <a class="btn" id="accessSignupBtn" href="index.html">Criar conta</a>
+
+        <!-- LOGADO -->
+        <button class="btn" id="sidebarLogoutBtn" type="button" style="display:none;">🚪 Sair</button>
       </div>
     </aside>
 
@@ -770,8 +772,9 @@
         </div>
 
         <div class="top-actions">
+          <!-- opcional: chip do usuário vai ser inserido aqui via JS -->
           <button class="chip" type="button" onclick="location.href='#sobre-projeto'">📘 Sobre</button>
-          <button class="chip" type="button" onclick="location.href='index.html'">➡️ Entrar</button>
+          <button class="chip" id="logoutBtn" type="button">🚪 Sair</button>
         </div>
       </header>
 
@@ -822,7 +825,7 @@
         <section id="sobre-projeto" class="section reveal">
           <h2>Sobre o Hub Resiliência Climática</h2>
           <p class="sub">
-            Esta aba explica a visão, missão e como o Hub se organiza. Substitua o texto abaixo pelo “texto de abertura do projeto”.
+            Esta aba explica a visão, missão e como o Hub se organiza.
           </p>
 
           <div class="about-grid">
@@ -830,23 +833,21 @@
               <div class="badge">Visão geral</div>
               <h3>Por que o Hub existe</h3>
 
-              <!-- ✅ COLE AQUI O TEXTO DE ABERTURA DO PROJETO -->
               <p class="lead" id="textoAbertura">
 <H1>O <strong>Hub Resiliência Climática</strong> nasceu a partir de uma constatação simples e urgente:</H1>
-<p>Em situações de <strong>crise climática</strong>, o lixo vira um problema antes, durante e depois do desastre.</p> 
+<p>Em situações de <strong>crise climática</strong>, o lixo vira um problema antes, durante e depois do desastre.</p>
 
-<p>As enchentes no Rio Grande do Sul deixaram isso evidente. Faltavam informação, coordenação, espaços de referência e apoio técnico nos territórios. Ao mesmo tempo, cooperativas, 
+<p>As enchentes no Rio Grande do Sul deixaram isso evidente. Faltavam informação, coordenação, espaços de referência e apoio técnico nos territórios. Ao mesmo tempo, cooperativas,
   catadores e lideranças comunitárias estavam na linha de frente, muitas vezes sem estrutura e reconhecimento.</p>
-<p>Foi nesse contexto que o Hub começou a ser construído, a partir da articulação entre organizações com trajetórias complementares na 
+<p>Foi nesse contexto que o Hub começou a ser construído, a partir da articulação entre organizações com trajetórias complementares na
   gestão de resíduos, na mobilização social e na economia circular.</p>
 <p>A <strong>Mãos Verdes</strong> contribui com sua experiência em educação ambiental, organização comunitária e gestão de projetos sociais.</p>
- <p>A <strong>Hélice</strong> atua na articulação institucional, na gestão estratégica e na conexão com políticas públicas.</p>
- <p>A <strong>VAUS</strong> aporta inteligência técnica, visão sistêmica e metodologias de economia circular aplicadas aos territórios.</p>
+<p>A <strong>Hélice</strong> atua na articulação institucional, na gestão estratégica e na conexão com políticas públicas.</p>
+<p>A <strong>VAUS</strong> aporta inteligência técnica, visão sistêmica e metodologias de economia circular aplicadas aos territórios.</p>
 Juntas, essas organizações estruturam o Hub como uma plataforma viva, conectada aos Centros de Referência na Gestão de Resíduos (CRGR), fortalecendo a reciclagem, a economia circular e a capacidade dos territórios de se prevenir, responder e se recuperar de eventos climáticos.
 Mais do que uma plataforma, o Hub é uma rede.
- Uma rede que acredita que cidades mais resilientes se constroem com participação, informação acessível e ação coletiva.
-
-             </p>
+Uma rede que acredita que cidades mais resilientes se constroem com participação, informação acessível e ação coletiva.
+              </p>
 
               <div class="mini-points">
                 <div class="pill">🌱 Resiliência</div>
@@ -1031,6 +1032,7 @@ Mais do que uma plataforma, o Hub é uma rede.
     </div>
   </div>
 
+  <!-- JS da UI (sem Firebase) -->
   <script>
     // ====== Sidebar mobile ======
     const sidebar = document.getElementById('sidebar');
@@ -1106,6 +1108,76 @@ Mais do que uma plataforma, o Hub é uma rede.
     }, { rootMargin: "-40% 0px -55% 0px", threshold: 0.01 });
 
     sections.forEach(sec => ioNav.observe(sec));
+  </script>
+
+  <!-- Firebase Auth (protege a home + logout) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
+      authDomain: "hub-resiliencia-climatica.firebaseapp.com",
+      projectId: "hub-resiliencia-climatica",
+      storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
+      messagingSenderId: "485694309026",
+      appId: "1:485694309026:web:771ed497d49861fa444dfb"
+    };
+
+    const LOGIN_URL = "index.html"; // sua página de login
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    const logoutBtn = document.getElementById("logoutBtn");
+    const sidebarLogoutBtn = document.getElementById("sidebarLogoutBtn");
+
+    const accessText = document.getElementById("accessText");
+    const accessLoginBtn = document.getElementById("accessLoginBtn");
+    const accessSignupBtn = document.getElementById("accessSignupBtn");
+
+    const topActions = document.querySelector(".top-actions");
+
+    function doLogout(){
+      return signOut(auth).then(() => {
+        window.location.href = LOGIN_URL;
+      });
+    }
+
+    logoutBtn?.addEventListener("click", async () => {
+      try { await doLogout(); }
+      catch(e){ console.error(e); alert("Não consegui sair. Tente novamente."); }
+    });
+
+    sidebarLogoutBtn?.addEventListener("click", async () => {
+      try { await doLogout(); }
+      catch(e){ console.error(e); alert("Não consegui sair. Tente novamente."); }
+    });
+
+    // Protege a HOME e ajusta UI (logado vs deslogado)
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = LOGIN_URL;
+        return;
+      }
+
+      // Topbar: chip do usuário (opcional)
+      if (topActions && !document.getElementById("userChip")) {
+        const chip = document.createElement("button");
+        chip.id = "userChip";
+        chip.type = "button";
+        chip.className = "chip";
+        chip.style.cursor = "default";
+        chip.textContent = `👤 ${user.email ?? "Usuário"}`;
+        topActions.insertBefore(chip, topActions.firstChild);
+      }
+
+      // Sidebar: troca "Acessar/Criar conta" por "Sair"
+      if (accessText) accessText.textContent = "Você está conectado. Use o botão abaixo para sair da sua conta.";
+      if (accessLoginBtn) accessLoginBtn.style.display = "none";
+      if (accessSignupBtn) accessSignupBtn.style.display = "none";
+      if (sidebarLogoutBtn) sidebarLogoutBtn.style.display = "";
+    });
   </script>
 </body>
 </html>
