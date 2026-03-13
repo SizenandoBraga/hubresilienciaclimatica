@@ -327,12 +327,19 @@ p,span,small,li{
 }
 
 .hero-visual{
-  min-height:380px;
-  display:grid;
-  place-items:center;
-  padding:26px;
+  position: relative;
+  overflow: hidden;
+  border-radius: calc(var(--radius) + 6px);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-strong);
+  min-height: 380px;
+  display: grid;
+  place-items: center;
+  padding: 26px;
   background:
-    radial-gradient(circle at 50% 40%, rgba(255,255,255,.98), rgba(255,255,255,.88) 58%, rgba(246,245,242,.92) 100%);
+    radial-gradient(circle at 30% 30%, rgba(129,185,42,.18), transparent 60%),
+    radial-gradient(circle at 70% 20%, rgba(83,172,222,.18), transparent 60%),
+    radial-gradient(circle at 60% 90%, rgba(239,107,34,.12), transparent 60%);
 }
 
 .hero-visual::after{
@@ -361,17 +368,24 @@ p,span,small,li{
 }
 
 .hero-logo-image{
-  position:relative;
-  z-index:2;
-  width:min(620px, 96%);
-  max-height:540px;
-  object-fit:contain;
+  position: relative;
+  z-index: 2;
+  width: min(640px, 95%);
+  max-height: 560px;
+  object-fit: contain;
+
   filter:
-    drop-shadow(0 22px 40px rgba(60,58,57,.18))
-    drop-shadow(0 40px 90px rgba(83,172,222,.16))
+    drop-shadow(0 18px 40px rgba(60,58,57,.18))
+    drop-shadow(0 40px 90px rgba(83,172,222,.20))
+    drop-shadow(0 20px 60px rgba(129,185,42,.20))
     saturate(1.08)
-    contrast(1.04)
-    brightness(1.02);
+    contrast(1.05);
+
+  transition: transform .3s ease;
+}
+
+.hero-logo-image:hover{
+  transform: scale(1.03);
 }
 
 .section-tag,
