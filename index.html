@@ -67,72 +67,60 @@
   <div class="noise"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="#top" aria-label="Ir para o topo">
-        <div class="brand-logo-wrap">
-          <img
-            src="img/logo_hub (1).png"
-            alt="Logo do Núcleo de Soluções para Resíduos Urbanos"
-            class="brand-logo"
-            loading="eager"
-            decoding="async"
-          />
-        </div>
-        <div class="brand-text">
-          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-          <span>Plataforma • Territórios & CRGR</span>
-        </div>
-      </a>
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="#top" aria-label="Ir para o topo">
+      <div class="brand-logo-wrap">
+        <img
+          src="img/logo_hub (1).png"
+          alt="Logo do Núcleo de Soluções para Resíduos Urbanos"
+          class="brand-logo"
+          loading="eager"
+          decoding="async"
+        />
+      </div>
+      <div class="brand-text">
+        <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+        <span>Plataforma • Territórios & CRGR</span>
+      </div>
+    </a>
 
-      <button
-        id="menuBtn"
-        class="menu-btn"
-        type="button"
-        aria-expanded="false"
-        aria-controls="mobileNavWrap"
-      >
-        <span aria-hidden="true">≡</span> Menu
+    <button
+      id="menuBtn"
+      class="menu-btn"
+      type="button"
+      aria-expanded="false"
+      aria-controls="mobileNavWrap"
+    >
+      <span aria-hidden="true">≡</span> Menu
+    </button>
+
+    <nav class="desktop-nav" aria-label="Navegação principal">
+      <a href="index.html">Início</a>
+      <a href="#pilares">Sobre</a>
+      <a href="conteudos.html">Conteúdos</a>
+      <a href="#dados">Dados</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+
+    <div class="header-actions">
+      <button id="btnEntrar" type="button" class="btn btn-primary">
+        Cadastrar / Login <span aria-hidden="true">→</span>
       </button>
-
-      <nav class="desktop-nav" aria-label="Navegação principal">
-        <a href="index.html">Início</a>
-        <a href="quem-somos.html">Quem Somos</a>
-        <a href="conteudos.html">Conteúdos</a>
-
-        <details class="nav-submenu">
-          <summary>Seções</summary>
-          <div class="nav-submenu-panel">
-            <a href="#pilares">Pilares</a>
-            <a href="#crgr">CRGRs</a>
-            <a href="#dados">Dados & Relatórios</a>
-            <a href="#parcerias">Parcerias</a>
-            <a href="#faq">FAQ</a>
-          </div>
-        </details>
-      </nav>
-
-      <div class="header-actions">
-        <button id="btnEntrar" type="button" class="btn btn-primary">
-          Cadastrar / Login <span aria-hidden="true">→</span>
-        </button>
-      </div>
     </div>
+  </div>
 
-    <div id="mobileNavWrap" class="mobile-nav" hidden>
-      <div class="container mobile-nav-inner">
-        <a href="#top">Início</a>
-        <a href="#pilares">Pilares</a>
-        <a href="#crgr">CRGRs</a>
-        <a href="#parcerias">Parcerias</a>
-        <a href="#dados">Dados</a>
-        <a href="#faq">FAQ</a>
-        <a href="quem-somos.html">Quem Somos</a>
-        <a href="conteudos.html">Conteúdos</a>
-        <a href="login.html">Cadastrar / Login</a>
-      </div>
+  <div id="mobileNavWrap" class="mobile-nav" hidden>
+    <div class="container mobile-nav-inner">
+      <a href="#top">Início</a>
+      <a href="#pilares">Sobre</a>
+      <a href="conteudos.html">Conteúdos</a>
+      <a href="#dados">Dados</a>
+      <a href="#faq">FAQ</a>
+      <a href="login.html">Cadastrar / Login</a>
     </div>
-  </header>
+  </div>
+</header>
 
   <main id="conteudo" class="container main-content">
     <section id="top" class="hero">
@@ -461,12 +449,13 @@
           <div class="footer-title">Núcleo de Soluções para Resíduos Urbanos</div>
           <div class="footer-copy">© <span id="year"></span> • Todos os direitos reservados.</div>
         </div>
-        <div class="footer-links">
-          <a href="#top">Voltar ao topo</a>
-          <a href="#crgr">CRGRs</a>
-          <a href="#parcerias">Parcerias</a>
-          <a href="#faq">FAQ</a>
-        </div>
+    <div class="footer-links">
+  <a href="#top">Início</a>
+  <a href="#pilares">Sobre</a>
+  <a href="conteudos.html">Conteúdos</a>
+  <a href="#dados">Dados</a>
+  <a href="#faq">FAQ</a>
+</div>
       </div>
     </footer>
   </main>
