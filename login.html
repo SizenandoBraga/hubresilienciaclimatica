@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>NSRU • Login</title>
+  <meta name="theme-color" content="#81B92A" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/login.css">
+</head>
+
+<body>
+  <div class="bg-grid"></div>
+  <div class="noise"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <main class="page">
+    <section class="hero">
+      <div class="hero-glow-top"></div>
+
+      <div class="hero-inner">
+        <div class="brand" translate="no">
+          <div class="mark" aria-hidden="true">
+            <img src="img/Design_sem_nome__2_-removebg-preview.png" alt="">
+          </div>
+          <div class="brand-title">
+            <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+            <span>Plataforma • Acesso</span>
+          </div>
+        </div>
+
+        <div class="kicker">
+          <span class="dot" aria-hidden="true"></span>
+          Cadastro e integração territorial
+        </div>
+
+        <h1>Faça parte do NSRU</h1>
+
+        <p>
+          O NSRU é um espaço de integração entre dados, pessoas e territórios. Ao se cadastrar, você passa a contribuir
+          para a organização da informação, o fortalecimento das redes locais e a construção de respostas mais eficientes
+          para a gestão de resíduos e os desafios climáticos. Seja você parte de uma cooperativa, liderança comunitária,
+          gestor público, técnico ou agente de resposta climática, seu cadastro ajuda a transformar dados em decisão e ação coletiva.
+        </p>
+
+        <div class="steps" aria-label="Como funciona">
+          <div class="pill"><span class="dot"></span> 1) Cadastro</div>
+          <div class="pill"><span class="dot"></span> 2) Análise</div>
+          <div class="pill"><span class="dot"></span> 3) Acesso liberado</div>
+        </div>
+
+        <div class="info-grid" aria-label="Para quem é">
+          <div class="info-card">
+            <div class="info-top">
+              <div class="info-ico" aria-hidden="true">♻️</div>
+              <div class="info-title">Cooperativas</div>
+            </div>
+            <p class="info-desc">Gestão, indicadores e suporte aos CRGRs no território.</p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-top">
+              <div class="info-ico" aria-hidden="true">🧭</div>
+              <div class="info-title">Lideranças & Comunidade</div>
+            </div>
+            <p class="info-desc">Acesso a informações, materiais e organização local.</p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-top">
+              <div class="info-ico" aria-hidden="true">🧰</div>
+              <div class="info-title">Técnicos & Gestores</div>
+            </div>
+            <p class="info-desc">Dados, relatórios e acompanhamento de ações.</p>
+          </div>
+
+          <div class="info-card">
+            <div class="info-top">
+              <div class="info-ico" aria-hidden="true">🚨</div>
+              <div class="info-title">Resposta Climática</div>
+            </div>
+            <p class="info-desc">Integração para prevenção, resposta e recuperação.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="card" role="region" aria-label="Autenticação" translate="no">
+        <header class="card-header">
+          <div>
+            <h2 id="cardTitle">Entrar</h2>
+            <div class="subtitle" id="cardSubtitle">Acesse sua conta para ver seu território, CRGR e atualizações.</div>
+          </div>
+          <div class="badge">Acesso seguro</div>
+        </header>
+
+        <div class="tabs" role="tablist" aria-label="Abas">
+          <button class="tab active" id="tabLogin" type="button" role="tab" aria-selected="true">Entrar</button>
+          <button class="tab" id="tabSignup" type="button" role="tab" aria-selected="false">Criar conta</button>
+        </div>
+
+        <form class="form" id="loginForm" autocomplete="on">
+          <div class="field">
+            <label for="loginEmail">E-mail</label>
+            <input class="input" id="loginEmail" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
+          </div>
+
+          <div class="field">
+            <label for="loginPassword">Senha</label>
+            <input class="input" id="loginPassword" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+          </div>
+
+          <div class="row">
+            <label class="checkbox">
+              <input type="checkbox" id="rememberMe" /> Manter conectado
+            </label>
+            <a class="link" href="#" id="resetPwdLink">Esqueci minha senha</a>
+          </div>
+
+          <button class="btn btn-primary" id="loginBtn" type="submit">Entrar</button>
+
+          <div class="loadingbar" id="loadingbar"><div></div></div>
+          <div id="msgBox" class="msg"></div>
+
+          <div class="divider">ou</div>
+
+          <button class="btn btn-secondary" id="goSignupBtn" type="button">Criar conta</button>
+
+          <div class="footer-note">
+            Ao entrar, você concorda com as políticas do projeto e boas práticas de uso comunitário.
+          </div>
+
+          <div class="authed-actions" id="authedActions" style="display:none;"></div>
+        </form>
+
+        <form class="form" id="signupForm" style="display:none;" autocomplete="on">
+          <div class="field">
+            <label for="signupName">Nome</label>
+            <input class="input" id="signupName" type="text" placeholder="Seu nome" autocomplete="name" required>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label for="signupEmail">E-mail</label>
+              <input class="input" id="signupEmail" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
+            </div>
+
+            <div class="field">
+              <label for="signupRole">Perfil</label>
+              <select class="select" id="signupRole" required>
+                <option value="cooperativa">Cooperativa</option>
+                <option value="comunidade">Comunidade</option>
+                <option value="lideranca">Liderança comunitária</option>
+                <option value="tecnico">Técnico</option>
+                <option value="gestor">Gestor</option>
+              </select>
+              <div class="hint">Governança/Admin são cadastrados manualmente.</div>
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label for="signupTerritory">Território / CRC (opcional)</label>
+              <input class="input" id="signupTerritory" type="text" placeholder="Ex.: Cooperativa Vila Pinto / CRC Centro">
+            </div>
+            <div class="field">
+              <label for="signupCrgr">CRGR / Unidade (opcional)</label>
+              <input class="input" id="signupCrgr" type="text" placeholder="Ex.: CRGR 01">
+            </div>
+          </div>
+
+          <div class="grid2">
+            <div class="field">
+              <label for="signupPassword">Senha</label>
+              <input class="input" id="signupPassword" type="password" placeholder="mínimo 6 caracteres" autocomplete="new-password" required>
+            </div>
+            <div class="field">
+              <label for="signupPassword2">Confirmar senha</label>
+              <input class="input" id="signupPassword2" type="password" placeholder="repita a senha" autocomplete="new-password" required>
+            </div>
+          </div>
+
+          <button class="btn btn-primary" id="signupBtn" type="submit">Criar conta</button>
+
+          <div class="loadingbar" id="loadingbar2"><div></div></div>
+          <div id="msgBox2" class="msg"></div>
+
+          <div class="divider">ou</div>
+
+          <button class="btn btn-secondary" id="goLoginBtn" type="button">Já tenho conta</button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="../js/login.js"></script>
+</body>
+</html>
