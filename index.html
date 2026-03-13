@@ -14,7 +14,7 @@
   />
   <meta name="theme-color" content="#81B92A" />
 
-  <link rel="stylesheet" href="/index.css" />
+  <link rel="stylesheet" href="index.css" />
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -55,12 +55,18 @@
         <a href="#top">Início</a>
         <a href="./quem-somos.html">Quem Somos</a>
         <a href="./conteudos.html">Conteúdos</a>
-        <a href="#sobre">Sobre</a>
-        <a href="#territorios">Territórios</a>
-        <a href="#pilares">Pilares</a>
-        <a href="#dados">Dados</a>
-        <a href="#galeria">Galeria</a>
-        <a href="#faq">FAQ</a>
+
+        <details class="nav-submenu">
+          <summary>Plataforma</summary>
+          <div class="nav-submenu-panel">
+            <a href="#sobre">Sobre</a>
+            <a href="#territorios">Territórios</a>
+            <a href="#pilares">Pilares</a>
+            <a href="#dados">Dados</a>
+            <a href="#galeria">Galeria</a>
+            <a href="#faq">FAQ</a>
+          </div>
+        </details>
       </nav>
 
       <div class="header-actions">
@@ -76,12 +82,16 @@
         <a href="#top">Início</a>
         <a href="./quem-somos.html">Quem Somos</a>
         <a href="./conteudos.html">Conteúdos</a>
-        <a href="#sobre">Sobre</a>
-        <a href="#territorios">Territórios</a>
-        <a href="#pilares">Pilares</a>
-        <a href="#dados">Dados</a>
-        <a href="#galeria">Galeria</a>
-        <a href="#faq">FAQ</a>
+
+        <div class="mobile-submenu">
+          <strong>Plataforma</strong>
+          <a href="#sobre">Sobre</a>
+          <a href="#territorios">Territórios</a>
+          <a href="#pilares">Pilares</a>
+          <a href="#dados">Dados</a>
+          <a href="#galeria">Galeria</a>
+          <a href="#faq">FAQ</a>
+        </div>
       </div>
     </div>
   </header>
@@ -519,6 +529,6 @@
     </footer>
   </main>
 
-  <script type="module" src="/index.js"></script>
+  <script type="module" src="index.js"></script>
 </body>
 </html>
