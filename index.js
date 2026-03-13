@@ -1,21 +1,5 @@
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-/* Corrige os ícones padrão do Leaflet em bundlers */
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
-
-delete L.Icon.Default.prototype._getIconUrl;
-
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow
-});
-
 document.addEventListener("DOMContentLoaded", () => {
-  const LOGIN_URL = "./login.html";
+  const LOGIN_URL = "login.html";
 
   const CRGR_POINTS = {
     cooadesc: {
@@ -24,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lng: -51.206,
       zoom: 15,
       popup: `
-        <div style="font-family: 'Archivo Condensed', sans-serif;">
+        <div style="font-family:'Archivo Condensed',sans-serif;">
           <strong>COOADESC</strong><br>
           Rua Seis (Vila Esperança), 113<br>
           Farrapos • Porto Alegre/RS
@@ -37,7 +21,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lng: -51.158333,
       zoom: 15,
       popup: `
-        <div style="font-family: 'Archivo Condensed', sans-serif;">
+        <div style="font-family:'Archivo Condensed',sans-serif;">
           <strong>Vila Pinto</strong><br>
           Região da Bom Jesus / Jardim Carvalho<br>
           Porto Alegre/RS
@@ -59,13 +43,9 @@ document.addEventListener("DOMContentLoaded", () => {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  /* Ano no footer */
   const yearEl = $("#year");
-  if (yearEl) {
-    yearEl.textContent = String(new Date().getFullYear());
-  }
+  if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
-  /* Botões de login */
   const btnEntrar = $("#btnEntrar");
   const btnEntrarHero = $("#btnEntrarHero");
 
@@ -76,9 +56,8 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  /* Menu mobile */
   const menuBtn = $("#menuBtn");
-  const mobileNav = $("#mobileNav");
+  const mobileNav = $("#mobileNavWrap");
 
   function closeMobileMenu() {
     if (!menuBtn || !mobileNav) return;
@@ -97,27 +76,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (menuBtn && mobileNav) {
     menuBtn.addEventListener("click", () => {
       const expanded = menuBtn.getAttribute("aria-expanded") === "true";
-      if (expanded) {
-        closeMobileMenu();
-      } else {
-        openMobileMenu();
-      }
+      expanded ? closeMobileMenu() : openMobileMenu();
     });
 
     $$("a", mobileNav).forEach((link) => {
-      link.addEventListener("click", () => {
-        closeMobileMenu();
-      });
+      link.addEventListener("click", () => closeMobileMenu());
     });
 
     window.addEventListener("resize", () => {
-      if (window.innerWidth > 860) {
-        closeMobileMenu();
-      }
+      if (window.innerWidth > 860) closeMobileMenu();
     });
   }
 
-  /* Cursor glow */
   const cursorGlow = $("#cursorGlow");
 
   if (cursorGlow && !isReducedMotion()) {
@@ -136,9 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
       mouseY = event.clientY;
       cursorGlow.style.opacity = "1";
 
-      if (!rafId) {
-        rafId = requestAnimationFrame(updateGlow);
-      }
+      if (!rafId) rafId = requestAnimationFrame(updateGlow);
     });
 
     window.addEventListener("mouseleave", () => {
@@ -150,7 +118,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* Reveal ao rolar */
   const revealEls = $$("[data-reveal]");
 
   if (revealEls.length) {
@@ -175,7 +142,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /* Contadores */
   const countEls = $$(".kcount");
 
   function animateCount(el) {
@@ -229,20 +195,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  /* FAQ: abre um por vez */
-  $$("details").forEach((detail) => {
+  $$("details.faq-item").forEach((detail) => {
     detail.addEventListener("toggle", () => {
       if (!detail.open) return;
-
-      $$("details").forEach((other) => {
-        if (other !== detail) {
-          other.open = false;
-        }
+      $$("details.faq-item").forEach((other) => {
+        if (other !== detail) other.open = false;
       });
     });
   });
 
-  /* Âncoras com offset */
   $$('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", (event) => {
       const href = anchor.getAttribute("href");
@@ -257,13 +218,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  /* Leaflet */
   const mapEl = $("#map");
   let map = null;
   const markers = {};
 
   function initMap() {
-    if (!mapEl || map) return map;
+    if (!mapEl || map || typeof L === "undefined") return map;
 
     map = L.map(mapEl, {
       zoomControl: true,
@@ -317,9 +277,18 @@ document.addEventListener("DOMContentLoaded", () => {
         focusPoint(pointKey);
       });
     });
+
+    const openMapBtn = $("[data-open-map]");
+    if (openMapBtn) {
+      openMapBtn.addEventListener("click", () => {
+        safeScrollTo(mapEl, 110);
+        setTimeout(() => {
+          if (map) map.invalidateSize();
+        }, 260);
+      });
+    }
   }
 
-  /* Hash inicial */
   if (window.location.hash) {
     const target = document.querySelector(window.location.hash);
     if (target) {
