@@ -1,7 +1,7 @@
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-/* Corrige o ícone padrão do Leaflet em bundlers como Parcel/Vite */
+/* Corrige os ícones padrão do Leaflet em bundlers */
 import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
 import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lng: -51.206,
       zoom: 15,
       popup: `
-        <div style="font-family: Archivo Condensed, sans-serif;">
+        <div style="font-family: 'Archivo Condensed', sans-serif;">
           <strong>COOADESC</strong><br>
           Rua Seis (Vila Esperança), 113<br>
           Farrapos • Porto Alegre/RS
@@ -37,7 +37,7 @@ document.addEventListener("DOMContentLoaded", () => {
       lng: -51.158333,
       zoom: 15,
       popup: `
-        <div style="font-family: Archivo Condensed, sans-serif;">
+        <div style="font-family: 'Archivo Condensed', sans-serif;">
           <strong>Vila Pinto</strong><br>
           Região da Bom Jesus / Jardim Carvalho<br>
           Porto Alegre/RS
@@ -105,7 +105,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     $$("a", mobileNav).forEach((link) => {
-      link.addEventListener("click", () => closeMobileMenu());
+      link.addEventListener("click", () => {
+        closeMobileMenu();
+      });
     });
 
     window.addEventListener("resize", () => {
@@ -115,7 +117,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* Glow do cursor */
+  /* Cursor glow */
   const cursorGlow = $("#cursorGlow");
 
   if (cursorGlow && !isReducedMotion()) {
@@ -148,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  /* Reveal */
+  /* Reveal ao rolar */
   const revealEls = $$("[data-reveal]");
 
   if (revealEls.length) {
@@ -233,7 +235,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!detail.open) return;
 
       $$("details").forEach((other) => {
-        if (other !== detail) other.open = false;
+        if (other !== detail) {
+          other.open = false;
+        }
       });
     });
   });
@@ -253,7 +257,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  /* Mapa Leaflet */
+  /* Leaflet */
   const mapEl = $("#map");
   let map = null;
   const markers = {};
@@ -276,7 +280,6 @@ document.addEventListener("DOMContentLoaded", () => {
       markers[key] = marker;
     });
 
-    /* Garante render correto após layout pronto */
     setTimeout(() => {
       map.invalidateSize();
     }, 250);
@@ -286,10 +289,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function focusPoint(pointKey) {
     const point = CRGR_POINTS[pointKey];
-    if (!point) return;
+    if (!point || !mapEl) return;
 
     const mapInstance = initMap();
-    if (!mapInstance || !mapEl) return;
+    if (!mapInstance) return;
 
     safeScrollTo(mapEl, 110);
 
