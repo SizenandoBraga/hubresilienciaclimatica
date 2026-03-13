@@ -9,7 +9,6 @@
   --bg:#F6F5F2;
   --paper:#FCFBF8;
   --surface:#FFFFFF;
-  --surface-soft:#F9F7F3;
   --border:rgba(60,58,57,.10);
 
   --text:#3C3A39;
@@ -18,7 +17,6 @@
   --shadow:0 18px 40px rgba(60,58,57,.08);
   --shadow-lg:0 24px 60px rgba(60,58,57,.12);
 
-  --radius:22px;
   --container:1180px;
 }
 
@@ -138,7 +136,7 @@ p,span,small,li{
   top:0;
   z-index:50;
   backdrop-filter:blur(10px);
-  background:rgba(249,247,242,.88);
+  background:rgba(249,247,242,.92);
   border-bottom:1px solid rgba(60,58,57,.08);
 }
 
@@ -308,6 +306,7 @@ p,span,small,li{
   display:block;
   margin-bottom:8px;
   font-size:14px;
+  font-style:normal;
 }
 
 .mobile-submenu a{
@@ -351,6 +350,7 @@ p,span,small,li{
   border:1px solid rgba(129,185,42,.20);
   color:var(--green);
   font-size:12px;
+  font-style:normal;
 }
 
 .hero-copy h1{
@@ -390,6 +390,7 @@ p,span,small,li{
   border-radius:16px;
   transition:all .22s ease;
   white-space:nowrap;
+  font-style:normal;
 }
 
 .btn-primary{
@@ -439,6 +440,7 @@ p,span,small,li{
   font-size:34px;
   line-height:1;
   color:var(--blue);
+  font-style:normal;
 }
 
 .hero-metric span{
@@ -677,6 +679,7 @@ p,span,small,li{
   color:var(--blue);
   font-size:12px;
   margin-bottom:10px;
+  font-style:normal;
 }
 
 .feature-card h3{
@@ -749,6 +752,7 @@ p,span,small,li{
   background:rgba(83,172,222,.10);
   color:var(--blue);
   font-size:12px;
+  font-style:normal;
 }
 
 .coop-card h3{
@@ -782,6 +786,7 @@ p,span,small,li{
   color:var(--black);
   cursor:pointer;
   transition:all .2s ease;
+  font-style:normal;
 }
 
 .small-btn:hover{
@@ -834,6 +839,7 @@ p,span,small,li{
   background:rgba(83,172,222,.10);
   color:var(--blue);
   font-size:12px;
+  font-style:normal;
 }
 
 .pillar-card h3{
@@ -891,6 +897,7 @@ p,span,small,li{
   line-height:.95;
   letter-spacing:-.04em;
   color:var(--blue);
+  font-style:normal;
 }
 
 .stat-card p{
@@ -1003,6 +1010,22 @@ details p{
 
 .footer-nav a:hover{
   color:var(--green);
+}
+
+.leaflet-container{
+  font-family:"Archivo Condensed", sans-serif;
+}
+
+.leaflet-popup-content-wrapper{
+  border-radius:14px;
+  box-shadow:0 12px 24px rgba(60,58,57,.14);
+}
+
+.leaflet-popup-content{
+  font-family:"Archivo Condensed", sans-serif;
+  font-style:normal;
+  font-weight:700;
+  color:var(--text);
 }
 
 [data-reveal]{

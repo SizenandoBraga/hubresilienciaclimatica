@@ -5,7 +5,6 @@
   <meta http-equiv="Content-Language" content="pt-BR" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-
   <title>Núcleo de Soluções para Resíduos Urbanos • Home</title>
 
   <meta
@@ -14,7 +13,18 @@
   />
   <meta name="theme-color" content="#81B92A" />
 
-  <link rel="stylesheet" href="/index.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <link rel="stylesheet" href="index.css" />
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
@@ -53,18 +63,22 @@
 
       <nav class="desktop-nav" aria-label="Navegação principal">
         <a href="#top">Início</a>
-        <a href="./quem-somos.html">Quem Somos</a>
-        <a href="./conteudos.html">Conteúdos</a>
+        <a href="#sobre">Sobre</a>
+        <a href="#territorios">Territórios</a>
+        <a href="#pilares">Pilares</a>
+        <a href="#dados">Dados</a>
+        <a href="#galeria">Galeria</a>
+        <a href="#faq">FAQ</a>
 
         <details class="nav-submenu">
-          <summary>Plataforma</summary>
+          <summary>Seções</summary>
           <div class="nav-submenu-panel">
-            <a href="#sobre">Sobre</a>
-            <a href="#territorios">Territórios</a>
+            <a href="#sobre">Sobre o núcleo</a>
+            <a href="#territorios">CRGRs</a>
             <a href="#pilares">Pilares</a>
-            <a href="#dados">Dados</a>
-            <a href="#galeria">Galeria</a>
-            <a href="#faq">FAQ</a>
+            <a href="#dados">Indicadores</a>
+            <a href="#galeria">Imagens</a>
+            <a href="#faq">Dúvidas</a>
           </div>
         </details>
       </nav>
@@ -80,18 +94,12 @@
     <div id="mobileNav" class="mobile-nav" hidden>
       <div class="container mobile-nav-inner">
         <a href="#top">Início</a>
-        <a href="./quem-somos.html">Quem Somos</a>
-        <a href="./conteudos.html">Conteúdos</a>
-
-        <div class="mobile-submenu">
-          <strong>Plataforma</strong>
-          <a href="#sobre">Sobre</a>
-          <a href="#territorios">Territórios</a>
-          <a href="#pilares">Pilares</a>
-          <a href="#dados">Dados</a>
-          <a href="#galeria">Galeria</a>
-          <a href="#faq">FAQ</a>
-        </div>
+        <a href="#sobre">Sobre</a>
+        <a href="#territorios">Territórios</a>
+        <a href="#pilares">Pilares</a>
+        <a href="#dados">Dados</a>
+        <a href="#galeria">Galeria</a>
+        <a href="#faq">FAQ</a>
       </div>
     </div>
   </header>
@@ -529,6 +537,11 @@
     </footer>
   </main>
 
-  <script type="module" src="/index.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="index.js"></script>
 </body>
 </html>
