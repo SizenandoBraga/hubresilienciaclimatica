@@ -424,28 +424,19 @@ p,span,small,li{
   flex-wrap:wrap;
 }
 
-.hero-right{
+.hero-logo-image{
   position:relative;
-  z-index:1;
-  min-height:500px;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  border-radius:34px;
-  background:
-    radial-gradient(circle at 30% 30%, rgba(129,185,42,.14), transparent 60%),
-    radial-gradient(circle at 72% 22%, rgba(83,172,222,.14), transparent 60%),
-    radial-gradient(circle at 60% 88%, rgba(239,107,34,.08), transparent 58%);
-}
-
-.hero-right::before{
-  content:"";
-  position:absolute;
-  inset:26px;
-  border-radius:34px;
-  background:rgba(255,255,255,.14);
-  border:1px solid rgba(255,255,255,.24);
-  box-shadow:inset 0 0 40px rgba(255,255,255,.14);
+  z-index:2;
+  width:min(700px, 98%);
+  max-height:600px;
+  object-fit:contain;
+  filter:
+    drop-shadow(0 18px 40px rgba(60,58,57,.16))
+    drop-shadow(0 36px 80px rgba(83,172,222,.14))
+    drop-shadow(0 18px 54px rgba(129,185,42,.14))
+    saturate(1.06)
+    contrast(1.04);
+  transition:transform .3s ease;
 }
 
 .hero-logo-image{
