@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Painel • Governança</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Leaflet (Mapa grátis / OSM) -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <link rel="stylesheet" href="./governanca.css" />
+</head>
+
+<body class="bg-slate-50 text-slate-900">
+  <!-- TOPBAR -->
+  <header class="bg-white border-b border-black/5">
+    <div class="max-w-[1400px] mx-auto px-4 py-3 flex items-center justify-between gap-3">
+      <div class="flex items-center gap-3">
+        <div class="h-10 w-10 rounded-xl bg-emerald-50 border border-emerald-100 grid place-items-center font-extrabold text-emerald-700">
+          RG
+        </div>
+        <div class="leading-tight">
+          <div class="text-xs text-slate-500">Hub Resiliência Climática</div>
+          <div class="font-extrabold tracking-tight">ÁREA LOGADA • GOVERNANÇA</div>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <span class="text-xs text-slate-500">Logado como:</span>
+        <b id="whoami" class="text-sm">—</b>
+        <button id="btnLogout" class="ml-3 px-4 py-2 rounded-xl border border-black/10 font-semibold hover:bg-black/5">
+          Sair
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-[1400px] mx-auto px-4 py-4">
+    <div class="grid gap-4 gov-grid">
+      <!-- MENU LATERAL – GOVERNANÇA -->
+      <aside class="space-y-3">
+        <div class="panel rounded-2xl p-4">
+          <div class="text-xs font-extrabold text-slate-500">MENU • GOVERNANÇA</div>
+
+          <nav class="mt-3 grid gap-2">
+            <!-- ITENS ORIGINAIS (mantidos) -->
+            <button class="navbtn active" data-view="viewDashboard">Painel geral</button>
+            <button class="navbtn" data-view="viewUsers">Gestão de Usuários</button>
+            <button class="navbtn" data-view="viewFeed">Feed (Posts)</button>
+            <button class="navbtn" data-view="viewTerritorios">Gestão de Territórios / CRGR</button>
+            <button class="navbtn" data-view="viewPlanos">Gestão de Planos de ação</button>
+            <button class="navbtn" data-view="viewConteudos">Gestão de Conteúdos</button>
+
+            <div class="h-px bg-black/10 my-2"></div>
+
+            <!-- NOVOS ITENS (adicionados) -->
+            <button class="navbtn" data-view="viewCoops">Cadastro de Cooperativas</button>
+            <button class="navbtn" data-view="viewMapa">Mapa • Cobertura & Pontos</button>
+            <button class="navbtn" data-view="viewColetas">Gestão de Coletas</button>
+          </nav>
+        </div>
+
+        <div class="panel rounded-2xl p-4">
+          <div class="text-xs font-extrabold text-slate-500">STATUS</div>
+          <div class="mt-2 flex flex-wrap gap-2 text-xs text-slate-600">
+            <span class="badge">Firestore: <b id="dbStatus">—</b></span>
+            <span class="badge">CRGR ativos: <b id="crgrCount">—</b></span>
+            <span class="badge">Usuários: <b id="usersCount">—</b></span>
+            <span class="badge">Cooperativas: <b id="coopCount">—</b></span>
+            <span class="badge">Coletas: <b id="coletasCount">—</b></span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- CONTEÚDO -->
+      <section class="space-y-4">
+
+        <!-- (1) PAINEL GERAL – ORIGINAL (mantido) -->
+        <section id="viewDashboard" class="view panel rounded-2xl p-4">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xl font-extrabold">Painel Geral</div>
+              <div class="text-sm text-slate-600">Visão geral do Hub • Painel de acompanhamento</div>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-3">
+            <div class="kpi">
+              <div class="label">Nº de CRGR ativos</div>
+              <div class="value" id="kpiCRGR">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Nº de usuários cadastrados</div>
+              <div class="value" id="kpiUsers">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Planos de ação em andamento</div>
+              <div class="value" id="kpiPlanos">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Indicadores críticos em alerta</div>
+              <div class="value" id="kpiAlertas">0</div>
+            </div>
+          </div>
+
+          <!-- KPIs agregados de cooperativas (NOVO, sem tirar nada) -->
+          <div class="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div class="kpi">
+              <div class="label">Cooperativas ativas</div>
+              <div class="value" id="kpiCoops">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Peso total (kg) • coletas</div>
+              <div class="value" id="kpiKg">0</div>
+            </div>
+            <div class="kpi">
+              <div class="label">Rejeito total (kg)</div>
+              <div class="value" id="kpiRej">0</div>
+            </div>
+          </div>
+
+          <div class="mt-3 text-xs text-slate-500">
+            * No <b>index</b> você pode mostrar só estes números agregados das cooperativas.
+          </div>
+        </section>
+
+        <!-- (2) GESTÃO DE USUÁRIOS – ORIGINAL (mantido) -->
+        <section id="viewUsers" class="view panel rounded-2xl p-4 hidden">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xl font-extrabold">Gestão de Usuários</div>
+              <div class="text-sm text-slate-600">Lista por cooperativa • edição • exclusão • (solicitações se quiser manter)</div>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-black/10 bg-white p-4">
+            <div class="text-sm text-slate-600">
+              ✅ Mantido. Aqui você conecta a listagem da coleção <b>users</b> e filtros.
+            </div>
+          </div>
+        </section>
+
+        <!-- (3) FEED – ORIGINAL (mantido) -->
+        <section id="viewFeed" class="view panel rounded-2xl p-4 hidden">
+          <div class="text-xl font-extrabold">Feed (Posts)</div>
+          <div class="text-sm text-slate-600">Publicações e comunicados do Hub</div>
+
+          <div class="mt-4 rounded-2xl border border-black/10 bg-white p-4">
+            <div class="text-sm text-slate-600">
+              ✅ Mantido. Você pode integrar com coleção <b>posts</b>.
+            </div>
+          </div>
+        </section>
+
+        <!-- (4) TERRITÓRIOS/CRGR – ORIGINAL (mantido) -->
+        <section id="viewTerritorios" class="view panel rounded-2xl p-4 hidden">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xl font-extrabold">Gestão de Territórios / CRGR</div>
+              <div class="text-sm text-slate-600">Seleciona território → dashboard (nº usuários) por território</div>
+            </div>
+          </div>
+
+          <div class="mt-4 rounded-2xl border border-black/10 bg-white p-4">
+            <div class="text-sm text-slate-600">
+              ✅ Mantido. Aqui você liga a coleção <b>territorios</b> e <b>crgr</b>.
+            </div>
+          </div>
+        </section>
+
+        <!-- (5) PLANOS – ORIGINAL (mantido) -->
+        <section id="viewPlanos" class="view panel rounded-2xl p-4 hidden">
+          <div class="text-xl font-extrabold">Gestão de Planos de ação</div>
+          <div class="text-sm text-slate-600">Planejamento e acompanhamento</div>
+
+          <div class="mt-4 rounded-2xl border border-black/10 bg-white p-4">
+            <div class="text-sm text-slate-600">
+              ✅ Mantido. Pode usar coleção <b>planos</b> + status.
+            </div>
+          </div>
+        </section>
+
+        <!-- (6) CONTEÚDOS – ORIGINAL (mantido) -->
+        <section id="viewConteudos" class="view panel rounded-2xl p-4 hidden">
+          <div class="text-xl font-extrabold">Gestão de Conteúdos</div>
+          <div class="text-sm text-slate-600">Materiais, documentos, trilhas</div>
+
+          <div class="mt-4 rounded-2xl border border-black/10 bg-white p-4">
+            <div class="text-sm text-slate-600">
+              ✅ Mantido. Pode usar coleção <b>conteudos</b>.
+            </div>
+          </div>
+        </section>
+
+        <!-- (7) CADASTRO DE COOPERATIVAS – NOVO (adicionado) -->
+        <section id="viewCoops" class="view panel rounded-2xl p-4 hidden">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xl font-extrabold">Cadastro de Cooperativas</div>
+              <div class="text-sm text-slate-600">Cadastrar e manter cooperativas (com território, cobertura e pontos)</div>
+            </div>
+          </div>
+
+          <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <!-- Form -->
+            <div class="rounded-2xl border border-black/10 bg-white p-4">
+              <div class="font-extrabold">Nova cooperativa / Editar</div>
+
+              <form id="coopForm" class="mt-3 grid gap-3">
+                <input id="coopId" type="hidden" />
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="lbl">Nome</label>
+                    <input id="coopNome" class="inp" placeholder="Ex.: Cooperativa Vila Pinto" required />
+                  </div>
+                  <div>
+                    <label class="lbl">Território</label>
+                    <input id="coopTerritorio" class="inp" placeholder="Ex.: Zona Sul / Bonja" required />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="lbl">Responsável</label>
+                    <input id="coopResp" class="inp" placeholder="Nome do responsável" />
+                  </div>
+                  <div>
+                    <label class="lbl">Contato</label>
+                    <input id="coopContato" class="inp" placeholder="WhatsApp / Telefone" />
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label class="lbl">Status</label>
+                    <select id="coopAtiva" class="inp">
+                      <option value="true">Ativa</option>
+                      <option value="false">Inativa</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="lbl">Pontos (JSON)</label>
+                    <textarea id="coopPontos" class="inp h-24" placeholder='[{"label":"P1","lat":-30.03,"lng":-51.21}]'></textarea>
+                  </div>
+                </div>
+
+                <div>
+                  <label class="lbl">Cobertura (Polygon JSON)</label>
+                  <textarea id="coopCobertura" class="inp h-24" placeholder='[{"lat":-30.02,"lng":-51.20},{"lat":-30.03,"lng":-51.18},{"lat":-30.05,"lng":-51.19}]'></textarea>
+                  <div class="text-xs text-slate-500 mt-1">Você pode começar vazio e adicionar depois.</div>
+                </div>
+
+                <div class="flex gap-2">
+                  <button class="btnPrimary" type="submit">Salvar</button>
+                  <button class="btnGhost" type="button" id="btnClearCoop">Limpar</button>
+                </div>
+
+                <div id="coopMsg" class="msg"></div>
+              </form>
+            </div>
+
+            <!-- Lista -->
+            <div class="rounded-2xl border border-black/10 bg-white p-4">
+              <div class="flex items-center justify-between">
+                <div class="font-extrabold">Cooperativas cadastradas</div>
+                <div class="text-xs text-slate-500" id="coopsMeta">—</div>
+              </div>
+
+              <div class="mt-3">
+                <input id="coopSearch" class="inp" placeholder="Buscar cooperativa..." />
+              </div>
+
+              <div id="coopList" class="mt-3 divide-y divide-black/5"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- (8) MAPA – NOVO (adicionado) -->
+        <section id="viewMapa" class="view panel rounded-2xl p-4 hidden">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xl font-extrabold">Mapa • Áreas de cobertura & pontos</div>
+              <div class="text-sm text-slate-600">Dashboard das áreas de cobertura dos pontos de coleta</div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <select id="mapCoopSelect" class="inp w-[320px]">
+                <option value="">Todas as cooperativas</option>
+              </select>
+              <button id="btnFitMap" class="btnGhost">Ajustar mapa</button>
+            </div>
+          </div>
+
+          <div class="mt-4">
+            <div id="map" class="w-full h-[520px] rounded-2xl overflow-hidden border border-black/10"></div>
+            <div class="text-xs text-slate-500 mt-2" id="mapHint">Carregando…</div>
+          </div>
+        </section>
+
+        <!-- (9) GESTÃO DE COLETAS – NOVO (adicionado) -->
+        <section id="viewColetas" class="view panel rounded-2xl p-4 hidden">
+          <div class="flex items-center justify-between gap-3">
+            <div>
+              <div class="text-xl font-extrabold">Gestão de Coletas</div>
+              <div class="text-sm text-slate-600">Ver todas as coletas das cooperativas cadastradas + filtro por cooperativa</div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <select id="coletasCoopSelect" class="inp w-[320px]">
+                <option value="">Todas as cooperativas</option>
+              </select>
+              <input id="coletasSearch" class="inp w-[260px]" placeholder="buscar por código/observação..." />
+            </div>
+          </div>
+
+          <div class="mt-4 overflow-auto">
+            <div class="min-w-[1100px]">
+              <div class="grid grid-cols-12 gap-3 text-xs font-extrabold text-slate-500 pb-2 border-b border-black/10">
+                <div class="col-span-2">Cooperativa</div>
+                <div class="col-span-2">Data</div>
+                <div class="col-span-2">Tipo</div>
+                <div class="col-span-2">Fluxo</div>
+                <div class="col-span-1 text-right">Rec (kg)</div>
+                <div class="col-span-1 text-right">Rej (kg)</div>
+                <div class="col-span-2">Obs</div>
+              </div>
+
+              <div id="coletasRows" class="divide-y divide-black/5"></div>
+              <div class="mt-3 text-[11px] text-right text-slate-400">Hub Resiliência Climática • Governança</div>
+            </div>
+          </div>
+        </section>
+
+      </section>
+    </div>
+  </main>
+
+  <script type="module" src="./governanca.js"></script>
+</body>
+</html>

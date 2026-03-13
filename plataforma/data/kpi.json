@@ -1,9 +1,0 @@
-{
-  "updatedAt": "2026-02-03",
-  "kpis": [
-    { "icon": "🧩", "value": 3, "label": "Territórios mapeados", "hint": "base inicial do Hub" },
-    { "icon": "🔁", "value": 38, "label": "Conteúdos curados", "hint": "guias, vídeos e artigos" },
-    { "icon": "🗓️", "value": 6, "label": "Eventos no mês", "hint": "formações e encontros" },
-    { "icon": "🤝", "value": 24, "label": "Parceiros conectados", "hint": "rede em expansão" }
-  ]
-}

@@ -2,945 +2,478 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR">
-  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hub Resiliência Climática • Login</title>
+  <title>Núcleo de Soluções para Resíduos Urbanos • Home</title>
+
+  <meta name="description" content="Núcleo de Soluções para Resíduos Urbanos: plataforma territorial para reciclagem, resiliência climática, governança e atuação em rede em Porto Alegre." />
+  <meta name="theme-color" content="#81B92A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:ital,wght@0,700;1,300&display=swap" rel="stylesheet">
 
-  <style>
-    :root{
-      --green-regen:#1B7F5A;
-      --green-light:#4CAF8F;
-      --blue-deep:#0D3B66;
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
 
-      --yellow:#F2C94C;
-      --graphite:#2E2E2E;
-      --bg:#F5F7F6;
-      --white:#FFFFFF;
-
-      --radius:16px;
-      --shadow:0 10px 30px rgba(0,0,0,0.08);
-    }
-
-    *{box-sizing:border-box}
-    body{
-      margin:0;
-      font-family:'Inter', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      color:var(--graphite);
-      background:var(--bg);
-    }
-    h1,h2,h3{
-      font-family:'Poppins', system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      margin:0;
-    }
-    a{color:inherit}
-
-    .page{
-      min-height:100vh;
-      display:grid;
-      grid-template-columns: 1.1fr 0.9fr;
-    }
-
-    .hero{
-      position:relative;
-      padding:56px clamp(20px, 4vw, 56px);
-      background: linear-gradient(135deg, var(--green-regen), var(--blue-deep));
-      color:#fff;
-      overflow:hidden;
-      isolation:isolate;
-    }
-
-    .hero::before{
-      content:"";
-      position:absolute;
-      inset:0;
-      background-image: url("img/Design_sem_nome__2_-removebg-preview.png");
-      background-repeat:no-repeat;
-      background-position:center;
-      background-size: 2400px;
-      opacity:0.14;
-      filter: saturate(1.05) contrast(1.05);
-      z-index:0;
-      pointer-events:none;
-    }
-
-    .hero::after{
-      content:"";
-      position:absolute;
-      inset:auto auto -140px -140px;
-      width:520px;
-      height:520px;
-      border-radius:999px;
-      background: radial-gradient(circle at 40% 40%, rgba(76,175,143,0.45), rgba(255,255,255,0) 62%);
-      pointer-events:none;
-      z-index:0;
-    }
-
-    .hero-glow-top{
-      position:absolute;
-      inset:-120px -120px auto auto;
-      width:380px;
-      height:380px;
-      border-radius:999px;
-      background: radial-gradient(circle at 30% 30%, rgba(242,201,76,0.35), rgba(255,255,255,0) 62%);
-      pointer-events:none;
-      z-index:0;
-    }
-
-    .brand, .hero-content{
-      position:relative;
-      z-index:1;
-    }
-
-    .brand{
-      display:flex;
-      align-items:center;
-      gap:14px;
-      margin-bottom:44px;
-    }
-
-    .brand-title{
-      display:flex;
-      flex-direction:column;
-      line-height:1.1;
-    }
-    .brand-title strong{
-      font-weight:700;
-      font-size:20px;
-      letter-spacing:0.2px;
-    }
-    .brand-title span{
-      opacity:.9;
-      font-size:12.5px;
-    }
-
-    .hero-content{
-      max-width:560px;
-      padding-top:10px;
-    }
-    .hero h1{
-      font-size: clamp(28px, 3.2vw, 44px);
-      line-height:1.08;
-      letter-spacing:-0.02em;
-      margin-bottom:14px;
-    }
-    .hero p{
-      margin:0 0 22px 0;
-      font-size: clamp(14px, 1.2vw, 16px);
-      line-height:1.6;
-      opacity:.95;
-    }
-
-    .pill-row{
-      display:flex;
-      flex-wrap:wrap;
-      gap:10px;
-      margin-top:10px;
-    }
-    .pill{
-      font-size:12.5px;
-      padding:10px 12px;
-      border-radius:999px;
-      border:1px solid rgba(255,255,255,0.25);
-      background: rgba(255,255,255,0.10);
-      backdrop-filter: blur(8px);
-      display:flex;
-      align-items:center;
-      gap:8px;
-      user-select:none;
-    }
-    .dot{
-      width:8px; height:8px; border-radius:50%;
-      background: var(--yellow);
-      box-shadow: 0 0 0 3px rgba(242,201,76,0.18);
-    }
-
-    /* PARCEIROS */
-    .partners{
-      margin-top: 22px;
-      border-radius: 18px;
-      border: 1px solid rgba(255,255,255,0.28);
-      background: rgba(255,255,255,0.12);
-      backdrop-filter: blur(10px);
-      padding: 16px;
-      box-shadow: 0 16px 40px rgba(0,0,0,0.12);
-    }
-    .partners-head{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom: 10px;
-    }
-    .partners-head strong{
-      font-family:'Poppins';
-      font-size: 13px;
-      letter-spacing:0.2px;
-    }
-    .partners-head span{
-      font-size: 12px;
-      opacity: .9;
-    }
-
-    .partners-grid{
-      display:grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .partner-card{
-      border-radius: 16px;
-      background: rgba(255,255,255,0.18);
-      border: 1px solid rgba(255,255,255,0.26);
-      height: 88px;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      overflow:hidden;
-      transition: transform .18s ease, background .18s ease, border-color .18s ease;
-      cursor: pointer;
-      position:relative;
-      padding: 8px;
-    }
-    .partner-card:hover{
-      transform: translateY(-2px);
-      background: rgba(255,255,255,0.22);
-      border-color: rgba(242,201,76,0.35);
-    }
-
-    .partner-card img{
-      max-width: 96%;
-      max-height: 82%;
-      object-fit: contain;
-      display:block;
-      filter: drop-shadow(0 10px 16px rgba(0,0,0,0.28));
-    }
-
-    .partner-fallback{
-      width: 100%;
-      height: 100%;
-      display:none;
-      align-items:center;
-      justify-content:center;
-      font-family:'Poppins';
-      font-weight: 800;
-      letter-spacing: 0.3px;
-      font-size: 18px;
-      color: rgba(255,255,255,0.96);
-      background:
-        radial-gradient(160px 100px at 30% 30%, rgba(242,201,76,0.22), rgba(255,255,255,0)),
-        radial-gradient(160px 100px at 80% 20%, rgba(76,175,143,0.22), rgba(255,255,255,0));
-    }
-
-    .partner-card[data-broken="true"] img{ display:none; }
-    .partner-card[data-broken="true"] .partner-fallback{ display:flex; }
-
-    .partners-foot{
-      margin-top: 12px;
-      font-size: 12px;
-      opacity: .9;
-      line-height:1.4;
-    }
-
-    @media (max-width: 1100px){
-      .partners-grid{ grid-template-columns: repeat(3, minmax(0, 1fr)); }
-    }
-    @media (max-width: 920px){
-      .page{ grid-template-columns: 1fr; }
-      .hero{ padding-bottom: 26px; }
-      .panel{ padding-top: 22px; padding-bottom: 40px; }
-      .hero::before{ background-size: 280px; opacity:0.12; }
-      .partners-grid{ grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .partner-card{ height: 84px; }
-    }
-    @media (max-width: 420px){
-      .partners-grid{ grid-template-columns: 1fr; }
-      .partner-card{ height: 92px; }
-    }
-
-    /* CARD / FORM */
-    .panel{
-      padding: 56px clamp(18px, 4vw, 56px);
-      display:flex;
-      align-items:center;
-      justify-content:center;
-    }
-
-    .card{
-      width:min(520px, 100%);
-      border-radius: var(--radius);
-      background: var(--white);
-      box-shadow: var(--shadow);
-      padding: 22px;
-    }
-
-    .card header{
-      display:flex;
-      align-items:flex-start;
-      justify-content:space-between;
-      gap:12px;
-      margin-bottom:14px;
-    }
-    .card h2{ font-size: 20px; margin-bottom:4px; }
-    .card .subtitle{ font-size:13.5px; color:#555; line-height:1.4; }
-
-    .badge{
-      font-size:12px;
-      padding:8px 10px;
-      border-radius:999px;
-      background: rgba(76,175,143,0.12);
-      color: var(--green-regen);
-      border: 1px solid rgba(76,175,143,0.25);
-      white-space:nowrap;
-      font-weight:600;
-    }
-
-    .tabs{ display:flex; gap:10px; margin: 10px 0 6px; }
-    .tab{
-      flex:1;
-      border-radius: 999px;
-      border: 1px solid #E3E7E6;
-      background:#fff;
-      padding:10px 12px;
-      font-weight:800;
-      cursor:pointer;
-      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
-    }
-    .tab:hover{ transform: translateY(-1px); box-shadow: 0 10px 18px rgba(0,0,0,0.06); }
-    .tab.active{ border-color: rgba(27,127,90,0.35); background: rgba(76,175,143,0.10); }
-
-    .form{ display:grid; gap:12px; margin-top:14px; }
-
-    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap:10px; }
-    @media (max-width: 520px){ .grid2{ grid-template-columns: 1fr; } }
-
-    .field label{
-      display:block;
-      font-size:12.5px;
-      margin-bottom:6px;
-      color:#444;
-      font-weight:600;
-    }
-    .input, .select{
-      width:100%;
-      padding: 12px 12px;
-      border-radius: 12px;
-      border: 1px solid #E3E7E6;
-      background: #fff;
-      outline:none;
-      font-size:14px;
-      transition: all .2s ease;
-    }
-    .input:focus, .select:focus{
-      border-color: rgba(27,127,90,0.55);
-      box-shadow: 0 0 0 4px rgba(27,127,90,0.10);
-    }
-
-    .row{
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      gap:10px;
-      margin-top:4px;
-      font-size:13px;
-    }
-    .checkbox{ display:flex; align-items:center; gap:8px; color:#555; user-select:none; }
-    .checkbox input{ accent-color: var(--green-regen); }
-
-    .link{ color: var(--blue-deep); text-decoration:none; font-weight:600; cursor:pointer; }
-    .link:hover{ text-decoration:underline; }
-
-    .btn{
-      width:100%;
-      border:none;
-      cursor:pointer;
-      padding: 12px 14px;
-      border-radius: 30px;
-      font-weight:700;
-      font-family:'Poppins', sans-serif;
-      letter-spacing:0.2px;
-      transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
-    }
-    .btn-primary{
-      background: linear-gradient(135deg, var(--green-light), var(--green-regen));
-      color:#fff;
-      box-shadow: 0 10px 24px rgba(27,127,90,0.22);
-    }
-    .btn-primary:hover{ transform: translateY(-2px); }
-    .btn-primary:active{ transform: translateY(0px); opacity:.92; }
-
-    .divider{
-      display:flex;
-      align-items:center;
-      gap:12px;
-      margin: 14px 0;
-      color:#777;
-      font-size:12px;
-    }
-    .divider::before, .divider::after{ content:""; height:1px; background:#E8ECEB; flex:1; }
-
-    .btn-secondary{
-      background: #fff;
-      border: 1px solid #E3E7E6;
-      color: var(--graphite);
-    }
-    .btn-secondary:hover{
-      transform: translateY(-2px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.06);
-    }
-
-    .footer-note{ margin-top:12px; font-size:12px; color:#666; line-height:1.5; }
-
-    .msg{
-      display:none;
-      margin-top:10px;
-      padding:10px 12px;
-      border-radius:12px;
-      font-size:13px;
-      line-height:1.35;
-    }
-    .msg.show{ display:block; }
-    .msg.success{
-      background: rgba(76,175,143,0.14);
-      border: 1px solid rgba(76,175,143,0.28);
-      color: #135a41;
-    }
-    .msg.error{
-      background: rgba(242,201,76,0.18);
-      border: 1px solid rgba(242,201,76,0.34);
-      color: #5b4a12;
-    }
-
-    .hint{ font-size:12px; opacity:.75; line-height:1.35; margin-top:6px; }
-
-    .loadingbar{
-      height:4px;
-      border-radius:999px;
-      background: rgba(27,127,90,0.12);
-      overflow:hidden;
-      margin-top:12px;
-      display:none;
-    }
-    .loadingbar.show{ display:block; }
-    .loadingbar > div{
-      height:100%;
-      width:35%;
-      border-radius:999px;
-      background: linear-gradient(90deg, rgba(27,127,90,.35), rgba(76,175,143,.95));
-      animation: move 1s infinite ease-in-out;
-    }
-    @keyframes move{
-      0%{ transform: translateX(-120%); }
-      100%{ transform: translateX(340%); }
-    }
-
-    .authed-actions{
-      display:grid;
-      gap:10px;
-      margin-top:12px;
-    }
-  </style>
+  <link rel="stylesheet" href="index.css" />
 </head>
-
 <body>
-  <main class="page">
-    <section class="hero">
-      <div class="hero-glow-top"></div>
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
-      <div class="brand" translate="no">
-        <div class="brand-title">
-          <strong>Hub Resiliência Climática</strong>
-          <span>Hub de Reciclagem & Territórios</span>
+  <div class="bg-grid"></div>
+  <div class="noise"></div>
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="brand" href="#top" aria-label="Voltar ao topo">
+        <div class="brand-mark" aria-hidden="true"></div>
+        <div class="brand-text">
+          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+          <span>Cooperativas • Territórios • Resiliência climática</span>
         </div>
+      </a>
+
+      <button id="menuBtn" class="menu-btn" type="button" aria-expanded="false" aria-controls="mobileNav">
+        <span aria-hidden="true">≡</span>
+        Menu
+      </button>
+
+      <nav class="desktop-nav" aria-label="Navegação principal">
+        <a href="#top">Início</a>
+        <a href="/html/quem-somos.html">Quem Somos</a>
+        <a href="/html/conteudos.html">Conteúdos</a>
+        <a href="#sobre">Sobre</a>
+        <a href="#territorios">Territórios</a>
+        <a href="#pilares">Pilares</a>
+        <a href="#dados">Dados</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+
+      <div class="header-actions">
+        <button id="btnEntrar" class="btn btn-primary" type="button">
+          Cadastrar / Login
+          <span aria-hidden="true">→</span>
+        </button>
       </div>
+    </div>
 
-      <div class="hero-content">
-        <h1>Regenerando territórios através da ação climática.</h1>
-        <p>
-          O <strong>Hub Resiliência Climática</strong> é um ponto de encontro digital que conecta <strong>cooperativas</strong>, <strong>comunidades</strong>,
-          <strong>técnicos</strong> e <strong>gestores públicos</strong>.
-          Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e a resposta aos desafios climáticos nos territórios.
-          Com foco em <strong>economia circular</strong>, <strong>governança</strong> e <strong>capacitação</strong>.
-        </p>
+    <div id="mobileNav" class="mobile-nav" hidden>
+      <a href="#top">Início</a>
+      <a href="/html/quem-somos.html">Quem Somos</a>
+      <a href="/html/conteudos.html">Conteúdos</a>
+      <a href="#dados">Dados</a>
+      <a href="#faq">FAQ</a>
+    </div>
+  </header>
 
-        <div class="pill-row" aria-label="Valores do projeto" translate="no">
-          <div class="pill"><span class="dot"></span> Sustentabilidade real</div>
-          <div class="pill"><span class="dot"></span> Comunidade & territórios</div>
-          <div class="pill"><span class="dot"></span> Economia circular</div>
-          <div class="pill"><span class="dot"></span> Inovação social & tech</div>
-          <div class="pill"><span class="dot"></span> Regeneração ambiental</div>
-        </div>
+  <main id="conteudo">
+    <section id="top" class="hero-coop">
+      <div class="container hero-grid">
+        <div class="hero-copy" data-reveal>
+          <span class="section-tag">NSRU • Plataforma territorial</span>
 
-        <div class="partners" aria-label="Empresas participantes" translate="no">
-          <div class="partners-head">
-            <div>
-              <strong>Empresas participantes</strong><br>
-              <span>Organizações que apoiam e constroem este projeto</span>
-            </div>
-            <span style="opacity:.95;">🤝</span>
+          <h1>
+            Reciclagem, território e cooperação para fortalecer a
+            <span>resiliência climática</span>
+            em Porto Alegre
+          </h1>
+
+          <p class="hero-lead">
+            O Núcleo de Soluções para Resíduos Urbanos conecta cooperativas, comunidades,
+            técnicos e gestão pública em uma plataforma voltada à organização territorial,
+            à economia circular e à resposta aos desafios climáticos.
+          </p>
+
+          <div class="hero-actions">
+            <button id="btnEntrarHero" class="btn btn-primary" type="button">
+              Entrar na plataforma
+              <span aria-hidden="true">→</span>
+            </button>
+
+            <a href="#territorios" class="btn btn-secondary">
+              Ver territórios
+            </a>
           </div>
 
-          <div class="partners-grid" id="partnersGrid"></div>
+          <div class="hero-info-row">
+            <div class="hero-info-card">
+              <strong>Cooperativas</strong>
+              <p>Fortalecimento institucional e apoio à operação.</p>
+            </div>
 
-          <div class="partners-foot">
-            Quer inserir sua organização? Fale com a equipe de governança para inclusão de logo e informações.
+            <div class="hero-info-card">
+              <strong>Territórios</strong>
+              <p>Leitura local com base em dados, pessoas e contexto.</p>
+            </div>
+
+            <div class="hero-info-card">
+              <strong>Governança</strong>
+              <p>Conteúdo, acompanhamento e articulação em rede.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-media" data-reveal>
+          <div class="hero-photo large-photo">
+            <img src="img/foto-cooperativa-capa.jpg" alt="Cooperativa ou território atendido pelo NSRU">
+          </div>
+
+          <div class="hero-media-bottom">
+            <div class="hero-photo small-photo">
+              <img src="img/foto-territorio-capa.jpg" alt="Território de atuação do NSRU">
+            </div>
+
+            <div class="hero-logo-card">
+              <img src="img/Logo_verde_NSRU.png" alt="Logo do Núcleo de Soluções para Resíduos Urbanos">
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="sobre" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="section-tag">Sobre o núcleo</span>
+          <h2>Uma plataforma com linguagem de território e trabalho coletivo</h2>
+          <p>
+            O NSRU foi pensado para apoiar a organização do trabalho, o acesso à informação
+            e a articulação entre cooperativas, comunidades e gestão pública.
+          </p>
+        </div>
+
+        <div class="about-grid">
+          <div class="about-text-card" data-reveal>
+            <h3>Mais do que uma vitrine, uma ferramenta de apoio</h3>
+            <p>
+              A proposta do NSRU é organizar conteúdos, indicadores, páginas territoriais e instrumentos
+              de governança em um ambiente digital simples, confiável e útil para o cotidiano dos territórios.
+            </p>
+            <p>
+              O foco não é apenas mostrar o projeto, mas apoiar a prática: orientar ações,
+              fortalecer redes locais e ampliar a capacidade de resposta diante das mudanças climáticas.
+            </p>
+
+            <div class="topic-list">
+              <div class="topic-item">Conteúdos e formação</div>
+              <div class="topic-item">Páginas de cooperativas e CRGRs</div>
+              <div class="topic-item">Mapas, indicadores e acompanhamento</div>
+            </div>
+          </div>
+
+          <div class="about-photo-card" data-reveal>
+            <img src="img/foto-trabalho-coletivo.jpg" alt="Trabalho coletivo em cooperativa ou território">
+            <div class="photo-legend">
+              Espaço para foto real de cooperativa, reunião, formação ou atividade em território
+            </div>
+          </div>
+        </div>
+
+        <div class="feature-group" data-reveal>
+          <article class="feature-card">
+            <span class="feature-kicker">Território</span>
+            <h3>Base local de atuação</h3>
+            <p>
+              O NSRU organiza informação a partir da realidade do território e do trabalho coletivo.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <span class="feature-kicker">Rede</span>
+            <h3>Conexão entre atores</h3>
+            <p>
+              Cooperativas, técnicos, comunidades e gestão pública passam a compartilhar leitura e ação.
+            </p>
+          </article>
+
+          <article class="feature-card">
+            <span class="feature-kicker">Prática</span>
+            <h3>Conteúdo útil e aplicável</h3>
+            <p>
+              O foco está em materiais, indicadores e fluxos que realmente apoiem o trabalho nos territórios.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="two-column-block reverse">
+          <div class="block-photo" data-reveal>
+            <img src="img/foto-reciclagem-operacao.jpg" alt="Operação de reciclagem em cooperativa">
+          </div>
+
+          <div class="block-text" data-reveal>
+            <span class="section-tag">Reciclagem e economia circular</span>
+            <h2>Informação para fortalecer a cadeia da reciclagem</h2>
+            <p>
+              O NSRU reúne conteúdos, referências e materiais de apoio que ajudam a fortalecer a triagem,
+              a segurança operacional, a inclusão produtiva e a organização do trabalho cooperativo.
+            </p>
+            <p>
+              A plataforma valoriza a prática das cooperativas e traduz informação em apoio concreto para
+              a operação e a governança.
+            </p>
+
+            <a href="/html/conteudos.html" class="btn btn-inline">
+              Entrar na página de conteúdos
+              <span aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="panel">
-      <div class="card" role="region" aria-label="Autenticação" translate="no">
-        <header>
-          <div>
-            <h2 id="cardTitle">Entrar</h2>
-            <div class="subtitle" id="cardSubtitle">Acesse sua conta para ver seu território, CRGR e atualizações.</div>
-          </div>
-          <div class="badge">Acesso seguro</div>
-        </header>
-
-        <div class="tabs" role="tablist" aria-label="Abas">
-          <button class="tab active" id="tabLogin" type="button" role="tab" aria-selected="true">Entrar</button>
-          <button class="tab" id="tabSignup" type="button" role="tab" aria-selected="false">Criar conta</button>
+    <section id="territorios" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="section-tag">Territórios e CRGRs</span>
+          <h2>Centros de referência conectados ao território</h2>
+          <p>
+            Os CRGRs organizam a atuação local em resíduos urbanos, educação ambiental,
+            articulação comunitária e resposta territorial.
+          </p>
         </div>
 
-        <!-- LOGIN -->
-        <form class="form" id="loginForm" autocomplete="on">
-          <div class="field">
-            <label for="loginEmail">E-mail</label>
-            <input class="input" id="loginEmail" name="email" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
-          </div>
+        <div class="territory-layout">
+          <div class="territory-panel" data-reveal>
+            <h3>Leitura simples e útil do território</h3>
+            <p>
+              O mapa ajuda a visualizar os centros de referência conectados ao NSRU e a relação entre
+              território, cooperativas e organização local.
+            </p>
 
-          <div class="field">
-            <label for="loginPassword">Senha</label>
-            <input class="input" id="loginPassword" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
-          </div>
-
-          <div class="row">
-            <label class="checkbox">
-              <input type="checkbox" id="rememberMe" />
-              Manter conectado
-            </label>
-            <a class="link" href="#" id="resetPwdLink">Esqueci minha senha</a>
-          </div>
-
-          <button class="btn btn-primary" id="loginBtn" type="submit">Entrar</button>
-
-          <div class="loadingbar" id="loadingbar"><div></div></div>
-          <div id="msgBox" class="msg"></div>
-
-          <div class="divider">ou</div>
-          <button class="btn btn-secondary" id="goSignupBtn" type="button">Criar conta</button>
-
-          <div class="footer-note">
-            Ao entrar, você concorda com as políticas do projeto e boas práticas de uso comunitário.
-          </div>
-
-          <!-- onde vão aparecer os botões "Continuar" e "Sair" quando já estiver logado -->
-          <div class="authed-actions" id="authedActions" style="display:none;"></div>
-        </form>
-
-        <!-- SIGNUP -->
-        <form class="form" id="signupForm" style="display:none;" autocomplete="on">
-          <div class="field">
-            <label for="signupName">Nome</label>
-            <input class="input" id="signupName" type="text" placeholder="Seu nome" autocomplete="name" required>
-          </div>
-
-          <div class="grid2">
-            <div class="field">
-              <label for="signupEmail">E-mail</label>
-              <input class="input" id="signupEmail" type="email" placeholder="nome@organizacao.org" autocomplete="email" required>
+            <div class="topic-list">
+              <div class="topic-item">Visualização territorial</div>
+              <div class="topic-item">Conexão com páginas dos CRGRs</div>
+              <div class="topic-item">Base para expansão futura</div>
             </div>
 
-            <div class="field">
-              <label for="signupRole">Perfil</label>
-              <select class="select" id="signupRole" required>
-                <option value="comunidade">Comunidade</option>
-                <option value="lideranca">Liderança comunitária</option>
-                <option value="tecnico">Técnico</option>
-                <option value="gestor">Gestor</option>
-              </select>
-              <div class="hint">Admins devem ser promovidos pela gestão (não via cadastro público).</div>
+            <div class="territory-actions">
+              <button class="small-btn" type="button" data-focus-point="cooadesc">Ver COOADESC no mapa</button>
+              <button class="small-btn" type="button" data-focus-point="vilapinto">Ver Vila Pinto no mapa</button>
             </div>
           </div>
 
-          <div class="grid2">
-            <div class="field">
-              <label for="signupTerritory">Território / CRC (opcional)</label>
-              <input class="input" id="signupTerritory" type="text" placeholder="Ex.: CRC Centro / Bairro X">
-            </div>
-            <div class="field">
-              <label for="signupCrgr">CRGR / Unidade (opcional)</label>
-              <input class="input" id="signupCrgr" type="text" placeholder="Ex.: CRGR 01">
-            </div>
+          <div class="map-wrapper" data-reveal>
+            <div id="map" class="map-box" aria-label="Mapa dos CRGRs"></div>
           </div>
+        </div>
 
-          <div class="grid2">
-            <div class="field">
-              <label for="signupPassword">Senha</label>
-              <input class="input" id="signupPassword" type="password" placeholder="mínimo 6 caracteres" autocomplete="new-password" required>
+        <div class="coops-grid" data-reveal>
+          <article class="coop-card">
+            <div class="coop-card-top">
+              <span class="coop-icon">♻</span>
+              <span class="coop-badge">CRGR piloto</span>
             </div>
-            <div class="field">
-              <label for="signupPassword2">Confirmar senha</label>
-              <input class="input" id="signupPassword2" type="password" placeholder="repita a senha" autocomplete="new-password" required>
+            <h3>COOADESC</h3>
+            <p>Rua Seis (Vila Esperança), 113 • Farrapos • Porto Alegre/RS</p>
+            <div class="territory-actions">
+              <button class="small-btn" type="button" data-focus-point="cooadesc">Ver no mapa</button>
+              <a class="small-btn solid" href="/html/cooadesc.html">Entrar na CRGR</a>
             </div>
-          </div>
+          </article>
 
-          <button class="btn btn-primary" id="signupBtn" type="submit">Criar conta</button>
-
-          <div class="loadingbar" id="loadingbar2"><div></div></div>
-          <div id="msgBox2" class="msg"></div>
-
-          <div class="divider">ou</div>
-          <button class="btn btn-secondary" id="goLoginBtn" type="button">Já tenho conta</button>
-        </form>
+          <article class="coop-card">
+            <div class="coop-card-top">
+              <span class="coop-icon">🌱</span>
+              <span class="coop-badge">CRGR piloto</span>
+            </div>
+            <h3>Vila Pinto</h3>
+            <p>Região da Bom Jesus / Jardim Carvalho • Porto Alegre/RS</p>
+            <div class="territory-actions">
+              <button class="small-btn" type="button" data-focus-point="vilapinto">Ver no mapa</button>
+              <a class="small-btn solid" href="/html/vila-pinto.html">Entrar na CRGR</a>
+            </div>
+          </article>
+        </div>
       </div>
     </section>
+
+    <section id="pilares" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="section-tag">Pilares da plataforma</span>
+          <h2>Dois eixos que estruturam o NSRU</h2>
+          <p>
+            O núcleo se organiza com foco em reciclagem, economia circular, formação
+            e governança territorial.
+          </p>
+        </div>
+
+        <div class="pillar-grid">
+          <article class="pillar-card" data-reveal>
+            <div class="pillar-header">
+              <span class="pillar-icon">♻</span>
+              <span class="pillar-label">Eixo I</span>
+            </div>
+            <h3>Reciclagem & Economia Circular</h3>
+            <p>
+              Referências, instrumentos e conteúdos para apoiar triagem, operação,
+              inclusão produtiva e fortalecimento da cadeia da reciclagem.
+            </p>
+            <div class="pillar-points">
+              <div>Guias e cartilhas</div>
+              <div>Triagem e segurança</div>
+              <div>Rotas e território</div>
+            </div>
+          </article>
+
+          <article class="pillar-card" data-reveal>
+            <div class="pillar-header">
+              <span class="pillar-icon">📚</span>
+              <span class="pillar-label">Eixo II</span>
+            </div>
+            <h3>Formação & Governança Territorial</h3>
+            <p>
+              Trilhas de aprendizagem, perfis de acesso e instrumentos para apoiar gestão,
+              articulação local e acompanhamento das ações.
+            </p>
+            <div class="pillar-points">
+              <div>Trilhas formativas</div>
+              <div>Perfis e acessos</div>
+              <div>Gestão e indicadores</div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section id="dados" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="section-tag">Dados e relatórios</span>
+          <h2>Indicadores para acompanhar o avanço da rede</h2>
+          <p>
+            Números sintéticos que ajudam a comunicar presença territorial,
+            mobilização e acompanhamento das ações.
+          </p>
+        </div>
+
+        <div class="stats-row" data-reveal>
+          <article class="stat-card">
+            <span class="stat-label">CRGR ativos</span>
+            <strong class="stat-number"><span class="kcount" data-count="3">0</span></strong>
+            <p>Centros pilotos conectados à plataforma.</p>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Usuários cadastrados</span>
+            <strong class="stat-number"><span class="kcount" data-count="684">0</span></strong>
+            <p>Cooperativas, técnicos, gestores e parceiros.</p>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Planos em andamento</span>
+            <strong class="stat-number"><span class="kcount" data-count="38">0</span></strong>
+            <p>Ações e prazos acompanhados no território.</p>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Indicadores em alerta</span>
+            <strong class="stat-number"><span class="kcount" data-count="5">0</span></strong>
+            <p>Pontos críticos que pedem atenção e coordenação.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section photo-section">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="section-tag">Imagens do projeto</span>
+          <h2>Espaços para mostrar cooperativas, território e trabalho coletivo</h2>
+          <p>
+            Aqui entram fotos reais do projeto: triagem, reuniões, formações, comunidades,
+            território e atuação das cooperativas.
+          </p>
+        </div>
+
+        <div class="photo-grid" data-reveal>
+          <div class="photo-slot photo-large">
+            <img src="img/foto-galeria-1.jpg" alt="Atividade em território">
+            <div class="photo-legend">Atividade territorial e mobilização comunitária</div>
+          </div>
+
+          <div class="photo-slot photo-small">
+            <img src="img/foto-galeria-2.jpg" alt="Cooperativa em atividade">
+            <div class="photo-legend">Cooperativas</div>
+          </div>
+
+          <div class="photo-slot photo-small">
+            <img src="img/foto-galeria-3.jpg" alt="Formação ou oficina">
+            <div class="photo-legend">Formação</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="section">
+      <div class="container">
+        <div class="section-head" data-reveal>
+          <span class="section-tag">Dúvidas frequentes</span>
+          <h2>Perguntas comuns sobre o NSRU</h2>
+          <p>
+            Respostas rápidas para orientar o uso da plataforma e sua organização territorial.
+          </p>
+        </div>
+
+        <div class="faq-list">
+          <details data-reveal>
+            <summary>Quem pode acessar a plataforma?</summary>
+            <p>Indicadores e conteúdos gerais podem ser acessados publicamente. Áreas específicas exigem perfil cadastrado.</p>
+          </details>
+
+          <details data-reveal>
+            <summary>Os dados podem apoiar políticas públicas?</summary>
+            <p>Sim. O objetivo é oferecer leitura territorial, monitoramento e apoio à tomada de decisão.</p>
+          </details>
+
+          <details data-reveal>
+            <summary>Quem alimenta os dados do sistema?</summary>
+            <p>Cooperativas, equipes técnicas, gestores públicos e parceiros vinculados à rede do projeto.</p>
+          </details>
+
+          <details data-reveal>
+            <summary>Como uma cooperativa pode se envolver?</summary>
+            <p>Entre em contato pelo canal institucional do projeto para avaliar conexão com um território ou CRGR.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <footer class="site-footer">
+      <div class="container footer-inner">
+        <div>
+          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+          <p>© <span id="year"></span> • Todos os direitos reservados.</p>
+        </div>
+
+        <nav class="footer-nav" aria-label="Links do rodapé">
+          <a href="#top">Topo</a>
+          <a href="#sobre">Sobre</a>
+          <a href="#territorios">Territórios</a>
+          <a href="#pilares">Pilares</a>
+          <a href="#dados">Dados</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+      </div>
+    </footer>
   </main>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-    import {
-      getAuth,
-      signInWithEmailAndPassword,
-      createUserWithEmailAndPassword,
-      sendPasswordResetEmail,
-      onAuthStateChanged,
-      setPersistence,
-      browserLocalPersistence,
-      browserSessionPersistence,
-      updateProfile,
-      signOut
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-    import {
-      getFirestore,
-      doc,
-      getDoc,
-      setDoc,
-      serverTimestamp
-    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyA8LPTZD7LA_CW2fOnJXJlVe6pByLyrRzo",
-      authDomain: "hub-resiliencia-climatica.firebaseapp.com",
-      projectId: "hub-resiliencia-climatica",
-      storageBucket: "hub-resiliencia-climatica.firebasestorage.app",
-      messagingSenderId: "485694309026",
-      appId: "1:485694309026:web:771ed497d49861fa444dfb"
-    };
-
-    const HOME_URL = "home.html";
-
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    // ===== UI refs =====
-    const tabLogin = document.getElementById("tabLogin");
-    const tabSignup = document.getElementById("tabSignup");
-    const loginForm = document.getElementById("loginForm");
-    const signupForm = document.getElementById("signupForm");
-    const cardTitle = document.getElementById("cardTitle");
-    const cardSubtitle = document.getElementById("cardSubtitle");
-    const goSignupBtn = document.getElementById("goSignupBtn");
-    const goLoginBtn = document.getElementById("goLoginBtn");
-    const msgBox = document.getElementById("msgBox");
-    const msgBox2 = document.getElementById("msgBox2");
-    const loadingbar = document.getElementById("loadingbar");
-    const loadingbar2 = document.getElementById("loadingbar2");
-    const loginBtn = document.getElementById("loginBtn");
-    const signupBtn = document.getElementById("signupBtn");
-    const rememberMe = document.getElementById("rememberMe");
-    const resetPwdLink = document.getElementById("resetPwdLink");
-    const authedActions = document.getElementById("authedActions");
-
-    const loginEmail = document.getElementById("loginEmail");
-    const loginPassword = document.getElementById("loginPassword");
-
-    const signupName = document.getElementById("signupName");
-    const signupEmail = document.getElementById("signupEmail");
-    const signupRole = document.getElementById("signupRole");
-    const signupTerritory = document.getElementById("signupTerritory");
-    const signupCrgr = document.getElementById("signupCrgr");
-    const signupPassword = document.getElementById("signupPassword");
-    const signupPassword2 = document.getElementById("signupPassword2");
-
-    // ===== Parceiros =====
-    const PARTNERS = [
-      { name: "Mãos Verdes", logo: "img/empresas/maos verdes.png" },
-      { name: "Helice Consultoria", logo: "img/empresas/helice_consultoria_ufrgs_logo.jpg" },
-      { name: "Vaus", logo: "img/empresas/vaus.avif" },
-    ];
-
-    function initials(name){
-      const n = (name || "").trim();
-      if(!n) return "OK";
-      const parts = n.split(/\s+/).filter(Boolean);
-      if(parts.length === 1) return parts[0].slice(0,2).toUpperCase();
-      return (parts[0][0] + parts[parts.length-1][0]).toUpperCase();
-    }
-    function renderPartners(){
-      const grid = document.getElementById("partnersGrid");
-      if(!grid) return;
-      grid.innerHTML = "";
-      PARTNERS.forEach(p => {
-        const card = document.createElement("div");
-        card.className = "partner-card";
-        card.title = p.name;
-        card.innerHTML = `
-          <img src="${p.logo}" alt="${p.name}">
-          <div class="partner-fallback">${initials(p.name)}</div>
-        `;
-        const img = card.querySelector("img");
-        img.addEventListener("error", () => card.setAttribute("data-broken", "true"));
-        grid.appendChild(card);
-      });
-    }
-    renderPartners();
-
-    // ===== Helpers =====
-    function showMsg(el, type, text){
-      el.className = "msg show " + (type === "error" ? "error" : "success");
-      el.textContent = text;
-    }
-    function hideMsg(el){
-      el.className = "msg";
-      el.textContent = "";
-    }
-    function setLoading(which, isLoading){
-      if(which === "login"){
-        loginBtn.disabled = isLoading;
-        loginBtn.style.opacity = isLoading ? "0.86" : "1";
-        loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
-        loadingbar.classList.toggle("show", isLoading);
-      } else {
-        signupBtn.disabled = isLoading;
-        signupBtn.style.opacity = isLoading ? "0.86" : "1";
-        signupBtn.textContent = isLoading ? "Criando..." : "Criar conta";
-        loadingbar2.classList.toggle("show", isLoading);
-      }
-    }
-    function niceError(err){
-      const code = err?.code || "";
-      const msg = err?.message || "";
-      return `${code}${msg ? " • " + msg : ""}`.trim();
-    }
-
-    function goTab(mode){
-      const isLogin = mode === "login";
-      tabLogin.classList.toggle("active", isLogin);
-      tabSignup.classList.toggle("active", !isLogin);
-      tabLogin.setAttribute("aria-selected", String(isLogin));
-      tabSignup.setAttribute("aria-selected", String(!isLogin));
-      loginForm.style.display = isLogin ? "" : "none";
-      signupForm.style.display = isLogin ? "none" : "";
-      cardTitle.textContent = isLogin ? "Entrar" : "Criar conta";
-      cardSubtitle.textContent = isLogin
-        ? "Acesse sua conta para ver seu território, CRGR e atualizações."
-        : "Crie sua conta e comece a participar do Hub.";
-      hideMsg(msgBox); hideMsg(msgBox2);
-    }
-
-    tabLogin.addEventListener("click", () => goTab("login"));
-    tabSignup.addEventListener("click", () => goTab("signup"));
-    goSignupBtn.addEventListener("click", () => goTab("signup"));
-    goLoginBtn.addEventListener("click", () => goTab("login"));
-
-    async function redirectAfterLogin(){
-      window.location.href = HOME_URL;
-    }
-
-    async function upsertUserProfile(user, payload){
-      const ref = doc(db, "users", user.uid);
-      const snap = await getDoc(ref);
-
-      const base = {
-        uid: user.uid,
-        email: user.email ?? null,
-        name: user.displayName || payload?.name || null,
-        role: payload?.role || "comunidade",
-        territoryLabel: payload?.territoryLabel || null,
-        crgrLabel: payload?.crgrLabel || null,
-        crgrIds: Array.isArray(payload?.crgrIds) ? payload.crgrIds : [],
-        orgId: payload?.orgId ?? null,
-        modules: payload?.modules ?? { feed: true },
-        bio: payload?.bio ?? "Mini bio: descreva sua atuação no território.",
-        updatedAt: serverTimestamp()
-      };
-
-      if(!snap.exists()){
-        await setDoc(ref, { ...base, createdAt: serverTimestamp() }, { merge: true });
-      } else {
-        await setDoc(ref, base, { merge: true });
-      }
-    }
-
-    // ========= OPÇÃO A: se já estiver logado, NÃO redireciona.
-    // Mostra "Continuar" + "Sair desta conta".
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        authedActions.style.display = "none";
-        return;
-      }
-
-      // força ficar na aba de login para ver a mensagem
-      goTab("login");
-
-      showMsg(msgBox, "success", `Você já está conectado como ${user.email}.`);
-
-      authedActions.innerHTML = "";
-      authedActions.style.display = "grid";
-
-      const continueBtn = document.createElement("button");
-      continueBtn.type = "button";
-      continueBtn.className = "btn btn-primary";
-      continueBtn.textContent = "Continuar";
-      continueBtn.addEventListener("click", () => redirectAfterLogin());
-
-      const logoutBtn = document.createElement("button");
-      logoutBtn.type = "button";
-      logoutBtn.className = "btn btn-secondary";
-      logoutBtn.textContent = "Sair desta conta";
-      logoutBtn.addEventListener("click", async () => {
-        try{
-          await signOut(auth);
-          window.location.reload();
-        }catch(e){
-          showMsg(msgBox, "error", "Não consegui sair. Tente novamente.");
-        }
-      });
-
-      authedActions.appendChild(continueBtn);
-      authedActions.appendChild(logoutBtn);
-    });
-
-    // ===== LOGIN =====
-    loginForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      hideMsg(msgBox);
-      setLoading("login", true);
-
-      const email = loginEmail.value.trim();
-      const password = loginPassword.value;
-
-      try{
-        await setPersistence(auth, rememberMe.checked ? browserLocalPersistence : browserSessionPersistence);
-
-        const cred = await signInWithEmailAndPassword(auth, email, password);
-
-        try{
-          await upsertUserProfile(cred.user, {});
-        }catch(profileErr){
-          console.warn("PROFILE ERROR (login continues) =>", profileErr);
-          showMsg(msgBox, "error", "Login OK, mas não consegui ler/criar seu perfil no Firestore (rules). Mesmo assim você vai entrar.");
-        }
-
-        await redirectAfterLogin();
-      }catch(err){
-        console.error("LOGIN ERROR =>", err);
-
-        const code = err?.code || "";
-        let text = "Não foi possível entrar. Verifique seus dados.";
-
-        if(code.includes("auth/invalid-credential")) text = "E-mail ou senha inválidos.";
-        else if(code.includes("auth/user-not-found")) text = "Usuário não encontrado.";
-        else if(code.includes("auth/wrong-password")) text = "Senha incorreta.";
-        else if(code.includes("auth/too-many-requests")) text = "Muitas tentativas. Tente novamente mais tarde.";
-        else if(code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
-        else if(code.includes("auth/network-request-failed")) text = "Falha de rede. Verifique internet.";
-        else if(code.includes("auth/invalid-api-key")) text = "API Key inválida no firebaseConfig.";
-        else if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
-        else text = "Erro no login: " + niceError(err);
-
-        showMsg(msgBox, "error", text);
-      }finally{
-        setLoading("login", false);
-      }
-    });
-
-    // ===== SIGNUP =====
-    signupForm.addEventListener("submit", async (e) => {
-      e.preventDefault();
-      hideMsg(msgBox2);
-
-      const name = signupName.value.trim();
-      const email = signupEmail.value.trim();
-      const role = signupRole.value;
-      const territoryLabel = signupTerritory.value.trim() || null;
-      const crgrLabel = signupCrgr.value.trim() || null;
-      const pass1 = signupPassword.value;
-      const pass2 = signupPassword2.value;
-
-      if(pass1.length < 6) return showMsg(msgBox2, "error", "Senha fraca. Use pelo menos 6 caracteres.");
-      if(pass1 !== pass2) return showMsg(msgBox2, "error", "As senhas não conferem.");
-
-      setLoading("signup", true);
-
-      try{
-        await setPersistence(auth, browserLocalPersistence);
-
-        const cred = await createUserWithEmailAndPassword(auth, email, pass1);
-
-        try{ await updateProfile(cred.user, { displayName: name }); } catch {}
-
-        try{
-          await upsertUserProfile(cred.user, {
-            name,
-            role,
-            territoryLabel,
-            crgrLabel,
-            crgrIds: [],
-            modules: { feed: true }
-          });
-        }catch(profileErr){
-          console.warn("PROFILE ERROR (signup continues) =>", profileErr);
-          showMsg(msgBox2, "error", "Conta criada, mas sem permissão para salvar perfil no Firestore (rules). Você ainda vai entrar.");
-        }
-
-        showMsg(msgBox2, "success", "Conta criada! Redirecionando...");
-        await redirectAfterLogin();
-      }catch(err){
-        console.error("SIGNUP ERROR =>", err);
-
-        const code = err?.code || "";
-        let text = "Não foi possível criar a conta.";
-        if(code.includes("auth/email-already-in-use")) text = "Este e-mail já está em uso.";
-        else if(code.includes("auth/weak-password")) text = "Senha fraca. Use pelo menos 6 caracteres.";
-        else if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
-        else if(code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
-        else text = "Erro no cadastro: " + niceError(err);
-
-        showMsg(msgBox2, "error", text);
-      }finally{
-        setLoading("signup", false);
-      }
-    });
-
-    // ===== RESET SENHA =====
-    resetPwdLink.addEventListener("click", async (e) => {
-      e.preventDefault();
-      hideMsg(msgBox);
-
-      const email = loginEmail.value.trim();
-      if(!email) return showMsg(msgBox, "error", "Digite seu e-mail para recuperar a senha.");
-
-      try{
-        await sendPasswordResetEmail(auth, email);
-        showMsg(msgBox, "success", "Enviamos um link de recuperação para seu e-mail.");
-      }catch(err){
-        console.error("RESET ERROR =>", err);
-        const code = err?.code || "";
-        let text = "Não foi possível enviar o e-mail de recuperação.";
-        if(code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
-        if(code.includes("auth/invalid-email")) text = "E-mail inválido.";
-        showMsg(msgBox, "error", text);
-      }
-    });
-  </script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="index.js"></script>
 </body>
 </html>
