@@ -1,476 +1,284 @@
 <!doctype html>
-<html lang="pt-BR" translate="no">
+<html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR" />
-  <meta name="google" content="notranslate" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Núcleo de Soluções para Resíduos Urbanos • Home</title>
 
-  <meta name="description" content="Núcleo de Soluções para Resíduos Urbanos: plataforma territorial para reciclagem, resiliência climática, governança e atuação em rede em Porto Alegre." />
-  <meta name="theme-color" content="#81B92A" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:ital,wght@0,700;1,300&display=swap" rel="stylesheet">
+<title>Núcleo de Soluções para Resíduos Urbanos</title>
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
+<link rel="stylesheet" href="index.css">
 
-  <link rel="stylesheet" href="index.css" />
 </head>
+
 <body>
-  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
-  <div class="bg-grid"></div>
-  <div class="noise"></div>
-  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+<header class="site-header">
 
-  <header class="site-header">
-    <div class="header-inner">
-      <a class="brand" href="#top" aria-label="Voltar ao topo">
-        <div class="brand-mark" aria-hidden="true"></div>
-        <div class="brand-text">
-          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-          <span>Cooperativas • Territórios • Resiliência climática</span>
-        </div>
-      </a>
+<div class="header-inner">
 
-      <button id="menuBtn" class="menu-btn" type="button" aria-expanded="false" aria-controls="mobileNav">
-        <span aria-hidden="true">≡</span>
-        Menu
-      </button>
+<a class="brand" href="#top">
 
-      <nav class="desktop-nav" aria-label="Navegação principal">
-        <a href="#top">Início</a>
-        <a href="/html/quem-somos.html">Quem Somos</a>
-        <a href="/html/conteudos.html">Conteúdos</a>
-        <a href="#dados">Dados</a>
-        <a href="#faq">FAQ</a>
-      </nav>
+<div class="brand-logo-wrap">
+<img src="./img/Logo_verde_NSRU.png" alt="NSRU" class="brand-logo">
+</div>
 
-      <div class="header-actions">
-        <button id="btnEntrar" class="btn btn-primary" type="button">
-          Cadastrar / Login
-          <span aria-hidden="true">→</span>
-        </button>
-      </div>
-    </div>
+<div class="brand-text">
+<strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+<span>Cooperativas • Territórios • Resiliência Climática</span>
+</div>
 
-    <div id="mobileNav" class="mobile-nav" hidden>
-      <a href="#top">Início</a>
-      <a href="/html/quem-somos.html">Quem Somos</a>
-      <a href="/html/conteudos.html">Conteúdos</a>
-      <a href="#dados">Dados</a>
-      <a href="#faq">FAQ</a>
-    </div>
-  </header>
+</a>
 
-  <main id="conteudo">
-    <section id="top" class="hero-coop">
-      <div class="container hero-grid">
-        <div class="hero-copy" data-reveal>
-          <span class="section-tag">NSRU • Plataforma territorial</span>
+<nav class="desktop-nav">
 
-          <h1>
-            Reciclagem, território e cooperação para fortalecer a
-            <span>resiliência climática</span>
-            em Porto Alegre
-          </h1>
+<a href="#top">Início</a>
+<a href="#sobre">Sobre</a>
+<a href="#territorios">Territórios</a>
+<a href="#pilares">Pilares</a>
+<a href="#dados">Dados</a>
+<a href="#faq">FAQ</a>
 
-          <p class="hero-lead">
-            O Núcleo de Soluções para Resíduos Urbanos conecta cooperativas, comunidades,
-            técnicos e gestão pública em uma plataforma voltada à organização territorial,
-            à economia circular e à resposta aos desafios climáticos.
-          </p>
+</nav>
 
-          <div class="hero-actions">
-            <button id="btnEntrarHero" class="btn btn-primary" type="button">
-              Entrar na plataforma
-              <span aria-hidden="true">→</span>
-            </button>
+<button id="btnEntrar" class="btn-primary">
+Entrar
+</button>
 
-            <a href="#territorios" class="btn btn-secondary">
-              Ver territórios
-            </a>
-          </div>
+</div>
 
-          <div class="hero-info-row">
-            <div class="hero-info-card">
-              <strong>Cooperativas</strong>
-              <p>Fortalecimento institucional e apoio à operação.</p>
-            </div>
+</header>
 
-            <div class="hero-info-card">
-              <strong>Territórios</strong>
-              <p>Leitura local com base em dados, pessoas e contexto.</p>
-            </div>
 
-            <div class="hero-info-card">
-              <strong>Governança</strong>
-              <p>Conteúdo, acompanhamento e articulação em rede.</p>
-            </div>
-          </div>
-        </div>
+<main id="conteudo">
 
-        <div class="hero-media" data-reveal>
-          <div class="hero-photo large-photo">
-            <img src="img/foto-cooperativa-capa.jpg" alt="Cooperativa ou território atendido pelo NSRU">
-          </div>
+<section id="top" class="hero">
 
-          <div class="hero-media-bottom">
-            <div class="hero-photo small-photo">
-              <img src="img/foto-territorio-capa.jpg" alt="Território de atuação do NSRU">
-            </div>
+<div class="container hero-grid">
 
-            <div class="hero-logo-card">
-              <img src="img/Logo_verde_NSRU.png" alt="Logo do Núcleo de Soluções para Resíduos Urbanos">
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+<div class="hero-text">
 
-    <section id="sobre" class="section">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="section-tag">Sobre o núcleo</span>
-          <h2>Uma plataforma com linguagem de território e trabalho coletivo</h2>
-          <p>
-            O NSRU foi pensado para apoiar a organização do trabalho, o acesso à informação
-            e a articulação entre cooperativas, comunidades e gestão pública.
-          </p>
-        </div>
+<h1>
+Reciclagem e território para fortalecer a
+<span>resiliência climática</span>
+</h1>
 
-        <div class="about-grid">
-          <div class="about-text-card" data-reveal>
-            <h3>Mais do que uma vitrine, uma ferramenta de apoio</h3>
-            <p>
-              A proposta do NSRU é organizar conteúdos, indicadores, páginas territoriais e instrumentos
-              de governança em um ambiente digital simples, confiável e útil para o cotidiano dos territórios.
-            </p>
-            <p>
-              O foco não é apenas mostrar o projeto, mas apoiar a prática: orientar ações,
-              fortalecer redes locais e ampliar a capacidade de resposta diante das mudanças climáticas.
-            </p>
+<p>
 
-            <div class="topic-list">
-              <div class="topic-item">Conteúdos e formação</div>
-              <div class="topic-item">Páginas de cooperativas e CRGRs</div>
-              <div class="topic-item">Mapas, indicadores e acompanhamento</div>
-            </div>
-          </div>
+O Núcleo de Soluções para Resíduos Urbanos conecta cooperativas,
+territórios e gestão pública para apoiar a economia circular
+e fortalecer a resposta aos desafios climáticos.
 
-          <div class="about-photo-card" data-reveal>
-            <img src="img/foto-trabalho-coletivo.jpg" alt="Trabalho coletivo em cooperativa ou território">
-            <div class="photo-legend">
-              Espaço para foto real de cooperativa, reunião, formação ou atividade em território
-            </div>
-          </div>
-        </div>
+</p>
 
-        <div class="feature-group" data-reveal>
-          <article class="feature-card">
-            <span class="feature-kicker">Território</span>
-            <h3>Base local de atuação</h3>
-            <p>
-              O NSRU organiza informação a partir da realidade do território e do trabalho coletivo.
-            </p>
-          </article>
+<div class="hero-actions">
 
-          <article class="feature-card">
-            <span class="feature-kicker">Rede</span>
-            <h3>Conexão entre atores</h3>
-            <p>
-              Cooperativas, técnicos, comunidades e gestão pública passam a compartilhar leitura e ação.
-            </p>
-          </article>
+<button id="btnEntrarHero" class="btn-primary">
+Entrar na plataforma
+</button>
 
-          <article class="feature-card">
-            <span class="feature-kicker">Prática</span>
-            <h3>Conteúdo útil e aplicável</h3>
-            <p>
-              O foco está em materiais, indicadores e fluxos que realmente apoiem o trabalho nos territórios.
-            </p>
-          </article>
-        </div>
-      </div>
-    </section>
+<a href="#territorios" class="btn-secondary">
+Ver territórios
+</a>
 
-    <section class="section">
-      <div class="container">
-        <div class="two-column-block reverse">
-          <div class="block-photo" data-reveal>
-            <img src="img/foto-reciclagem-operacao.jpg" alt="Operação de reciclagem em cooperativa">
-          </div>
+</div>
 
-          <div class="block-text" data-reveal>
-            <span class="section-tag">Reciclagem e economia circular</span>
-            <h2>Informação para fortalecer a cadeia da reciclagem</h2>
-            <p>
-              O NSRU reúne conteúdos, referências e materiais de apoio que ajudam a fortalecer a triagem,
-              a segurança operacional, a inclusão produtiva e a organização do trabalho cooperativo.
-            </p>
-            <p>
-              A plataforma valoriza a prática das cooperativas e traduz informação em apoio concreto para
-              a operação e a governança.
-            </p>
+</div>
 
-            <a href="/html/conteudos.html" class="btn btn-inline">
-              Entrar na página de conteúdos
-              <span aria-hidden="true">→</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </section>
+<div class="hero-image">
 
-    <section id="territorios" class="section">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="section-tag">Territórios e CRGRs</span>
-          <h2>Centros de referência conectados ao território</h2>
-          <p>
-            Os CRGRs organizam a atuação local em resíduos urbanos, educação ambiental,
-            articulação comunitária e resposta territorial.
-          </p>
-        </div>
+<img src="./img/foto-cooperativa-capa.jpg">
 
-        <div class="territory-layout">
-          <div class="territory-panel" data-reveal>
-            <h3>Leitura simples e útil do território</h3>
-            <p>
-              O mapa ajuda a visualizar os centros de referência conectados ao NSRU e a relação entre
-              território, cooperativas e organização local.
-            </p>
+</div>
 
-            <div class="topic-list">
-              <div class="topic-item">Visualização territorial</div>
-              <div class="topic-item">Conexão com páginas dos CRGRs</div>
-              <div class="topic-item">Base para expansão futura</div>
-            </div>
+</div>
 
-            <div class="territory-actions">
-              <button class="small-btn" type="button" data-focus-point="cooadesc">Ver COOADESC no mapa</button>
-              <button class="small-btn" type="button" data-focus-point="vilapinto">Ver Vila Pinto no mapa</button>
-            </div>
-          </div>
+</section>
 
-          <div class="map-wrapper" data-reveal>
-            <div id="map" class="map-box" aria-label="Mapa dos CRGRs"></div>
-          </div>
-        </div>
 
-        <div class="coops-grid" data-reveal>
-          <article class="coop-card">
-            <div class="coop-card-top">
-              <span class="coop-icon">♻</span>
-              <span class="coop-badge">CRGR piloto</span>
-            </div>
-            <h3>COOADESC</h3>
-            <p>Rua Seis (Vila Esperança), 113 • Farrapos • Porto Alegre/RS</p>
-            <div class="territory-actions">
-              <button class="small-btn" type="button" data-focus-point="cooadesc">Ver no mapa</button>
-              <a class="small-btn solid" href="/html/cooadesc.html">Entrar na CRGR</a>
-            </div>
-          </article>
+<section id="sobre" class="section">
 
-          <article class="coop-card">
-            <div class="coop-card-top">
-              <span class="coop-icon">🌱</span>
-              <span class="coop-badge">CRGR piloto</span>
-            </div>
-            <h3>Vila Pinto</h3>
-            <p>Região da Bom Jesus / Jardim Carvalho • Porto Alegre/RS</p>
-            <div class="territory-actions">
-              <button class="small-btn" type="button" data-focus-point="vilapinto">Ver no mapa</button>
-              <a class="small-btn solid" href="/html/vila-pinto.html">Entrar na CRGR</a>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
+<div class="container two-columns">
 
-    <section id="pilares" class="section">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="section-tag">Pilares da plataforma</span>
-          <h2>Dois eixos que estruturam o NSRU</h2>
-          <p>
-            O núcleo se organiza com foco em reciclagem, economia circular, formação
-            e governança territorial.
-          </p>
-        </div>
+<div>
 
-        <div class="pillar-grid">
-          <article class="pillar-card" data-reveal>
-            <div class="pillar-header">
-              <span class="pillar-icon">♻</span>
-              <span class="pillar-label">Eixo I</span>
-            </div>
-            <h3>Reciclagem & Economia Circular</h3>
-            <p>
-              Referências, instrumentos e conteúdos para apoiar triagem, operação,
-              inclusão produtiva e fortalecimento da cadeia da reciclagem.
-            </p>
-            <div class="pillar-points">
-              <div>Guias e cartilhas</div>
-              <div>Triagem e segurança</div>
-              <div>Rotas e território</div>
-            </div>
-          </article>
+<h2>Uma plataforma para cooperativas e territórios</h2>
 
-          <article class="pillar-card" data-reveal>
-            <div class="pillar-header">
-              <span class="pillar-icon">📚</span>
-              <span class="pillar-label">Eixo II</span>
-            </div>
-            <h3>Formação & Governança Territorial</h3>
-            <p>
-              Trilhas de aprendizagem, perfis de acesso e instrumentos para apoiar gestão,
-              articulação local e acompanhamento das ações.
-            </p>
-            <div class="pillar-points">
-              <div>Trilhas formativas</div>
-              <div>Perfis e acessos</div>
-              <div>Gestão e indicadores</div>
-            </div>
-          </article>
-        </div>
-      </div>
-    </section>
+<p>
 
-    <section id="dados" class="section">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="section-tag">Dados e relatórios</span>
-          <h2>Indicadores para acompanhar o avanço da rede</h2>
-          <p>
-            Números sintéticos que ajudam a comunicar presença territorial,
-            mobilização e acompanhamento das ações.
-          </p>
-        </div>
+O NSRU organiza conteúdos, indicadores e páginas territoriais
+para apoiar o trabalho das cooperativas e a articulação
+entre comunidade, técnicos e gestão pública.
 
-        <div class="stats-row" data-reveal>
-          <article class="stat-card">
-            <span class="stat-label">CRGR ativos</span>
-            <strong class="stat-number"><span class="kcount" data-count="3">0</span></strong>
-            <p>Centros pilotos conectados à plataforma.</p>
-          </article>
+</p>
 
-          <article class="stat-card">
-            <span class="stat-label">Usuários cadastrados</span>
-            <strong class="stat-number"><span class="kcount" data-count="684">0</span></strong>
-            <p>Cooperativas, técnicos, gestores e parceiros.</p>
-          </article>
+<p>
 
-          <article class="stat-card">
-            <span class="stat-label">Planos em andamento</span>
-            <strong class="stat-number"><span class="kcount" data-count="38">0</span></strong>
-            <p>Ações e prazos acompanhados no território.</p>
-          </article>
+A plataforma transforma informação em ação,
+fortalecendo a economia circular
+e a governança territorial.
 
-          <article class="stat-card">
-            <span class="stat-label">Indicadores em alerta</span>
-            <strong class="stat-number"><span class="kcount" data-count="5">0</span></strong>
-            <p>Pontos críticos que pedem atenção e coordenação.</p>
-          </article>
-        </div>
-      </div>
-    </section>
+</p>
 
-    <section class="section photo-section">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="section-tag">Imagens do projeto</span>
-          <h2>Espaços para mostrar cooperativas, território e trabalho coletivo</h2>
-          <p>
-            Aqui entram fotos reais do projeto: triagem, reuniões, formações, comunidades,
-            território e atuação das cooperativas.
-          </p>
-        </div>
+</div>
 
-        <div class="photo-grid" data-reveal>
-          <div class="photo-slot photo-large">
-            <img src="img/foto-galeria-1.jpg" alt="Atividade em território">
-            <div class="photo-legend">Atividade territorial e mobilização comunitária</div>
-          </div>
+<div class="image-box">
 
-          <div class="photo-slot photo-small">
-            <img src="img/foto-galeria-2.jpg" alt="Cooperativa em atividade">
-            <div class="photo-legend">Cooperativas</div>
-          </div>
+<img src="./img/foto-trabalho-coletivo.jpg">
 
-          <div class="photo-slot photo-small">
-            <img src="img/foto-galeria-3.jpg" alt="Formação ou oficina">
-            <div class="photo-legend">Formação</div>
-          </div>
-        </div>
-      </div>
-    </section>
+</div>
 
-    <section id="faq" class="section">
-      <div class="container">
-        <div class="section-head" data-reveal>
-          <span class="section-tag">Dúvidas frequentes</span>
-          <h2>Perguntas comuns sobre o NSRU</h2>
-          <p>
-            Respostas rápidas para orientar o uso da plataforma e sua organização territorial.
-          </p>
-        </div>
+</div>
 
-        <div class="faq-list">
-          <details data-reveal>
-            <summary>Quem pode acessar a plataforma?</summary>
-            <p>Indicadores e conteúdos gerais podem ser acessados publicamente. Áreas específicas exigem perfil cadastrado.</p>
-          </details>
+</section>
 
-          <details data-reveal>
-            <summary>Os dados podem apoiar políticas públicas?</summary>
-            <p>Sim. O objetivo é oferecer leitura territorial, monitoramento e apoio à tomada de decisão.</p>
-          </details>
 
-          <details data-reveal>
-            <summary>Quem alimenta os dados do sistema?</summary>
-            <p>Cooperativas, equipes técnicas, gestores públicos e parceiros vinculados à rede do projeto.</p>
-          </details>
+<section id="territorios" class="section">
 
-          <details data-reveal>
-            <summary>Como uma cooperativa pode se envolver?</summary>
-            <p>Entre em contato pelo canal institucional do projeto para avaliar conexão com um território ou CRGR.</p>
-          </details>
-        </div>
-      </div>
-    </section>
+<div class="container">
 
-    <footer class="site-footer">
-      <div class="container footer-inner">
-        <div>
-          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-          <p>© <span id="year"></span> • Todos os direitos reservados.</p>
-        </div>
+<h2>Territórios e CRGRs</h2>
 
-        <nav class="footer-nav" aria-label="Links do rodapé">
-          <a href="#top">Topo</a>
-          <a href="#sobre">Sobre</a>
-          <a href="#territorios">Territórios</a>
-          <a href="#pilares">Pilares</a>
-          <a href="#dados">Dados</a>
-          <a href="#faq">FAQ</a>
-        </nav>
-      </div>
-    </footer>
-  </main>
+<div class="territorio-grid">
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-  <script src="index.js"></script>
+<div class="territorio-text">
+
+<p>
+
+Os Centros de Referência em Gestão de Resíduos
+organizam a atuação local em reciclagem,
+educação ambiental e articulação territorial.
+
+</p>
+
+<button class="btn-secondary" data-focus-point="cooadesc">
+Ver COOADESC
+</button>
+
+<button class="btn-secondary" data-focus-point="vilapinto">
+Ver Vila Pinto
+</button>
+
+</div>
+
+<div id="map" class="map-box"></div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section id="pilares" class="section">
+
+<div class="container">
+
+<h2>Pilares da plataforma</h2>
+
+<div class="cards">
+
+<div class="card">
+
+<h3>Reciclagem e Economia Circular</h3>
+
+<p>
+Conteúdos e instrumentos para fortalecer
+a cadeia da reciclagem e a triagem.
+</p>
+
+</div>
+
+<div class="card">
+
+<h3>Formação e Governança</h3>
+
+<p>
+Trilhas formativas e instrumentos de gestão
+para apoiar cooperativas e territórios.
+</p>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section id="dados" class="section">
+
+<div class="container">
+
+<h2>Indicadores</h2>
+
+<div class="stats">
+
+<div class="stat">
+
+<strong class="kcount" data-count="3">0</strong>
+<span>CRGR ativos</span>
+
+</div>
+
+<div class="stat">
+
+<strong class="kcount" data-count="684">0</strong>
+<span>Usuários cadastrados</span>
+
+</div>
+
+<div class="stat">
+
+<strong class="kcount" data-count="38">0</strong>
+<span>Planos em andamento</span>
+
+</div>
+
+</div>
+
+</div>
+
+</section>
+
+
+<section id="faq" class="section">
+
+<div class="container">
+
+<h2>Perguntas frequentes</h2>
+
+<details>
+<summary>Quem pode acessar a plataforma?</summary>
+<p>Conteúdos públicos são abertos. Áreas internas exigem login.</p>
+</details>
+
+<details>
+<summary>Quem alimenta os dados?</summary>
+<p>Cooperativas, técnicos e parceiros do projeto.</p>
+</details>
+
+</div>
+
+</section>
+
+</main>
+
+
+<footer class="footer">
+
+<div class="container footer-inner">
+
+<strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+
+<span>© <span id="year"></span></span>
+
+</div>
+
+</footer>
+
+<script type="module" src="index.js"></script>
+
 </body>
 </html>
