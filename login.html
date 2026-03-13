@@ -19,16 +19,16 @@
 <body>
   <div class="bg-grid"></div>
   <div class="noise"></div>
-  <div class="cursor-glow" id="cursorGlow"></div>
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
   <main class="page">
-    <section class="hero">
+    <section class="hero" data-reveal>
       <div class="hero-glow-top"></div>
 
       <div class="hero-inner">
         <div class="brand" translate="no">
           <div class="mark" aria-hidden="true">
-            <img src="img/Design_sem_nome__2_-removebg-preview.png" alt="">
+            <img src="../img/Design_sem_nome__2_-removebg-preview.png" alt="">
           </div>
           <div class="brand-title">
             <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
@@ -44,10 +44,8 @@
         <h1>Faça parte do NSRU</h1>
 
         <p>
-          O NSRU é um espaço de integração entre dados, pessoas e territórios. Ao se cadastrar, você passa a contribuir
-          para a organização da informação, o fortalecimento das redes locais e a construção de respostas mais eficientes
-          para a gestão de resíduos e os desafios climáticos. Seja você parte de uma cooperativa, liderança comunitária,
-          gestor público, técnico ou agente de resposta climática, seu cadastro ajuda a transformar dados em decisão e ação coletiva.
+          O NSRU integra dados, pessoas e territórios. Ao se cadastrar, você contribui para organizar a informação,
+          fortalecer redes locais e construir respostas mais eficientes para a gestão de resíduos e os desafios climáticos.
         </p>
 
         <div class="steps" aria-label="Como funciona">
@@ -92,7 +90,7 @@
       </div>
     </section>
 
-    <section class="panel">
+    <section class="panel" data-reveal>
       <div class="card" role="region" aria-label="Autenticação" translate="no">
         <header class="card-header">
           <div>
@@ -107,6 +105,7 @@
           <button class="tab" id="tabSignup" type="button" role="tab" aria-selected="false">Criar conta</button>
         </div>
 
+        <!-- LOGIN -->
         <form class="form" id="loginForm" autocomplete="on">
           <div class="field">
             <label for="loginEmail">E-mail</label>
@@ -120,19 +119,20 @@
 
           <div class="row">
             <label class="checkbox">
-              <input type="checkbox" id="rememberMe" /> Manter conectado
+              <input type="checkbox" id="rememberMe" />
+              <span>Manter conectado</span>
             </label>
             <a class="link" href="#" id="resetPwdLink">Esqueci minha senha</a>
           </div>
 
-          <button class="btn btn-primary" id="loginBtn" type="submit">Entrar</button>
+          <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Entrar</button>
 
           <div class="loadingbar" id="loadingbar"><div></div></div>
-          <div id="msgBox" class="msg"></div>
+          <div id="msgBox" class="msg" aria-live="polite"></div>
 
           <div class="divider">ou</div>
 
-          <button class="btn btn-secondary" id="goSignupBtn" type="button">Criar conta</button>
+          <button class="btn btn-secondary btn-block" id="goSignupBtn" type="button">Criar conta</button>
 
           <div class="footer-note">
             Ao entrar, você concorda com as políticas do projeto e boas práticas de uso comunitário.
@@ -141,6 +141,7 @@
           <div class="authed-actions" id="authedActions" style="display:none;"></div>
         </form>
 
+        <!-- SIGNUP -->
         <form class="form" id="signupForm" style="display:none;" autocomplete="on">
           <div class="field">
             <label for="signupName">Nome</label>
@@ -188,14 +189,14 @@
             </div>
           </div>
 
-          <button class="btn btn-primary" id="signupBtn" type="submit">Criar conta</button>
+          <button class="btn btn-primary btn-block" id="signupBtn" type="submit">Criar conta</button>
 
           <div class="loadingbar" id="loadingbar2"><div></div></div>
-          <div id="msgBox2" class="msg"></div>
+          <div id="msgBox2" class="msg" aria-live="polite"></div>
 
           <div class="divider">ou</div>
 
-          <button class="btn btn-secondary" id="goLoginBtn" type="button">Já tenho conta</button>
+          <button class="btn btn-secondary btn-block" id="goLoginBtn" type="button">Já tenho conta</button>
         </form>
       </div>
     </section>

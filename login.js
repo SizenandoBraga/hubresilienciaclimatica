@@ -1,5 +1,4 @@
 import { initializeApp } from "firebase/app";
-
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -12,7 +11,6 @@ import {
   updateProfile,
   signOut
 } from "firebase/auth";
-
 import {
   getFirestore,
   doc,
@@ -21,23 +19,21 @@ import {
   serverTimestamp
 } from "firebase/firestore";
 
-
 // =============================
 // Firebase
 // =============================
 const firebaseConfig = {
-apiKey: "AIzaSyBs9qA9kWiXFEiXFCNLEKAn0Xo362RulJM",
-authDomain: "hub-resliencia-em-rede.firebaseapp.com",
-projectId: "hub-resliencia-em-rede",
-storageBucket: "hub-resliencia-em-rede.firebasestorage.app",
-messagingSenderId: "138042062207",
-appId: "1:138042062207:web:ee1c94acaa6b5f9ac6564a"
+  apiKey: "AIzaSyBs9qA9kWiXFEiXFCNLEKAn0Xo362RulJM",
+  authDomain: "hub-resliencia-em-rede.firebaseapp.com",
+  projectId: "hub-resliencia-em-rede",
+  storageBucket: "hub-resliencia-em-rede.firebasestorage.app",
+  messagingSenderId: "138042062207",
+  appId: "1:138042062207:web:ee1c94acaa6b5f9ac6564a"
 };
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
 
 // =============================
 // Rotas
@@ -48,25 +44,20 @@ const ROUTES = {
   home: "./home.html"
 };
 
-
 // =============================
 // UI refs
 // =============================
 const tabLogin = document.getElementById("tabLogin");
 const tabSignup = document.getElementById("tabSignup");
-
 const loginForm = document.getElementById("loginForm");
 const signupForm = document.getElementById("signupForm");
-
 const cardTitle = document.getElementById("cardTitle");
 const cardSubtitle = document.getElementById("cardSubtitle");
-
 const goSignupBtn = document.getElementById("goSignupBtn");
 const goLoginBtn = document.getElementById("goLoginBtn");
 
 const msgBox = document.getElementById("msgBox");
 const msgBox2 = document.getElementById("msgBox2");
-
 const loadingbar = document.getElementById("loadingbar");
 const loadingbar2 = document.getElementById("loadingbar2");
 
@@ -89,50 +80,51 @@ const signupCrgr = document.getElementById("signupCrgr");
 const signupPassword = document.getElementById("signupPassword");
 const signupPassword2 = document.getElementById("signupPassword2");
 
-
 // =============================
 // Cursor glow
 // =============================
 const glow = document.getElementById("cursorGlow");
-
 if (glow) {
-  document.addEventListener("pointermove", (e) => {
-    document.documentElement.style.setProperty("--mx", e.clientX);
-    document.documentElement.style.setProperty("--my", e.clientY);
-    glow.style.opacity = 1;
+  window.addEventListener(
+    "pointermove",
+    (e) => {
+      document.documentElement.style.setProperty("--mx", e.clientX);
+      document.documentElement.style.setProperty("--my", e.clientY);
+      glow.style.opacity = "1";
+    },
+    { passive: true }
+  );
+
+  window.addEventListener("pointerleave", () => {
+    glow.style.opacity = "0";
   });
 }
 
-
 // =============================
-// Reveal animation
+// Reveal
 // =============================
 const revealEls = document.querySelectorAll("[data-reveal]");
-
-if (revealEls.length) {
+if (revealEls.length && "IntersectionObserver" in window) {
   const io = new IntersectionObserver((entries) => {
-    entries.forEach((e) => {
-      if (e.isIntersecting) {
-        e.target.classList.add("in");
-      }
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add("in");
+      io.unobserve(entry.target);
     });
-  }, { threshold: .12 });
+  }, { threshold: 0.12 });
 
-  revealEls.forEach(el => io.observe(el));
+  revealEls.forEach((el) => io.observe(el));
+} else {
+  revealEls.forEach((el) => el.classList.add("in"));
 }
-
 
 // =============================
 // Helpers UI
 // =============================
 function showMsg(el, type, text) {
   if (!el) return;
-
   el.classList.remove("is-error", "is-success");
-
-  if (type === "error") el.classList.add("is-error");
-  else el.classList.add("is-success");
-
+  el.classList.add(type === "error" ? "is-error" : "is-success");
   el.textContent = text;
 }
 
@@ -142,48 +134,42 @@ function hideMsg(el) {
   el.textContent = "";
 }
 
-function setLoading(which, state) {
-
+function setLoading(which, isLoading) {
   if (which === "login") {
-
     if (loginBtn) {
-      loginBtn.disabled = state;
-      loginBtn.textContent = state ? "Entrando..." : "Entrar";
+      loginBtn.disabled = isLoading;
+      loginBtn.style.opacity = isLoading ? "0.86" : "1";
+      loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
     }
-
-    loadingbar?.classList.toggle("show", state);
-
+    loadingbar?.classList.toggle("show", isLoading);
   } else {
-
     if (signupBtn) {
-      signupBtn.disabled = state;
-      signupBtn.textContent = state ? "Criando..." : "Criar conta";
+      signupBtn.disabled = isLoading;
+      signupBtn.style.opacity = isLoading ? "0.86" : "1";
+      signupBtn.textContent = isLoading ? "Criando..." : "Criar conta";
     }
-
-    loadingbar2?.classList.toggle("show", state);
+    loadingbar2?.classList.toggle("show", isLoading);
   }
 }
 
 function niceError(err) {
-  return err?.code || err?.message || "Erro inesperado";
+  const code = err?.code || "";
+  const msg = err?.message || "";
+  return `${code}${msg ? " • " + msg : ""}`.trim();
 }
 
-
-// =============================
-// Tabs
-// =============================
 function goTab(mode) {
-
   const isLogin = mode === "login";
 
   tabLogin?.classList.toggle("active", isLogin);
   tabSignup?.classList.toggle("active", !isLogin);
+  tabLogin?.setAttribute("aria-selected", String(isLogin));
+  tabSignup?.setAttribute("aria-selected", String(!isLogin));
 
   if (loginForm) loginForm.style.display = isLogin ? "" : "none";
   if (signupForm) signupForm.style.display = isLogin ? "none" : "";
 
   if (cardTitle) cardTitle.textContent = isLogin ? "Entrar" : "Criar conta";
-
   if (cardSubtitle) {
     cardSubtitle.textContent = isLogin
       ? "Acesse sua conta para ver seu território, CRGR e atualizações."
@@ -199,209 +185,266 @@ tabSignup?.addEventListener("click", () => goTab("signup"));
 goSignupBtn?.addEventListener("click", () => goTab("signup"));
 goLoginBtn?.addEventListener("click", () => goTab("login"));
 
-
 // =============================
-// Firestore perfil
+// Firestore: Perfil do usuário
 // =============================
 function normalizeRole(role) {
-  const r = (role || "").toLowerCase();
-
-  if (r === "governança") return "governanca";
+  const r = (role || "").toLowerCase().trim();
   if (r === "coorporativa") return "cooperativa";
-
+  if (r === "governança") return "governanca";
   return r;
 }
 
 function routeByRole(profile) {
-
   const role = normalizeRole(profile?.role);
+  const rolesMap = profile?.roles || {};
 
-  if (role === "admin" || role === "governanca" || role === "gestor")
-    return window.location.href = ROUTES.governanca;
+  const isGov =
+    role === "admin" ||
+    role === "governanca" ||
+    role === "gestor" ||
+    rolesMap.admin === true ||
+    rolesMap.gestor === true;
 
-  if (role === "cooperativa")
-    return window.location.href = ROUTES.cooperativa;
+  const isCoop = role === "cooperativa";
 
+  if (isGov) {
+    window.location.href = ROUTES.governanca;
+    return;
+  }
+  if (isCoop) {
+    window.location.href = ROUTES.cooperativa;
+    return;
+  }
   window.location.href = ROUTES.home;
 }
 
 async function getUserProfile(uid) {
-
   const ref = doc(db, "users", uid);
   const snap = await getDoc(ref);
-
   return snap.exists() ? snap.data() : null;
 }
 
 async function ensureInitialProfileActive(user, payload = {}) {
-
   const ref = doc(db, "users", user.uid);
   const snap = await getDoc(ref);
-
   if (snap.exists()) return snap.data();
 
-  const profile = {
-    role: payload.role || "cooperativa",
+  const requestedRole = normalizeRole(payload.role || "cooperativa") || "cooperativa";
+
+  const minimal = {
+    role: requestedRole === "cooperativa" ? "cooperativa" : "user",
     status: "active",
     createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-    email: user.email,
-    name: payload.name || null,
-    territoryLabel: payload.territoryLabel || null,
-    crgrLabel: payload.crgrLabel || null
+    updatedAt: serverTimestamp()
   };
 
-  await setDoc(ref, profile, { merge: true });
+  await setDoc(ref, minimal, { merge: true });
 
-  return profile;
+  try {
+    await setDoc(
+      ref,
+      {
+        email: user.email ?? null,
+        displayName: user.displayName || payload.name || null,
+        name: user.displayName || payload.name || null,
+        territoryLabel: payload.territoryLabel || null,
+        crgrLabel: payload.crgrLabel || null,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+  } catch (e) {
+    console.warn("Não consegui gravar campos extras no perfil (rules).", e?.code || e);
+  }
+
+  return minimal;
 }
 
+// =============================
+// Estado: já logado?
+// =============================
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    if (authedActions) authedActions.style.display = "none";
+    return;
+  }
+
+  goTab("login");
+
+  hideMsg(msgBox);
+  showMsg(msgBox, "success", `Você já está conectado como ${user.email}.`);
+
+  if (!authedActions) return;
+  authedActions.innerHTML = "";
+  authedActions.style.display = "grid";
+
+  const continueBtn = document.createElement("button");
+  continueBtn.type = "button";
+  continueBtn.className = "btn btn-primary btn-block";
+  continueBtn.textContent = "Continuar";
+  continueBtn.addEventListener("click", async () => {
+    try {
+      let profile = await getUserProfile(user.uid);
+      if (!profile) {
+        await ensureInitialProfileActive(user, { role: "cooperativa" });
+        profile = await getUserProfile(user.uid);
+      }
+      routeByRole(profile || { role: "cooperativa" });
+    } catch (e) {
+      console.error(e);
+      showMsg(msgBox, "error", "Não consegui carregar seu perfil. Tente novamente.");
+    }
+  });
+
+  const logoutBtn = document.createElement("button");
+  logoutBtn.type = "button";
+  logoutBtn.className = "btn btn-secondary btn-block";
+  logoutBtn.textContent = "Sair desta conta";
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      window.location.reload();
+    } catch (e) {
+      showMsg(msgBox, "error", "Não consegui sair. Tente novamente.");
+    }
+  });
+
+  authedActions.appendChild(continueBtn);
+  authedActions.appendChild(logoutBtn);
+});
 
 // =============================
 // LOGIN
 // =============================
 loginForm?.addEventListener("submit", async (e) => {
-
   e.preventDefault();
-
   hideMsg(msgBox);
   setLoading("login", true);
 
-  try {
+  const email = (loginEmail?.value || "").trim();
+  const password = loginPassword?.value || "";
 
+  try {
     await setPersistence(
       auth,
-      rememberMe?.checked
-        ? browserLocalPersistence
-        : browserSessionPersistence
+      rememberMe?.checked ? browserLocalPersistence : browserSessionPersistence
     );
 
-    const cred = await signInWithEmailAndPassword(
-      auth,
-      loginEmail.value,
-      loginPassword.value
-    );
+    const cred = await signInWithEmailAndPassword(auth, email, password);
 
     let profile = await getUserProfile(cred.user.uid);
-
     if (!profile) {
-      await ensureInitialProfileActive(cred.user);
+      await ensureInitialProfileActive(cred.user, { role: "cooperativa" });
       profile = await getUserProfile(cred.user.uid);
     }
 
-    routeByRole(profile);
+    const status = (profile?.status || "active").toLowerCase();
+    if (status === "blocked") {
+      await signOut(auth);
+      showMsg(msgBox, "error", "Seu acesso está bloqueado. Fale com a governança.");
+      return;
+    }
 
+    routeByRole(profile || { role: "cooperativa" });
   } catch (err) {
+    console.error("LOGIN ERROR =>", err);
 
-    console.error(err);
+    const code = err?.code || "";
+    let text = "Não foi possível entrar. Verifique seus dados.";
 
-    let text = "Erro no login.";
-
-    if (err.code === "auth/invalid-credential")
-      text = "E-mail ou senha inválidos.";
-
-    if (err.code === "auth/user-not-found")
-      text = "Usuário não encontrado.";
-
-    if (err.code === "auth/wrong-password")
-      text = "Senha incorreta.";
+    if (code.includes("auth/invalid-credential")) text = "E-mail ou senha inválidos.";
+    else if (code.includes("auth/user-not-found")) text = "Usuário não encontrado.";
+    else if (code.includes("auth/wrong-password")) text = "Senha incorreta.";
+    else if (code.includes("auth/too-many-requests")) text = "Muitas tentativas. Tente novamente mais tarde.";
+    else if (code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
+    else if (code.includes("auth/network-request-failed")) text = "Falha de rede. Verifique internet.";
+    else if (code.includes("auth/invalid-api-key")) text = "API Key inválida no firebaseConfig.";
+    else if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
+    else text = "Erro no login: " + niceError(err);
 
     showMsg(msgBox, "error", text);
-
   } finally {
-
     setLoading("login", false);
   }
-
 });
-
 
 // =============================
 // SIGNUP
 // =============================
 signupForm?.addEventListener("submit", async (e) => {
-
   e.preventDefault();
-
   hideMsg(msgBox2);
 
-  if (signupPassword.value.length < 6)
-    return showMsg(msgBox2, "error", "Senha muito curta.");
+  const name = (signupName?.value || "").trim();
+  const email = (signupEmail?.value || "").trim();
+  const role = normalizeRole(signupRole?.value || "cooperativa") || "cooperativa";
+  const territoryLabel = (signupTerritory?.value || "").trim() || null;
+  const crgrLabel = (signupCrgr?.value || "").trim() || null;
+  const pass1 = signupPassword?.value || "";
+  const pass2 = signupPassword2?.value || "";
 
-  if (signupPassword.value !== signupPassword2.value)
-    return showMsg(msgBox2, "error", "Senhas diferentes.");
+  if (pass1.length < 6) return showMsg(msgBox2, "error", "Senha fraca. Use pelo menos 6 caracteres.");
+  if (pass1 !== pass2) return showMsg(msgBox2, "error", "As senhas não conferem.");
 
   setLoading("signup", true);
 
   try {
+    await setPersistence(auth, browserLocalPersistence);
 
-    const cred = await createUserWithEmailAndPassword(
-      auth,
-      signupEmail.value,
-      signupPassword.value
-    );
+    const cred = await createUserWithEmailAndPassword(auth, email, pass1);
 
-    await updateProfile(cred.user, {
-      displayName: signupName.value
-    });
+    try { await updateProfile(cred.user, { displayName: name }); } catch {}
 
     await ensureInitialProfileActive(cred.user, {
-      name: signupName.value,
-      role: signupRole.value,
-      territoryLabel: signupTerritory.value,
-      crgrLabel: signupCrgr.value
+      name,
+      role,
+      territoryLabel,
+      crgrLabel
     });
 
-    window.location.href = ROUTES.home;
-
+    if (role === "cooperativa") window.location.href = ROUTES.cooperativa;
+    else window.location.href = ROUTES.home;
   } catch (err) {
+    console.error("SIGNUP ERROR =>", err);
 
-    console.error(err);
+    const code = err?.code || "";
+    let text = "Não foi possível criar a conta.";
 
-    let text = "Erro ao criar conta.";
-
-    if (err.code === "auth/email-already-in-use")
-      text = "Este e-mail já possui cadastro.";
-
-    if (err.code === "auth/weak-password")
-      text = "Senha muito fraca.";
+    if (code.includes("auth/email-already-in-use")) text = "Este e-mail já está em uso. Use a aba Entrar.";
+    else if (code.includes("auth/weak-password")) text = "Senha fraca. Use pelo menos 6 caracteres.";
+    else if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
+    else if (code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
+    else text = "Erro no cadastro: " + niceError(err);
 
     showMsg(msgBox2, "error", text);
-
   } finally {
-
     setLoading("signup", false);
   }
-
 });
 
-
 // =============================
-// RESET PASSWORD
+// RESET SENHA
 // =============================
 resetPwdLink?.addEventListener("click", async (e) => {
-
   e.preventDefault();
+  hideMsg(msgBox);
 
-  const email = loginEmail.value;
-
-  if (!email)
-    return showMsg(msgBox, "error", "Digite seu e-mail.");
+  const email = (loginEmail?.value || "").trim();
+  if (!email) return showMsg(msgBox, "error", "Digite seu e-mail para recuperar a senha.");
 
   try {
-
     await sendPasswordResetEmail(auth, email);
-
-    showMsg(msgBox, "success", "Link de recuperação enviado.");
-
+    showMsg(msgBox, "success", "Enviamos um link de recuperação para seu e-mail.");
   } catch (err) {
-
-    showMsg(msgBox, "error", niceError(err));
-
+    console.error("RESET ERROR =>", err);
+    const code = err?.code || "";
+    let text = "Não foi possível enviar o e-mail de recuperação.";
+    if (code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
+    if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
+    showMsg(msgBox, "error", text);
   }
-
 });
 
-
-// =============================
+// inicial
 goTab("login");
