@@ -1,393 +1,639 @@
-(() => {
-  const $ = (s, el=document) => el.querySelector(s);
-  const $$ = (s, el=document) => Array.from(el.querySelectorAll(s));
+import { auth, db } from "./firebase-init.js";
+import { onAuthStateChanged } from "firebase/auth";
+import {
+  doc,
+  getDoc,
+  collection,
+  query,
+  where,
+  orderBy,
+  onSnapshot
+} from "firebase/firestore";
 
-  // =========================
-  // Cursor glow (leve)
-  // =========================
-  const glow = $("#cursorGlow");
-  const motionOK = !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  const coarsePointer = window.matchMedia("(pointer: coarse)").matches;
+const els = {
+  sidebar: document.getElementById("sidebar"),
+  menuBtn: document.getElementById("menuBtn"),
+  sidebarClose: document.getElementById("sidebarClose"),
 
-  if (glow && motionOK && !coarsePointer){
-    let raf = null, x = 0, y = 0;
-    window.addEventListener("mousemove", (e) => {
-      x = e.clientX; y = e.clientY;
-      if (!raf){
-        raf = requestAnimationFrame(() => {
-          document.documentElement.style.setProperty("--mx", x);
-          document.documentElement.style.setProperty("--my", y);
-          glow.style.opacity = "1";
-          raf = null;
-        });
+  territoryNameTop: document.getElementById("territoryNameTop"),
+  userNameTop: document.getElementById("userNameTop"),
+
+  noticesList: document.getElementById("noticesList"),
+  featuredTrails: document.getElementById("featuredTrails"),
+
+  territoryTabs: document.getElementById("territoryTabs"),
+  territoryPanelTitle: document.getElementById("territoryPanelTitle"),
+  territoryPanelSubtitle: document.getElementById("territoryPanelSubtitle"),
+
+  territoryCommunications: document.getElementById("territoryCommunications"),
+  territoryServices: document.getElementById("territoryServices"),
+  territoryCalendar: document.getElementById("territoryCalendar"),
+  territoryTrainings: document.getElementById("territoryTrainings"),
+
+  summaryAccepted: document.getElementById("summaryAccepted"),
+  summaryRejected: document.getElementById("summaryRejected"),
+  summaryPoints: document.getElementById("summaryPoints"),
+
+  indicatorColetas: document.getElementById("indicatorColetas"),
+  indicatorParticipants: document.getElementById("indicatorParticipants"),
+  indicatorDocs: document.getElementById("indicatorDocs"),
+  indicatorActions: document.getElementById("indicatorActions"),
+
+  participantsList: document.getElementById("participantsList"),
+  participantSearchInput: document.getElementById("participantSearchInput"),
+  participantsTotalCount: document.getElementById("participantsTotalCount"),
+  participantsPeopleCount: document.getElementById("participantsPeopleCount"),
+  participantsCondoCount: document.getElementById("participantsCondoCount"),
+
+  mapPointsCount: document.getElementById("mapPointsCount"),
+  mapPointsList: document.getElementById("mapPointsList"),
+  mapTypeFilter: document.getElementById("mapTypeFilter"),
+  btnNearMe: document.getElementById("btnNearMe")
+};
+
+let allParticipants = [];
+let territoryMap = null;
+let territoryMarkers = [];
+let territoryPoints = [];
+
+const TAB_META = {
+  comunicados: {
+    title: "Comunicados da cooperativa",
+    subtitle: "Avisos e atualizações do território."
+  },
+  servicos: {
+    title: "Serviços disponíveis",
+    subtitle: "Ações e apoios operacionais do território."
+  },
+  mapa: {
+    title: "Mapa do território",
+    subtitle: "Pontos e referências acessíveis ao território."
+  },
+  calendario: {
+    title: "Agenda e calendário",
+    subtitle: "Compromissos, reuniões e atividades previstas."
+  },
+  treinamentos: {
+    title: "Treinamentos e formações",
+    subtitle: "Trilhas e capacitações da cooperativa."
+  },
+  coleta: {
+    title: "Coleta especial",
+    subtitle: "Fluxos operacionais extraordinários."
+  },
+  ouvidoria: {
+    title: "Ouvidoria",
+    subtitle: "Canal aberto para escuta e apoio."
+  }
+};
+
+async function getUserProfile(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) {
+    throw new Error("Usuário não encontrado.");
+  }
+  return snap.data();
+}
+
+function validateProfile(profile) {
+  if (profile.role !== "cooperativa") {
+    throw new Error("Acesso permitido somente para cooperativa.");
+  }
+
+  if (profile.status !== "active") {
+    throw new Error("Usuário sem acesso ativo.");
+  }
+
+  if (!profile.territoryId) {
+    throw new Error("Usuário sem território vinculado.");
+  }
+}
+
+function setupSidebar() {
+  els.menuBtn?.addEventListener("click", () => {
+    els.sidebar?.classList.add("open");
+  });
+
+  els.sidebarClose?.addEventListener("click", () => {
+    els.sidebar?.classList.remove("open");
+  });
+}
+
+function fillHeader(profile) {
+  if (els.territoryNameTop) {
+    els.territoryNameTop.textContent = profile.territoryLabel || "Território";
+  }
+
+  if (els.userNameTop) {
+    els.userNameTop.textContent = profile.displayName || profile.name || "Usuário";
+  }
+}
+
+function renderInfoList(container, items) {
+  if (!container) return;
+
+  container.innerHTML = items.map((item) => `
+    <article class="info-item">
+      <div class="info-copy">
+        <strong>${item.title}</strong>
+        <span>${item.description}</span>
+      </div>
+      ${item.meta ? `<span class="info-meta">${item.meta}</span>` : ""}
+    </article>
+  `).join("");
+}
+
+function renderTrailList(container, items) {
+  if (!container) return;
+
+  container.innerHTML = items.map((item) => `
+    <article class="trail-item">
+      <div class="trail-copy">
+        <strong>${item.title}</strong>
+        <span>${item.status}</span>
+      </div>
+      ${item.level ? `<span class="trail-level">${item.level}</span>` : ""}
+    </article>
+  `).join("");
+}
+
+function fillStaticPanels() {
+  renderInfoList(els.noticesList, [
+    {
+      title: "Comunicado do Núcleo",
+      description: "Atualização de conteúdos e trilhas nesta semana.",
+      meta: "Hoje"
+    },
+    {
+      title: "Campanha ativa no território",
+      description: "Mutirão de educação ambiental | Inscrições abertas.",
+      meta: "Esta semana"
+    }
+  ]);
+
+  renderTrailList(els.featuredTrails, [
+    {
+      title: "Trilha 1 • Introdução",
+      status: "Status: não iniciada",
+      level: "Básico"
+    },
+    {
+      title: "Trilha 2 • Gestão de Resíduos",
+      status: "Status: em andamento",
+      level: "Essencial"
+    }
+  ]);
+
+  renderInfoList(els.territoryCommunications, [
+    {
+      title: "Mutirão de limpeza — sábado",
+      description: "Concentração às 8h. Leve luvas e garrafa de água.",
+      meta: "Ação"
+    },
+    {
+      title: "Mudança de horário",
+      description: "Triagem das 8h às 17h (seg–sex).",
+      meta: "Aviso"
+    },
+    {
+      title: "Coleta especial aberta",
+      description: "Agendamentos para grandes volumes via formulário.",
+      meta: "Serviço"
+    }
+  ]);
+
+  renderInfoList(els.territoryServices, [
+    {
+      title: "Apoio operacional",
+      description: "Orientação sobre triagem, rota e organização."
+    },
+    {
+      title: "Ponto de entrega",
+      description: "Recebimento de materiais vinculados ao território."
+    }
+  ]);
+
+  renderInfoList(els.territoryCalendar, [
+    {
+      title: "Reunião da cooperativa",
+      description: "Quarta-feira • 14h • sede local",
+      meta: "Agenda"
+    },
+    {
+      title: "Oficina ambiental",
+      description: "Sexta-feira • 9h • escola do território",
+      meta: "Formação"
+    }
+  ]);
+
+  renderInfoList(els.territoryTrainings, [
+    {
+      title: "Formação inicial",
+      description: "Introdução à separação correta dos resíduos."
+    },
+    {
+      title: "Boas práticas operacionais",
+      description: "Procedimentos e rotina da cooperativa."
+    }
+  ]);
+
+  if (els.summaryAccepted) els.summaryAccepted.textContent = "4";
+  if (els.summaryRejected) els.summaryRejected.textContent = "4";
+  if (els.summaryPoints) els.summaryPoints.textContent = "3";
+
+  if (els.indicatorColetas) els.indicatorColetas.textContent = "0";
+  if (els.indicatorDocs) els.indicatorDocs.textContent = "12";
+  if (els.indicatorActions) els.indicatorActions.textContent = "5";
+}
+
+function setupTerritoryTabs() {
+  const tabs = document.querySelectorAll(".territory-tab");
+  const contents = document.querySelectorAll(".territory-tab-content");
+
+  tabs.forEach((tab) => {
+    tab.addEventListener("click", () => {
+      const key = tab.dataset.tab;
+
+      tabs.forEach((t) => t.classList.remove("active"));
+      contents.forEach((c) => c.classList.remove("active"));
+
+      tab.classList.add("active");
+      document.getElementById(`tab-${key}`)?.classList.add("active");
+
+      if (els.territoryPanelTitle) {
+        els.territoryPanelTitle.textContent = TAB_META[key]?.title || "Painel do território";
+      }
+
+      if (els.territoryPanelSubtitle) {
+        els.territoryPanelSubtitle.textContent = TAB_META[key]?.subtitle || "";
+      }
+
+      if (key === "mapa") {
+        setTimeout(() => {
+          territoryMap?.invalidateSize();
+        }, 200);
       }
     });
-    window.addEventListener("mouseleave", () => glow.style.opacity = "0");
-  }
-
-  // =========================
-  // Theme toggle (persist)
-  // =========================
-  const THEME_KEY = "hub_theme";
-  const btnTheme = $("#btnTheme");
-
-  function setTheme(theme){
-    document.documentElement.setAttribute("data-theme", theme);
-    const isDark = theme === "dark";
-    if (btnTheme){
-      btnTheme.setAttribute("aria-pressed", String(isDark));
-      $(".theme-ico", btnTheme).textContent = isDark ? "☀️" : "🌙";
-      $(".theme-text", btnTheme).textContent = isDark ? "Light" : "Dark";
-    }
-    try{ localStorage.setItem(THEME_KEY, theme); } catch {}
-  }
-
-  const savedTheme = (() => {
-    try{ return localStorage.getItem(THEME_KEY); } catch { return null; }
-  })();
-
-  if (savedTheme){
-    setTheme(savedTheme);
-  } else {
-    const prefersDark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    setTheme(prefersDark ? "dark" : "light");
-  }
-
-  btnTheme?.addEventListener("click", () => {
-    const cur = document.documentElement.getAttribute("data-theme") || "light";
-    setTheme(cur === "dark" ? "light" : "dark");
   });
+}
 
-  // =========================
-  // User menu dropdown
-  // =========================
-  const userBtn = $("#userBtn");
-  const userMenu = $("#userMenu");
+function participantIcon(type) {
+  const key = String(type || "").toLowerCase();
 
-  function closeUserMenu(){
-    userMenu?.classList.remove("open");
-    userBtn?.setAttribute("aria-expanded", "false");
-  }
-  function toggleUserMenu(){
-    if (!userMenu || !userBtn) return;
-    const isOpen = userMenu.classList.toggle("open");
-    userBtn.setAttribute("aria-expanded", String(isOpen));
-  }
+  if (key === "condominio") return "🏢";
+  if (key === "comercio") return "🏪";
+  if (key === "familia") return "👨‍👩‍👧";
+  if (key === "morador") return "👤";
+  if (key === "lideranca") return "📣";
+  if (key === "participante") return "🧩";
 
-  userBtn?.addEventListener("click", (e) => {
-    e.stopPropagation();
-    toggleUserMenu();
-  });
+  return "👤";
+}
 
-  document.addEventListener("click", () => closeUserMenu());
-  document.addEventListener("keydown", (e) => {
-    if (e.key === "Escape") closeUserMenu();
-  });
+function formatParticipantType(type) {
+  if (!type) return "Não informado";
 
-  // =========================
-  // Navigation (SPA feel)
-  // =========================
-  const pages = $$("[data-page]");
-  const menuItems = $$("[data-nav]");
+  const map = {
+    morador: "Morador",
+    familia: "Família",
+    condominio: "Condomínio",
+    comercio: "Comércio",
+    lideranca: "Liderança",
+    participante: "Participante"
+  };
 
-  function showPage(name){
-    pages.forEach(p => p.classList.toggle("show", p.dataset.page === name));
-    // sidebar active
-    $$(".menu-item[data-nav]").forEach(a => a.classList.toggle("active", a.dataset.nav === name));
-    closeUserMenu();
-    // scroll to top of main
-    $("#main")?.scrollIntoView({ behavior: "smooth", block: "start" });
-  }
+  return map[type] || type;
+}
 
-  menuItems.forEach(el => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      const name = el.dataset.nav;
-      if (name) showPage(name);
-    });
-  });
+function computeParticipantsKpis(items) {
+  const total = items.length;
 
-  // =========================
-  // Território select + labels
-  // =========================
-  const territorioSelect = $("#territorioSelect");
-  const territorioNome = $("#territorioNome");
-  const territorioLabel = $("#territorioLabel");
+  const peopleCount = items.filter((item) =>
+    ["morador", "familia", "lideranca", "participante"].includes(
+      String(item.participantType || "").toLowerCase()
+    )
+  ).length;
 
-  function territorioText(){
-    const opt = territorioSelect?.selectedOptions?.[0];
-    return opt ? opt.textContent.trim() : "Território";
-  }
+  const condoCount = items.filter((item) =>
+    String(item.participantType || "").toLowerCase() === "condominio"
+  ).length;
 
-  function syncTerritorioUI(){
-    const t = territorioText();
-    if (territorioNome) territorioNome.textContent = t;
-    if (territorioLabel) territorioLabel.textContent = t;
+  if (els.participantsTotalCount) els.participantsTotalCount.textContent = String(total);
+  if (els.participantsPeopleCount) els.participantsPeopleCount.textContent = String(peopleCount);
+  if (els.participantsCondoCount) els.participantsCondoCount.textContent = String(condoCount);
+  if (els.indicatorParticipants) els.indicatorParticipants.textContent = String(total);
+}
+
+function renderParticipants(items) {
+  if (!els.participantsList) return;
+
+  if (!items.length) {
+    els.participantsList.innerHTML = `
+      <div class="participants-empty">
+        Nenhum participante encontrado para este território.
+      </div>
+    `;
+    return;
   }
 
-  territorioSelect?.addEventListener("change", () => {
-    syncTerritorioUI();
-    // aqui você pode recalcular KPIs conforme território real
-  });
-  syncTerritorioUI();
+  els.participantsList.innerHTML = items.map((item) => `
+    <article class="participant-row">
+      <div class="participant-main">
+        <div class="participant-avatar">${participantIcon(item.participantType)}</div>
 
-  // =========================
-  // Filtro "somente meus dados"
-  // =========================
-  const t1 = $("#toggleMeusDados");
-  const t2 = $("#toggleMeusDados2");
-
-  function syncToggles(from){
-    const val = !!from.checked;
-    if (from === t1 && t2) t2.checked = val;
-    if (from === t2 && t1) t1.checked = val;
-
-    // Simulação simples nos KPIs
-    const kTerr = $("#kpiTerritorio");
-    const kMeus = $("#kpiMeus");
-    if (val){
-      kTerr && (kTerr.textContent = "12");
-      kMeus && (kMeus.textContent = "6");
-    } else {
-      kTerr && (kTerr.textContent = "12");
-      kMeus && (kMeus.textContent = "—");
-    }
-  }
-
-  t1?.addEventListener("change", () => syncToggles(t1));
-  t2?.addEventListener("change", () => syncToggles(t2));
-
-  // =========================
-  // Trilhas (progresso + "certificado")
-  // =========================
-  const PROG_KEY = "hub_trilhas_progress";
-
-  function loadProgress(){
-    try{
-      return JSON.parse(localStorage.getItem(PROG_KEY) || "{}");
-    }catch{ return {}; }
-  }
-  function saveProgress(data){
-    try{ localStorage.setItem(PROG_KEY, JSON.stringify(data)); } catch {}
-  }
-
-  function calcTrailPct(prefix, prog){
-    const keys = [`${prefix}-e1`, `${prefix}-e2`, `${prefix}-e3`];
-    const done = keys.filter(k => prog[k]).length;
-    return Math.round((done / keys.length) * 100);
-  }
-
-  function updateTrailUI(){
-    const prog = loadProgress();
-    const pct1 = calcTrailPct("t1", prog);
-    const pct2 = calcTrailPct("t2", prog);
-
-    $("#pT1") && ($("#pT1").textContent = String(pct1));
-    $("#barT1") && ($("#barT1").style.width = pct1 + "%");
-    $("#btnCertT1") && ($("#btnCertT1").disabled = pct1 < 100);
-
-    $("#pT2") && ($("#pT2").textContent = String(pct2));
-    $("#barT2") && ($("#barT2").style.width = pct2 + "%");
-    $("#btnCertT2") && ($("#btnCertT2").disabled = pct2 < 100);
-
-    // KPI geral (média)
-    const avg = Math.round((pct1 + pct2) / 2);
-    $("#kpiProgresso") && ($("#kpiProgresso").textContent = `${avg}%`);
-  }
-
-  $$("[data-step]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const key = btn.getAttribute("data-step");
-      if (!key) return;
-      const prog = loadProgress();
-      prog[key] = true;
-      saveProgress(prog);
-      btn.textContent = "Concluída ✓";
-      btn.disabled = true;
-      updateTrailUI();
-    });
-
-    // estado inicial
-    const prog = loadProgress();
-    const key = btn.getAttribute("data-step");
-    if (key && prog[key]){
-      btn.textContent = "Concluída ✓";
-      btn.disabled = true;
-    }
-  });
-
-  $("#btnCertT1")?.addEventListener("click", () => {
-    alert("Certificado (demo): gerar PDF aqui quando conectar o backend.");
-  });
-  $("#btnCertT2")?.addEventListener("click", () => {
-    alert("Certificado (demo): gerar PDF aqui quando conectar o backend.");
-  });
-
-  updateTrailUI();
-
-  // =========================
-  // Coletas (localStorage)
-  // =========================
-  const COLETAS_KEY = "hub_coletas";
-  const formColeta = $("#formColeta");
-  const listEl = $("#coletasList");
-  const emptyEl = $("#coletasEmpty");
-
-  const btnDia = $("#btnColetaDia");
-  const btnParcial = $("#btnColetaParcial");
-  const coletaTipo = $("#coletaTipo");
-  const coletaData = $("#coletaData");
-  const formTitle = $("#formTitle");
-  const formHint = $("#formHint");
-
-  function todayISO(){
-    const d = new Date();
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    const dd = String(d.getDate()).padStart(2,"0");
-    return `${yyyy}-${mm}-${dd}`;
-  }
-
-  function loadColetas(){
-    try{ return JSON.parse(localStorage.getItem(COLETAS_KEY) || "[]"); }catch{ return []; }
-  }
-  function saveColetas(items){
-    try{ localStorage.setItem(COLETAS_KEY, JSON.stringify(items)); } catch {}
-  }
-
-  function setFormMode(mode){
-    if (!coletaTipo) return;
-    coletaTipo.value = mode;
-    if (formTitle) formTitle.textContent = mode === "dia" ? "Registrar coleta do dia" : "Registrar coleta parcial";
-    if (formHint) formHint.textContent = mode === "dia"
-      ? "Use para consolidar o total do dia."
-      : "Use quando houver mais de uma entrada no mesmo dia.";
-  }
-
-  btnDia?.addEventListener("click", () => setFormMode("dia"));
-  btnParcial?.addEventListener("click", () => setFormMode("parcial"));
-
-  // default date
-  if (coletaData && !coletaData.value) coletaData.value = todayISO();
-
-  function renderColetas(){
-    if (!listEl) return;
-    const items = loadColetas().slice().reverse();
-    listEl.innerHTML = "";
-    if (!items.length){
-      emptyEl && (emptyEl.style.display = "block");
-      listEl.appendChild(emptyEl);
-      return;
-    }
-    emptyEl && (emptyEl.style.display = "none");
-
-    items.forEach(item => {
-      const el = document.createElement("div");
-      el.className = "coleta-item";
-      el.innerHTML = `
-        <div>
-          <strong>${item.tipo === "dia" ? "Coleta do dia" : "Coleta parcial"} • ${item.categoriaLabel}</strong>
-          <p>${item.peso} kg ${item.obs ? `• ${escapeHtml(item.obs)}` : ""}</p>
+        <div class="participant-copy">
+          <strong>${item.name || "Sem nome"}</strong>
+          <span>${item.participantCode || "-"}</span>
+          <span>${item.address?.street || "Endereço não informado"}${item.address?.number ? `, ${item.address.number}` : ""}</span>
         </div>
-        <div class="coleta-meta">
-          ${escapeHtml(item.data)}<br/>
-          <span class="muted">${escapeHtml(item.territorio)}</span>
-        </div>
-      `;
-      listEl.appendChild(el);
-    });
+      </div>
+
+      <div class="participant-meta">
+        <span class="participant-tag">${formatParticipantType(item.participantType)}</span>
+        <span class="participant-subtag">${item.localType || item.address?.neighborhood || "Território"}</span>
+      </div>
+    </article>
+  `).join("");
+}
+
+function filterParticipants() {
+  const term = String(els.participantSearchInput?.value || "").trim().toLowerCase();
+
+  if (!term) {
+    computeParticipantsKpis(allParticipants);
+    renderParticipants(allParticipants);
+    return;
   }
 
-  function escapeHtml(str){
-    return String(str)
-      .replaceAll("&", "&amp;")
-      .replaceAll("<", "&lt;")
-      .replaceAll(">", "&gt;")
-      .replaceAll('"', "&quot;")
-      .replaceAll("'", "&#039;");
-  }
+  const filtered = allParticipants.filter((item) => {
+    const name = String(item.name || "").toLowerCase();
+    const code = String(item.participantCode || "").toLowerCase();
+    return name.includes(term) || code.includes(term);
+  });
 
-  formColeta?.addEventListener("submit", (e) => {
-    e.preventDefault();
+  computeParticipantsKpis(filtered);
+  renderParticipants(filtered);
+}
 
-    const data = $("#coletaData")?.value || todayISO();
-    const tipo = $("#coletaTipo")?.value || "dia";
-    const pesoRaw = $("#coletaPeso")?.value || "0";
-    const peso = Number(pesoRaw);
-    const categoria = $("#coletaCategoria")?.value || "mistos";
-    const obs = $("#coletaObs")?.value?.trim() || "";
+function bindParticipantsSearch() {
+  els.participantSearchInput?.addEventListener("input", filterParticipants);
+}
 
-    if (!Number.isFinite(peso) || peso < 0){
-      alert("Informe um peso válido.");
-      return;
+function loadParticipants(territoryId) {
+  const q = query(
+    collection(db, "participants"),
+    where("territoryId", "==", territoryId),
+    orderBy("createdAtISO", "desc")
+  );
+
+  onSnapshot(
+    q,
+    (snapshot) => {
+      allParticipants = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      }));
+
+      computeParticipantsKpis(allParticipants);
+      renderParticipants(allParticipants);
+      filterParticipants();
+    },
+    (error) => {
+      console.error("Erro ao carregar participantes:", error);
+
+      if (els.participantsList) {
+        els.participantsList.innerHTML = `
+          <div class="participants-empty">
+            Não foi possível carregar os participantes.
+          </div>
+        `;
+      }
     }
+  );
+}
 
-    const categoriaLabelMap = {
-      mistos: "Recicláveis mistos",
-      papel: "Papel/Papelão",
-      plastico: "Plástico",
-      vidro: "Vidro",
-      metal: "Metal",
-      rejeito: "Rejeito",
-    };
+function getDefaultTerritoryPoints(profile) {
+  const territoryId = profile?.territoryId || "";
 
-    const items = loadColetas();
-    items.push({
-      id: crypto?.randomUUID?.() || String(Date.now()),
-      data,
-      tipo,
-      peso: peso.toFixed(1).replace(".0",""),
-      categoria,
-      categoriaLabel: categoriaLabelMap[categoria] || categoria,
-      obs,
-      territorio: territorioText(),
-      createdAt: Date.now(),
-    });
-    saveColetas(items);
-
-    // reset leve
-    $("#coletaPeso").value = "";
-    $("#coletaObs").value = "";
-    renderColetas();
-
-    // feedback
-    alert("Coleta salva!");
-  });
-
-  $("#btnLimparColeta")?.addEventListener("click", () => {
-    $("#coletaPeso").value = "";
-    $("#coletaObs").value = "";
-  });
-
-  $("#btnLimparHistorico")?.addEventListener("click", () => {
-    if (!confirm("Deseja limpar o histórico de coletas (neste navegador)?")) return;
-    saveColetas([]);
-    renderColetas();
-  });
-
-  coletaTipo?.addEventListener("change", () => setFormMode(coletaTipo.value));
-
-  // inicial
-  setFormMode(coletaTipo?.value || "dia");
-  renderColetas();
-
-  // =========================
-  // Form contato (demo)
-  // =========================
-  $("#formContato")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    alert("Mensagem enviada (demo). Integre com backend quando quiser.");
-    e.target.reset();
-  });
-
-  // =========================
-  // Sair (demo)
-  // =========================
-  function doSair(){
-    alert("Sair (demo). Direcione para login.html aqui.");
-    // window.location.href = "login.html";
+  if (territoryId === "crgr_vila_pinto") {
+    return [
+      {
+        id: "vp-1",
+        name: "Ponto Bom Jesus",
+        type: "seletiva",
+        lat: -30.036111,
+        lng: -51.158333,
+        address: "Região Bom Jesus / Jardim Carvalho"
+      },
+      {
+        id: "vp-2",
+        name: "Escola parceira",
+        type: "papel",
+        lat: -30.0315,
+        lng: -51.1608,
+        address: "Área escolar do território"
+      },
+      {
+        id: "vp-3",
+        name: "Ponto comunitário",
+        type: "plastico",
+        lat: -30.0382,
+        lng: -51.1548,
+        address: "Centro comunitário local"
+      }
+    ];
   }
-  $("#btnSair")?.addEventListener("click", doSair);
-  $("#btnSairTop")?.addEventListener("click", doSair);
 
-})();
+  if (territoryId === "crgr_cooadesc") {
+    return [
+      {
+        id: "coo-1",
+        name: "COOADESC (CRGR)",
+        type: "seletiva",
+        lat: -30.003,
+        lng: -51.206,
+        address: "Rua Seis (Vila Esperança), 113 — Farrapos"
+      },
+      {
+        id: "coo-2",
+        name: "Ponto de papel e plástico",
+        type: "plastico",
+        lat: -30.006,
+        lng: -51.203,
+        address: "Ponto comunitário da região"
+      }
+    ];
+  }
+
+  if (territoryId === "crgr_cooperilhas") {
+    return [
+      {
+        id: "coopi-1",
+        name: "Cooperilhas (CRGR)",
+        type: "seletiva",
+        lat: -30.016667,
+        lng: -51.216667,
+        address: "Rua Paraíba, 177 — Floresta"
+      },
+      {
+        id: "coopi-2",
+        name: "Ponto parceiro",
+        type: "vidro",
+        lat: -30.0182,
+        lng: -51.2124,
+        address: "Região de apoio local"
+      }
+    ];
+  }
+
+  return [
+    {
+      id: "default-1",
+      name: profile?.territoryLabel || "Ponto do território",
+      type: "seletiva",
+      lat: -30.0346,
+      lng: -51.2177,
+      address: "Ponto principal do território"
+    }
+  ];
+}
+
+function clearTerritoryMarkers() {
+  territoryMarkers.forEach((marker) => territoryMap?.removeLayer(marker));
+  territoryMarkers = [];
+}
+
+function renderMapPointsList(points) {
+  if (!els.mapPointsList) return;
+
+  if (!points.length) {
+    els.mapPointsList.innerHTML = `
+      <div class="participants-empty">Nenhum ponto encontrado para o filtro atual.</div>
+    `;
+    return;
+  }
+
+  els.mapPointsList.innerHTML = points.map((point) => `
+    <article class="map-point-card">
+      <strong>${point.name}</strong>
+      <span>${point.address || "Endereço não informado"}</span>
+      <span>Tipo: ${point.type || "seletiva"} • ${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}</span>
+    </article>
+  `).join("");
+}
+
+function renderTerritoryMap(points) {
+  if (typeof L === "undefined") return;
+  const mapContainer = document.getElementById("territoryMap");
+  if (!mapContainer) return;
+
+  if (!territoryMap) {
+    const first = points[0] || { lat: -30.0346, lng: -51.2177 };
+
+    territoryMap = L.map("territoryMap", {
+      zoomControl: true
+    }).setView([first.lat, first.lng], 13);
+
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(territoryMap);
+  }
+
+  clearTerritoryMarkers();
+
+  const bounds = [];
+
+  points.forEach((point) => {
+    const marker = L.marker([point.lat, point.lng]).addTo(territoryMap);
+    marker.bindPopup(`
+      <strong>${point.name}</strong><br>
+      ${point.address || ""}<br>
+      Tipo: ${point.type || "seletiva"}
+    `);
+    territoryMarkers.push(marker);
+    bounds.push([point.lat, point.lng]);
+  });
+
+  if (bounds.length === 1) {
+    territoryMap.setView(bounds[0], 14);
+  } else if (bounds.length > 1) {
+    territoryMap.fitBounds(bounds, { padding: [30, 30] });
+  }
+
+  if (els.mapPointsCount) {
+    els.mapPointsCount.textContent = String(points.length);
+  }
+
+  if (els.summaryPoints) {
+    els.summaryPoints.textContent = String(points.length);
+  }
+
+  renderMapPointsList(points);
+}
+
+function applyMapFilter() {
+  const filter = els.mapTypeFilter?.value || "all";
+
+  if (filter === "all") {
+    renderTerritoryMap(territoryPoints);
+    return;
+  }
+
+  const filtered = territoryPoints.filter((point) => point.type === filter);
+  renderTerritoryMap(filtered);
+}
+
+function setupMapActions() {
+  els.mapTypeFilter?.addEventListener("change", applyMapFilter);
+
+  els.btnNearMe?.addEventListener("click", () => {
+    if (!navigator.geolocation || !territoryMap) return;
+
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        territoryMap.setView([pos.coords.latitude, pos.coords.longitude], 14);
+      },
+      () => {
+        alert("Não foi possível obter sua localização.");
+      }
+    );
+  });
+}
+
+function initTerritoryMap(profile) {
+  territoryPoints = getDefaultTerritoryPoints(profile);
+
+  setTimeout(() => {
+    renderTerritoryMap(territoryPoints);
+  }, 120);
+}
+
+function boot() {
+  setupSidebar();
+  setupTerritoryTabs();
+  fillStaticPanels();
+  bindParticipantsSearch();
+  setupMapActions();
+
+  onAuthStateChanged(auth, async (user) => {
+    try {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const profile = await getUserProfile(user.uid);
+      validateProfile(profile);
+
+      fillHeader(profile);
+      loadParticipants(profile.territoryId);
+      initTerritoryMap(profile);
+    } catch (error) {
+      console.error("Erro ao carregar painel da cooperativa:", error);
+      alert(error.message || "Não foi possível carregar o painel.");
+      window.location.href = "login.html";
+    }
+  });
+}
+
+boot();

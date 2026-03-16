@@ -1,624 +1,443 @@
 <!doctype html>
-<html lang="pt-BR" translate="no" data-theme="light">
+<html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
   <meta http-equiv="Content-Language" content="pt-BR">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Hub Resiliência Climática • Cooperativas</title>
+  <title>Núcleo de Soluções para Resíduos Urbanos • Cooperativa</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="cooperativas.css" />
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <link rel="stylesheet" href="cooperativas.css">
 </head>
-
 <body>
-  <a class="skip" href="#main">Pular para o conteúdo</a>
+  <div class="coop-bg"></div>
+  <div class="coop-noise"></div>
 
-  <!-- BG -->
-  <div class="bg-grid" aria-hidden="true"></div>
-  <div class="noise" aria-hidden="true"></div>
-  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-top">
+        <a class="brand" href="index.html">
+          <div class="brand-mark">
+            <img src="img/logo_hub (1).png" alt="Núcleo de Soluções para Resíduos Urbanos">
+          </div>
+          <div class="brand-copy">
+            <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+            <span>Plataforma • Cooperativas</span>
+          </div>
+        </a>
 
-  <!-- TOPBAR -->
-  <header class="topbar" role="banner">
-    <div class="topbar-inner">
-      <a class="brand" href="#" data-nav="home" aria-label="Ir para o painel inicial">
-        <span class="mark" aria-hidden="true"></span>
-        <span class="brand-text">
-          <strong>Hub Resiliência Climática</strong>
-          <small>Plataforma • Cooperativas</small>
-        </span>
-      </a>
-
-      <div class="topbar-right">
-        <!-- território -->
-        <div class="select-pill" role="group" aria-label="Selecionar território">
-          <span class="pill-ico" aria-hidden="true">●</span>
-          <select id="territorioSelect" aria-label="Território">
-            <option value="vila-pinto">Centro de Triagem Vila Pinto</option>
-            <option value="restinga">CRGR Restinga</option>
-            <option value="zona-norte">CRGR Zona Norte</option>
-          </select>
-          <span class="pill-caret" aria-hidden="true">▾</span>
-        </div>
-
-        <!-- tema -->
-        <button class="btn btn-ghost theme-toggle" id="btnTheme" type="button"
-          aria-label="Alternar tema" aria-pressed="false">
-          <span class="theme-ico" aria-hidden="true">🌙</span>
-          <span class="theme-text">Dark</span>
-        </button>
-
-        <!-- usuário -->
-        <button class="user-pill" id="userBtn" type="button" aria-haspopup="menu" aria-expanded="false">
-          <span class="user-ico" aria-hidden="true">👤</span>
-          <span>Usuário</span>
-        </button>
-
-        <div class="user-menu" id="userMenu" role="menu" aria-label="Menu do usuário">
-          <button role="menuitem" class="user-item" type="button">Meu perfil</button>
-          <button role="menuitem" class="user-item" type="button">Preferências</button>
-          <button role="menuitem" class="user-item danger" type="button" id="btnSairTop">Sair</button>
-        </div>
+        <button class="sidebar-close" id="sidebarClose" aria-label="Fechar menu">×</button>
       </div>
-    </div>
-  </header>
 
-  <div class="app">
-    <!-- SIDEBAR -->
-    <aside class="sidebar" aria-label="Menu lateral">
-      <div class="sidebar-card">
-        <div class="sidebar-title">MENU</div>
+      <nav class="sidebar-nav">
+        <div class="nav-label">Menu</div>
 
-        <nav class="menu" aria-label="Navegação">
-          <a class="menu-item active" href="#" data-nav="home">
-            <span class="menu-ico" aria-hidden="true">🏠</span>
-            Painel inicial
-          </a>
+        <a class="nav-link active" href="cooperativa.html">
+          <span class="nav-ico">🏠</span>
+          <span>Painel inicial</span>
+        </a>
 
-          <a class="menu-item" href="#" data-nav="conteudos">
-            <span class="menu-ico" aria-hidden="true">📚</span>
-            Conteúdos
-          </a>
+        <a class="nav-link" href="usuarios.html">
+          <span class="nav-ico">👥</span>
+          <span>Usuários cadastrados</span>
+        </a>
 
-          <a class="menu-item" href="#" data-nav="trilhas">
-            <span class="menu-ico" aria-hidden="true">🧭</span>
-            Trilhas formativas
-          </a>
+        <a class="nav-link" href="registro-coletas-fase.html">
+          <span class="nav-ico">♻️</span>
+          <span>Registro de coletas</span>
+        </a>
 
-          <a class="menu-item" href="#" data-nav="territorio">
-            <span class="menu-ico" aria-hidden="true">📍</span>
-            Território
-          </a>
+        <a class="nav-link" href="dashboard-cooperativa.html">
+          <span class="nav-ico">📊</span>
+          <span>Dashboard da cooperativa</span>
+        </a>
 
-          <a class="menu-item" href="#" data-nav="documentos">
-            <span class="menu-ico" aria-hidden="true">📄</span>
-            Documentos
-          </a>
+        <a class="nav-link" href="conteudos.html">
+          <span class="nav-ico">📚</span>
+          <span>Conteúdos</span>
+        </a>
 
-          <!-- ✅ NOVO -->
-          <a class="menu-item" href="./cadastro-coletas.html" >
-            <span class="menu-ico" aria-hidden="true">🧾</span>
-            Coletas
-          </a>
+        <a class="nav-link" href="trilhas.html">
+          <span class="nav-ico">🎓</span>
+          <span>Trilhas formativas</span>
+        </a>
 
-<!-- ✅ DASHBOARD DE COLETAS (NOVA PÁGINA EXTERNA) -->
-<a class="menu-item" href="./dashboard-coletas.html">
-  <span class="menu-ico" aria-hidden="true">📊</span>
-  Dashboard de coletas
-</a>
+        <a class="nav-link" href="documentos.html">
+          <span class="nav-ico">📄</span>
+          <span>Documentos</span>
+        </a>
 
-          <a class="menu-item" href="#" data-nav="contato">
-            <span class="menu-ico" aria-hidden="true">💬</span>
-            Fale com o Hub
-          </a>
-        </nav>
+        <div class="nav-label nav-label-space">Sessão</div>
 
-        <div class="sidebar-sep" aria-hidden="true"></div>
+        <a class="nav-link" href="index.html">
+          <span class="nav-ico">↩</span>
+          <span>Sair</span>
+        </a>
+      </nav>
 
-        <div class="sidebar-title">SESSÃO</div>
-        <button class="menu-item btn-link" id="btnSair" type="button">
-          <span class="menu-ico" aria-hidden="true">⏻</span>
-          Sair
-        </button>
-
-        <p class="sidebar-tip">
-          Dica: esta página é o “MVP” do perfil cooperativa. Conecte com Firestore quando quiser.
+      <div class="sidebar-help">
+        <p>
+          Área vinculada ao território da cooperativa logada. O dashboard pode ler automaticamente os registros da coleção <strong>coletas</strong> e consolidar indicadores do território.
         </p>
       </div>
     </aside>
 
-    <!-- MAIN -->
-    <main id="main" class="main" role="main">
-      <!-- PAGE: HOME -->
-      <section class="page show" data-page="home">
-        <div class="hero-shell">
-          <div class="hero-top">
-            <div>
-              <h1>Bem-vinda(o) ao Hub Resiliência Climática</h1>
-              <p class="hero-sub">
-                Seu espaço para acessar conteúdos, acompanhar ações do território e participar da construção de soluções.
-              </p>
+    <div class="content-area">
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+
+          <a class="topbar-brand" href="index.html">
+            <div class="topbar-brand-mark">
+              <img src="img/logo_hub (1).png" alt="Núcleo de Soluções para Resíduos Urbanos">
             </div>
-          </div>
-
-          <!-- KPIs -->
-          <div class="kpis">
-            <article class="kpi">
-              <div class="kpi-label">Indicadores do Hub</div>
-              <div class="kpi-value" id="kpiHub">28</div>
-              <div class="kpi-hint">Totais disponíveis na plataforma</div>
-            </article>
-
-            <article class="kpi">
-              <div class="kpi-label">Meu território</div>
-              <div class="kpi-value" id="kpiTerritorio">12</div>
-              <div class="kpi-hint">Indicadores do território selecionado</div>
-            </article>
-
-            <article class="kpi">
-              <div class="kpi-label">Somente meus dados</div>
-              <div class="kpi-value" id="kpiMeus">6</div>
-              <div class="kpi-hint">Indicadores filtrados por usuário</div>
-            </article>
-
-            <article class="kpi">
-              <div class="kpi-label">Progresso trilhas</div>
-              <div class="kpi-value" id="kpiProgresso">35%</div>
-              <div class="kpi-hint">Média do seu andamento</div>
-            </article>
-          </div>
-
-          <!-- quick access -->
-          <div class="quick">
-            <a class="quick-card" href="#" data-nav="conteudos">
-              <div class="quick-badge"><span class="dot" aria-hidden="true"></span> Acesso rápido</div>
-              <div class="quick-title">Conteúdos</div>
-              <div class="quick-sub">Materiais, cartilhas, vídeos e guias por tema.</div>
-              <span class="quick-ico" aria-hidden="true">📚</span>
-            </a>
-
-            <a class="quick-card" href="#" data-nav="trilhas">
-              <div class="quick-badge"><span class="dot" aria-hidden="true"></span> Acesso rápido</div>
-              <div class="quick-title">Trilhas</div>
-              <div class="quick-sub">Formação em etapas com status e acompanhamento.</div>
-              <span class="quick-ico" aria-hidden="true">🧭</span>
-            </a>
-
-            <a class="quick-card" href="#" data-nav="territorio">
-              <div class="quick-badge"><span class="dot" aria-hidden="true"></span> Acesso rápido</div>
-              <div class="quick-title">Meu Território</div>
-              <div class="quick-sub">Ações, comunicados e contexto do território selecionado.</div>
-              <span class="quick-ico" aria-hidden="true">📍</span>
-            </a>
-
-            <a class="quick-card" href="#" data-nav="documentos">
-              <div class="quick-badge"><span class="dot" aria-hidden="true"></span> Acesso rápido</div>
-              <div class="quick-title">Documentos</div>
-              <div class="quick-sub">Arquivos do Hub e do território: PDFs, atas e relatórios.</div>
-              <span class="quick-ico" aria-hidden="true">📄</span>
-            </a>
-          </div>
-
-          <!-- two columns like the image -->
-          <div class="grid-2">
-            <!-- Avisos -->
-            <section class="card">
-              <div class="card-head">
-                <div class="card-title">
-                  <span class="pin" aria-hidden="true">🟡</span>
-                  Avisos importantes
-                </div>
-                <small class="card-meta">Atualizações do território</small>
-              </div>
-
-              <div class="list">
-                <article class="list-item">
-                  <div class="li-main">
-                    <strong>Comunicado do Hub</strong>
-                    <p>Atualização de conteúdos e trilhas nesta semana.</p>
-                  </div>
-                  <span class="li-side">Hoje</span>
-                </article>
-
-                <article class="list-item">
-                  <div class="li-main">
-                    <strong>Campanha ativa no território</strong>
-                    <p>Mutirão de educação ambiental (inscrições abertas).</p>
-                  </div>
-                  <span class="li-side">Esta semana</span>
-                </article>
-              </div>
-            </section>
-
-            <!-- Trilhas em destaque -->
-            <section class="card">
-              <div class="card-head">
-                <div class="card-title">
-                  <span class="pin" aria-hidden="true">🧭</span>
-                  Trilhas em destaque
-                </div>
-                <small class="card-meta">Seu progresso</small>
-              </div>
-
-              <div class="trail">
-                <div class="trail-row">
-                  <div>
-                    <strong>Trilha 1 • Introdução</strong>
-                    <p>Status: <span class="muted">não iniciada</span></p>
-                  </div>
-                  <span class="tag">Básico</span>
-                </div>
-
-                <div class="trail-row">
-                  <div>
-                    <strong>Trilha 2 • Gestão de Resíduos</strong>
-                    <p>Status: <span class="muted">em andamento</span></p>
-                  </div>
-                  <span class="tag">Essencial</span>
-                </div>
-
-                <button class="link" type="button" data-nav="trilhas">Ver todas as trilhas →</button>
-              </div>
-            </section>
-          </div>
-
-          <!-- Território -->
-          <section class="card territory-card">
-            <div class="card-head">
-              <div class="card-title">
-                <span class="pin" aria-hidden="true">📍</span>
-                Território
-              </div>
-              <small class="card-meta">Resumo</small>
+            <div class="topbar-brand-copy">
+              <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+              <span>Plataforma • Cooperativas</span>
             </div>
-
-            <div class="territory-box">
-              <div class="territory-line">
-                <strong>Território selecionado:</strong>
-                <span id="territorioNome">Centro de Triagem Vila Pinto</span>
-              </div>
-              <div class="territory-sub muted">
-                – Ações em andamento • – Comunicados locais
-              </div>
-
-              <div class="territory-actions">
-                <label class="toggle">
-                  <input type="checkbox" id="toggleMeusDados" />
-                  <span class="toggle-ui" aria-hidden="true"></span>
-                  <span>Mostrar somente meus dados</span>
-                </label>
-
-                <button class="link" type="button" data-nav="territorio">Acessar território →</button>
-              </div>
-            </div>
-          </section>
+          </a>
         </div>
-      </section>
 
-      <!-- PAGE: CONTEUDOS -->
-      <section class="page" data-page="conteudos">
-        <header class="page-head">
-          <div>
-            <h2 class="page-title">Conteúdos</h2>
-            <p class="page-sub">Materiais para download e apoio prático por tema.</p>
+        <div class="topbar-right">
+          <div class="topbar-pill topbar-territory">
+            <span class="dot"></span>
+            <span id="territoryNameTop">Território</span>
+            <span class="caret">▼</span>
           </div>
-        </header>
 
-        <div class="cards-3">
-          <article class="card content-card">
-            <div class="card-head">
-              <div class="card-title">Cartilhas</div>
-              <small class="card-meta">PDF</small>
-            </div>
-            <div class="downloads">
-              <a class="dl" href="#" download>Cartilha • Separação correta de recicláveis</a>
-              <a class="dl" href="#" download>Cartilha • Fluxo de triagem (boas práticas)</a>
-              <a class="dl" href="#" download>Cartilha • Segurança no trabalho</a>
-            </div>
-          </article>
-
-          <article class="card content-card">
-            <div class="card-head">
-              <div class="card-title">Guias rápidos</div>
-              <small class="card-meta">Checklists</small>
-            </div>
-            <div class="downloads">
-              <a class="dl" href="#" download>Checklist • Rotina diária de operação</a>
-              <a class="dl" href="#" download>Checklist • Registro de coletas</a>
-              <a class="dl" href="#" download>Checklist • Comunicação em emergência</a>
-            </div>
-          </article>
-
-          <article class="card content-card">
-            <div class="card-head">
-              <div class="card-title">Vídeos</div>
-              <small class="card-meta">Links</small>
-            </div>
-            <div class="downloads">
-              <a class="dl" href="#" target="_blank" rel="noopener">Vídeo • Introdução ao Hub</a>
-              <a class="dl" href="#" target="_blank" rel="noopener">Vídeo • Economia circular na prática</a>
-              <a class="dl" href="#" target="_blank" rel="noopener">Vídeo • Indicadores e relatórios</a>
-            </div>
-          </article>
+          <div class="topbar-pill user-pill">
+            <span class="user-icon">👤</span>
+            <span id="userNameTop">Usuário</span>
+          </div>
         </div>
-      </section>
+      </header>
 
-      <!-- PAGE: TRILHAS -->
-      <section class="page" data-page="trilhas">
-        <header class="page-head">
-          <div>
-            <h2 class="page-title">Trilhas formativas</h2>
-            <p class="page-sub">Formação em etapas com status, acompanhamento e certificação ao concluir.</p>
-          </div>
-        </header>
-
-        <div class="grid-2">
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">Trilha 1 • Introdução</div>
-              <small class="card-meta"><span class="tag">Básico</span></small>
-            </div>
-
-            <div class="steps">
-              <div class="step">
-                <div class="step-left">
-                  <span class="dot-ok" aria-hidden="true"></span>
-                  <div>
-                    <strong>Etapa 1</strong>
-                    <p>O que é o Hub e como usar.</p>
-                  </div>
-                </div>
-                <button class="btn btn-ghost btn-small" type="button" data-step="t1-e1">Marcar concluída</button>
-              </div>
-
-              <div class="step">
-                <div class="step-left">
-                  <span class="dot-mid" aria-hidden="true"></span>
-                  <div>
-                    <strong>Etapa 2</strong>
-                    <p>Território, CRGR e governança.</p>
-                  </div>
-                </div>
-                <button class="btn btn-ghost btn-small" type="button" data-step="t1-e2">Marcar concluída</button>
-              </div>
-
-              <div class="step">
-                <div class="step-left">
-                  <span class="dot-off" aria-hidden="true"></span>
-                  <div>
-                    <strong>Etapa 3</strong>
-                    <p>Indicadores e relatórios.</p>
-                  </div>
-                </div>
-                <button class="btn btn-ghost btn-small" type="button" data-step="t1-e3">Marcar concluída</button>
-              </div>
-            </div>
-
-            <div class="progress">
-              <div class="progress-top">
-                <strong>Progresso</strong>
-                <span class="muted"><span id="pT1">0</span>%</span>
-              </div>
-              <div class="bar"><i id="barT1" style="width:0%"></i></div>
-              <p class="muted small">Ao concluir 100%, o certificado fica disponível.</p>
-              <button class="btn btn-primary btn-small" id="btnCertT1" type="button" disabled>
-                Baixar certificado
-              </button>
-            </div>
-          </section>
-
-          <section class="card">
-            <div class="card-head">
-              <div class="card-title">Trilha 2 • Gestão de Resíduos</div>
-              <small class="card-meta"><span class="tag">Essencial</span></small>
-            </div>
-
-            <div class="steps">
-              <div class="step">
-                <div class="step-left">
-                  <span class="dot-mid" aria-hidden="true"></span>
-                  <div>
-                    <strong>Etapa 1</strong>
-                    <p>Organização da triagem e fluxos.</p>
-                  </div>
-                </div>
-                <button class="btn btn-ghost btn-small" type="button" data-step="t2-e1">Marcar concluída</button>
-              </div>
-
-              <div class="step">
-                <div class="step-left">
-                  <span class="dot-off" aria-hidden="true"></span>
-                  <div>
-                    <strong>Etapa 2</strong>
-                    <p>Qualidade do material e rejeito.</p>
-                  </div>
-                </div>
-                <button class="btn btn-ghost btn-small" type="button" data-step="t2-e2">Marcar concluída</button>
-              </div>
-
-              <div class="step">
-                <div class="step-left">
-                  <span class="dot-off" aria-hidden="true"></span>
-                  <div>
-                    <strong>Etapa 3</strong>
-                    <p>Registro e indicadores operacionais.</p>
-                  </div>
-                </div>
-                <button class="btn btn-ghost btn-small" type="button" data-step="t2-e3">Marcar concluída</button>
-              </div>
-            </div>
-
-            <div class="progress">
-              <div class="progress-top">
-                <strong>Progresso</strong>
-                <span class="muted"><span id="pT2">0</span>%</span>
-              </div>
-              <div class="bar"><i id="barT2" style="width:0%"></i></div>
-              <p class="muted small">Ao concluir 100%, o certificado fica disponível.</p>
-              <button class="btn btn-primary btn-small" id="btnCertT2" type="button" disabled>
-                Baixar certificado
-              </button>
-            </div>
-          </section>
-        </div>
-      </section>
-
-      <!-- PAGE: TERRITORIO -->
-      <section class="page" data-page="territorio">
-        <header class="page-head">
-          <div>
-            <h2 class="page-title">Território</h2>
-            <p class="page-sub">Dashboard do território selecionado + filtro para ver somente seus dados.</p>
-          </div>
-
-          <div class="page-actions">
-            <label class="toggle">
-              <input type="checkbox" id="toggleMeusDados2" />
-              <span class="toggle-ui" aria-hidden="true"></span>
-              <span>Somente meus dados</span>
-            </label>
-          </div>
-        </header>
-
-        <div class="cards-3">
-          <article class="card">
-            <div class="card-head">
-              <div class="card-title">Indicadores do território</div>
-              <small class="card-meta" id="territorioLabel">Centro de Triagem Vila Pinto</small>
-            </div>
-            <div class="metric">
-              <div class="metric-row"><span>Materiais recicláveis (mês)</span><strong id="mRec">18,2t</strong></div>
-              <div class="metric-row"><span>Rejeito (mês)</span><strong id="mRej">3,4t</strong></div>
-              <div class="metric-row"><span>Coletas registradas</span><strong id="mCol">26</strong></div>
-            </div>
-          </article>
-
-          <article class="card">
-            <div class="card-head">
-              <div class="card-title">Avisos do território</div>
-              <small class="card-meta">Últimos 7 dias</small>
-            </div>
-            <div class="list">
-              <article class="list-item">
-                <div class="li-main">
-                  <strong>Reunião de alinhamento</strong>
-                  <p>Encontro com lideranças e equipe técnica.</p>
-                </div>
-                <span class="li-side">Qua</span>
-              </article>
-
-              <article class="list-item">
-                <div class="li-main">
-                  <strong>Atualização de dados</strong>
-                  <p>Fechamento semanal de coleta e triagem.</p>
-                </div>
-                <span class="li-side">Sex</span>
-              </article>
-            </div>
-          </article>
-
-          <article class="card">
-            <div class="card-head">
-              <div class="card-title">Meus dados</div>
-              <small class="card-meta">Quando o filtro estiver ativo</small>
-            </div>
-            <div class="metric">
-              <div class="metric-row"><span>Minhas coletas (mês)</span><strong id="mMinhas">9</strong></div>
-              <div class="metric-row"><span>Meu volume (mês)</span><strong id="mVol">4,1t</strong></div>
-              <div class="metric-row"><span>Qualidade</span><strong id="mQual">Boa</strong></div>
-            </div>
-          </article>
-        </div>
-      </section>
-
-      <!-- PAGE: DOCUMENTOS -->
-      <section class="page" data-page="documentos">
-        <header class="page-head">
-          <div>
-            <h2 class="page-title">Documentos</h2>
-            <p class="page-sub">Arquivos do Hub e do território: PDFs, atas e relatórios.</p>
-          </div>
-        </header>
-
-        <div class="cards-3">
-          <article class="card">
-            <div class="card-head">
-              <div class="card-title">Relatórios</div>
-              <small class="card-meta">PDF</small>
-            </div>
-            <div class="downloads">
-              <a class="dl" href="#" download>Relatório mensal • Indicadores do Hub</a>
-              <a class="dl" href="#" download>Relatório • Território (último trimestre)</a>
-              <a class="dl" href="#" download>Relatório • Qualidade do material</a>
-            </div>
-          </article>
-
-          <article class="card">
-            <div class="card-head">
-              <div class="card-title">Atas</div>
-              <small class="card-meta">PDF</small>
-            </div>
-            <div class="downloads">
-              <a class="dl" href="#" download>Ata • Reunião CRGR</a>
-              <a class="dl" href="#" download>Ata • Comitê do território</a>
-              <a class="dl" href="#" download>Ata • Parcerias</a>
-            </div>
-          </article>
-
-          <article class="card">
-            <div class="card-head">
-              <div class="card-title">Modelos</div>
-              <small class="card-meta">DOC/PDF</small>
-            </div>
-            <div class="downloads">
-              <a class="dl" href="#" download>Modelo • Registro diário de coletas</a>
-              <a class="dl" href="#" download>Modelo • Checklist de operação</a>
-              <a class="dl" href="#" download>Modelo • Comunicação de incidentes</a>
-            </div>
-          </article>
-        </div>
-      </section>
-
-   
-
-      <!-- PAGE: CONTATO -->
-      <section class="page" data-page="contato">
-        <header class="page-head">
-          <div>
-            <h2 class="page-title">Fale com o Hub</h2>
-            <p class="page-sub">Envie uma mensagem rápida para a equipe.</p>
-          </div>
-        </header>
-
-        <section class="card">
-          <div class="card-head">
-            <div class="card-title">Mensagem</div>
-            <small class="card-meta">Retornaremos assim que possível</small>
-          </div>
-
-          <form class="form" id="formContato">
-            <label class="field">
-              <span>Assunto</span>
-              <input type="text" required placeholder="Ex.: Dúvida sobre trilha" />
-            </label>
-            <label class="field">
-              <span>Mensagem</span>
-              <textarea required rows="5" placeholder="Escreva sua mensagem..."></textarea>
-            </label>
-            <div class="form-actions">
-              <button class="btn btn-primary" type="submit">Enviar</button>
-              <button class="btn btn-ghost" type="reset">Limpar</button>
-            </div>
-          </form>
+      <main class="coop-main" id="painel-inicial">
+        <section class="coop-hero">
+          <div class="hero-badge">Área logada da cooperativa</div>
+          <h1>Bem-vinda(o) ao Núcleo de Soluções para Resíduos Urbanos</h1>
+          <p>
+            Seu espaço para acessar conteúdos, acompanhar ações do território, registrar coletas realizadas e visualizar os indicadores da cooperativa.
+          </p>
         </section>
-      </section>
-    </main>
+
+        <section class="dashboard-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Painel da cooperativa</span>
+              <h2>Acessos, materiais e trilhas</h2>
+            </div>
+
+            <p>
+              Espaço individual para conteúdos, trilhas, documentos, avisos importantes e acesso rápido ao registro de coletas do território.
+            </p>
+          </div>
+
+          <div class="quick-grid">
+            <article class="quick-card">
+              <div class="quick-card-top">
+                <span class="mini-badge">Acesso rápido</span>
+                <span class="quick-icon">📘</span>
+              </div>
+              <h3>Conteúdos</h3>
+              <p>Cartilhas, vídeos, materiais operacionais e referências por tema.</p>
+              <a href="conteudos.html">Acessar conteúdos →</a>
+            </article>
+
+            <article class="quick-card">
+              <div class="quick-card-top">
+                <span class="mini-badge">Acesso rápido</span>
+                <span class="quick-icon">🎓</span>
+              </div>
+              <h3>Trilhas formativas</h3>
+              <p>Aprendizagem em etapas com acompanhamento e evolução.</p>
+              <a href="trilhas.html">Acessar trilhas →</a>
+            </article>
+
+            <article class="quick-card">
+              <div class="quick-card-top">
+                <span class="mini-badge">Acesso rápido</span>
+                <span class="quick-icon">📄</span>
+              </div>
+              <h3>Documentos</h3>
+              <p>PDFs, atas, relatórios e arquivos institucionais do território.</p>
+              <a href="documentos.html">Abrir documentos →</a>
+            </article>
+
+            <article class="quick-card">
+              <div class="quick-card-top">
+                <span class="mini-badge">Operação</span>
+                <span class="quick-icon">♻️</span>
+              </div>
+              <h3>Registro de coletas</h3>
+              <p>Lance as coletas realizadas e envie os números direto para o dashboard.</p>
+              <a href="registro-coletas-fase.html">Registrar coletas →</a>
+            </article>
+          </div>
+
+          <div class="panel-grid two-cols">
+            <article class="panel-card">
+              <div class="panel-card-head">
+                <h3>📢 Avisos importantes</h3>
+              </div>
+              <div class="info-list" id="noticesList"></div>
+            </article>
+
+            <article class="panel-card">
+              <div class="panel-card-head">
+                <h3>🧭 Trilhas em destaque</h3>
+              </div>
+              <div class="trail-list" id="featuredTrails"></div>
+              <a class="panel-link" href="trilhas.html">Ver todas as trilhas →</a>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-section participants-section-shell">
+          <div class="section-head participants-head">
+            <div>
+              <span class="section-tag">Cadastro do território</span>
+              <h2>Participantes cadastrados</h2>
+            </div>
+
+            <p>
+              Gerencie moradores, famílias, condomínios e outros participantes vinculados à cooperativa logada.
+            </p>
+          </div>
+
+          <div class="participants-toolbar">
+            <div class="participants-search">
+              <input
+                type="text"
+                id="participantSearchInput"
+                placeholder="Buscar por nome ou código..."
+              />
+            </div>
+
+            <a class="participants-add-btn" href="cadastro-participantes-vila-pinto.html">
+              + Novo participante
+            </a>
+          </div>
+
+          <div class="participants-kpis">
+            <article class="participants-kpi-card">
+              <span>Total cadastrados</span>
+              <strong id="participantsTotalCount">0</strong>
+            </article>
+
+            <article class="participants-kpi-card">
+              <span>Famílias / moradores</span>
+              <strong id="participantsPeopleCount">0</strong>
+            </article>
+
+            <article class="participants-kpi-card">
+              <span>Condomínios</span>
+              <strong id="participantsCondoCount">0</strong>
+            </article>
+          </div>
+
+          <div class="participants-list" id="participantsList"></div>
+        </section>
+
+        <section class="dashboard-section territory-panel-shell">
+          <div class="territory-topbar">
+            <span class="section-tag territory-tag">Painel do território</span>
+
+            <div class="territory-tabs" id="territoryTabs">
+              <button class="territory-tab active" data-tab="comunicados">📋 Comunicados</button>
+              <button class="territory-tab" data-tab="servicos">🛠 Serviços</button>
+              <button class="territory-tab" data-tab="mapa">🗺 Mapa</button>
+              <button class="territory-tab" data-tab="calendario">🗓 Calendário</button>
+              <button class="territory-tab" data-tab="treinamentos">🎓 Treinamentos</button>
+              <button class="territory-tab territory-tab-special" data-tab="coleta">🚚 Coleta especial</button>
+              <button class="territory-tab" data-tab="ouvidoria">🗣 Ouvidoria</button>
+            </div>
+          </div>
+
+          <div class="territory-panel-grid">
+            <div class="territory-main">
+              <div class="territory-main-head">
+                <div>
+                  <h3 id="territoryPanelTitle">Comunicados da cooperativa</h3>
+                  <p id="territoryPanelSubtitle">Avisos, atualizações e orientações do território.</p>
+                </div>
+
+                <div class="territory-head-actions">
+                  <button class="pill-state pill-state-active" type="button">Atual</button>
+                  <button class="pill-state" type="button">Timeline</button>
+                </div>
+              </div>
+
+              <div class="territory-tab-content active" id="tab-comunicados">
+                <div class="territory-list" id="territoryCommunications"></div>
+              </div>
+
+              <div class="territory-tab-content" id="tab-servicos">
+                <div class="territory-list" id="territoryServices"></div>
+              </div>
+
+              <div class="territory-tab-content" id="tab-mapa">
+                <section class="territory-map-section">
+                  <div class="territory-map-toolbar">
+                    <div>
+                      <h4>Mapa de pontos de coleta</h4>
+                      <p>
+                        Veja no mapa e filtre por tipo de resíduo do território acessível ao usuário.
+                      </p>
+                    </div>
+
+                    <div class="territory-map-filters">
+                      <select id="mapTypeFilter" class="map-select">
+                        <option value="all">Todos os tipos</option>
+                        <option value="seletiva">Coleta seletiva</option>
+                        <option value="papel">Papel</option>
+                        <option value="plastico">Plástico</option>
+                        <option value="vidro">Vidro</option>
+                        <option value="metal">Metal</option>
+                        <option value="eletronicos">Eletrônicos</option>
+                        <option value="oleo">Óleo</option>
+                      </select>
+
+                      <button id="btnNearMe" class="map-ghost-btn" type="button">
+                        📍 Perto de mim
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="territory-map-layout">
+                    <div class="territory-map-canvas">
+                      <div id="territoryMap"></div>
+                    </div>
+
+                    <aside class="territory-map-sidebar">
+                      <div class="map-sidebar-head">
+                        <h5>Lista de pontos</h5>
+                        <span id="mapPointsCount">0</span>
+                      </div>
+
+                      <div id="mapPointsList" class="map-points-list"></div>
+                    </aside>
+                  </div>
+                </section>
+              </div>
+
+              <div class="territory-tab-content" id="tab-calendario">
+                <div class="territory-list" id="territoryCalendar"></div>
+              </div>
+
+              <div class="territory-tab-content" id="tab-treinamentos">
+                <div class="territory-list" id="territoryTrainings"></div>
+              </div>
+
+              <div class="territory-tab-content" id="tab-coleta">
+                <div class="territory-special-box">
+                  <strong>Coleta especial aberta</strong>
+                  <p>
+                    Registre coletas especiais, agendadas ou operacionais da cooperativa.
+                  </p>
+                  <a class="special-cta" href="registro-coletas-fase.html">♻️ Registrar coleta realizada</a>
+                </div>
+              </div>
+
+              <div class="territory-tab-content" id="tab-ouvidoria">
+                <div class="territory-special-box">
+                  <strong>Ouvidoria do território</strong>
+                  <p>
+                    Canal para dúvidas, sugestões, ocorrências e retorno da comunidade ligada à cooperativa.
+                  </p>
+                  <a class="panel-link" href="ouvidoria.html">Abrir ouvidoria →</a>
+                </div>
+              </div>
+            </div>
+
+            <aside class="territory-side">
+              <div class="side-card">
+                <h4>Resumo rápido</h4>
+
+                <div class="summary-list">
+                  <div class="summary-row">
+                    <span>Materiais aceitos</span>
+                    <strong id="summaryAccepted">0</strong>
+                  </div>
+                  <div class="summary-row">
+                    <span>Não aceitos</span>
+                    <strong id="summaryRejected">0</strong>
+                  </div>
+                  <div class="summary-row">
+                    <span>Pontos no mapa</span>
+                    <strong id="summaryPoints">0</strong>
+                  </div>
+                </div>
+
+                <div class="summary-actions">
+                  <a href="servicos.html" class="summary-btn">Serviços</a>
+                  <a href="dashboard-cooperativa.html" class="summary-btn">Mapa</a>
+                </div>
+              </div>
+
+              <div class="side-card quick-shortcuts">
+                <h4>Atalho rápido</h4>
+                <a class="special-cta" href="registro-coletas-fase.html">♻️ Registrar coleta</a>
+              </div>
+
+              <div class="side-card small-grid">
+                <a href="calendario.html" class="summary-btn">Calendário</a>
+                <a href="ouvidoria.html" class="summary-btn">Ouvidoria</a>
+                <a href="trilhas.html" class="summary-btn full">Treinamentos</a>
+              </div>
+
+              <div class="side-card indicators-card">
+                <div class="indicators-head">
+                  <h4>Indicadores gerais da cooperativa / CRGR</h4>
+                  <p>Resumo consolidado do território, incluindo registros de coleta.</p>
+                </div>
+
+                <div class="indicator-mini-grid">
+                  <div class="indicator-mini">
+                    <span>Coletas</span>
+                    <strong id="indicatorColetas">0</strong>
+                  </div>
+                  <div class="indicator-mini">
+                    <span>Participantes</span>
+                    <strong id="indicatorParticipants">0</strong>
+                  </div>
+                  <div class="indicator-mini">
+                    <span>Documentos</span>
+                    <strong id="indicatorDocs">0</strong>
+                  </div>
+                  <div class="indicator-mini">
+                    <span>Ações</span>
+                    <strong id="indicatorActions">0</strong>
+                  </div>
+                </div>
+
+                <a class="dashboard-cta" href="dashboard-cooperativa.html">
+                  📊 Acessar dashboard da cooperativa
+                </a>
+              </div>
+            </aside>
+          </div>
+        </section>
+      </main>
+    </div>
   </div>
 
-  <script src="cooperativas.js" defer></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script type="module" src="cooperativas.js"></script>
 </body>
 </html>
