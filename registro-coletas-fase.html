@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="
+  default-src 'self';
+  base-uri 'self';
+  form-action 'self';
+  frame-ancestors 'self';
+  script-src 'self' https://www.gstatic.com https://www.googleapis.com 'unsafe-inline';
+  style-src 'self' 'unsafe-inline' https://fonts.googleapis.com;
+  font-src 'self' https://fonts.gstatic.com;
+  img-src 'self' data: blob: https:;
+  connect-src 'self'
+    http://127.0.0.1:5500
+    https://www.gstatic.com
+    https://www.googleapis.com
+    https://identitytoolkit.googleapis.com
+    https://securetoken.googleapis.com
+    https://firestore.googleapis.com
+    https://firebaseinstallations.googleapis.com
+    https://viacep.com.br
+    https://nominatim.openstreetmap.org;
+">
+  <title>Cadastro de Participantes • Núcleo de Soluções para Resíduos Urbanos</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="cadastro-coletas.css">
+</head>
+
+<body>
+  <div class="bg-grid"></div>
+  <div class="noise"></div>
+
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="logo">
+          <img src="img/logo_hub (1).png" alt="Logo do Núcleo de Soluções para Resíduos Urbanos">
+        </div>
+        <div class="brand-text">
+          <div class="brand-kicker">Plataforma Digital</div>
+          <div class="brand-title">Núcleo de Soluções para Resíduos Urbanos</div>
+          <div class="brand-sub">Cadastro de Participantes</div>
+        </div>
+      </div>
+
+      <div class="statusbar">
+        <span class="chip">Auth: <b id="authStatus">—</b></span>
+        <span class="chip">Território: <b id="territoryStatus">—</b></span>
+        <a class="btn ghost" href="index.html">Voltar ao início</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap main">
+    <section class="card">
+      <div class="card-head">
+        <div>
+          <h1>Cadastro de Participantes</h1>
+          <p class="muted">Preencha uma etapa por vez. O sistema libera o avanço somente após os campos obrigatórios estarem concluídos.</p>
+        </div>
+
+        <div class="progressbox">
+          <div class="progress-top">
+            <span class="muted">Progresso:</span>
+            <b id="progressLabel">1/4</b>
+          </div>
+          <div class="progressbar">
+            <div id="progressFill" class="progressfill" style="width:25%"></div>
+          </div>
+          <div class="bankline">
+            <span class="muted">Banco:</span>
+            <b id="dbStatus" class="ok">conectando…</b>
+          </div>
+        </div>
+      </div>
+
+      <div class="steps">
+        <!-- STEP 1 -->
+        <section class="step" data-step="1">
+          <div class="step-title">
+            <div class="step-ico">✅</div>
+            <div>
+              <h2>Consentimento e autorização</h2>
+              <p class="muted">Selecione todos os itens para avançar para a próxima etapa.</p>
+            </div>
+          </div>
+
+          <div class="checklist">
+            <label class="checkitem">
+              <input type="checkbox" class="lgpdCheck" id="lgpd1">
+              <span>Autorizo o uso dos meus dados pessoais para fins de organização, acompanhamento e gestão do projeto, conforme a LGPD.</span>
+            </label>
+
+            <label class="checkitem">
+              <input type="checkbox" class="lgpdCheck" id="lgpd2">
+              <span>Autorizo o envio de comunicações via WhatsApp, incluindo avisos, convites e atividades relacionadas ao projeto.</span>
+            </label>
+
+            <label class="checkitem">
+              <input type="checkbox" class="lgpdCheck" id="lgpd3">
+              <span>Autorizo a utilização da minha imagem para fins de divulgação institucional, comunicação e promoção das ações do projeto.</span>
+            </label>
+          </div>
+
+          <div class="nav">
+            <button class="btn ghost" id="btnPrev1" disabled>Voltar</button>
+            <div class="nav-right">
+              <button class="btn ghost" id="btnPreview1" type="button">Prévia</button>
+              <button class="btn" id="btnNext1" type="button" disabled>Próxima etapa</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 2 -->
+        <section class="step hidden" data-step="2">
+          <div class="step-title">
+            <div class="step-ico">👤</div>
+            <div>
+              <h2>Identificação</h2>
+              <p class="muted">Seu nome vem do login. Confirme telefone e o tipo de local vinculado à coleta.</p>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field span2">
+              <label>Nome completo *</label>
+              <input id="u_name" placeholder="Nome do usuário logado" readonly>
+              <div class="helper muted">Este campo é preenchido automaticamente com base no login.</div>
+            </div>
+
+            <div class="field">
+              <label>Telefone/WhatsApp com DDD *</label>
+              <input id="u_phone" placeholder="(51) 9XXXX-XXXX" autocomplete="tel" required>
+              <div class="helper muted">Você pode digitar com espaço ou traço; o sistema normaliza automaticamente.</div>
+            </div>
+
+            <div class="field">
+              <label>Seu código (para próximos registros)</label>
+              <input id="u_code" placeholder="RB-XXXXXX" readonly>
+              <div class="helper muted">Esse código identifica você no projeto.</div>
+            </div>
+
+            <div class="field span2">
+              <label>Local para coleta *</label>
+              <div class="segmented" id="pickupSegment">
+                <button type="button" class="segbtn" data-value="Casa">Casa</button>
+                <button type="button" class="segbtn" data-value="Condomínio">Condomínio</button>
+                <button type="button" class="segbtn" data-value="Comércio">Comércio</button>
+                <button type="button" class="segbtn" data-value="Outro">Outro</button>
+              </div>
+              <input id="u_pickupLocal" class="hidden" />
+              <div class="helper muted">Selecione uma opção para continuar.</div>
+            </div>
+
+            <div class="field span2">
+              <div class="infobox">
+                <div class="info-title">Tipo de cadastro</div>
+                <div class="info-sub muted">
+                  Se o local selecionado for <b>Condomínio</b>, futuramente o sistema pode gerar um código do tipo <b>COND-XXXXXX</b>.
+                  Nos demais casos, será utilizado um código do tipo <b>RB-XXXXXX</b>.
+                </div>
+                <div class="info-grid">
+                  <div class="info-card">
+                    <div class="info-k">Participante</div>
+                    <div class="info-v" id="codePreviewA">RB-XXXXXX</div>
+                  </div>
+                  <div class="info-card">
+                    <div class="info-k">Condomínio (opcional)</div>
+                    <div class="info-v" id="codePreviewB">COND-XXXXXX</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="btn ghost" id="btnPrev2" type="button">Voltar</button>
+            <div class="nav-right">
+              <button class="btn ghost" id="btnPreview2" type="button">Prévia</button>
+              <button class="btn" id="btnNext2" type="button" disabled>Próxima etapa</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 3 -->
+        <section class="step hidden" data-step="3">
+          <div class="step-title">
+            <div class="step-ico">📍</div>
+            <div>
+              <h2>Endereço e território CRGR</h2>
+              <p class="muted">Busque o CEP, informe o número e selecione o território onde você será vinculado.</p>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field">
+              <label>CEP *</label>
+              <div class="row">
+                <input id="a_cep" placeholder="Ex.: 90010-000" inputmode="numeric" autocomplete="postal-code">
+                <button id="btnCep" class="btn ghost" type="button">Buscar</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Número *</label>
+              <input id="a_num" placeholder="Ex.: 123" inputmode="numeric">
+              <div class="helper muted">Usado para tentar gerar a localização no mapa.</div>
+            </div>
+
+            <div class="field">
+              <label>Rua *</label>
+              <input id="a_rua" placeholder="Preenchido pelo CEP" readonly>
+            </div>
+
+            <div class="field">
+              <label>Bairro *</label>
+              <input id="a_bairro" placeholder="Preenchido pelo CEP" readonly>
+            </div>
+
+            <div class="field">
+              <label>Cidade *</label>
+              <input id="a_cidade" placeholder="Preenchido pelo CEP" readonly>
+            </div>
+
+            <div class="field">
+              <label>UF *</label>
+              <input id="a_uf" placeholder="Ex.: RS" maxlength="2" readonly>
+            </div>
+
+            <div class="field span2">
+              <label>Ponto de referência *</label>
+              <input id="a_ref" placeholder="Ex.: perto do mercado, em frente à praça...">
+            </div>
+
+            <div class="field span2">
+              <label>Território CRGR *</label>
+              <select id="a_territory" required>
+                <option value="">Carregando territórios…</option>
+              </select>
+              <div class="helper muted">Escolha o território onde você participa, coleta ou está vinculado.</div>
+            </div>
+
+            <div class="field span2">
+              <label>Endereço completo</label>
+              <input id="a_full" placeholder="Montado automaticamente" readonly>
+            </div>
+
+            <div class="field span2">
+              <div class="geoBox">
+                <div class="geoTitle">Localização para o dashboard</div>
+                <div class="geoSub muted">
+                  Quando você busca o CEP e informa o número, o sistema tenta gerar <b>latitude/longitude</b> para posicionar o endereço no mapa.
+                </div>
+                <div class="geoLine">
+                  <span class="muted">Geo:</span>
+                  <b id="geoStatus">ainda não calculado</b>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="btn ghost" id="btnPrev3" type="button">Voltar</button>
+            <div class="nav-right">
+              <button class="btn ghost" id="btnPreview3" type="button">Prévia</button>
+              <button class="btn" id="btnNext3" type="button" disabled>Próxima etapa</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- STEP 4 -->
+        <section class="step hidden" data-step="4">
+          <div class="step-title">
+            <div class="step-ico">📝</div>
+            <div>
+              <h2>Questionário final</h2>
+              <p class="muted">Última etapa para habilitar o acesso ao cadastro de coletas.</p>
+            </div>
+          </div>
+
+          <div class="grid two">
+            <div class="field span2">
+              <label>Você encontra dificuldades ao separar seu resíduo seco e orgânico? *</label>
+              <div class="segmented" id="q_diffSeg">
+                <button type="button" class="segbtn" data-value="Sim">Sim</button>
+                <button type="button" class="segbtn" data-value="Não">Não</button>
+              </div>
+              <input id="q_difficulty" class="hidden" />
+            </div>
+
+            <div class="field span2">
+              <label>Se você enfrenta dificuldades, informe o que tem dificultado.</label>
+              <textarea id="q_details" rows="3" placeholder="Descreva rapidamente…"></textarea>
+            </div>
+
+            <div class="field span2">
+              <label>Como você ficou sabendo do projeto? *</label>
+              <input id="q_how" placeholder="Ex.: indicação, rede social, cooperativa, escola…">
+            </div>
+
+            <div class="field span2">
+              <div class="finalmsg">
+                <div class="finaltitle">Mensagem final</div>
+                <p class="muted">
+                  Agradecemos por se cadastrar no projeto. Nosso time irá analisar as informações e entrar em contato quando necessário.
+                  Obrigado por contribuir com a organização territorial, a reciclagem e a construção de respostas coletivas. ♻️🌿
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="nav">
+            <button class="btn ghost" id="btnPrev4" type="button">Voltar</button>
+            <div class="nav-right">
+              <button class="btn ghost" id="btnPreview4" type="button">Prévia</button>
+              <button class="btn" id="btnFinish" type="button" disabled>Concluir e acessar coletas</button>
+            </div>
+          </div>
+
+          <div id="msgBox" class="msg hidden"></div>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script type="module" src="cadastro-coletas.js"></script>
+</body>
+</html>
