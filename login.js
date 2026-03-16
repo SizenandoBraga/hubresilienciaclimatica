@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase/app";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
   getAuth,
   signInWithEmailAndPassword,
@@ -10,14 +10,15 @@ import {
   browserSessionPersistence,
   updateProfile,
   signOut
-} from "firebase/auth";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 import {
   getFirestore,
   doc,
   getDoc,
   setDoc,
   serverTimestamp
-} from "firebase/firestore";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 // =============================
 // Firebase
@@ -446,5 +447,4 @@ resetPwdLink?.addEventListener("click", async (e) => {
   }
 });
 
-// inicial
 goTab("login");
