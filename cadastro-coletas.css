@@ -114,12 +114,11 @@ TOPBAR
 }
 
 .logo{
-  width:60px;
-  height:60px;
+  width:90px;
+  height:90px;
   border-radius:18px;
   display:grid;
   place-items:center;
-  background:linear-gradient(135deg, rgba(255,255,255,.98), rgba(245,242,236,.95));
   border:1px solid rgba(60,58,57,.08);
   box-shadow:var(--shadow-xs);
   overflow:hidden;
