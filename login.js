@@ -41,7 +41,7 @@ const db = getFirestore(app);
 // =============================
 const ROUTES = {
   governanca: "./governanca.html",
-  cooperativa: "./cooperativa.html",
+  cooperativa: "./cooperativas.html",
   home: "./home.html"
 };
 
