@@ -1,6 +1,6 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+import { auth, db } from "./firebase-init.js";
+
 import {
-  getAuth,
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -13,29 +13,11 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
-  getFirestore,
   doc,
   getDoc,
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-// =============================
-// Firebase
-// =============================
-const firebaseConfig = {
-  apiKey: "AIzaSyBs9qA9kWiXFEiXFCNLEKAn0Xo362RulJM",
-  authDomain: "hub-resliencia-em-rede.firebaseapp.com",
-  projectId: "hub-resliencia-em-rede",
-  storageBucket: "hub-resliencia-em-rede.firebasestorage.app",
-  messagingSenderId: "138042062207",
-  appId: "1:138042062207:web:ee1c94acaa6b5f9ac6564a"
-};
-
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
 // =============================
 // Rotas
 // =============================
