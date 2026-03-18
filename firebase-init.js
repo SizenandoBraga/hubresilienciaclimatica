@@ -1,12 +1,11 @@
-import { initializeApp } from "firebase/app";
 
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
 import {
-getAuth,
-setPersistence,
-browserLocalPersistence
-} from "firebase/auth";
-
-import { getFirestore } from "firebase/firestore/lite";
+  getAuth,
+  setPersistence,
+  browserLocalPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyCK3U8d8Ql1xoviPe-KJ6B8xvOZ7_K4vuQ",
@@ -18,12 +17,11 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
 
-// serviços
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+await setPersistence(auth, browserLocalPersistence);
 
-// mantém usuário logado entre páginas
-setPersistence(auth, browserLocalPersistence).catch((err) => {
-console.warn("[auth] setPersistence falhou:", err?.message || err);
-});
+const db = getFirestore(app);
+
+export { app, auth, db };
+
