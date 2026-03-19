@@ -1,12 +1,23 @@
-import { auth, db } from "./firebase-init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { db } from "./firebase-init.js";
 import {
-  doc,
-  getDoc,
   collection,
   addDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+/* =========================
+   CONFIGURAÇÃO DA PÁGINA PÚBLICA
+========================= */
+const PUBLIC_TERRITORY = {
+  territoryId: "vila-pinto",
+  territoryLabel: "Vila Pinto"
+};
+
+const PUBLIC_SOURCE = {
+  createdBy: null,
+  createdByName: "Cadastro público",
+  createdByRole: "public"
+};
 
 /* =========================
    ELEMENTOS
@@ -54,8 +65,6 @@ const els = {
   closeSuccessModal: document.getElementById("closeSuccessModal")
 };
 
-let currentUser = null;
-let currentProfile = null;
 let currentStep = 1;
 let selectedLocalType = "casa";
 let selectedRegisterType = "participante";
@@ -75,50 +84,22 @@ if (els.menuToggle && els.mobileMenu) {
 /* =========================
    HELPERS
 ========================= */
-async function getUserProfile(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) throw new Error("Usuário não encontrado.");
-  return snap.data();
-}
-
-function validateProfile(profile) {
-  if (!profile) throw new Error("Perfil do usuário não carregado.");
-
-  if (profile.role !== "cooperativa" && profile.role !== "coorporativa") {
-    throw new Error("Acesso permitido somente para usuários cooperativa.");
-  }
-
-  if (profile.status !== "active") {
-    throw new Error("O usuário precisa estar com status ativo.");
-  }
-
-  if (!profile.territoryId || !profile.territoryLabel) {
-    throw new Error("O usuário precisa ter território vinculado.");
-  }
-
-  if (!profile.permissions || profile.permissions.coletas !== true) {
-    throw new Error("O usuário precisa ter permissão de cadastro/coletas ativa.");
-  }
-}
-
-function fillHeader(profile) {
-  const userName =
-    profile.displayName ||
-    profile.dispalyName ||
-    profile.name ||
-    "Usuário";
-
+function fillHeaderPublicData() {
   if (els.territoryLabelView) {
-    els.territoryLabelView.textContent = profile.territoryLabel || "Território";
+    els.territoryLabelView.textContent = PUBLIC_TERRITORY.territoryLabel;
   }
 
   if (els.userNameView) {
-    els.userNameView.textContent = userName;
+    els.userNameView.textContent = "Cadastro público";
   }
 }
 
 function getValue(el) {
   return el ? String(el.value || "").trim() : "";
+}
+
+function onlyDigits(value) {
+  return String(value || "").replace(/\D/g, "");
 }
 
 function showMessage(message, type = "error") {
@@ -187,7 +168,22 @@ function bindChoiceGroup(selector, callback) {
 }
 
 function normalizePhone(value) {
-  return String(value || "").replace(/\D/g, "");
+  return onlyDigits(value);
+}
+
+function formatCepInput(value) {
+  const digits = onlyDigits(value).slice(0, 8);
+  if (digits.length <= 5) return digits;
+  return `${digits.slice(0, 5)}-${digits.slice(5)}`;
+}
+
+function formatCpfInput(value) {
+  const digits = onlyDigits(value).slice(0, 11);
+
+  return digits
+    .replace(/^(\d{3})(\d)/, "$1.$2")
+    .replace(/^(\d{3})\.(\d{3})(\d)/, "$1.$2.$3")
+    .replace(/\.(\d{3})(\d)/, ".$1-$2");
 }
 
 function validateStep(step) {
@@ -216,20 +212,20 @@ function validateStep(step) {
     if (!getValue(els.state)) throw new Error("Informe a UF.");
     if (!getValue(els.referencePoint)) throw new Error("Informe um ponto de referência.");
   }
-
-  if (step === 4) {
-    // etapa final sem campos obrigatórios extras além dos anteriores
-  }
 }
 
 async function fetchCep() {
-  const cep = getValue(els.cep).replace(/\D/g, "");
+  const cep = onlyDigits(getValue(els.cep));
 
   if (!cep || cep.length !== 8) {
     throw new Error("Informe um CEP válido com 8 números.");
   }
 
   const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+  if (!response.ok) {
+    throw new Error("Não foi possível consultar o CEP.");
+  }
+
   const data = await response.json();
 
   if (data.erro) {
@@ -240,6 +236,7 @@ async function fetchCep() {
   if (els.neighborhood) els.neighborhood.value = data.bairro || "";
   if (els.city) els.city.value = data.localidade || "";
   if (els.state) els.state.value = data.uf || "";
+  if (els.cep) els.cep.value = formatCepInput(cep);
 
   updateGeoPreview();
 }
@@ -250,9 +247,11 @@ function updateGeoPreview() {
   const cep = getValue(els.cep);
   const number = getValue(els.number);
   const street = getValue(els.street);
+  const neighborhood = getValue(els.neighborhood);
+  const city = getValue(els.city);
 
   if (cep && number && street) {
-    els.geoPreview.textContent = `${street}, ${number} • CEP ${cep}`;
+    els.geoPreview.textContent = `${street}, ${number}${neighborhood ? ` • ${neighborhood}` : ""}${city ? ` • ${city}` : ""} • CEP ${cep}`;
   } else {
     els.geoPreview.textContent = "ainda não calculado";
   }
@@ -283,15 +282,11 @@ function closeSuccessModalAndGoBack() {
    PAYLOAD
 ========================= */
 function buildPayload() {
-  const userName =
-    currentProfile.displayName ||
-    currentProfile.dispalyName ||
-    currentProfile.name ||
-    "Usuário";
+  const nowIso = new Date().toISOString();
 
   return {
-    territoryId: currentProfile.territoryId,
-    territoryLabel: currentProfile.territoryLabel || "",
+    territoryId: PUBLIC_TERRITORY.territoryId,
+    territoryLabel: PUBLIC_TERRITORY.territoryLabel,
 
     name: getValue(els.fullName),
     participantCode: getValue(els.generatedCode),
@@ -300,7 +295,7 @@ function buildPayload() {
 
     phone: normalizePhone(getValue(els.phone)),
     email: getValue(els.email),
-    cpf: getValue(els.cpf),
+    cpf: onlyDigits(getValue(els.cpf)),
 
     consent: {
       lgpd: !!els.consentLgpd?.checked,
@@ -325,10 +320,15 @@ function buildPayload() {
 
     projectSource: getValue(els.projectSource),
 
-    createdBy: currentUser.uid,
-    createdByName: userName,
+    source: "public_form",
+    status: "pending_review",
+
+    createdBy: PUBLIC_SOURCE.createdBy,
+    createdByName: PUBLIC_SOURCE.createdByName,
+    createdByRole: PUBLIC_SOURCE.createdByRole,
+
     createdAt: serverTimestamp(),
-    createdAtISO: new Date().toISOString()
+    createdAtISO: nowIso
   };
 }
 
@@ -360,8 +360,24 @@ function bindNavigation() {
   });
 }
 
+function bindMasks() {
+  els.cep?.addEventListener("input", (event) => {
+    event.target.value = formatCepInput(event.target.value);
+    updateGeoPreview();
+  });
+
+  els.cpf?.addEventListener("input", (event) => {
+    event.target.value = formatCpfInput(event.target.value);
+  });
+
+  els.phone?.addEventListener("input", (event) => {
+    event.target.value = event.target.value.replace(/[^\d()\-\s+]/g, "");
+  });
+}
+
 function bindEvents() {
   bindNavigation();
+  bindMasks();
 
   bindChoiceGroup("[data-local-type]", (dataset) => {
     selectedLocalType = dataset.localType;
@@ -385,7 +401,7 @@ function bindEvents() {
     }
   });
 
-  [els.cep, els.number, els.street].forEach((input) => {
+  [els.cep, els.number, els.street, els.neighborhood, els.city].forEach((input) => {
     input?.addEventListener("input", updateGeoPreview);
   });
 
@@ -403,13 +419,6 @@ function bindEvents() {
     try {
       hideMessage();
 
-      if (!currentUser || !currentProfile) {
-        throw new Error("Usuário não carregado.");
-      }
-
-      validateProfile(currentProfile);
-
-      // valida todas as etapas antes de salvar
       validateStep(1);
       validateStep(2);
       validateStep(3);
@@ -426,6 +435,27 @@ function bindEvents() {
 
       hideMessage();
       openSuccessModal();
+      els.form.reset();
+
+      selectedLocalType = "casa";
+      selectedRegisterType = "participante";
+      selectedDifficulty = "sim";
+
+      document.querySelectorAll("[data-local-type]").forEach((btn) => {
+        btn.classList.toggle("selected", btn.dataset.localType === "casa");
+      });
+
+      document.querySelectorAll("[data-register-type]").forEach((btn) => {
+        btn.classList.toggle("selected", btn.dataset.registerType === "participante");
+      });
+
+      document.querySelectorAll("[data-difficulty]").forEach((btn) => {
+        btn.classList.toggle("selected", btn.dataset.difficulty === "sim");
+      });
+
+      generateParticipantCode();
+      updateGeoPreview();
+      showStep(1);
     } catch (error) {
       console.error("Erro ao salvar participante:", error);
       showMessage(error.message || "Não foi possível salvar o participante.", "error");
@@ -442,28 +472,11 @@ function bindEvents() {
    BOOT
 ========================= */
 function boot() {
+  fillHeaderPublicData();
   bindEvents();
   generateParticipantCode();
   updateProgress();
   updateGeoPreview();
-
-  onAuthStateChanged(auth, async (user) => {
-    try {
-      if (!user) {
-        window.location.href = "../html/login.html";
-        return;
-      }
-
-      currentUser = user;
-      currentProfile = await getUserProfile(user.uid);
-
-      validateProfile(currentProfile);
-      fillHeader(currentProfile);
-    } catch (error) {
-      console.error("Erro ao carregar cadastro de participantes:", error);
-      showMessage(error.message || "Não foi possível carregar a página.", "error");
-    }
-  });
 }
 
 boot();

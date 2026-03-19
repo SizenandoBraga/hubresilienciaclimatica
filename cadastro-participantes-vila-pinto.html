@@ -38,7 +38,7 @@
       </nav>
 
       <div class="site-header-actions">
-        <a class="site-login-btn" href="../html/cooperativa.html">Voltar ao painel →</a>
+        <a class="site-login-btn" href="/vila-pinto.html">Voltar ao território →</a>
       </div>
 
       <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
@@ -50,7 +50,7 @@
       <a href="../html/cadastro-participantes.html">Participantes</a>
       <a href="../html/registro-coletas-fases.html">Coletas</a>
       <a href="../html/dashboard-cooperativa.html">Dashboard</a>
-      <a href="../html/cooperativa.html">Voltar ao painel</a>
+      <a href="/vila-pinto.html">Voltar ao território</a>
     </div>
   </header>
 
@@ -66,11 +66,11 @@
         <div class="wizard-meta">
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Território</span>
-            <strong id="territoryLabelView">Carregando...</strong>
+            <strong id="territoryLabelView">Vila Pinto</strong>
           </div>
           <div class="wizard-meta-item">
-            <span class="wizard-meta-label">Responsável</span>
-            <strong id="userNameView">Carregando...</strong>
+            <span class="wizard-meta-label">Acesso</span>
+            <strong id="userNameView">Cadastro público</strong>
           </div>
         </div>
       </div>
@@ -320,27 +320,29 @@
       </section>
     </form>
   </main>
-<div id="successModal" class="success-modal hidden" aria-hidden="true">
-  <div class="success-modal-backdrop"></div>
 
-  <div class="success-modal-card" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
-    <div class="success-modal-icon">💚</div>
+  <div id="successModal" class="success-modal hidden" aria-hidden="true">
+    <div class="success-modal-backdrop"></div>
 
-    <h3 id="successModalTitle">Inscrição realizada com sucesso</h3>
+    <div class="success-modal-card" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
+      <div class="success-modal-icon">💚</div>
 
-    <p>
-      Agradecemos pela sua inscrição no projeto.
-      Nossa cooperativa irá analisar suas informações e entrar em contato para informar
-      se você está dentro da zona de coleta atendida pelo território.
-    </p>
+      <h3 id="successModalTitle">Inscrição realizada com sucesso</h3>
 
-    <div class="success-modal-actions">
-      <button type="button" class="btn-primary" id="closeSuccessModal">
-        Fechar e voltar a pagina de territó!rio
-      </button>
+      <p>
+        Agradecemos pela sua inscrição no projeto.
+        Nossa cooperativa irá analisar suas informações e entrar em contato para informar
+        se você está dentro da zona de coleta atendida pelo território.
+      </p>
+
+      <div class="success-modal-actions">
+        <button type="button" class="btn-primary" id="closeSuccessModal">
+          Fechar e voltar à página do território
+        </button>
+      </div>
     </div>
   </div>
-</div>
+
   <script type="module" src="/cadastro-participantes-vila-pinto.js"></script>
 </body>
 </html>
