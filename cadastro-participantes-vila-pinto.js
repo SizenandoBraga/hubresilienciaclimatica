@@ -276,7 +276,7 @@ function closeSuccessModalAndGoBack() {
   }
 
   document.body.classList.remove("modal-open");
-  window.location.href = "/html/vila-pinto.html";
+  window.location.href = "/vila-pinto.html";
 }
 
 /* =========================
