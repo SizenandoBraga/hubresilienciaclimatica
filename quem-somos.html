@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <title>Quem Somos • Núcleo de Soluções para Resíduos Urbanos</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            inter: ["Inter", "system-ui", "sans-serif"],
+            poppins: ["Poppins", "Inter", "sans-serif"]
+          },
+          colors: {
+            "regen-green": "#1B7F5A",
+            "regen-greenLight": "#4CAF8F",
+            "regen-blue": "#0D3B66",
+            "regen-yellow": "#F2C94C",
+            "regen-graphite": "#232323",
+            "regen-bg": "#F5F7F6",
+            "muted": "#667085"
+          },
+          boxShadow: {
+            soft: "0 18px 40px rgba(13,59,102,.10)"
+          }
+        }
+      }
+    }
+  </script>
+
+  <link rel="stylesheet" href="/quem-somos.css">
+</head>
+
+<body class="text-regen-graphite">
+  <div class="bg-grid"></div>
+  <div class="noise"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <!-- HEADER -->
+  <header class="sticky top-0 z-50 backdrop-blur-xl bg-regen-bg/80 border-b border-regen-blue/10">
+    <div class="mx-auto max-w-[1180px] px-4 py-3 flex flex-wrap items-center justify-between gap-3">
+      <a class="flex items-center gap-3 min-w-0" href="../index.html">
+        <div
+          class="w-10 h-10 rounded-2xl shadow-soft overflow-hidden"
+          style="background:conic-gradient(from 180deg, #1B7F5A, #4CAF8F, #0D3B66, #1B7F5A);"
+        >
+          <div
+            class="w-full h-full"
+            style="background: radial-gradient(circle at 30% 30%, rgba(255,255,255,.55), transparent 55%);"
+          ></div>
+        </div>
+
+        <div>
+          <div class="font-poppins font-semibold text-sm">Núcleo de Soluções para Resíduos Urbanos</div>
+          <div class="text-xs text-muted">Plataforma • Territórios & CRGR</div>
+        </div>
+      </a>
+
+      <nav class="hidden md:flex items-center gap-3">
+        <a class="px-3 py-2 rounded-2xl font-semibold text-sm hover:bg-regen-green/10 hover:text-regen-green transition" href="../index.html">
+          Início
+        </a>
+
+        <a class="px-3 py-2 rounded-2xl font-semibold text-sm text-regen-green bg-regen-green/10" href="#top">
+          Quem Somos
+        </a>
+
+        <a class="px-3 py-2 rounded-2xl font-semibold text-sm hover:bg-regen-green/10 hover:text-regen-green transition" href="../html/conteudos.html">
+          Conteúdos
+        </a>
+
+        <a class="px-3 py-2 rounded-2xl font-semibold text-sm hover:bg-regen-green/10 hover:text-regen-green transition" href="../index.html#dados">
+          Dados
+        </a>
+
+        <a class="px-3 py-2 rounded-2xl font-semibold text-sm hover:bg-regen-green/10 hover:text-regen-green transition" href="../index.html#faq">
+          FAQ
+        </a>
+      </nav>
+
+      <button
+        id="btnEntrar"
+        class="px-4 py-2 rounded-2xl font-extrabold text-sm border border-regen-yellow/50 bg-gradient-to-br from-regen-yellow to-[#ffe08a] text-black shadow-[0_18px_34px_rgba(242,201,76,.26)]"
+      >
+        Cadastrar / Login →
+      </button>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-[1180px] px-4 pb-24 relative z-[3]">
+    <!-- HERO -->
+    <section class="pt-10 pb-6 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+      <div data-reveal>
+        <div class="inline-flex items-center gap-2 px-3 py-2 rounded-full bg-regen-green/10 border border-regen-green/20 text-regen-green font-black text-xs">
+          Quem Somos
+        </div>
+
+        <h1 class="mt-4 font-poppins text-4xl md:text-5xl">
+          O Núcleo de Soluções para Resíduos Urbanos
+        </h1>
+
+        <p class="mt-4 text-[15px] leading-relaxed text-black/80">
+          O Núcleo de Soluções para Resíduos Urbanos nasceu a partir de uma constatação simples e urgente:
+          em situações de crise climática, o lixo vira um problema antes, durante e depois do desastre.
+        </p>
+
+        <p class="mt-3 text-[15px] leading-relaxed text-black/80">
+          As enchentes no Rio Grande do Sul deixaram isso evidente. Faltavam informação, coordenação,
+          espaços de referência e apoio técnico nos territórios. Ao mesmo tempo, cooperativas, catadores
+          e lideranças comunitárias estavam na linha de frente, muitas vezes sem estrutura e reconhecimento.
+        </p>
+
+        <p class="mt-3 text-[15px] leading-relaxed text-black/80">
+          Foi nesse contexto que o Hub começou a ser construído, a partir da articulação entre organizações
+          com trajetórias complementares na gestão de resíduos, na mobilização social e na economia circular.
+        </p>
+      </div>
+
+      <div class="grid place-items-center" data-reveal>
+        <div class="hero-logo-shell">
+          <img
+            src="../img/logo_hub.png"
+            class="max-w-[420px] w-full drop-shadow-[0_34px_70px_rgba(13,59,102,.24)]"
+            alt="Núcleo de Soluções para Resíduos Urbanos"
+          >
+        </div>
+      </div>
+    </section>
+
+    <!-- ORGANIZAÇÕES -->
+    <section class="mt-8 card-shell" data-reveal>
+      <div class="wrap">
+        <div class="section-badge">Organizações</div>
+
+        <h2 class="section-title">Três trajetórias complementares</h2>
+
+        <p class="section-sub">
+          Educação ambiental, articulação institucional
+          e inteligência técnica atuando juntas.
+        </p>
+
+        <div class="grid md:grid-cols-3 gap-6 mt-8">
+          <!-- MÃOS VERDES -->
+          <article class="org-card">
+            <div class="org-logo">
+              <img src="../img/maos_verdes_logo.jpg" alt="Logo Mãos Verdes">
+            </div>
+
+            <h3>Mãos Verdes</h3>
+
+            <p>
+              Educação ambiental, mobilização social
+              e projetos comunitários.
+            </p>
+          </article>
+
+        
+
+          <!-- Cluster Ecoar -->
+          <article class="org-card">
+            <div class="org-logo">
+              <img src="../img/Cluster_ecoar.png" alt="Logo Cluster Ecoar">
+            </div>
+
+            <h3>Cluster Ecoar</h3>
+
+            <p>
+              Inteligência técnica e metodologias
+              de economia circular.
+            </p>
+          </article>
+        </div>
+
+        <div class="org-text-block">
+          <p>
+            Juntas, essas organizações estruturam o Hub como uma plataforma viva,
+            conectada aos Centros de Referência na Gestão de Resíduos (CRGR),
+            fortalecendo a reciclagem, a economia circular e a capacidade dos territórios
+            de se prevenir, responder e se recuperar de eventos climáticos.
+          </p>
+
+          <p class="org-text-highlight">
+            Mais do que uma plataforma, o Hub é uma rede.
+          </p>
+
+          <p>
+            Uma rede que acredita que cidades mais resilientes se constroem
+            com participação, informação acessível e ação coletiva.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <footer class="mt-10 text-sm text-black/70">
+      <div class="pt-4 border-t border-regen-blue/10 flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <div class="font-bold text-black/80">
+            Núcleo de Soluções para Resíduos Urbanos • Plataforma Regenera
+          </div>
+          <div class="mt-1">
+            © <span id="year"></span>
+          </div>
+        </div>
+
+        <div class="flex gap-4 font-bold">
+          <a class="hover:text-regen-green" href="../index.html">Início</a>
+          <a class="hover:text-regen-green" href="../index.html#crgr">CRGRs</a>
+          <a class="hover:text-regen-green" href="../index.html#faq">FAQ</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+
+  <script src="/quem-somos.js"></script>
+</body>
+</html>

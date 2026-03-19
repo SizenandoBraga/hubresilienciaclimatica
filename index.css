@@ -329,10 +329,11 @@ p,span,small,li{
 }
 
 /* HERO */
+/* HERO */
 
 .hero{
   position:relative;
-  padding:58px 0 18px;
+  padding:72px 0 24px;
   overflow:hidden;
 }
 
@@ -373,10 +374,12 @@ p,span,small,li{
 .hero-title{
   margin:0;
   max-width:980px;
-  font-size:clamp(2.3rem, 4.4vw, 4.25rem);
-  line-height:1.02;
-  letter-spacing:-.04em;
+  font-size:clamp(2.5rem, 4.5vw, 4.4rem);
+  line-height:1;
+  letter-spacing:-.045em;
   color:var(--black);
+  font-style:normal;
+  font-weight:700;
 }
 
 .hero-title-line{
@@ -385,34 +388,48 @@ p,span,small,li{
 
 .hero-title-highlight{
   display:block;
-  margin:.14em 0 .10em;
+  margin:.16em 0 .10em;
   background:linear-gradient(90deg, var(--green) 0%, var(--blue) 58%, var(--orange) 100%);
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
   background-clip:text;
   color:transparent;
+  font-style:normal;
+  font-weight:700;
 }
 
 .hero-description{
+  max-width:72ch;
+  margin:26px 0 0;
   font-size:18px;
-  line-height:1.78;
-  color:rgba(60,58,57,.84);
-  max-width:60ch;
-  margin:24px 0 0;
+  line-height:1.9;
+  color:rgba(60,58,57,.86);
+  text-wrap:pretty;
+}
+
+.hero-description-justify{
+  text-align:justify;
+  text-justify:inter-word;
 }
 
 .hero-bottom-note{
-  margin-top:26px;
-  padding-left:16px;
-  max-width:640px;
+  margin-top:28px;
+  padding:16px 0 0 18px;
+  max-width:700px;
   border-left:4px solid var(--orange);
   color:var(--black);
   font-size:15px;
-  line-height:1.65;
+  line-height:1.75;
   font-weight:700;
   font-style:normal;
 }
 
+.hero .card-actions{
+  display:flex;
+  flex-wrap:wrap;
+  gap:12px;
+  margin-top:24px;
+}
 /* SEÇÕES */
 
 .section-shell{
