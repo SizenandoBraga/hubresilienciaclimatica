@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Cadastro de Participantes • Núcleo de Soluções para Resíduos Urbanos</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="/cadastro-participantes-vila-pinto.css">
+</head>
+<body>
+  <div class="page-bg"></div>
+  <div class="page-noise"></div>
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="../index.html" aria-label="Ir para o início">
+        <div class="site-brand-mark">
+          <img src="/img/logo_hub.png" alt="Núcleo de Soluções para Resíduos Urbanos">
+        </div>
+        <div class="site-brand-copy">
+          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+          <span>Plataforma • Territórios & CRGR</span>
+        </div>
+      </a>
+
+      <nav class="site-nav" aria-label="Navegação principal">
+        <a href="../index.html">Início</a>
+        <a href="../html/cooperativa.html">Painel</a>
+        <a class="is-active" href="../html/cadastro-participantes.html">Participantes</a>
+        <a href="../html/registro-coletas-fases.html">Coletas</a>
+        <a href="../html/dashboard-cooperativa.html">Dashboard</a>
+      </nav>
+
+      <div class="site-header-actions">
+        <a class="site-login-btn" href="../html/cooperativa.html">Voltar ao painel →</a>
+      </div>
+
+      <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+    </div>
+
+    <div class="site-mobile-menu" id="mobileMenu">
+      <a href="../index.html">Início</a>
+      <a href="../html/cooperativa.html">Painel</a>
+      <a href="../html/cadastro-participantes.html">Participantes</a>
+      <a href="../html/registro-coletas-fases.html">Coletas</a>
+      <a href="../html/dashboard-cooperativa.html">Dashboard</a>
+      <a href="../html/cooperativa.html">Voltar ao painel</a>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="wizard-header glass-card">
+      <div class="wizard-header-top">
+        <div>
+          <span class="page-badge">Cadastro territorial</span>
+          <h1>Cadastro de Participantes</h1>
+          <p>Preencha as etapas abaixo para cadastrar moradores, famílias, condomínios e participantes vinculados ao território da cooperativa.</p>
+        </div>
+
+        <div class="wizard-meta">
+          <div class="wizard-meta-item">
+            <span class="wizard-meta-label">Território</span>
+            <strong id="territoryLabelView">Carregando...</strong>
+          </div>
+          <div class="wizard-meta-item">
+            <span class="wizard-meta-label">Responsável</span>
+            <strong id="userNameView">Carregando...</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-wrap">
+        <div class="progress-copy">
+          <span id="stepIndicator">Etapa 1 de 4</span>
+          <strong id="progressText">Progresso: 1/4</strong>
+        </div>
+        <div class="progress-bar">
+          <span id="progressBarFill" style="width:25%"></span>
+        </div>
+      </div>
+    </section>
+
+    <div id="formMessage" class="form-message hidden"></div>
+
+    <form id="participantWizardForm" class="wizard-shell">
+      <section class="step-card glass-card is-active" data-step="1">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 1</span>
+            <h2>Consentimento e autorização</h2>
+          </div>
+        </div>
+
+        <div class="step-card-inner">
+          <div class="section-icon">✅</div>
+
+          <div class="consent-block">
+            <h3>Dados pessoais • Declaro estar ciente e autorizo</h3>
+            <p>Selecione todos os itens para avançar.</p>
+
+            <label class="check-item">
+              <input type="checkbox" id="consentLgpd">
+              <span>Uso dos meus dados pessoais para fins de organização e gestão do projeto (LGPD).</span>
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" id="consentWhatsapp">
+              <span>Envio de comunicações via WhatsApp (avisos e atividades).</span>
+            </label>
+
+            <label class="check-item">
+              <input type="checkbox" id="consentImage">
+              <span>Utilização da minha imagem para divulgação e promoção do projeto.</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" disabled>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="button" class="btn-primary" data-next-step>Próxima etapa</button>
+        </div>
+      </section>
+
+      <section class="step-card glass-card hidden" data-step="2">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 2</span>
+            <h2>Informações principais</h2>
+          </div>
+        </div>
+
+        <div class="step-card-inner">
+          <div class="grid grid-2">
+            <div class="field field-full">
+              <label for="fullName">1) Nome completo <span>*</span></label>
+              <input type="text" id="fullName" placeholder="Digite seu nome completo">
+            </div>
+
+            <div class="field">
+              <label for="phone">2) Telefone / WhatsApp com DDD <span>*</span></label>
+              <input type="text" id="phone" placeholder="Ex.: 51999998888">
+              <small>Pode digitar com espaço, traço ou parênteses.</small>
+            </div>
+
+            <div class="field">
+              <label for="email">3) E-mail</label>
+              <input type="email" id="email" placeholder="Ex.: nome@email.com">
+            </div>
+
+            <div class="field">
+              <label for="localType">4) Local para coleta <span>*</span></label>
+              <div class="choice-grid choice-grid-4" id="localTypeGroup">
+                <button type="button" class="choice-card selected" data-local-type="casa">
+                  <strong>Casa</strong>
+                  <span>residência</span>
+                </button>
+                <button type="button" class="choice-card" data-local-type="condominio">
+                  <strong>Condomínio</strong>
+                  <span>coletivo</span>
+                </button>
+                <button type="button" class="choice-card" data-local-type="comercio">
+                  <strong>Comércio</strong>
+                  <span>empresa / loja</span>
+                </button>
+                <button type="button" class="choice-card" data-local-type="outro">
+                  <strong>Outro</strong>
+                  <span>outras possibilidades</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="field field-full">
+              <label>5) Tipo de cadastro</label>
+              <div class="choice-grid choice-grid-2" id="registerTypeGroup">
+                <button type="button" class="choice-card selected" data-register-type="participante">
+                  <strong>Participante</strong>
+                  <span>gera código RB-XXXXXX</span>
+                </button>
+                <button type="button" class="choice-card" data-register-type="condominio">
+                  <strong>Condomínio</strong>
+                  <span>gera código COND-XXXXXX</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="generatedCode">6) Código sugerido</label>
+              <input type="text" id="generatedCode" readonly>
+            </div>
+
+            <div class="field">
+              <label for="cpf">7) CPF</label>
+              <input type="text" id="cpf" placeholder="Ex.: 000.000.000-00">
+            </div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" data-prev-step>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="button" class="btn-primary" data-next-step>Próxima etapa</button>
+        </div>
+      </section>
+
+      <section class="step-card glass-card hidden" data-step="3">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 3</span>
+            <h2>Endereço e localização</h2>
+          </div>
+        </div>
+
+        <div class="step-card-inner">
+          <div class="grid grid-2">
+            <div class="field">
+              <label for="cep">8) CEP <span>*</span></label>
+              <div class="inline-field">
+                <input type="text" id="cep" placeholder="Ex.: 90010-000">
+                <button type="button" class="btn-inline" id="btnBuscarCep">Buscar</button>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="number">9) Número <span>*</span></label>
+              <input type="text" id="number" placeholder="Ex.: 123">
+              <small>Usado para achar a localização no mapa.</small>
+            </div>
+
+            <div class="field">
+              <label for="street">10) Rua <span>*</span></label>
+              <input type="text" id="street" placeholder="Preenchido pelo CEP">
+            </div>
+
+            <div class="field">
+              <label for="neighborhood">11) Bairro <span>*</span></label>
+              <input type="text" id="neighborhood" placeholder="Preenchido pelo CEP">
+            </div>
+
+            <div class="field">
+              <label for="city">12) Cidade <span>*</span></label>
+              <input type="text" id="city" placeholder="Preenchido pelo CEP">
+            </div>
+
+            <div class="field">
+              <label for="state">13) UF <span>*</span></label>
+              <input type="text" id="state" placeholder="Ex.: RS">
+            </div>
+
+            <div class="field field-full">
+              <label for="referencePoint">14) Ponto de referência <span>*</span></label>
+              <input type="text" id="referencePoint" placeholder="Ex.: perto do mercado, em frente à praça...">
+            </div>
+          </div>
+
+          <div class="location-card">
+            <strong>Localização para o dashboard</strong>
+            <p>Ao buscar o CEP e informar o número, a localização poderá ser usada depois para mapa e visualizações do território.</p>
+            <div class="geo-line">Geo: <span id="geoPreview">ainda não calculado</span></div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" data-prev-step>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="button" class="btn-primary" data-next-step>Próxima etapa</button>
+        </div>
+      </section>
+
+      <section class="step-card glass-card hidden" data-step="4">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 4</span>
+            <h2>Perfil e finalização</h2>
+          </div>
+        </div>
+
+        <div class="step-card-inner">
+          <div class="question-block">
+            <label class="question-title">15) Você encontra dificuldades ao separar seu resíduo seco e orgânico?</label>
+            <div class="choice-grid choice-grid-2" id="difficultyGroup">
+              <button type="button" class="choice-card selected" data-difficulty="sim">
+                <strong>Sim</strong>
+                <span>tenho alguma dificuldade</span>
+              </button>
+              <button type="button" class="choice-card" data-difficulty="nao">
+                <strong>Não</strong>
+                <span>consigo separar sem dificuldade</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field field-full">
+            <label for="difficultyDetail">16) Se houver dificuldade, informe o que tem dificultado</label>
+            <textarea id="difficultyDetail" rows="4" placeholder="Descreva a principal dificuldade encontrada..."></textarea>
+          </div>
+
+          <div class="field field-full">
+            <label for="projectSource">17) Como você ficou sabendo do projeto?</label>
+            <textarea id="projectSource" rows="4" placeholder="Ex.: indicação da cooperativa, rede social, visita no território..."></textarea>
+          </div>
+
+          <div class="final-message-card">
+            <strong>Mensagem final</strong>
+            <p>Agradecemos por se cadastrar no projeto. Nosso time poderá analisar as informações e entrar em contato. Obrigado por contribuir 💚♻️</p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" data-prev-step>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="submit" class="btn-primary" id="btnSubmitParticipant">Concluir cadastro</button>
+        </div>
+      </section>
+    </form>
+  </main>
+<div id="successModal" class="success-modal hidden" aria-hidden="true">
+  <div class="success-modal-backdrop"></div>
+
+  <div class="success-modal-card" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
+    <div class="success-modal-icon">💚</div>
+
+    <h3 id="successModalTitle">Inscrição realizada com sucesso</h3>
+
+    <p>
+      Agradecemos pela sua inscrição no projeto.
+      Nossa cooperativa irá analisar suas informações e entrar em contato para informar
+      se você está dentro da zona de coleta atendida pelo território.
+    </p>
+
+    <div class="success-modal-actions">
+      <button type="button" class="btn-primary" id="closeSuccessModal">
+        Fechar e voltar a pagina de territó!rio
+      </button>
+    </div>
+  </div>
+</div>
+  <script type="module" src="/cadastro-participantes-vila-pinto.js"></script>
+</body>
+</html>
