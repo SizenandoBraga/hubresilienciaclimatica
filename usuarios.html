@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Usuários Cadastrados • Núcleo de Soluções para Resíduos Urbanos</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="../css/usuarios.css">
+</head>
+<body>
+  <div class="page-bg"></div>
+  <div class="page-noise"></div>
+
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="../index.html" aria-label="Ir para o início">
+        <div class="site-brand-mark">
+          <img src="../img/logo_hub.png" alt="Núcleo de Soluções para Resíduos Urbanos">
+        </div>
+        <div class="site-brand-copy">
+          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+          <span>Plataforma • Territórios & CRGR</span>
+        </div>
+      </a>
+
+      <nav class="site-nav" aria-label="Navegação principal">
+        <a href="../index.html">Início</a>
+        <a href="../html/cooperativa.html">Painel</a>
+        <a class="is-active" href="../html/usuarios.html">Usuários</a>
+        <a href="../html/registro-coletas-fases.html">Coletas</a>
+        <a href="../html/dashboard-cooperativa.html">Dashboard</a>
+      </nav>
+
+      <div class="site-header-actions">
+        <a class="site-login-btn" href="../html/cadastro-participantes.html">+ Novo usuário</a>
+      </div>
+
+      <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+    </div>
+
+    <div class="site-mobile-menu" id="mobileMenu">
+      <a href="../index.html">Início</a>
+      <a href="../html/cooperativa.html">Painel</a>
+      <a href="../html/usuarios.html">Usuários</a>
+      <a href="../html/registro-coletas-fases.html">Coletas</a>
+      <a href="../html/dashboard-cooperativa.html">Dashboard</a>
+      <a href="../html/cadastro-participantes.html">+ Novo usuário</a>
+    </div>
+  </header>
+
+  <main class="page-shell">
+    <section class="hero-card glass-card">
+      <div>
+        <span class="section-badge">Gestão de usuários</span>
+        <h1>Usuários cadastrados do território</h1>
+        <p>
+          Gerencie solicitações de entrada em rota, usuários aprovados, horários de coleta,
+          status cadastral e o acompanhamento de resíduos registrados por usuário.
+        </p>
+      </div>
+
+      <div class="hero-actions">
+        <a href="../html/cadastro-participantes.html" class="btn-primary">+ Cadastrar usuário</a>
+        <button class="btn-secondary" type="button" id="btnExportarLista">Exportar lista</button>
+      </div>
+    </section>
+
+    <section class="kpi-grid">
+      <article class="kpi-card glass-card">
+        <span>Total cadastrados</span>
+        <strong id="kpiTotalUsuarios">0</strong>
+        <small>Base total do território</small>
+      </article>
+
+      <article class="kpi-card glass-card">
+        <span>Solicitações pendentes</span>
+        <strong id="kpiPendentes">0</strong>
+        <small>Aguardando avaliação</small>
+      </article>
+
+      <article class="kpi-card glass-card">
+        <span>Usuários aprovados</span>
+        <strong id="kpiAprovados">0</strong>
+        <small>Inseridos em rota</small>
+      </article>
+
+      <article class="kpi-card glass-card">
+        <span>Resíduos registrados</span>
+        <strong id="kpiResiduos">0 kg</strong>
+        <small>Total por usuários</small>
+      </article>
+    </section>
+
+    <section class="toolbar-grid">
+      <div class="toolbar-card glass-card search-card">
+        <label for="searchUser">Buscar usuário</label>
+        <input type="text" id="searchUser" placeholder="Buscar por nome, código ou telefone...">
+      </div>
+
+      <div class="toolbar-card glass-card">
+        <label for="filterStatus">Status</label>
+        <select id="filterStatus">
+          <option value="all">Todos</option>
+          <option value="pendente">Pendentes</option>
+          <option value="aprovado">Aprovados</option>
+          <option value="inativo">Inativos</option>
+        </select>
+      </div>
+
+      <div class="toolbar-card glass-card">
+        <label for="filterRoute">Rota</label>
+        <select id="filterRoute">
+          <option value="all">Todas</option>
+          <option value="sim">Com rota</option>
+          <option value="nao">Sem rota</option>
+        </select>
+      </div>
+    </section>
+
+    <section class="panel-card glass-card map-panel">
+      <div class="panel-head">
+        <div>
+          <span class="section-tag">Mapa operacional</span>
+          <h2>Pontos de coleta e rotas realizadas</h2>
+        </div>
+      </div>
+
+      <div class="map-layout">
+        <div id="usersMap" class="users-map"></div>
+
+        <aside class="map-side">
+          <div class="map-side-card">
+            <strong>Pontos em mapa</strong>
+            <span id="mappedUsersCount">0 usuários/pontos</span>
+          </div>
+
+          <div class="map-side-card">
+            <strong>Rota estimada</strong>
+            <span>Ligação sequencial entre usuários aprovados em rota.</span>
+          </div>
+
+          <div id="routeList" class="route-list"></div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="content-grid">
+      <section class="left-column">
+        <article class="panel-card glass-card">
+          <div class="panel-head">
+            <div>
+              <span class="section-tag">Solicitações</span>
+              <h2>Solicitaram entrar em rota</h2>
+            </div>
+          </div>
+
+          <div id="pendingUsersList" class="user-list"></div>
+        </article>
+
+        <article class="panel-card glass-card">
+          <div class="panel-head">
+            <div>
+              <span class="section-tag">Base ativa</span>
+              <h2>Usuários aprovados e em operação</h2>
+            </div>
+          </div>
+
+          <div id="approvedUsersList" class="user-list"></div>
+        </article>
+      </section>
+
+      <aside class="right-column">
+        <article class="panel-card glass-card">
+          <div class="panel-head">
+            <div>
+              <span class="section-tag">Resumo</span>
+              <h2>Organização de horários</h2>
+            </div>
+          </div>
+
+          <div id="scheduleSummary" class="schedule-summary"></div>
+        </article>
+
+        <article class="panel-card glass-card">
+          <div class="panel-head">
+            <div>
+              <span class="section-tag">Mapa</span>
+              <h2>Usuários inseridos no mapa</h2>
+            </div>
+          </div>
+
+          <div id="mappedUsersSummary" class="mapped-users-summary"></div>
+        </article>
+      </aside>
+    </section>
+
+    <section class="panel-card glass-card">
+      <div class="panel-head">
+        <div>
+          <span class="section-tag">Gestão completa</span>
+          <h2>Todos os usuários cadastrados</h2>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="users-table">
+          <thead>
+            <tr>
+              <th>Usuário</th>
+              <th>Status</th>
+              <th>Rota</th>
+              <th>Horário</th>
+              <th>Resíduos</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="usersTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="userModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop"></div>
+    <div class="modal-card">
+      <div class="modal-head">
+        <div>
+          <span class="section-tag">Gestão de usuário</span>
+          <h3 id="modalTitle">Editar usuário</h3>
+        </div>
+        <button class="modal-close" type="button" id="closeModalBtn">×</button>
+      </div>
+
+      <form id="userEditForm" class="modal-form">
+        <input type="hidden" id="editUserId">
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="editUserName">Nome</label>
+            <input type="text" id="editUserName">
+          </div>
+
+          <div class="field">
+            <label for="editUserPhone">Telefone</label>
+            <input type="text" id="editUserPhone">
+          </div>
+
+          <div class="field">
+            <label for="editUserStatus">Status</label>
+            <select id="editUserStatus">
+              <option value="pendente">Pendente</option>
+              <option value="aprovado">Aprovado</option>
+              <option value="inativo">Inativo</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="editUserRoute">Está em rota?</label>
+            <select id="editUserRoute">
+              <option value="sim">Sim</option>
+              <option value="nao">Não</option>
+            </select>
+          </div>
+
+          <div class="field field-full">
+            <label for="editUserSchedule">Horário de coleta</label>
+            <input type="text" id="editUserSchedule" placeholder="Ex.: Terça e quinta • 14h às 16h">
+          </div>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="btn-danger" id="deleteUserBtn">Excluir usuário</button>
+          <button type="submit" class="btn-primary">Salvar alterações</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="../js/usuarios.js"></script>
+</body>
+</html>
