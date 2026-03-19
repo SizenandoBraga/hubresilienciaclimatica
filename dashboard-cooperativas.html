@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NSRU • Dashboard de Coletas</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
+
+  <link rel="stylesheet" href="dashboard-cooperativas.css">
+</head>
+
+<body>
+  <div class="bg-grid"></div>
+  <div class="noise"></div>
+  <div class="cursor-glow" id="cursorGlow"></div>
+
+  <div class="shell">
+    <aside class="sidebar" aria-label="Filtros e navegação">
+      <div class="side-inner">
+        <a class="brand" href="index.html" aria-label="Voltar para a Home">
+          <div class="brand-logo-wrap">
+            <img src="img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo">
+          </div>
+          <div>
+            <strong>Dashboard • Coletas</strong>
+            <span>Relatórios operacionais</span>
+          </div>
+        </a>
+
+        <div class="side-section">
+          <h3>
+            Filtros
+            <span class="chip chip-orange"><span class="dot"></span> Ao vivo</span>
+          </h3>
+
+          <div class="field">
+            <div class="label">Território</div>
+            <select id="fTerritorio">
+              <option value="__all__">Todos</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="label">Fluxo</div>
+            <select id="fFluxo">
+              <option value="__all__">Todos</option>
+              <option value="recebimento">Recebimento</option>
+              <option value="final_turno">Final do turno</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="label">Entrega</div>
+            <select id="fEntrega">
+              <option value="__all__">Todos</option>
+            </select>
+          </div>
+
+          <div class="field row2">
+            <div>
+              <div class="label">Data início</div>
+              <input id="fIni" type="date" />
+            </div>
+            <div>
+              <div class="label">Data fim</div>
+              <input id="fFim" type="date" />
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="label">Busca rápida</div>
+            <input id="fBusca" type="text" placeholder="participante, código, criador..." />
+          </div>
+
+          <div class="field stack">
+            <button class="btn btn-primary" id="btnAplicar" type="button">Aplicar filtros →</button>
+            <button class="btn btn-ghost" id="btnLimpar" type="button">Limpar filtros</button>
+            <a class="btn btn-orange" href="cooperativas.html">Voltar ao menu da cooperativa</a>
+          </div>
+
+          <p class="hint">
+            O dashboard recebe os dados registrados na página de cadastro de coletas.
+          </p>
+        </div>
+
+        <div class="side-section">
+          <h3>Usuário logado</h3>
+
+          <div class="field">
+            <div class="label">Nome</div>
+            <div class="read-box" id="userDisplayName">—</div>
+          </div>
+
+          <div class="field">
+            <div class="label">Perfil</div>
+            <div class="read-box" id="userRole">—</div>
+          </div>
+
+          <div class="field">
+            <div class="label">Território</div>
+            <div class="read-box" id="userTerritory">—</div>
+          </div>
+
+          <div class="field">
+            <div class="label">Status banco</div>
+            <div class="read-box" id="dbStatus">conectando…</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main" aria-label="Relatórios do dashboard">
+      <section class="top">
+        <div class="top-inner">
+          <div class="title">
+            <h1>Dashboard de Coletas Seletivas</h1>
+            <p>
+              Visualização das coletas registradas por cooperativas, com indicadores,
+              gráficos e tabela detalhada por território, fluxo e entrega.
+            </p>
+          </div>
+
+          <div class="top-actions">
+            <span class="pill pill-orange"><span class="b"></span> Período: <span id="txtPeriodo">—</span></span>
+            <span class="pill"><span class="b"></span> Registros: <span id="txtRegistrosTopo">0</span></span>
+            <button class="mini-btn mini-btn-orange" id="btnPrint" type="button">Imprimir / PDF ⎙</button>
+          </div>
+        </div>
+
+        <div class="kpis" aria-label="Indicadores principais">
+          <div class="kpi kpi-orange">
+            <div class="klabel">Total de coletas</div>
+            <p class="kvalue" id="k_totalColetas">0</p>
+            <p class="khint">Quantidade total no período filtrado.</p>
+          </div>
+
+          <div class="kpi">
+            <div class="klabel">Participantes únicos</div>
+            <p class="kvalue" id="k_participantes">0</p>
+            <p class="khint">Participantes distintos vinculados às coletas.</p>
+          </div>
+
+          <div class="kpi">
+            <div class="klabel">Resíduo seco (kg)</div>
+            <p class="kvalue" id="k_residuoSeco">0</p>
+            <p class="khint">Somatório informado nos recebimentos.</p>
+          </div>
+
+          <div class="kpi kpi-orange-soft">
+            <div class="klabel">Rejeito total (kg)</div>
+            <p class="kvalue" id="k_rejeito">0</p>
+            <p class="khint">Recebimento + final do turno.</p>
+          </div>
+
+          <div class="kpi">
+            <div class="klabel">Final de turno</div>
+            <p class="kvalue" id="k_finalTurno">0</p>
+            <p class="khint">Quantidade de fechamentos operacionais.</p>
+          </div>
+
+          <div class="kpi">
+            <div class="klabel">Territórios ativos</div>
+            <p class="kvalue" id="k_territoriosAtivos">0</p>
+            <p class="khint">Territórios com atividade no período.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="grid">
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="panel-head">
+              <div class="hgroup">
+                <h2>Evolução diária de registros</h2>
+                <p>Quantidade de coletas registradas por dia.</p>
+              </div>
+            </div>
+
+            <div class="canvas-wrap">
+              <canvas id="mainChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-inner">
+            <div class="panel-head">
+              <div class="hgroup">
+                <h2>Detalhamento rápido</h2>
+                <p>Distribuição por fluxo, entrega e território.</p>
+              </div>
+            </div>
+
+            <div class="canvas-wrap small">
+              <canvas id="secA"></canvas>
+            </div>
+
+            <div class="canvas-wrap small">
+              <canvas id="secB"></canvas>
+            </div>
+
+            <div class="canvas-wrap small">
+              <canvas id="secC"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-inner">
+          <div class="panel-head">
+            <div class="hgroup">
+              <h2>Tabela de coletas</h2>
+              <p>Últimos registros recebidos do formulário de coletas.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table id="tbl">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Território</th>
+                  <th>Participante</th>
+                  <th>Código</th>
+                  <th>Fluxo</th>
+                  <th>Entrega</th>
+                  <th>Criado por</th>
+                  <th>Peso base</th>
+                  <th>Qualidade</th>
+                  <th>Foto</th>
+                </tr>
+              </thead>
+              <tbody id="tableColetasBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <div class="foot">© <span id="year"></span> • NSRU • Dashboard de Coletas</div>
+    </main>
+  </div>
+
+  <script type="module" src="dashboard-cooperativa.js"></script>
+</body>
+</html>
