@@ -67,66 +67,38 @@
   <div class="noise"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
-<header class="site-header" id="siteHeader">
-  <div class="container">
-    <div class="header-shell">
+<header class="site-header">
+  <div class="container header-inner">
+    <a class="brand" href="index.html" aria-label="Ir para a página inicial">
+      <img
+        src="img/NSRU - Logo-Preto.png"
+        alt="Núcleo de Soluções para Resíduos Urbanos"
+        class="brand-logo"
+      >
+    </a>
 
-      <a href="index.html" class="brand" aria-label="Página inicial do Núcleo de Soluções para Resíduos Urbanos">
-        <div class="brand-logo-wrap">
-          <img
-            src="img/NSRU - Logo-Preto.png"
-            alt="Logo do Núcleo de Soluções para Resíduos Urbanos"
-            class="brand-logo"
-            loading="eager"
-            decoding="async"
-          />
-        </div>
+    <button
+      class="menu-btn"
+      id="menuBtn"
+      type="button"
+      aria-label="Abrir menu"
+      aria-expanded="false"
+      aria-controls="mainNav"
+    >
+      ☰
+    </button>
 
-        <div class="brand-copy">
-          <strong>Núcleo de Soluções</strong>
-          <span>para Resíduos Urbanos</span>
-        </div>
-      </a>
+    <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
+      <a href="index.html" class="nav-link active">Início</a>
+      <a href="quem-somos.html" class="nav-link">Quem Somos</a>
+      <a href="conteudos.html" class="nav-link">Conteúdos</a>
+      <a href="#dados" class="nav-link">Dados e Relatórios</a>
+      <a href="#faq" class="nav-link">FAQ</a>
+    </nav>
 
-      <nav class="main-nav" aria-label="Navegação principal">
-        <a href="#inicio">Início</a>
-        <a href="#pilares">Pilares</a>
-        <a href="#crgr">CRGRs</a>
-        <a href="#dados">Indicadores</a>
-        <a href="#conteudos">Conteúdos</a>
-      </nav>
-
-      <div class="header-actions">
-        <a href="login.html" class="btn-login">
-          Entrar <span aria-hidden="true">→</span>
-        </a>
-
-        <button
-          class="menu-toggle"
-          type="button"
-          aria-label="Abrir menu"
-          aria-expanded="false"
-          aria-controls="mobileMenu"
-          onclick="document.getElementById('mobileMenu').classList.toggle('open'); this.setAttribute('aria-expanded', document.getElementById('mobileMenu').classList.contains('open') ? 'true' : 'false');"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="mobile-menu" id="mobileMenu">
-    <div class="mobile-menu-inner">
-      <a href="#inicio">Início</a>
-      <a href="#pilares">Pilares</a>
-      <a href="#crgr">CRGRs</a>
-      <a href="#dados">Indicadores</a>
-      <a href="#conteudos">Conteúdos</a>
-      <a href="login.html" class="btn-login mobile-login">
-        Entrar <span aria-hidden="true">→</span>
+    <div class="header-actions">
+      <a href="login.html" class="header-cta">
+        Cadastrar / Login
       </a>
     </div>
   </div>

@@ -68,7 +68,6 @@ summary,
 button,
 .btn,
 .main-nav a,
-.mobile-menu-inner a,
 .footer-links a{
   font-style:normal;
   font-weight:700;
@@ -152,175 +151,122 @@ p,span,small,li{
   position:sticky;
   top:0;
   z-index:60;
-  padding:10px 0;
   backdrop-filter:blur(16px);
   -webkit-backdrop-filter:blur(16px);
-  background:rgba(246,245,242,.76);
+  background:rgba(246,245,242,.84);
   border-bottom:1px solid rgba(60,58,57,.08);
 }
 
-.header-shell{
+.header-inner{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  gap:24px;
-  min-height:84px;
+  gap:20px;
+  min-height:92px;
 }
 
 .brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  min-width:0;
-  flex:0 1 auto;
-}
-
-.brand-logo-wrap{
-  width:92px;
-  height:92px;
   flex:0 0 auto;
   display:flex;
   align-items:center;
-  justify-content:center;
-  background:none;
-  border:none;
-  box-shadow:none;
-  padding:0;
-  transition:transform .2s ease;
-}
-
-.brand-logo-wrap:hover{
-  transform:scale(1.04);
+  text-decoration:none;
 }
 
 .brand-logo{
-  width:100%;
-  height:100%;
+  width:168px;
+  height:auto;
+  display:block;
   object-fit:contain;
-  filter:
-    drop-shadow(0 8px 16px rgba(60,58,57,.12))
-    drop-shadow(0 18px 30px rgba(83,172,222,.10));
-}
-
-.brand-copy{
-  min-width:0;
-}
-
-.brand-copy strong{
-  display:block;
-  font-size:15px;
-  line-height:1.05;
-  letter-spacing:-.02em;
-}
-
-.brand-copy span{
-  display:block;
-  color:var(--muted);
-  font-size:12px;
-  margin-top:2px;
 }
 
 .main-nav{
   display:flex;
   align-items:center;
+  justify-content:center;
   gap:8px;
-  padding:8px;
+  flex:1 1 auto;
+}
+
+.nav-link{
+  position:relative;
+  padding:12px 16px;
   border-radius:999px;
-  background:rgba(255,255,255,.52);
-  border:1px solid rgba(60,58,57,.08);
-  box-shadow:var(--shadow-xs);
+  text-decoration:none;
+  color:var(--black);
+  font-size:15px;
+  font-weight:700;
+  transition:color .2s ease, background .2s ease, transform .2s ease;
 }
 
-.main-nav > a{
-  padding:10px 14px;
-  border-radius:12px;
-  font-size:13px;
-  color:rgba(60,58,57,.92);
-  transition:transform .18s ease, background .18s ease, color .18s ease;
-}
-
-.main-nav > a:hover{
+.nav-link:hover{
   background:rgba(83,172,222,.10);
   color:var(--blue);
   transform:translateY(-1px);
 }
 
-.header-actions{
-  display:flex;
-  align-items:center;
-  gap:10px;
+.nav-link.active{
+  background:rgba(129,185,42,.12);
+  color:var(--green);
 }
 
-.btn-login{
+.nav-link::after{
+  content:"";
+  position:absolute;
+  left:16px;
+  right:16px;
+  bottom:8px;
+  height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg, var(--green), var(--blue));
+  transform:scaleX(0);
+  transform-origin:center;
+  transition:transform .22s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after{
+  transform:scaleX(1);
+}
+
+.header-actions{
+  flex:0 0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+}
+
+.header-cta{
   display:inline-flex;
   align-items:center;
   justify-content:center;
-  gap:8px;
-  min-height:46px;
-  padding:0 18px;
-  border-radius:14px;
+  padding:13px 18px;
+  border-radius:999px;
   text-decoration:none;
   font-size:14px;
   font-weight:700;
   color:#fff;
   background:linear-gradient(135deg, var(--orange), #f49457);
-  box-shadow:0 14px 28px rgba(239,107,34,.22);
-  transition:transform .18s ease, box-shadow .2s ease, filter .2s ease;
+  box-shadow:0 16px 30px rgba(239,107,34,.24);
+  transition:transform .18s ease, filter .2s ease, box-shadow .2s ease;
 }
 
-.btn-login:hover{
+.header-cta:hover{
   transform:translateY(-2px);
   filter:brightness(1.02);
+  box-shadow:0 20px 36px rgba(239,107,34,.28);
 }
 
-.menu-toggle{
+.menu-btn{
   display:none;
-  border:1px solid rgba(60,58,57,.12);
+  border:none;
   background:#fff;
   color:var(--black);
-  border-radius:14px;
-  width:46px;
-  height:46px;
-  padding:0;
-  cursor:pointer;
-  box-shadow:var(--shadow-xs);
-}
-
-.menu-toggle span{
-  display:block;
-  width:18px;
-  height:2px;
-  margin:4px auto;
-  background:var(--black);
-  border-radius:999px;
-}
-
-.mobile-menu{
-  display:none;
-  padding:0 0 12px;
-}
-
-.mobile-menu.open{
-  display:block;
-}
-
-.mobile-menu-inner{
-  padding-bottom:14px;
-}
-
-.mobile-menu-inner a{
-  display:block;
-  padding:14px;
+  width:48px;
+  height:48px;
   border-radius:16px;
-  background:#fff;
-  border:1px solid rgba(60,58,57,.08);
-  margin-top:8px;
-  color:var(--black);
   box-shadow:var(--shadow-xs);
-}
-
-.mobile-login{
-  display:flex !important;
+  cursor:pointer;
+  font-size:22px;
   align-items:center;
   justify-content:center;
 }
@@ -554,8 +500,6 @@ p,span,small,li{
 .section-text.narrow{
   max-width:72ch;
 }
-
-/* HEAD PILARES */
 
 .section-head-pillars{
   margin-top:0;
@@ -1003,7 +947,7 @@ summary:focus{
     gap:4px;
   }
 
-  .main-nav > a{
+  .nav-link{
     padding:10px 10px;
   }
 
@@ -1036,30 +980,59 @@ summary:focus{
   .hero-description{
     max-width:100%;
   }
+
+  .brand-logo{
+    width:146px;
+  }
 }
 
 @media (max-width:860px){
-  .main-nav,
-  .header-actions .btn-login{
+  .header-inner{
+    flex-wrap:wrap;
+    min-height:auto;
+    padding:14px 0;
+  }
+
+  .menu-btn{
+    display:inline-flex;
+  }
+
+  .header-actions{
     display:none;
   }
 
-  .menu-toggle{
-    display:inline-block;
+  .main-nav{
+    width:100%;
+    display:none;
+    flex-direction:column;
+    align-items:stretch;
+    gap:8px;
+    margin-top:8px;
+    padding:12px;
+    border-radius:24px;
+    background:rgba(255,255,255,.92);
+    border:1px solid rgba(60,58,57,.08);
+    box-shadow:var(--shadow-sm);
+    order:4;
+    flex:0 0 100%;
   }
 
-  .header-shell{
-    gap:14px;
-    min-height:74px;
+  .main-nav.open{
+    display:flex;
   }
 
-  .brand{
-    flex:1 1 auto;
+  .nav-link{
+    width:100%;
+    border-radius:16px;
+    padding:14px 16px;
   }
 
-  .brand-logo-wrap{
-    width:74px;
-    height:74px;
+  .nav-link::after{
+    display:none;
+  }
+
+  .section-grid{
+    grid-template-columns:1fr;
   }
 
   .cards-grid.two,
@@ -1103,17 +1076,12 @@ summary:focus{
     padding-bottom:40px;
   }
 
-  .brand-logo-wrap{
-    width:62px;
-    height:62px;
+  .brand-logo{
+    width:128px;
   }
 
-  .brand-copy strong{
-    font-size:13px;
-  }
-
-  .brand-copy span{
-    font-size:11px;
+  .header-inner{
+    gap:14px;
   }
 
   .hero{

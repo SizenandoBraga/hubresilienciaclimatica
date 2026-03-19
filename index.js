@@ -33,7 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
-  function safeScrollTo(target, offset = 88) {
+  function safeScrollTo(target, offset = 96) {
     if (!target) return;
     const top = target.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: "smooth" });
@@ -57,30 +57,30 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   const menuBtn = $("#menuBtn");
-  const mobileNav = $("#mobileNavWrap");
+  const mainNav = $("#mainNav");
 
   function closeMobileMenu() {
-    if (!menuBtn || !mobileNav) return;
+    if (!menuBtn || !mainNav) return;
     menuBtn.setAttribute("aria-expanded", "false");
-    mobileNav.hidden = true;
-    mobileNav.classList.remove("open");
+    mainNav.classList.remove("open");
   }
 
   function openMobileMenu() {
-    if (!menuBtn || !mobileNav) return;
+    if (!menuBtn || !mainNav) return;
     menuBtn.setAttribute("aria-expanded", "true");
-    mobileNav.hidden = false;
-    mobileNav.classList.add("open");
+    mainNav.classList.add("open");
   }
 
-  if (menuBtn && mobileNav) {
+  if (menuBtn && mainNav) {
     menuBtn.addEventListener("click", () => {
       const expanded = menuBtn.getAttribute("aria-expanded") === "true";
       expanded ? closeMobileMenu() : openMobileMenu();
     });
 
-    $$("a", mobileNav).forEach((link) => {
-      link.addEventListener("click", () => closeMobileMenu());
+    $$("a", mainNav).forEach((link) => {
+      link.addEventListener("click", () => {
+        if (window.innerWidth <= 860) closeMobileMenu();
+      });
     });
 
     window.addEventListener("resize", () => {
@@ -154,7 +154,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (isReducedMotion()) {
-      el.textContent = String(target);
+      el.textContent = target.toLocaleString("pt-BR");
       return;
     }
 
@@ -195,10 +195,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  $$("details.faq-item").forEach((detail) => {
+  $$("details.faq-item, details").forEach((detail) => {
     detail.addEventListener("toggle", () => {
       if (!detail.open) return;
-      $$("details.faq-item").forEach((other) => {
+      $$("details.faq-item, details").forEach((other) => {
         if (other !== detail) other.open = false;
       });
     });
