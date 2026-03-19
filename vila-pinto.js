@@ -1,243 +1,242 @@
-import { auth, db } from "./firebase-init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-import {
-  doc,
-    getDoc,
-      collection,
-        query,
-          where,
-            getDocs
-            } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-            import "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+document.addEventListener("DOMContentLoaded", () => {
+  const $ = (selector, scope = document) => scope.querySelector(selector);
+  const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
-            const els = {
-              menuToggle: document.getElementById("menuToggle"),
-                mobileMenu: document.getElementById("mobileMenu"),
+  const TERRITORY_DATA = {
+    title: "Vila Pinto",
+    lead:
+      "Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território.",
+    label: "Centro de Triagem Vila Pinto",
+    region: "Porto Alegre / RS",
+    profile: "Operação comunitária e cooperativa",
+    focus: "Coleta seletiva, triagem e fortalecimento territorial",
+    coopName: "UT Vila Pinto",
+    coopDescription:
+      "Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.",
+    stats: {
+      cooperados: 24,
+      coletas: 148,
+      volume: 18.7,
+      pontos: 12
+    },
+    map: {
+      center: [-30.036111, -51.158333],
+      zoom: 14,
+      marker: {
+        lat: -30.036111,
+        lng: -51.158333,
+        popup: `
+          <div style="font-family:'Archivo Condensed',sans-serif;">
+            <strong>Vila Pinto</strong><br>
+            Centro de Triagem Vila Pinto<br>
+            Bom Jesus / Jardim Carvalho<br>
+            Porto Alegre • RS
+          </div>
+        `
+      }
+    }
+  };
 
-                  territoryHeroTitle: document.getElementById("territoryHeroTitle"),
-                    territoryHeroLead: document.getElementById("territoryHeroLead"),
+  function formatNumber(value) {
+    return Number(value).toLocaleString("pt-BR");
+  }
 
-                      cooperadosValue: document.getElementById("cooperadosValue"),
-                        coletasValue: document.getElementById("coletasValue"),
-                          volumeValue: document.getElementById("volumeValue"),
-                            pontosValue: document.getElementById("pontosValue"),
+  function formatTon(value) {
+    return `${Number(value).toLocaleString("pt-BR", {
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1
+    })} t`;
+  }
 
-                              territoryLabelText: document.getElementById("territoryLabelText"),
-                                territoryRegionText: document.getElementById("territoryRegionText"),
-                                  territoryProfileText: document.getElementById("territoryProfileText"),
-                                    territoryFocusText: document.getElementById("territoryFocusText"),
+  function isReducedMotion() {
+    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  }
 
-                                      coopNameText: document.getElementById("coopNameText"),
-                                        coopDescriptionText: document.getElementById("coopDescriptionText"),
+  function fillStaticContent() {
+    const mapText = {
+      territoryHeroTitle: TERRITORY_DATA.title,
+      territoryHeroLead: TERRITORY_DATA.lead,
+      territoryLabelText: TERRITORY_DATA.label,
+      territoryRegionText: TERRITORY_DATA.region,
+      territoryProfileText: TERRITORY_DATA.profile,
+      territoryFocusText: TERRITORY_DATA.focus,
+      coopNameText: TERRITORY_DATA.coopName,
+      coopDescriptionText: TERRITORY_DATA.coopDescription
+    };
 
-                                          map: document.getElementById("map")
-                                          };
+    Object.entries(mapText).forEach(([id, value]) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = value;
+    });
+  }
 
-                                          let territoryMap = null;
-                                          let territoryMarkers = [];
+  function animateValue(el, finalValue, formatter = (v) => String(v), duration = 1200) {
+    if (!el) return;
 
-                                          /* MENU */
-                                          if (els.menuToggle && els.mobileMenu) {
-                                            els.menuToggle.addEventListener("click", () => {
-                                                els.mobileMenu.classList.toggle("show");
-                                                  });
-                                                  }
+    if (isReducedMotion()) {
+      el.textContent = formatter(finalValue);
+      return;
+    }
 
-                                                  /* HELPERS */
-                                                  async function getUserProfile(uid) {
-                                                    const snap = await getDoc(doc(db, "users", uid));
-                                                      if (!snap.exists()) throw new Error("Usuário não encontrado.");
-                                                        return snap.data();
-                                                        }
+    const start = performance.now();
 
-                                                        function validateProfile(profile) {
-                                                          if (!profile) throw new Error("Perfil não encontrado.");
-                                                            if (profile.status !== "active") throw new Error("Usuário sem acesso ativo.");
-                                                              if (!profile.territoryId) throw new Error("Usuário sem territoryId.");
-                                                              }
+    function frame(now) {
+      const progress = Math.min((now - start) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = finalValue * eased;
+      el.textContent = formatter(current);
 
-                                                              function setText(el, value, fallback = "-") {
-                                                                if (!el) return;
-                                                                  el.textContent = value || fallback;
-                                                                  }
+      if (progress < 1) {
+        requestAnimationFrame(frame);
+      } else {
+        el.textContent = formatter(finalValue);
+      }
+    }
 
-                                                                  function formatTon(valueKg) {
-                                                                    const tons = Number(valueKg || 0) / 1000;
-                                                                      return `${tons.toFixed(1).replace(".", ",")} t`;
-                                                                      }
+    requestAnimationFrame(frame);
+  }
 
-                                                                      function sumColetasVolume(items) {
-                                                                        return items.reduce((sum, item) => {
-                                                                            const qty = Number(item.quantity || 0);
-                                                                                return sum + (Number.isFinite(qty) ? qty : 0);
-                                                                                  }, 0);
-                                                                                  }
+  function initStats() {
+    const cooperadosEl = $("#cooperadosValue");
+    const coletasEl = $("#coletasValue");
+    const volumeEl = $("#volumeValue");
+    const pontosEl = $("#pontosValue");
 
-                                                                                  /* MAPA */
-                                                                                  function clearMarkers() {
-                                                                                    territoryMarkers.forEach((marker) => {
-                                                                                        territoryMap?.removeLayer(marker);
-                                                                                          });
-                                                                                            territoryMarkers = [];
-                                                                                            }
+    const startAnimation = () => {
+      animateValue(cooperadosEl, TERRITORY_DATA.stats.cooperados, (v) => formatNumber(Math.round(v)));
+      animateValue(coletasEl, TERRITORY_DATA.stats.coletas, (v) => formatNumber(Math.round(v)));
+      animateValue(volumeEl, TERRITORY_DATA.stats.volume, (v) => formatTon(v));
+      animateValue(pontosEl, TERRITORY_DATA.stats.pontos, (v) => formatNumber(Math.round(v)));
+    };
 
-                                                                                            function ensureMap(center = [-30.036111, -51.158333], zoom = 14) {
-                                                                                              if (!els.map || typeof L === "undefined") return null;
+    if ("IntersectionObserver" in window) {
+      const statsSection = $(".stats-section");
+      if (!statsSection) return startAnimation();
 
-                                                                                                if (!territoryMap) {
-                                                                                                    territoryMap = L.map("map", {
-                                                                                                          zoomControl: true
-                                                                                                              }).setView(center, zoom);
+      const observer = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            startAnimation();
+            obs.disconnect();
+          });
+        },
+        { threshold: 0.35 }
+      );
 
-                                                                                                                  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-                                                                                                                        attribution: "&copy; OpenStreetMap"
-                                                                                                                            }).addTo(territoryMap);
-                                                                                                                              }
+      observer.observe(statsSection);
+    } else {
+      startAnimation();
+    }
+  }
 
-                                                                                                                                return territoryMap;
-                                                                                                                                }
+  function initReveal() {
+    const revealEls = $$("[data-reveal]");
+    if (!revealEls.length) return;
 
-                                                                                                                                function renderMapPoints(points) {
-                                                                                                                                  const safePoints = Array.isArray(points) ? points : [];
-                                                                                                                                    const fallbackCenter = safePoints.length
-                                                                                                                                        ? [safePoints[0].geo.lat, safePoints[0].geo.lng]
-                                                                                                                                            : [-30.036111, -51.158333];
+    if ("IntersectionObserver" in window && !isReducedMotion()) {
+      const observer = new IntersectionObserver(
+        (entries, obs) => {
+          entries.forEach((entry) => {
+            if (!entry.isIntersecting) return;
+            entry.target.classList.add("is-visible");
+            obs.unobserve(entry.target);
+          });
+        },
+        {
+          threshold: 0.15,
+          rootMargin: "0px 0px -8% 0px"
+        }
+      );
 
-                                                                                                                                              const map = ensureMap(fallbackCenter, 14);
-                                                                                                                                                if (!map) return;
+      revealEls.forEach((el) => observer.observe(el));
+    } else {
+      revealEls.forEach((el) => el.classList.add("is-visible"));
+    }
+  }
 
-                                                                                                                                                  clearMarkers();
+  function initMobileMenu() {
+    const menuToggle = $("#menuToggle");
+    const mobileMenu = $("#mobileMenu");
 
-                                                                                                                                                    const bounds = [];
+    if (!menuToggle || !mobileMenu) return;
 
-                                                                                                                                                      safePoints.forEach((point) => {
-                                                                                                                                                          const lat = Number(point?.geo?.lat);
-                                                                                                                                                              const lng = Number(point?.geo?.lng);
+    const closeMenu = () => {
+      mobileMenu.classList.remove("show");
+      menuToggle.setAttribute("aria-expanded", "false");
+    };
 
-                                                                                                                                                                  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return;
+    const openMenu = () => {
+      mobileMenu.classList.add("show");
+      menuToggle.setAttribute("aria-expanded", "true");
+    };
 
-                                                                                                                                                                      const marker = L.marker([lat, lng]).addTo(map);
-                                                                                                                                                                          marker.bindPopup(`
-                                                                                                                                                                                <strong>${point.name || "Ponto de coleta"}</strong><br>
-                                                                                                                                                                                      ${point.address || "Endereço não informado"}<br>
-                                                                                                                                                                                            Tipo: ${point.type || "seletiva"}
-                                                                                                                                                                                                `);
+    menuToggle.addEventListener("click", () => {
+      const isOpen = mobileMenu.classList.contains("show");
+      isOpen ? closeMenu() : openMenu();
+    });
 
-                                                                                                                                                                                                    territoryMarkers.push(marker);
-                                                                                                                                                                                                        bounds.push([lat, lng]);
-                                                                                                                                                                                                          });
+    $$("a", mobileMenu).forEach((link) => {
+      link.addEventListener("click", closeMenu);
+    });
 
-                                                                                                                                                                                                            if (bounds.length === 1) {
-                                                                                                                                                                                                                map.setView(bounds[0], 14);
-                                                                                                                                                                                                                  } else if (bounds.length > 1) {
-                                                                                                                                                                                                                      map.fitBounds(bounds, { padding: [30, 30] });
-                                                                                                                                                                                                                        }
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 820) closeMenu();
+    });
+  }
 
-                                                                                                                                                                                                                          setTimeout(() => {
-                                                                                                                                                                                                                              map.invalidateSize();
-                                                                                                                                                                                                                                }, 120);
-                                                                                                                                                                                                                                }
+  function initMap() {
+    const mapEl = $("#map");
+    if (!mapEl || typeof L === "undefined") return;
 
-                                                                                                                                                                                                                                /* FIRESTORE */
-                                                                                                                                                                                                                                async function loadParticipants(territoryId) {
-                                                                                                                                                                                                                                  const q = query(
-                                                                                                                                                                                                                                      collection(db, "participants"),
-                                                                                                                                                                                                                                          where("territoryId", "==", territoryId)
-                                                                                                                                                                                                                                            );
+    const map = L.map(mapEl, {
+      zoomControl: true,
+      scrollWheelZoom: false
+    }).setView(TERRITORY_DATA.map.center, TERRITORY_DATA.map.zoom);
 
-                                                                                                                                                                                                                                              const snap = await getDocs(q);
-                                                                                                                                                                                                                                                return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-                                                                                                                                                                                                                                                }
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
 
-                                                                                                                                                                                                                                                async function loadColetas(territoryId) {
-                                                                                                                                                                                                                                                  const q = query(
-                                                                                                                                                                                                                                                      collection(db, "coletas"),
-                                                                                                                                                                                                                                                          where("territoryId", "==", territoryId)
-                                                                                                                                                                                                                                                            );
+    const marker = L.marker([
+      TERRITORY_DATA.map.marker.lat,
+      TERRITORY_DATA.map.marker.lng
+    ]).addTo(map);
 
-                                                                                                                                                                                                                                                              const snap = await getDocs(q);
-                                                                                                                                                                                                                                                                return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-                                                                                                                                                                                                                                                                }
+    marker.bindPopup(TERRITORY_DATA.map.marker.popup);
 
-                                                                                                                                                                                                                                                                async function loadPontosColeta(territoryId) {
-                                                                                                                                                                                                                                                                  const q = query(
-                                                                                                                                                                                                                                                                      collection(db, "pontos_coleta"),
-                                                                                                                                                                                                                                                                          where("territoryId", "==", territoryId)
-                                                                                                                                                                                                                                                                            );
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 250);
+  }
 
-                                                                                                                                                                                                                                                                              const snap = await getDocs(q);
-                                                                                                                                                                                                                                                                                return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-                                                                                                                                                                                                                                                                                }
+  function initCursorGlow() {
+    const orb1 = $(".orb-1");
+    const orb2 = $(".orb-2");
+    if (isReducedMotion() || !orb1 || !orb2) return;
 
-                                                                                                                                                                                                                                                                                /* UI */
-                                                                                                                                                                                                                                                                                function fillTerritoryHeader(profile) {
-                                                                                                                                                                                                                                                                                  const heroName =
-                                                                                                                                                                                                                                                                                      profile.territoryShortName ||
-                                                                                                                                                                                                                                                                                          profile.territoryName ||
-                                                                                                                                                                                                                                                                                              profile.territoryLabel ||
-                                                                                                                                                                                                                                                                                                  "Território";
+    let raf = null;
+    let x = window.innerWidth / 2;
+    let y = window.innerHeight / 2;
 
-                                                                                                                                                                                                                                                                                                    setText(els.territoryHeroTitle, heroName, "Território");
-                                                                                                                                                                                                                                                                                                      setText(
-                                                                                                                                                                                                                                                                                                          els.territoryHeroLead,
-                                                                                                                                                                                                                                                                                                              profile.territoryLead ||
-                                                                                                                                                                                                                                                                                                                    "Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território."
-                                                                                                                                                                                                                                                                                                                      );
+    function render() {
+      orb1.style.transform = `translate(${x * 0.02}px, ${y * 0.015}px)`;
+      orb2.style.transform = `translate(${x * -0.015}px, ${y * -0.012}px)`;
+      raf = null;
+    }
 
-                                                                                                                                                                                                                                                                                                                        setText(els.territoryLabelText, profile.territoryLabel, "Território");
-                                                                                                                                                                                                                                                                                                                          setText(els.territoryRegionText, profile.regionLabel || "Porto Alegre / RS");
-                                                                                                                                                                                                                                                                                                                            setText(els.territoryProfileText, profile.territoryProfile || "Operação comunitária e cooperativa");
-                                                                                                                                                                                                                                                                                                                              setText(
-                                                                                                                                                                                                                                                                                                                                  els.territoryFocusText,
-                                                                                                                                                                                                                                                                                                                                      profile.territoryFocus || "Coleta seletiva, triagem e fortalecimento territorial"
-                                                                                                                                                                                                                                                                                                                                        );
+    window.addEventListener("mousemove", (event) => {
+      x = event.clientX;
+      y = event.clientY;
 
-                                                                                                                                                                                                                                                                                                                                          setText(els.coopNameText, profile.territoryLabel || "Cooperativa");
-                                                                                                                                                                                                                                                                                                                                            setText(
-                                                                                                                                                                                                                                                                                                                                                els.coopDescriptionText,
-                                                                                                                                                                                                                                                                                                                                                    profile.coopDescription ||
-                                                                                                                                                                                                                                                                                                                                                          "Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem."
-                                                                                                                                                                                                                                                                                                                                                            );
-                                                                                                                                                                                                                                                                                                                                                            }
+      if (!raf) raf = requestAnimationFrame(render);
+    });
+  }
 
-                                                                                                                                                                                                                                                                                                                                                            function fillStats({ participants, coletas, pontos }) {
-                                                                                                                                                                                                                                                                                                                                                              const totalParticipants = participants.length;
-                                                                                                                                                                                                                                                                                                                                                                const totalColetas = coletas.length;
-                                                                                                                                                                                                                                                                                                                                                                  const totalVolumeKg = sumColetasVolume(coletas);
-                                                                                                                                                                                                                                                                                                                                                                    const totalPontos = pontos.length;
-
-                                                                                                                                                                                                                                                                                                                                                                      if (els.cooperadosValue) els.cooperadosValue.textContent = String(totalParticipants);
-                                                                                                                                                                                                                                                                                                                                                                        if (els.coletasValue) els.coletasValue.textContent = String(totalColetas);
-                                                                                                                                                                                                                                                                                                                                                                          if (els.volumeValue) els.volumeValue.textContent = formatTon(totalVolumeKg);
-                                                                                                                                                                                                                                                                                                                                                                            if (els.pontosValue) els.pontosValue.textContent = String(totalPontos);
-                                                                                                                                                                                                                                                                                                                                                                            }
-
-                                                                                                                                                                                                                                                                                                                                                                            async function bootPage(user) {
-                                                                                                                                                                                                                                                                                                                                                                              const profile = await getUserProfile(user.uid);
-                                                                                                                                                                                                                                                                                                                                                                                validateProfile(profile);
-
-                                                                                                                                                                                                                                                                                                                                                                                  fillTerritoryHeader(profile);
-
-                                                                                                                                                                                                                                                                                                                                                                                    const [participants, coletas, pontos] = await Promise.all([
-                                                                                                                                                                                                                                                                                                                                                                                        loadParticipants(profile.territoryId),
-                                                                                                                                                                                                                                                                                                                                                                                            loadColetas(profile.territoryId),
-                                                                                                                                                                                                                                                                                                                                                                                                loadPontosColeta(profile.territoryId)
-                                                                                                                                                                                                                                                                                                                                                                                                  ]);
-
-                                                                                                                                                                                                                                                                                                                                                                                                    fillStats({ participants, coletas, pontos });
-                                                                                                                                                                                                                                                                                                                                                                                                      renderMapPoints(pontos);
-                                                                                                                                                                                                                                                                                                                                                                                                      }
-
-                                                                                                                                                                                                                                                                                                                                                                                                      onAuthStateChanged(auth, async (user) => {
-                                                                                                                                                                                                                                                                                                                                                                                                        try {
-                                                                                                                                                                                                                                                                                                                                                                                                            if (!user) {
-                                                                                                                                                                                                                                                                                                                                                                                                                  window.location.href = "../html/login.html";
-                                                                                                                                                                                                                                                                                                                                                                                                                        return;
-                                                                                                                                                                                                                                                                                                                                                                                                                            }
-
-                                                                                                                                                                                                                                                                                                                                                                                                                                await bootPage(user);
-                                                                                                                                                                                                                                                                                                                                                                                                                                  } catch (error) {
-                                                                                                                                                                                                                                                                                                                                                                                                                                      console.error("Erro ao carregar território:", error);
-                                                                                                                                                                                                                                                                                                                                                                                                                                          alert(error.message || "Não foi possível carregar os dados do território.");
-                                                                                                                                                                                                                                                                                                                                                                                                                                            }
-                                                                                                                                                                                                                                                                                                                                                                                                                                            });
+  fillStaticContent();
+  initStats();
+  initReveal();
+  initMobileMenu();
+  initMap();
+  initCursorGlow();
+});
