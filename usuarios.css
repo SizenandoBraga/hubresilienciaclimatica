@@ -121,46 +121,53 @@ select{
    BLOCO DA MARCA
    Versão somente com a logo em destaque
 ========================================================= */
+/* =========================================================
+   LOGO DESTACADO (SEM CAIXA)
+   Versão limpa, grande e com presença visual
+========================================================= */
 .site-brand{
   display:flex;
   align-items:center;
-  justify-content:center;
-  min-width:0;
-  flex-shrink:0;
+  justify-content:flex-start;
 }
 
-.site-brand--only-logo{
-  padding:4px 0;
-}
-
-.site-brand-mark{
-  width:48px;
-  height:48px;
-  border-radius:18px;
-  overflow:hidden;
-  flex-shrink:0;
-  background:linear-gradient(135deg, rgba(129,185,42,.16), rgba(83,172,222,.14));
-  border:1px solid rgba(60,58,57,.08);
-  box-shadow:var(--shadow-xs);
-}
-
+/* Remove completamente qualquer "caixa" */
+.site-brand-mark,
 .site-brand-mark--highlight{
-  width:82px;
-  height:82px;
-  padding:10px;
-  border-radius:26px;
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,255,255,.88)),
-    linear-gradient(135deg, rgba(129,185,42,.18), rgba(83,172,222,.14));
-  border:1px solid rgba(60,58,57,.10);
-  box-shadow:var(--shadow-sm);
+  background:none;
+  border:none;
+  box-shadow:none;
+  padding:0;
+  border-radius:0;
 }
 
+/* Logo grande e protagonista */
+.site-brand-mark{
+  width:110px;
+  height:110px;
+}
+
+/* Ajuste da imagem */
 .site-brand-mark img{
   width:100%;
   height:100%;
   object-fit:contain;
   display:block;
+
+  /* leve destaque visual */
+  filter:
+    drop-shadow(0 6px 14px rgba(0,0,0,.08))
+    drop-shadow(0 2px 6px rgba(129,185,42,.12));
+
+  transition:transform .25s ease, filter .25s ease;
+}
+
+/* Micro interação */
+.site-brand:hover img{
+  transform:scale(1.05);
+  filter:
+    drop-shadow(0 10px 22px rgba(0,0,0,.12))
+    drop-shadow(0 4px 10px rgba(129,185,42,.18));
 }
 
 /* =========================================================
@@ -950,5 +957,11 @@ body.modal-open{
   .btn-secondary,
   .btn-danger{
     width:100%;
+  }
+}
+@media (max-width: 720px){
+  .site-brand-mark{
+    width:78px;
+    height:78px;
   }
 }
