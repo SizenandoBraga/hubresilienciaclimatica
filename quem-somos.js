@@ -40,7 +40,6 @@ if ("IntersectionObserver" in window && revealItems.length) {
 
 const btnEntrar = document.getElementById("btnEntrar");
 
-
 if (btnEntrar) {
   btnEntrar.addEventListener("click", () => {
     window.location.href = "../html/login.html";
