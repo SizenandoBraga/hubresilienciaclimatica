@@ -91,10 +91,11 @@ function wireChoices() {
 }
 
 /* =========================
-SALVAR
+SALVAR FIREBASE
 ========================= */
 
 async function salvarRecebimento() {
+
   await addDoc(collection(db, "coletas"), {
     createdAt: serverTimestamp(),
     opDate: $("opDate").value,
@@ -102,17 +103,22 @@ async function salvarRecebimento() {
 
     recebimento: {
       pesoResiduoSecoKg: parseNum($("pesoResiduoSecoKg").value),
-      qualidadeNota: parseNum($("qualidadeNota").value)
+      qualidadeNota: parseNum($("qualidadeNota").value),
+      fotosQtd: $("fotoResiduo")?.files?.length || 0
     }
   });
 }
 
 async function salvarFinalTurno() {
+
   await addDoc(collection(db, "coletas"), {
     createdAt: serverTimestamp(),
     opDate: $("opDate").value,
     flowType: "final_turno",
-    fotosQtd: fotosFinalTurno.length
+
+    finalTurno: {
+      fotosQtd: fotosFinalTurno.length
+    }
   });
 }
 
@@ -124,31 +130,33 @@ function wireForms() {
 
   $("formRecebimento")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     try {
       await salvarRecebimento();
       setMsg($("msgRecebimento"), "ok", "Salvo ✓");
-    } catch {
-      setMsg($("msgRecebimento"), "bad", "Erro");
+
+    } catch (e) {
+      console.error(e);
+      setMsg($("msgRecebimento"), "bad", "Erro ao salvar");
     }
   });
 
   $("formFinalTurno")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     try {
       await salvarFinalTurno();
       setMsg($("msgFinalTurno"), "ok", "Salvo ✓");
-    } catch {
-      setMsg($("msgFinalTurno"), "bad", "Erro");
+
+    } catch (e) {
+      console.error(e);
+      setMsg($("msgFinalTurno"), "bad", "Erro ao salvar");
     }
   });
 }
 
 /* =========================
-FOTOS (ATUALIZADO)
-========================= */
-
-/* =========================
-FOTOS (ATUALIZADO E ESTÁVEL)
+FOTOS MINIATURAS (PERFEITO)
 ========================= */
 
 const inputFotosFinalTurno = document.getElementById("fotoFinalTurno");
@@ -161,7 +169,6 @@ inputFotosFinalTurno?.addEventListener("change", (e) => {
 
   const files = Array.from(e.target.files);
 
-  // filtra apenas imagens
   const imagensValidas = files.filter(f => f.type.startsWith("image/"));
 
   if (fotosFinalTurno.length + imagensValidas.length > MAX_FOTOS) {
@@ -173,7 +180,6 @@ inputFotosFinalTurno?.addEventListener("change", (e) => {
 
   renderPreviewFinalTurno();
 
-  // limpa input pra permitir selecionar mesmas imagens novamente
   inputFotosFinalTurno.value = "";
 });
 
@@ -191,11 +197,10 @@ function renderPreviewFinalTurno() {
     div.className = "preview-item";
 
     div.innerHTML = `
-      <img src="${url}">
+      <img src="${url}" title="${file.name}">
       <button class="preview-remove" type="button">×</button>
     `;
 
-    // remover imagem
     div.querySelector(".preview-remove").addEventListener("click", () => {
       fotosFinalTurno.splice(index, 1);
       renderPreviewFinalTurno();
@@ -203,7 +208,6 @@ function renderPreviewFinalTurno() {
 
     previewFinalTurno.appendChild(div);
   });
-  setText("contadorFotos", `${fotosFinalTurno.length} fotos`);
 }
 
 /* =========================
