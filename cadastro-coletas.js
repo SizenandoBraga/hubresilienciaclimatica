@@ -1,4 +1,4 @@
-import { auth, db } from "firebase-init.js";
+import { auth, db } from "./firebase-init.js";
 
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
@@ -14,11 +14,12 @@ import {
   limit
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+/* =====================================================
+UTILS
+===================================================== */
+
 const $ = (id) => document.getElementById(id);
 
-/* =====================================================
-STATE GLOBAL
-===================================================== */
 const STATE = {
   user: null,
   userDoc: null,
@@ -32,9 +33,6 @@ const STATE = {
   selectedFlow: null
 };
 
-/* =====================================================
-UTILS
-===================================================== */
 function show(el, yes) {
   el?.classList.toggle("hidden", !yes);
 }
@@ -60,58 +58,176 @@ function toISODate(d) {
 }
 
 function parseNum(v) {
-  const x = String(v ?? "").replace(",", ".").trim();
-  if (!x) return null;
-  const n = Number(x);
+  const n = Number(String(v).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
 
 /* =====================================================
-FOTOS FINAL DE TURNO (MELHORADO)
+AUTH + BOOTSTRAP (CORRIGIDO)
 ===================================================== */
 
-const inputFotosFinalTurno = document.getElementById("fotoFinalTurno");
-const previewFinalTurno = document.getElementById("previewFinalTurno");
+async function loadUserDoc(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+async function bootstrapAfterAuth(user) {
+  STATE.user = user;
+  setText("dbStatus", "conectado");
+
+  const ud = await loadUserDoc(user.uid);
+  STATE.userDoc = ud;
+
+  if (!ud) {
+    alert("Usuário não encontrado.");
+    window.location.href = "./index.html";
+    return;
+  }
+
+  STATE.territoryId = ud.territoryId || null;
+  STATE.territoryLabel = ud.territoryLabel || "—";
+}
+
+/* =====================================================
+CHOICES
+===================================================== */
+
+function wireChoiceCards() {
+  document.querySelectorAll("[data-delivery]").forEach((btn) => {
+    btn.onclick = () => {
+      document.querySelectorAll("[data-delivery]").forEach(el => el.classList.remove("active"));
+      btn.classList.add("active");
+      STATE.selectedDelivery = btn.dataset.delivery;
+      $("deliveryType").value = btn.dataset.delivery;
+    };
+  });
+
+  document.querySelectorAll("[data-flow]").forEach((btn) => {
+    btn.onclick = () => {
+      document.querySelectorAll("[data-flow]").forEach(el => el.classList.remove("active"));
+      btn.classList.add("active");
+
+      STATE.selectedFlow = btn.dataset.flow;
+      $("flowType").value = btn.dataset.flow;
+
+      show($("panelRecebimento"), btn.dataset.flow === "recebimento");
+      show($("panelFinalTurno"), btn.dataset.flow === "final_turno");
+    };
+  });
+
+  document.querySelectorAll(".quality-btn").forEach(btn => {
+    btn.onclick = () => {
+      document.querySelectorAll(".quality-btn").forEach(el => el.classList.remove("active"));
+      btn.classList.add("active");
+      $("qualidadeNota").value = btn.dataset.quality;
+    };
+  });
+}
+
+/* =====================================================
+SALVAR DADOS
+===================================================== */
+
+async function saveRecebimento() {
+  const payload = {
+    createdAt: serverTimestamp(),
+    opDate: $("opDate").value,
+    deliveryType: $("deliveryType").value,
+    flowType: "recebimento",
+
+    recebimento: {
+      pesoResiduoSecoKg: parseNum($("pesoResiduoSecoKg").value),
+      pesoRejeitoKg: parseNum($("pesoRejeitoKg").value),
+      pesoNaoComercializadoKg: parseNum($("pesoNaoComercializadoKg").value),
+      qualidadeNota: parseNum($("qualidadeNota").value)
+    }
+  };
+
+  await addDoc(collection(db, "coletas"), payload);
+}
+
+async function saveFinalTurno() {
+  const payload = {
+    createdAt: serverTimestamp(),
+    opDate: $("opDate").value,
+    deliveryType: $("deliveryType").value,
+    flowType: "final_turno",
+
+    finalTurno: {
+      pesoRejeitoGeralKg: parseNum($("pesoRejeitoGeralKg").value),
+      plasticoKg: parseNum($("plasticoKg").value),
+      papelMistoKg: parseNum($("papelMistoKg").value)
+    }
+  };
+
+  await addDoc(collection(db, "coletas"), payload);
+}
+
+/* =====================================================
+FORMS
+===================================================== */
+
+function wireForms() {
+
+  $("formOperacao")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    setMsg($("msgOperacao"), "ok", "Etapa inicial OK");
+  });
+
+  $("formRecebimento")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await saveRecebimento();
+      setMsg($("msgRecebimento"), "ok", "Salvo ✓");
+    } catch (e) {
+      setMsg($("msgRecebimento"), "bad", "Erro ao salvar");
+    }
+  });
+
+  $("formFinalTurno")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    try {
+      await saveFinalTurno();
+      setMsg($("msgFinalTurno"), "ok", "Salvo ✓");
+    } catch (e) {
+      setMsg($("msgFinalTurno"), "bad", "Erro ao salvar");
+    }
+  });
+}
+
+/* =====================================================
+FOTOS FINAL TURNO (MANTIDO)
+===================================================== */
+
+const inputFotosFinalTurno = $("fotoFinalTurno");
+const previewFinalTurno = $("previewFinalTurno");
 
 let fotosFinalTurno = [];
 const MAX_FOTOS = 10;
 
-// Seleção de imagens
 inputFotosFinalTurno?.addEventListener("change", (e) => {
-
   const files = Array.from(e.target.files);
 
-  const novas = [];
+  if (fotosFinalTurno.length + files.length > MAX_FOTOS) {
+    alert(`Máximo de ${MAX_FOTOS} fotos.`);
+    return;
+  }
 
   files.forEach(file => {
-    if (!file.type.startsWith("image/")) return;
-
-    if (fotosFinalTurno.length + novas.length < MAX_FOTOS) {
-      novas.push(file);
+    if (file.type.startsWith("image/")) {
+      fotosFinalTurno.push(file);
     }
   });
 
-  fotosFinalTurno = [...fotosFinalTurno, ...novas];
-
-  if (files.length !== novas.length) {
-    alert(`Limite de ${MAX_FOTOS} imagens atingido.`);
-  }
-
   renderPreviewFinalTurno();
-
-  // limpa input (permite selecionar a mesma imagem novamente)
-  inputFotosFinalTurno.value = "";
 });
 
-// Render preview
-function renderPreviewFinalTurno(){
-
+function renderPreviewFinalTurno() {
   if (!previewFinalTurno) return;
 
   previewFinalTurno.innerHTML = "";
 
   fotosFinalTurno.forEach((file, index) => {
-
     const url = URL.createObjectURL(file);
 
     const div = document.createElement("div");
@@ -125,114 +241,41 @@ function renderPreviewFinalTurno(){
     previewFinalTurno.appendChild(div);
   });
 
-  // remover imagem
   previewFinalTurno.querySelectorAll(".preview-remove").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      const index = Number(e.target.dataset.index);
-      fotosFinalTurno.splice(index, 1);
+    btn.onclick = (e) => {
+      fotosFinalTurno.splice(Number(e.target.dataset.index), 1);
       renderPreviewFinalTurno();
-    });
+    };
   });
 }
 
 /* =====================================================
-SALVAR FINAL TURNO (AJUSTADO COM FOTOS)
+INIT (CORRIGIDO)
 ===================================================== */
 
-async function saveFinalTurno() {
+function init() {
+  wireChoiceCards();
+  wireForms();
 
-  if (!STATE.user) throw new Error("Usuário não autenticado.");
+  if ($("opDate")) $("opDate").value = toISODate(new Date());
 
-  const payload = {
-    createdBy: STATE.user.uid,
-    createdAt: serverTimestamp(),
+  onAuthStateChanged(auth, async (user) => {
+    try {
+      if (!user) {
+        setText("dbStatus", "deslogado");
+        window.location.href = "./index.html";
+        return;
+      }
 
-    opDate: $("opDate")?.value || null,
-    flowType: "final_turno",
-    deliveryType: $("deliveryType")?.value || null,
+      await bootstrapAfterAuth(user);
 
-    finalTurno: {
-      pesoRejeitoGeralKg: parseNum($("pesoRejeitoGeralKg")?.value),
+      console.log("🔥 Firebase conectado com sucesso");
 
-      plasticoKg: parseNum($("plasticoKg")?.value),
-      papelMistoKg: parseNum($("papelMistoKg")?.value),
-      papelaoKg: parseNum($("papelaoKg")?.value),
-      aluminioMetalKg: parseNum($("aluminioMetalKg")?.value),
-      vidroKg: parseNum($("vidroKg")?.value),
-      sacariaKg: parseNum($("sacariaKg")?.value),
-      isoporKg: parseNum($("isoporKg")?.value),
-      oleoKg: parseNum($("oleoKg")?.value),
-
-      // AQUI É O AJUSTE PRINCIPAL
-      fotosFinalTurnoQtd: fotosFinalTurno.length
+    } catch (e) {
+      console.error(e);
+      setText("dbStatus", "erro");
     }
-  };
-
-  await addDoc(collection(db, "coletas"), payload);
-
-  // limpa fotos após salvar
-  fotosFinalTurno = [];
-  renderPreviewFinalTurno();
-
-  return payload;
-}
-
-/* =====================================================
-FORM FINAL TURNO
-===================================================== */
-
-$("formFinalTurno")?.addEventListener("submit", async (ev) => {
-  ev.preventDefault();
-
-  const msg = $("msgFinalTurno");
-  hideMsg(msg);
-
-  try {
-    setMsg(msg, "warn", "Salvando...");
-
-    await saveFinalTurno();
-
-    setMsg(msg, "ok", "Salvo com sucesso ✓");
-
-    $("formFinalTurno").reset();
-
-  } catch (e) {
-    console.error(e);
-    setMsg(msg, "bad", "Erro ao salvar.");
-  }
-});
-
-/* =====================================================
-INIT
-===================================================== */
-
-async function init() {
-
-  if ($("opDate")) {
-    $("opDate").value = toISODate(new Date());
-  }
-
-  try {
-
-    await auth.authStateReady();
-
-    const user = auth.currentUser;
-
-    if (!user) {
-      window.location.href = "./index.html";
-      return;
-    }
-
-    STATE.user = user;
-
-    onAuthStateChanged(auth, (u) => {
-      if (!u) window.location.href = "./index.html";
-    });
-
-  } catch (e) {
-    console.error(e);
-    alert("Erro ao iniciar");
-  }
+  });
 }
 
 init();
