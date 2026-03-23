@@ -205,10 +205,7 @@ function renderPreviewFinalTurno() {
   });
   setText("contadorFotos", `${fotosFinalTurno.length} fotos`);
 }
-div.innerHTML = `
-  <img src="${url}" title="${file.name}">
-  <button class="preview-remove" type="button">×</button>
-`;
+
 /* =========================
 INIT
 ========================= */
