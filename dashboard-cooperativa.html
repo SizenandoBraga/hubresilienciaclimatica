@@ -12,10 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/luxon@3.4.4/build/global/luxon.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@1.3.1/dist/chartjs-adapter-luxon.umd.min.js"></script>
 
-  <link rel="stylesheet" href="/dashboard-cooperativa.css">
+  <link rel="stylesheet" href="./dashboard-cooperativa.css">
 </head>
 
 <body>
@@ -78,7 +76,7 @@
 
           <div class="field">
             <div class="label">Busca rápida</div>
-            <input id="fBusca" type="text" placeholder="participante, código, criador..." />
+            <input id="fBusca" type="text" placeholder="família, código, criador, observação..." />
           </div>
 
           <div class="field stack">
@@ -88,7 +86,7 @@
           </div>
 
           <p class="hint">
-            O dashboard recebe os dados registrados na página de cadastro de coletas.
+            O dashboard recebe os dados registrados no formulário de coletas e permite leitura operacional, histórico, edição e cancelamento.
           </p>
         </div>
 
@@ -124,8 +122,8 @@
           <div class="title">
             <h1>Dashboard de Coletas Seletivas</h1>
             <p>
-              Visualização das coletas registradas por cooperativas, com indicadores,
-              gráficos e tabela detalhada por território, fluxo e entrega.
+              Visualização operacional das coletas registradas pela cooperativa, com indicadores,
+              histórico, qualidade, rejeito, não comercializado e painéis ampliados.
             </p>
           </div>
 
@@ -146,19 +144,19 @@
           <div class="kpi">
             <div class="klabel">Participantes únicos</div>
             <p class="kvalue" id="k_participantes">0</p>
-            <p class="khint">Participantes distintos vinculados às coletas.</p>
+            <p class="khint">Famílias/participantes distintos vinculados às coletas.</p>
           </div>
 
           <div class="kpi">
             <div class="klabel">Resíduo seco (kg)</div>
             <p class="kvalue" id="k_residuoSeco">0</p>
-            <p class="khint">Somatório informado nos recebimentos.</p>
+            <p class="khint">Somatório informado em recebimento.</p>
           </div>
 
           <div class="kpi kpi-orange-soft">
             <div class="klabel">Rejeito total (kg)</div>
             <p class="kvalue" id="k_rejeito">0</p>
-            <p class="khint">Recebimento + final do turno.</p>
+            <p class="khint">Peso rejeitado no período.</p>
           </div>
 
           <div class="kpi">
@@ -171,6 +169,131 @@
             <div class="klabel">Territórios ativos</div>
             <p class="kvalue" id="k_territoriosAtivos">0</p>
             <p class="khint">Territórios com atividade no período.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-inner">
+          <div class="panel-head">
+            <div class="hgroup">
+              <h2>Resumo operacional ampliado</h2>
+             <p>Indicadores executivos, materiais, rejeito e histórico operacional.</p>
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-side">
+              <div class="mini-stat-card green">
+                <div class="mini-stat-value" id="k_totalDiasProjeto">0</div>
+                <div class="mini-stat-label">total de dias do projeto</div>
+                <div class="mini-stat-sub" id="k_inicioProjeto">Início: —</div>
+              </div>
+
+              <div class="mini-stat-card green">
+                <div class="mini-stat-value" id="k_operacoesRealizadas">0</div>
+                <div class="mini-stat-label">operações realizadas</div>
+              </div>
+
+              <div class="side-duo">
+                <div class="mini-box">
+                  <h4>Famílias</h4>
+                  <div class="mini-box-line"><strong id="k_familiasCadastradas">0</strong><span>cadastradas</span></div>
+                  <div class="mini-box-line"><strong id="k_familiasParticipantes">0</strong><span>participantes</span></div>
+                  <div class="mini-box-line"><strong id="k_familiasColetas">0</strong><span>coletas realizadas</span></div>
+                </div>
+
+                <div class="mini-box">
+                  <h4>Condomínio</h4>
+                  <div class="mini-box-line"><strong id="k_condominiosCadastrados">0</strong><span>cadastrados</span></div>
+                  <div class="mini-box-line"><strong id="k_condominiosParticipantes">0</strong><span>participantes</span></div>
+                  <div class="mini-box-line"><strong id="k_condominiosColetas">0</strong><span>coletas realizadas</span></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="summary-main">
+              <div class="overall-grid">
+                <div class="overall-card recyclable">
+                  <div class="overall-icon">♻️</div>
+                  <div class="overall-copy">
+                    <div class="overall-topline">GERAL</div>
+                    <div class="overall-big">
+                      <strong id="k_totalReciclavelKg">0</strong> kg
+                      <span>RECICLÁVEL</span>
+                    </div>
+                    <div class="overall-subline">
+                      <strong id="k_totalReciclavelPct">0%</strong> do total
+                    </div>
+                    <div class="overall-foot">
+                      Receita total ≈ <strong id="k_receitaTotal">R$ 0,00</strong>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="overall-card reject">
+                  <div class="overall-icon">🚯</div>
+                  <div class="overall-copy">
+                    <div class="overall-big">
+                      <strong id="k_totalRejeitoKg">0</strong> kg
+                      <span>REJEITO</span>
+                    </div>
+                    <div class="overall-subline">
+                      <strong id="k_totalRejeitoPct">0%</strong> do total
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="materials-layout">
+                <div>
+                  <div class="block-title">Tipo de material reciclável</div>
+                  <div class="block-subtitle">(% sobre o total de recicláveis)</div>
+                  <div class="material-cards" id="materialCards"></div>
+                </div>
+
+                <div>
+                  <div class="block-title">Tipo de rejeito</div>
+                  <div class="block-subtitle">(% sobre o total do rejeito + não comercializado)</div>
+
+                  <div class="reject-cards">
+                    <div class="reject-card">
+                      <div class="reject-name">Não reciclável</div>
+                      <div class="reject-value"><span id="k_rejeitoNaoReciclavelPct">0%</span></div>
+                      <div class="reject-kg" id="k_rejeitoNaoReciclavelKg">0 kg</div>
+                    </div>
+
+                    <div class="reject-card">
+                      <div class="reject-name">Não comercializado</div>
+                      <div class="reject-value"><span id="k_naoComercializadoPct">0%</span></div>
+                      <div class="reject-kg" id="k_naoComercializadoKg">0 kg</div>
+                    </div>
+
+                    <div class="other-card">
+                      <div class="other-title">Outro</div>
+                      <div class="other-value" id="k_outroKg">0 kg</div>
+                      <div class="other-label">Óleo de cozinha</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="bottom-analytics">
+                <div class="map-panel-lite">
+                  <div class="block-title">Localização</div>
+                  <div class="map-mini" id="mapMini">
+                    <div class="map-mini-placeholder" id="mapMiniText">Centro de Triagem / Território ativo</div>
+                  </div>
+                </div>
+
+                <div class="timeline-panel-lite">
+                  <div class="block-title">Série de peso por operação</div>
+                  <div class="canvas-wrap slim">
+                    <canvas id="weightTimelineChart"></canvas>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -219,6 +342,35 @@
         <div class="panel-inner">
           <div class="panel-head">
             <div class="hgroup">
+              <h2>Histórico operacional</h2>
+              <p>Registros recentes com possibilidade de edição e cancelamento.</p>
+            </div>
+          </div>
+
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Participante</th>
+                  <th>Fluxo</th>
+                  <th>Entrega</th>
+                  <th>Resíduo seco</th>
+                  <th>Qualidade</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="panel-inner">
+          <div class="panel-head">
+            <div class="hgroup">
               <h2>Tabela de coletas</h2>
               <p>Últimos registros recebidos do formulário de coletas.</p>
             </div>
@@ -235,9 +387,13 @@
                   <th>Fluxo</th>
                   <th>Entrega</th>
                   <th>Criado por</th>
-                  <th>Peso base</th>
+                  <th>Resíduo seco</th>
+                  <th>Não comerc.</th>
+                  <th>Rejeito</th>
                   <th>Qualidade</th>
                   <th>Foto</th>
+                  <th>Status</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
               <tbody id="tableColetasBody"></tbody>
@@ -250,6 +406,86 @@
     </main>
   </div>
 
-  <script type="module" src="/dashboard-cooperativa.js"></script>
+  <div class="modal" id="photoModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="photoModal"></div>
+    <div class="modal-card modal-photo">
+      <button class="modal-close" data-close="photoModal" aria-label="Fechar">×</button>
+      <div class="modal-body">
+        <img id="photoModalImg" src="" alt="Foto do registro">
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="editModal" aria-hidden="true">
+    <div class="modal-backdrop" data-close="editModal"></div>
+    <div class="modal-card">
+      <button class="modal-close" data-close="editModal" aria-label="Fechar">×</button>
+
+      <div class="modal-head">
+        <h3>Editar registro</h3>
+        <p>Atualize os dados incorretos antes de salvar.</p>
+      </div>
+
+      <div class="modal-form">
+        <div class="field">
+          <div class="label">Participante</div>
+          <div class="read-box" id="editParticipantName">—</div>
+        </div>
+
+        <div class="field row2">
+          <div>
+            <div class="label">Fluxo</div>
+            <select id="editFluxo">
+              <option value="recebimento">Recebimento</option>
+              <option value="final_turno">Final do turno</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">Entrega</div>
+            <input id="editEntrega" type="text" placeholder="domiciliar, ponto, triagem..." />
+          </div>
+        </div>
+
+        <div class="field row2">
+          <div>
+            <div class="label">Resíduo seco (kg)</div>
+            <input id="editPesoBase" type="number" step="0.01" min="0" />
+          </div>
+          <div>
+            <div class="label">Qualidade</div>
+            <select id="editQualidade">
+              <option value="">Não informada</option>
+              <option value="1">1 • Baixa</option>
+              <option value="2">2 • Média</option>
+              <option value="3">3 • Alta</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field row2">
+          <div>
+            <div class="label">Rejeito (kg)</div>
+            <input id="editRejeito" type="number" step="0.01" min="0" />
+          </div>
+          <div>
+            <div class="label">Não comercializado (kg)</div>
+            <input id="editNaoComercializado" type="number" step="0.01" min="0" />
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="label">Observação</div>
+          <input id="editObs" type="text" placeholder="Motivo do ajuste / observação" />
+        </div>
+
+        <div class="field stack">
+          <button class="btn btn-primary" id="btnSaveEdit" type="button">Salvar edição</button>
+          <button class="btn btn-ghost" type="button" data-close="editModal">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./dashboard-cooperativa.js"></script>
 </body>
 </html>
