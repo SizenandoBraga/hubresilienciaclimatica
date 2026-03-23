@@ -147,6 +147,10 @@ function wireForms() {
 FOTOS (ATUALIZADO)
 ========================= */
 
+/* =========================
+FOTOS (ATUALIZADO E ESTÁVEL)
+========================= */
+
 const inputFotosFinalTurno = document.getElementById("fotoFinalTurno");
 const previewFinalTurno = document.getElementById("previewFinalTurno");
 
@@ -156,47 +160,50 @@ const MAX_FOTOS = 10;
 inputFotosFinalTurno?.addEventListener("change", (e) => {
 
   const files = Array.from(e.target.files);
+
+  // filtra apenas imagens
   const imagensValidas = files.filter(f => f.type.startsWith("image/"));
 
   if (fotosFinalTurno.length + imagensValidas.length > MAX_FOTOS) {
-    alert(`Máximo de ${MAX_FOTOS} fotos.`);
+    alert(`Máximo de ${MAX_FOTOS} fotos permitido.`);
     return;
   }
 
   fotosFinalTurno = [...fotosFinalTurno, ...imagensValidas];
+
   renderPreviewFinalTurno();
 
+  // limpa input pra permitir selecionar mesmas imagens novamente
   inputFotosFinalTurno.value = "";
 });
 
 function renderPreviewFinalTurno() {
 
+  if (!previewFinalTurno) return;
+
   previewFinalTurno.innerHTML = "";
 
   fotosFinalTurno.forEach((file, index) => {
 
-    const reader = new FileReader();
+    const url = URL.createObjectURL(file);
 
-    reader.onload = (e) => {
+    const div = document.createElement("div");
+    div.className = "preview-item";
 
-      const div = document.createElement("div");
-      div.className = "preview-item";
+    div.innerHTML = `
+      <img src="${url}">
+      <button class="preview-remove" type="button">×</button>
+    `;
 
-      div.innerHTML = `
-        <img src="${e.target.result}">
-        <button class="preview-remove" data-index="${index}">×</button>
-      `;
+    // remover imagem
+    div.querySelector(".preview-remove").addEventListener("click", () => {
+      fotosFinalTurno.splice(index, 1);
+      renderPreviewFinalTurno();
+    });
 
-      previewFinalTurno.appendChild(div);
-
-      div.querySelector(".preview-remove").onclick = () => {
-        fotosFinalTurno.splice(index, 1);
-        renderPreviewFinalTurno();
-      };
-    };
-
-    reader.readAsDataURL(file);
+    previewFinalTurno.appendChild(div);
   });
+  setText("contadorFotos", `${fotosFinalTurno.length} fotos`);
 }
 
 /* =========================
