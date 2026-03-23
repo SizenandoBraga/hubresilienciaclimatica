@@ -57,63 +57,108 @@ h1,h2,h3,strong{
 }
 
 /* HEADER */
-
-.site-header{
+/* ===== HEADER PADRÃO ===== */
+.topbar{
   position:sticky;
   top:0;
   z-index:50;
-  backdrop-filter:blur(16px);
-  background:rgba(246,245,242,.86);
-  border-bottom:1px solid var(--border);
+  backdrop-filter: blur(10px);
+  background: rgba(255,255,255,0.7);
+  border-bottom:1px solid rgba(0,0,0,.05);
 }
 
-.header-inner{
+.topbar-inner{
   display:flex;
   align-items:center;
   justify-content:space-between;
-  min-height:92px;
+  padding:10px 0;
 }
 
-.brand-logo{
-  width:180px;
-  object-fit:contain;
-}
-
-/* NAV */
-
-.main-nav{
+.brand{
   display:flex;
-  gap:8px;
+  align-items:center;
+  gap:12px;
+  text-decoration:none;
+  color:#111;
 }
 
-.nav-link{
-  padding:10px 14px;
-  border-radius:999px;
+.logo-img{
+  height:42px;
+}
+
+.brand-title{
   font-weight:700;
-  transition:.2s;
+  font-size:14px;
 }
 
-.nav-link:hover{
-  background:rgba(83,172,222,.10);
-  color:var(--blue);
+.brand-sub{
+  font-size:12px;
+  opacity:.6;
 }
 
-.nav-link.active{
-  background:rgba(129,185,42,.15);
-  color:var(--green);
+.topbar-nav{
+  display:flex;
+  gap:18px;
 }
 
-/* CTA */
+.topbar-nav a{
+  text-decoration:none;
+  color:#333;
+  font-size:14px;
+}
 
-.header-cta{
-  padding:12px 18px;
-  border-radius:999px;
+.topbar-nav a.active{
   font-weight:700;
+  color:#0D3B66;
+}
+
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+
+.btn.primary{
+  background:#0D3B66;
   color:#fff;
-  background:linear-gradient(135deg, var(--orange), #f49457);
-  box-shadow:var(--shadow-sm);
+  padding:8px 14px;
+  border-radius:8px;
+  text-decoration:none;
 }
 
+.menu-toggle{
+  display:none;
+  font-size:20px;
+  background:none;
+  border:none;
+}
+
+/* MOBILE */
+@media(max-width:900px){
+  .topbar-nav{
+    display:none;
+  }
+
+  .menu-toggle{
+    display:block;
+  }
+
+  .mobile-menu{
+    display:none;
+    flex-direction:column;
+    padding:10px;
+    background:#fff;
+  }
+
+  .mobile-menu a{
+    padding:10px 0;
+    border-bottom:1px solid #eee;
+  }
+
+  .mobile-menu.show{
+    display:flex;
+  }
+}
 /* HERO */
 
 .hero{

@@ -21,40 +21,53 @@
   <div class="cursor-glow" id="cursorGlow"></div>
 
   <!-- HEADER -->
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="index.html" aria-label="Ir para a página inicial">
-        <img
-          src="img/NSRU - Logo-Preto.png"
-          alt="Núcleo de Soluções para Resíduos Urbanos"
-       
+ <header class="topbar">
+  <div class="wrap topbar-inner">
 
-      <button
-        class="menu-btn"
-        id="menuBtn"
-        type="button"
-        aria-label="Abrir menu"
-        aria-expanded="false"
-        aria-controls="mainNav"
-      >
-        
-      </button>
-
-      <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
-        <a href="index.html" class="nav-link">Início</a>
-        <a href="quem-somos.html" class="nav-link active">Quem Somos</a>
-        <a href="conteudos.html" class="nav-link">Conteúdos</a>
-        <a href="index.html#dados" class="nav-link">Dados e Relatórios</a>
-        <a href="index.html#faq" class="nav-link">FAQ</a>
-      </nav>
-
-      <div class="header-actions">
-        <a href="login.html" class="header-cta" id="btnEntrar">
-          Cadastrar / Login
-        </a>
+    <!-- LOGO / MARCA -->
+    <a href="index.html" class="brand" aria-label="Página inicial do NSRU">
+      <div class="logo">
+        <img src="img/NSRU - Logo-Preto.png" alt="Logo NSRU" class="logo-img">
       </div>
+
+      <div class="brand-text">
+        <div class="brand-kicker">Plataforma Digital</div>
+        <div class="brand-title">Núcleo de Soluções para Resíduos Urbanos</div>
+        <div class="brand-sub">Quem Somos</div>
+      </div>
+    </a>
+
+    <!-- MENU DESKTOP -->
+    <nav class="topbar-nav">
+      <a href="index.html">Início</a>
+      <a href="quem-somos.html" class="active">Quem Somos</a>
+      <a href="conteudos.html">Conteúdos</a>
+      <a href="index.html#dados">Dados</a>
+      <a href="index.html#faq">FAQ</a>
+    </nav>
+
+    <!-- AÇÕES -->
+    <div class="topbar-actions">
+      <a href="login.html" class="btn primary">Cadastrar / Login</a>
+
+      <!-- MENU MOBILE -->
+      <button id="menuToggle" class="menu-toggle" aria-label="Abrir menu">
+        ☰
+      </button>
     </div>
-  </header>
+
+  </div>
+
+  <!-- MENU MOBILE -->
+  <div id="mobileMenu" class="mobile-menu">
+    <a href="index.html">Início</a>
+    <a href="quem-somos.html">Quem Somos</a>
+    <a href="conteudos.html">Conteúdos</a>
+    <a href="index.html#dados">Dados</a>
+    <a href="index.html#faq">FAQ</a>
+    <a href="login.html">Cadastrar / Login</a>
+  </div>
+</header>
 
   <main class="container main-content">
     <!-- HERO -->
@@ -105,13 +118,6 @@
       <div class="section-shell-content">
         <span class="section-badge alt">Governança</span>
 
-        <h2 class="section-title">Trajetórias complementares em rede</h2>
-
-        <p class="section-sub">
-          Educação ambiental, mobilização social, articulação institucional
-          e inteligência técnica atuando juntas para fortalecer os territórios.
-        </p>
-
         <div class="org-grid">
           <!-- MÃOS VERDES -->
           <article class="org-card">
@@ -140,23 +146,16 @@
       </div>
     </section>
 
-        <!-- ORGANIZAÇÕES -->
+        <!-- Cooperativas Parceiras -->
     <section class="section-shell" data-reveal>
       <div class="section-shell-content">
         <span class="section-badge alt">Cooperativas Parceiras</span>
-
-        <h2 class="section-title">Cooperativas Parceiras do Território</h2>
-
-        <p class="section-sub">
-     As cooperativas parceiras atuam na coleta seletiva e na gestão dos resíduos, 
-     promovendo a reciclagem, geração de renda e redução dos impactos ambientais no território.
-        </p>
 
         <div class="org-grid">
           <!-- Vila Pinto -->
           <article class="org-card">
             <div class="org-logo">
-              <img src="img/LogoVP.png" alt="Logo Mãos Verdes">
+              <img src="img/LogoVP.png" alt="Logo UT Vila Pinto">
             </div>
 
             <h3>UT Vila Pinto</h3>
@@ -167,10 +166,20 @@
           <!-- COOADESC -->
           <article class="org-card">
             <div class="org-logo">
-              <img src="img/logo_cooadesc.jpg" alt="Logo Cluster Ecoar">
+              <img src="img/logo_cooadesc.jpg" alt="Logo Cooadesc">
             </div>
 
             <h3>Cooperativa COOADESC</h3>
+
+           
+          </article>
+
+            <article class="org-card">
+            <div class="org-logo">
+              <img src="img/" alt="Logo Cluster Ecoar">
+            </div>
+
+            <h3>Cooperativa 3/h3>
 
            
           </article>
