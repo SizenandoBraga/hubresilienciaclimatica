@@ -181,25 +181,35 @@
 
   <!-- HEADER GLOBAL LOAD -->
   <script>
-    fetch("header.html")
-      .then(res => {
-        if (!res.ok) throw new Error("Erro ao carregar header");
-        return res.text();
-      })
-      .then(data => {
-        document.getElementById("header").innerHTML = data;
+document.addEventListener("DOMContentLoaded", () => {
+  fetch("/header.html") // tenta raiz primeiro
+    .then(res => {
+      if (!res.ok) throw new Error("Erro ao carregar header");
+      return res.text();
+    })
+    .then(data => {
+      document.getElementById("header").innerHTML = data;
 
-        if (!document.querySelector('script[src="header.js"]')) {
+      const script = document.createElement("script");
+      script.src = "/header.js";
+      script.defer = true;
+      document.body.appendChild(script);
+    })
+    .catch(() => {
+      // fallback automático
+      fetch("header.html")
+        .then(res => res.text())
+        .then(data => {
+          document.getElementById("header").innerHTML = data;
+
           const script = document.createElement("script");
           script.src = "header.js";
           script.defer = true;
           document.body.appendChild(script);
-        }
-      })
-      .catch(() => {
-        document.getElementById("header").innerHTML = "<p style='padding:20px'>Erro ao carregar menu.</p>";
-      });
-  </script>
+        });
+    });
+});
+</script>
 
 </body>
 </html>
