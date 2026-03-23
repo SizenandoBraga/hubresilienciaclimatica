@@ -4,38 +4,16 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/f
 import {
   doc,
   getDoc,
-  updateDoc,
   addDoc,
   collection,
-  serverTimestamp,
-  query,
-  where,
-  getDocs,
-  limit
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* =====================================================
+/* =========================
 UTILS
-===================================================== */
+========================= */
 
 const $ = (id) => document.getElementById(id);
-
-const STATE = {
-  user: null,
-  userDoc: null,
-  territoryId: null,
-  territoryLabel: null,
-  territoryColor: null,
-  role: null,
-  publicCode: null,
-  selectedParticipant: null,
-  selectedDelivery: null,
-  selectedFlow: null
-};
-
-function show(el, yes) {
-  el?.classList.toggle("hidden", !yes);
-}
 
 function setText(id, value) {
   const el = $(id);
@@ -44,13 +22,8 @@ function setText(id, value) {
 
 function setMsg(el, kind, text) {
   if (!el) return;
-  el.classList.remove("hidden", "ok", "warn", "bad");
-  el.classList.add(kind);
+  el.className = `msg ${kind}`;
   el.textContent = text;
-}
-
-function hideMsg(el) {
-  el?.classList.add("hidden");
 }
 
 function toISODate(d) {
@@ -62,56 +35,49 @@ function parseNum(v) {
   return Number.isFinite(n) ? n : null;
 }
 
-/* =====================================================
-AUTH + BOOTSTRAP (CORRIGIDO)
-===================================================== */
+/* =========================
+AUTH
+========================= */
 
 async function loadUserDoc(uid) {
   const snap = await getDoc(doc(db, "users", uid));
   return snap.exists() ? snap.data() : null;
 }
 
-async function bootstrapAfterAuth(user) {
-  STATE.user = user;
+async function bootstrap(user) {
   setText("dbStatus", "conectado");
 
-  const ud = await loadUserDoc(user.uid);
-  STATE.userDoc = ud;
+  const userDoc = await loadUserDoc(user.uid);
 
-  if (!ud) {
+  if (!userDoc) {
     alert("Usuário não encontrado.");
-    window.location.href = "./index.html";
-    return;
+    location.href = "index.html";
   }
-
-  STATE.territoryId = ud.territoryId || null;
-  STATE.territoryLabel = ud.territoryLabel || "—";
 }
 
-/* =====================================================
+/* =========================
 CHOICES
-===================================================== */
+========================= */
 
-function wireChoiceCards() {
-  document.querySelectorAll("[data-delivery]").forEach((btn) => {
+function wireChoices() {
+
+  document.querySelectorAll("[data-delivery]").forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll("[data-delivery]").forEach(el => el.classList.remove("active"));
       btn.classList.add("active");
-      STATE.selectedDelivery = btn.dataset.delivery;
       $("deliveryType").value = btn.dataset.delivery;
     };
   });
 
-  document.querySelectorAll("[data-flow]").forEach((btn) => {
+  document.querySelectorAll("[data-flow]").forEach(btn => {
     btn.onclick = () => {
       document.querySelectorAll("[data-flow]").forEach(el => el.classList.remove("active"));
       btn.classList.add("active");
 
-      STATE.selectedFlow = btn.dataset.flow;
       $("flowType").value = btn.dataset.flow;
 
-      show($("panelRecebimento"), btn.dataset.flow === "recebimento");
-      show($("panelFinalTurno"), btn.dataset.flow === "final_turno");
+      $("panelRecebimento").classList.toggle("hidden", btn.dataset.flow !== "recebimento");
+      $("panelFinalTurno").classList.toggle("hidden", btn.dataset.flow !== "final_turno");
     };
   });
 
@@ -124,157 +90,138 @@ function wireChoiceCards() {
   });
 }
 
-/* =====================================================
-SALVAR DADOS
-===================================================== */
+/* =========================
+SALVAR
+========================= */
 
-async function saveRecebimento() {
-  const payload = {
+async function salvarRecebimento() {
+  await addDoc(collection(db, "coletas"), {
     createdAt: serverTimestamp(),
     opDate: $("opDate").value,
-    deliveryType: $("deliveryType").value,
     flowType: "recebimento",
 
     recebimento: {
       pesoResiduoSecoKg: parseNum($("pesoResiduoSecoKg").value),
-      pesoRejeitoKg: parseNum($("pesoRejeitoKg").value),
-      pesoNaoComercializadoKg: parseNum($("pesoNaoComercializadoKg").value),
       qualidadeNota: parseNum($("qualidadeNota").value)
     }
-  };
-
-  await addDoc(collection(db, "coletas"), payload);
+  });
 }
 
-async function saveFinalTurno() {
-  const payload = {
+async function salvarFinalTurno() {
+  await addDoc(collection(db, "coletas"), {
     createdAt: serverTimestamp(),
     opDate: $("opDate").value,
-    deliveryType: $("deliveryType").value,
     flowType: "final_turno",
-
-    finalTurno: {
-      pesoRejeitoGeralKg: parseNum($("pesoRejeitoGeralKg").value),
-      plasticoKg: parseNum($("plasticoKg").value),
-      papelMistoKg: parseNum($("papelMistoKg").value)
-    }
-  };
-
-  await addDoc(collection(db, "coletas"), payload);
+    fotosQtd: fotosFinalTurno.length
+  });
 }
 
-/* =====================================================
+/* =========================
 FORMS
-===================================================== */
+========================= */
 
 function wireForms() {
-
-  $("formOperacao")?.addEventListener("submit", (e) => {
-    e.preventDefault();
-    setMsg($("msgOperacao"), "ok", "Etapa inicial OK");
-  });
 
   $("formRecebimento")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
-      await saveRecebimento();
+      await salvarRecebimento();
       setMsg($("msgRecebimento"), "ok", "Salvo ✓");
-    } catch (e) {
-      setMsg($("msgRecebimento"), "bad", "Erro ao salvar");
+    } catch {
+      setMsg($("msgRecebimento"), "bad", "Erro");
     }
   });
 
   $("formFinalTurno")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     try {
-      await saveFinalTurno();
+      await salvarFinalTurno();
       setMsg($("msgFinalTurno"), "ok", "Salvo ✓");
-    } catch (e) {
-      setMsg($("msgFinalTurno"), "bad", "Erro ao salvar");
+    } catch {
+      setMsg($("msgFinalTurno"), "bad", "Erro");
     }
   });
 }
 
-/* =====================================================
-FOTOS FINAL TURNO (MANTIDO)
-===================================================== */
+/* =========================
+FOTOS (ATUALIZADO)
+========================= */
 
-const inputFotosFinalTurno = $("fotoFinalTurno");
-const previewFinalTurno = $("previewFinalTurno");
+const inputFotosFinalTurno = document.getElementById("fotoFinalTurno");
+const previewFinalTurno = document.getElementById("previewFinalTurno");
 
 let fotosFinalTurno = [];
 const MAX_FOTOS = 10;
 
 inputFotosFinalTurno?.addEventListener("change", (e) => {
-  const files = Array.from(e.target.files);
 
-  if (fotosFinalTurno.length + files.length > MAX_FOTOS) {
+  const files = Array.from(e.target.files);
+  const imagensValidas = files.filter(f => f.type.startsWith("image/"));
+
+  if (fotosFinalTurno.length + imagensValidas.length > MAX_FOTOS) {
     alert(`Máximo de ${MAX_FOTOS} fotos.`);
     return;
   }
 
-  files.forEach(file => {
-    if (file.type.startsWith("image/")) {
-      fotosFinalTurno.push(file);
-    }
-  });
-
+  fotosFinalTurno = [...fotosFinalTurno, ...imagensValidas];
   renderPreviewFinalTurno();
+
+  inputFotosFinalTurno.value = "";
 });
 
 function renderPreviewFinalTurno() {
-  if (!previewFinalTurno) return;
 
   previewFinalTurno.innerHTML = "";
 
   fotosFinalTurno.forEach((file, index) => {
-    const url = URL.createObjectURL(file);
 
-    const div = document.createElement("div");
-    div.className = "preview-item";
+    const reader = new FileReader();
 
-    div.innerHTML = `
-      <img src="${url}">
-      <button class="preview-remove" data-index="${index}">×</button>
-    `;
+    reader.onload = (e) => {
 
-    previewFinalTurno.appendChild(div);
-  });
+      const div = document.createElement("div");
+      div.className = "preview-item";
 
-  previewFinalTurno.querySelectorAll(".preview-remove").forEach(btn => {
-    btn.onclick = (e) => {
-      fotosFinalTurno.splice(Number(e.target.dataset.index), 1);
-      renderPreviewFinalTurno();
+      div.innerHTML = `
+        <img src="${e.target.result}">
+        <button class="preview-remove" data-index="${index}">×</button>
+      `;
+
+      previewFinalTurno.appendChild(div);
+
+      div.querySelector(".preview-remove").onclick = () => {
+        fotosFinalTurno.splice(index, 1);
+        renderPreviewFinalTurno();
+      };
     };
+
+    reader.readAsDataURL(file);
   });
 }
 
-/* =====================================================
-INIT (CORRIGIDO)
-===================================================== */
+/* =========================
+INIT
+========================= */
 
 function init() {
-  wireChoiceCards();
+
+  wireChoices();
   wireForms();
 
-  if ($("opDate")) $("opDate").value = toISODate(new Date());
+  if ($("opDate")) {
+    $("opDate").value = toISODate(new Date());
+  }
 
   onAuthStateChanged(auth, async (user) => {
-    try {
-      if (!user) {
-        setText("dbStatus", "deslogado");
-        window.location.href = "./index.html";
-        return;
-      }
 
-      await bootstrapAfterAuth(user);
-
-      console.log("🔥 Firebase conectado com sucesso");
-
-    } catch (e) {
-      console.error(e);
-      setText("dbStatus", "erro");
+    if (!user) {
+      setText("dbStatus", "deslogado");
+      location.href = "index.html";
+      return;
     }
+
+    await bootstrap(user);
+    console.log("🔥 Firebase conectado");
   });
 }
 
