@@ -10,6 +10,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
+STATE GLOBAL
+========================= */
+
+const STATE = {
+  user: null,
+  userDoc: null,
+  territoryId: null
+};
+
+/* =========================
 UTILS
 ========================= */
 
@@ -36,7 +46,7 @@ function parseNum(v) {
 }
 
 /* =========================
-AUTH
+AUTH + USER
 ========================= */
 
 async function loadUserDoc(uid) {
@@ -45,6 +55,7 @@ async function loadUserDoc(uid) {
 }
 
 async function bootstrap(user) {
+
   setText("dbStatus", "conectado");
 
   const userDoc = await loadUserDoc(user.uid);
@@ -52,6 +63,17 @@ async function bootstrap(user) {
   if (!userDoc) {
     alert("Usuário não encontrado.");
     location.href = "index.html";
+    return;
+  }
+
+  STATE.user = user;
+  STATE.userDoc = userDoc;
+  STATE.territoryId = userDoc.territoryId;
+
+  console.log("👤 UserDoc:", userDoc);
+
+  if (!STATE.territoryId) {
+    alert("Usuário sem território definido.");
   }
 }
 
@@ -91,20 +113,22 @@ function wireChoices() {
 }
 
 /* =========================
-SALVAR FIREBASE
+SALVAR (AGORA COM TERRITORY)
 ========================= */
 
 async function salvarRecebimento() {
 
   await addDoc(collection(db, "coletas"), {
     createdAt: serverTimestamp(),
+
+    territoryId: STATE.territoryId, // 🔥 ESSENCIAL
+
     opDate: $("opDate").value,
     flowType: "recebimento",
 
     recebimento: {
       pesoResiduoSecoKg: parseNum($("pesoResiduoSecoKg").value),
-      qualidadeNota: parseNum($("qualidadeNota").value),
-      fotosQtd: $("fotoResiduo")?.files?.length || 0
+      qualidadeNota: parseNum($("qualidadeNota").value)
     }
   });
 }
@@ -113,12 +137,13 @@ async function salvarFinalTurno() {
 
   await addDoc(collection(db, "coletas"), {
     createdAt: serverTimestamp(),
+
+    territoryId: STATE.territoryId, // 🔥 ESSENCIAL
+
     opDate: $("opDate").value,
     flowType: "final_turno",
 
-    finalTurno: {
-      fotosQtd: fotosFinalTurno.length
-    }
+    fotosQtd: fotosFinalTurno.length
   });
 }
 
@@ -134,10 +159,9 @@ function wireForms() {
     try {
       await salvarRecebimento();
       setMsg($("msgRecebimento"), "ok", "Salvo ✓");
-
     } catch (e) {
       console.error(e);
-      setMsg($("msgRecebimento"), "bad", "Erro ao salvar");
+      setMsg($("msgRecebimento"), "bad", e.message);
     }
   });
 
@@ -147,20 +171,19 @@ function wireForms() {
     try {
       await salvarFinalTurno();
       setMsg($("msgFinalTurno"), "ok", "Salvo ✓");
-
     } catch (e) {
       console.error(e);
-      setMsg($("msgFinalTurno"), "bad", "Erro ao salvar");
+      setMsg($("msgFinalTurno"), "bad", e.message);
     }
   });
 }
 
 /* =========================
-FOTOS MINIATURAS (PERFEITO)
+FOTOS COM MINIATURA
 ========================= */
 
-const inputFotosFinalTurno = document.getElementById("fotoFinalTurno");
-const previewFinalTurno = document.getElementById("previewFinalTurno");
+const inputFotosFinalTurno = $("fotoFinalTurno");
+const previewFinalTurno = $("previewFinalTurno");
 
 let fotosFinalTurno = [];
 const MAX_FOTOS = 10;
@@ -168,15 +191,14 @@ const MAX_FOTOS = 10;
 inputFotosFinalTurno?.addEventListener("change", (e) => {
 
   const files = Array.from(e.target.files);
+  const imagens = files.filter(f => f.type.startsWith("image/"));
 
-  const imagensValidas = files.filter(f => f.type.startsWith("image/"));
-
-  if (fotosFinalTurno.length + imagensValidas.length > MAX_FOTOS) {
-    alert(`Máximo de ${MAX_FOTOS} fotos permitido.`);
+  if (fotosFinalTurno.length + imagens.length > MAX_FOTOS) {
+    alert(`Máximo de ${MAX_FOTOS} fotos`);
     return;
   }
 
-  fotosFinalTurno = [...fotosFinalTurno, ...imagensValidas];
+  fotosFinalTurno = [...fotosFinalTurno, ...imagens];
 
   renderPreviewFinalTurno();
 
@@ -185,28 +207,31 @@ inputFotosFinalTurno?.addEventListener("change", (e) => {
 
 function renderPreviewFinalTurno() {
 
-  if (!previewFinalTurno) return;
-
   previewFinalTurno.innerHTML = "";
 
   fotosFinalTurno.forEach((file, index) => {
 
-    const url = URL.createObjectURL(file);
+    const reader = new FileReader();
 
-    const div = document.createElement("div");
-    div.className = "preview-item";
+    reader.onload = (e) => {
 
-    div.innerHTML = `
-      <img src="${url}" title="${file.name}">
-      <button class="preview-remove" type="button">×</button>
-    `;
+      const div = document.createElement("div");
+      div.className = "preview-item";
 
-    div.querySelector(".preview-remove").addEventListener("click", () => {
-      fotosFinalTurno.splice(index, 1);
-      renderPreviewFinalTurno();
-    });
+      div.innerHTML = `
+        <img src="${e.target.result}">
+        <button class="preview-remove" data-index="${index}">×</button>
+      `;
 
-    previewFinalTurno.appendChild(div);
+      previewFinalTurno.appendChild(div);
+
+      div.querySelector(".preview-remove").onclick = () => {
+        fotosFinalTurno.splice(index, 1);
+        renderPreviewFinalTurno();
+      };
+    };
+
+    reader.readAsDataURL(file);
   });
 }
 
@@ -232,6 +257,7 @@ function init() {
     }
 
     await bootstrap(user);
+
     console.log("🔥 Firebase conectado");
   });
 }
