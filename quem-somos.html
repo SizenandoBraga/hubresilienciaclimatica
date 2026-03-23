@@ -8,29 +8,40 @@
 
   <title>Quem Somos • Núcleo de Soluções para Resíduos Urbanos</title>
 
+  <!-- SEO básico -->
+  <meta name="description" content="Conheça o Núcleo de Soluções para Resíduos Urbanos e como ele atua na articulação territorial, reciclagem e resiliência climática.">
+
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
 
+  <!-- CSS -->
   <link rel="stylesheet" href="quem-somos.css">
 </head>
 
 <body>
+
+  <!-- Acessibilidade -->
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+  <!-- Background -->
   <div class="bg-grid"></div>
   <div class="noise"></div>
-  <div class="cursor-glow" id="cursorGlow"></div>
+  <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
-  <!-- HEADER -->
-<div id="header"></div>
+  <!-- HEADER GLOBAL -->
+  <div id="header"></div>
 
-  <main class="container main-content">
+  <!-- MAIN -->
+  <main id="conteudo" class="container main-content">
+
     <!-- HERO -->
     <section class="hero hero-about">
       <div class="hero-grid">
+
         <div class="hero-copy" data-reveal>
-          <span class="section-badge">
-            Quem Somos
-          </span>
+          <span class="section-badge">Quem Somos</span>
 
           <h1 class="hero-title">
             O Núcleo de Soluções para Resíduos Urbanos
@@ -45,13 +56,12 @@
           <p class="hero-description hero-description-justify">
             As enchentes no Rio Grande do Sul tornaram isso ainda mais evidente. Faltavam informação acessível,
             coordenação territorial, espaços de referência e apoio técnico contínuo. Ao mesmo tempo, cooperativas,
-            catadores e lideranças comunitárias estavam na linha de frente, muitas vezes sem estrutura adequada
-            e sem o devido reconhecimento pelo papel estratégico que desempenham.
+            catadores e lideranças comunitárias estavam na linha de frente.
           </p>
 
           <p class="hero-description hero-description-justify">
-            Foi nesse contexto que o NSRU começou a ser construído, a partir da articulação entre organizações
-            com trajetórias complementares na gestão de resíduos, na mobilização social e na economia circular.
+            Foi nesse contexto que o NSRU começou a ser construído, conectando organizações com atuação em gestão de resíduos,
+            mobilização social e economia circular.
           </p>
         </div>
 
@@ -64,82 +74,62 @@
             >
           </div>
         </div>
+
       </div>
     </section>
 
-    <!-- ORGANIZAÇÕES -->
+    <!-- GOVERNANÇA -->
     <section class="section-shell" data-reveal>
       <div class="section-shell-content">
         <span class="section-badge alt">Governança</span>
 
         <div class="org-grid">
-          <!-- MÃOS VERDES -->
           <article class="org-card">
             <div class="org-logo">
               <img src="img/maos_verdes_logo.jpg" alt="Logo Mãos Verdes">
             </div>
-
             <h3>Mãos Verdes</h3>
-
-          
           </article>
 
-          <!-- CLUSTER ECOAR -->
           <article class="org-card">
             <div class="org-logo">
               <img src="img/Cluster_ecoar.png" alt="Logo Cluster Ecoar">
             </div>
-
             <h3>Cluster Ecoar</h3>
-
-           
           </article>
         </div>
-
-      
       </div>
     </section>
 
-        <!-- Cooperativas Parceiras -->
+    <!-- COOPERATIVAS -->
     <section class="section-shell" data-reveal>
       <div class="section-shell-content">
         <span class="section-badge alt">Cooperativas Parceiras</span>
 
         <div class="org-grid">
-          <!-- Vila Pinto -->
+
           <article class="org-card">
             <div class="org-logo">
               <img src="img/LogoVP.png" alt="Logo UT Vila Pinto">
             </div>
-
             <h3>UT Vila Pinto</h3>
-
-          
           </article>
 
-          <!-- COOADESC -->
           <article class="org-card">
             <div class="org-logo">
-              <img src="img/logo_cooadesc.jpg" alt="Logo Cooadesc">
+              <img src="img/logo_cooadesc.jpg" alt="Logo COOADESC">
             </div>
-
             <h3>Cooperativa COOADESC</h3>
-
-           
           </article>
 
-            <article class="org-card">
+          <article class="org-card">
             <div class="org-logo">
-              <img src="img/" alt="Logo Cluster Ecoar">
+              <img src="img/placeholder.png" alt="Logo Cooperativa">
             </div>
-
-            <h3>Cooperativa 3</h3>
-
-           
+            <h3>Cooperativa Parceira</h3>
           </article>
-        </div>
 
-      
+        </div>
       </div>
     </section>
 
@@ -157,14 +147,14 @@
 
         <div class="closing-box">
           <p>
-            Ao reunir conteúdos, referências, organização comunitária, indicadores e conexões entre atores,
-            o Núcleo de Soluções para Resíduos Urbanos se consolida como uma ferramenta de fortalecimento
-            territorial para a reciclagem, a justiça climática e a construção de respostas coletivas mais consistentes.
+            O Núcleo se consolida como uma ferramenta de fortalecimento territorial,
+            promovendo reciclagem, justiça climática e respostas coletivas mais consistentes.
           </p>
         </div>
       </div>
     </section>
 
+    <!-- FOOTER -->
     <footer class="site-footer">
       <div class="footer-inner">
         <div>
@@ -183,20 +173,33 @@
         </div>
       </div>
     </footer>
+
   </main>
 
+  <!-- JS -->
   <script src="quem-somos.js"></script>
-  <script>
-  fetch("header.html")
-    .then(res => res.text())
-    .then(data => {
-      document.getElementById("header").innerHTML = data;
 
-      // Carrega JS depois do HTML
-      const script = document.createElement("script");
-      script.src = "header.js";
-      document.body.appendChild(script);
-    });
-</script>
+  <!-- HEADER GLOBAL LOAD -->
+  <script>
+    fetch("header.html")
+      .then(res => {
+        if (!res.ok) throw new Error("Erro ao carregar header");
+        return res.text();
+      })
+      .then(data => {
+        document.getElementById("header").innerHTML = data;
+
+        if (!document.querySelector('script[src="header.js"]')) {
+          const script = document.createElement("script");
+          script.src = "header.js";
+          script.defer = true;
+          document.body.appendChild(script);
+        }
+      })
+      .catch(() => {
+        document.getElementById("header").innerHTML = "<p style='padding:20px'>Erro ao carregar menu.</p>";
+      });
+  </script>
+
 </body>
 </html>
