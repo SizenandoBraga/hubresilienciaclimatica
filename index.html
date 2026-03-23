@@ -67,42 +67,7 @@
   <div class="noise"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a class="brand" href="index.html" aria-label="Ir para a página inicial">
-      <img
-        src="img/NSRU - Logo-Preto.png"
-        alt="Núcleo de Soluções para Resíduos Urbanos"
-        class="brand-logo"
-      >
-    </a>
-
-    <button
-      class="menu-btn"
-      id="menuBtn"
-      type="button"
-      aria-label="Abrir menu"
-      aria-expanded="false"
-      aria-controls="mainNav"
-    >
-      ☰
-    </button>
-
-    <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
-      <a href="index.html" class="nav-link active">Início</a>
-      <a href="quem-somos.html" class="nav-link">Quem Somos</a>
-      <a href="conteudos.html" class="nav-link">Conteúdos</a>
-      <a href="#dados" class="nav-link">Dados e Relatórios</a>
-      <a href="#faq" class="nav-link">FAQ</a>
-    </nav>
-
-    <div class="header-actions">
-      <a href="login.html" class="header-cta">
-        Cadastrar / Login
-      </a>
-    </div>
-  </div>
-</header>
+<div id="header"></div>
 
   <main id="conteudo" class="container main-content">
   
@@ -440,6 +405,18 @@ Formação de lideranças locais e gestão colaborativa dos territórios.
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
+  <script>
+  fetch("/components/header.html")
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById("header").innerHTML = data;
+
+      // Carrega JS depois do HTML
+      const script = document.createElement("script");
+      script.src = "/components/header.js";
+      document.body.appendChild(script);
+    });
+</script>
   <script src="/index.js"></script>
 </body>
 </html>
