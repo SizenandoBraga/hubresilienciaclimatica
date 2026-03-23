@@ -405,15 +405,16 @@ Formação de lideranças locais e gestão colaborativa dos territórios.
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
+  
   <script>
-  fetch("/components/header.html")
+  fetch("header.html")
     .then(res => res.text())
     .then(data => {
       document.getElementById("header").innerHTML = data;
 
       // Carrega JS depois do HTML
       const script = document.createElement("script");
-      script.src = "/components/header.js";
+      script.src = "header.js";
       document.body.appendChild(script);
     });
 </script>
