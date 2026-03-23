@@ -743,3 +743,56 @@ select:-webkit-autofill{
     border-radius:22px;
   }
 }
+/* =========================
+BLOCOS DINÂMICOS DE FOTOS
+(NOVO - FINAL DO TURNO)
+========================= */
+
+.fotos-wrap{
+  display:flex;
+  flex-direction:column;
+  gap:12px;
+  margin-top:10px;
+}
+
+.foto-row{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  padding:12px;
+  border:1px dashed var(--border);
+  border-radius:16px;
+  background:var(--surface-soft);
+  box-shadow:var(--shadow-xs);
+  transition:all .18s ease;
+}
+
+.foto-row:hover{
+  border-color:rgba(83,172,222,.30);
+  box-shadow:var(--shadow-sm);
+}
+
+/* INPUT DE FOTO */
+.foto-row input[type="file"]{
+  background:#fff;
+  border-radius:12px;
+  padding:10px;
+  border:1px solid rgba(60,58,57,.12);
+}
+
+/* BOTÃO REMOVER */
+.btnRemoveFoto{
+  align-self:flex-end;
+}
+
+/* PREVIEW USANDO PADRÃO QUE VOCÊ JÁ TEM */
+.preview{
+  margin-top:6px;
+}
+
+/* RESPONSIVO */
+@media (max-width:760px){
+  .foto-row{
+    padding:10px;
+  }
+}

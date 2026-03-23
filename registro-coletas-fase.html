@@ -279,10 +279,25 @@
             </div>
           </div>
 
-          <div class="field span-2">
-            <label for="fotoFinalTurno">Incluir fotos dos resíduos e rejeitos</label>
-            <input type="file" id="fotoFinalTurno" multiple>
-          </div>
+        
+
+<div class="field span-2">
+  <div class="extra-head">
+    <label>Fotos dos resíduos e rejeitos</label>
+    <button type="button" class="btn ghost small" id="btnAddFoto">+ Adicionar fotos</button>
+  </div>
+
+  <div id="fotosWrap" class="fotos-wrap">
+    <!-- BLOCO PADRÃO -->
+    <div class="foto-row">
+      <input type="file" class="foto-input" multiple accept="image/*">
+      <button type="button" class="btn ghost small btnRemoveFoto">Remover</button>
+
+      <!-- preview -->
+      <div class="preview"></div>
+    </div>
+  </div>
+</div>
 
           <div class="form-actions span-2">
             <button type="button" class="btn ghost" id="btnVoltarFinalTurno">Voltar</button>
