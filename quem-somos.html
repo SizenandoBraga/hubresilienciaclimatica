@@ -21,53 +21,7 @@
   <div class="cursor-glow" id="cursorGlow"></div>
 
   <!-- HEADER -->
- <header class="topbar">
-  <div class="wrap topbar-inner">
-
-    <!-- LOGO / MARCA -->
-    <a href="index.html" class="brand" aria-label="Página inicial do NSRU">
-      <div class="logo">
-        <img src="img/NSRU - Logo-Preto.png" alt="Logo NSRU" class="logo-img">
-      </div>
-
-      <div class="brand-text">
-        <div class="brand-kicker">Plataforma Digital</div>
-        <div class="brand-title">Núcleo de Soluções para Resíduos Urbanos</div>
-        <div class="brand-sub">Quem Somos</div>
-      </div>
-    </a>
-
-    <!-- MENU DESKTOP -->
-    <nav class="topbar-nav">
-      <a href="index.html">Início</a>
-      <a href="quem-somos.html" class="active">Quem Somos</a>
-      <a href="conteudos.html">Conteúdos</a>
-      <a href="index.html#dados">Dados</a>
-      <a href="index.html#faq">FAQ</a>
-    </nav>
-
-    <!-- AÇÕES -->
-    <div class="topbar-actions">
-      <a href="login.html" class="btn primary">Cadastrar / Login</a>
-
-      <!-- MENU MOBILE -->
-      <button id="menuToggle" class="menu-toggle" aria-label="Abrir menu">
-        ☰
-      </button>
-    </div>
-
-  </div>
-
-  <!-- MENU MOBILE -->
-  <div id="mobileMenu" class="mobile-menu">
-    <a href="index.html">Início</a>
-    <a href="quem-somos.html">Quem Somos</a>
-    <a href="conteudos.html">Conteúdos</a>
-    <a href="index.html#dados">Dados</a>
-    <a href="index.html#faq">FAQ</a>
-    <a href="login.html">Cadastrar / Login</a>
-  </div>
-</header>
+<div id="header"></div>
 
   <main class="container main-content">
     <!-- HERO -->
@@ -232,5 +186,17 @@
   </main>
 
   <script src="quem-somos.js"></script>
+  <script>
+  fetch("header.html")
+    .then(res => res.text())
+    .then(data => {
+      document.getElementById("header").innerHTML = data;
+
+      // Carrega JS depois do HTML
+      const script = document.createElement("script");
+      script.src = "header.js";
+      document.body.appendChild(script);
+    });
+</script>
 </body>
 </html>
