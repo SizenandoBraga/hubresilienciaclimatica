@@ -14,15 +14,23 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const MATERIAL_META = [
-  { key: "plasticoKg", label: "Plástico", price: 1.92 },
-  { key: "vidroKg", label: "Vidro", price: 0.08 },
-  { key: "metalKg", label: "Metal", price: 2.9 },
-  { key: "sacariaKg", label: "Sacaria", price: 0.12 },
-  { key: "papelMistoKg", label: "Papel misto", price: 0.66 },
-  { key: "papelaoKg", label: "Papelão", price: 0.52 },
-  { key: "isoporKg", label: "Isopor", price: 0.4 },
-  { key: "oleoCozinhaKg", label: "Óleo de cozinha", price: 1.5 }
+  { key: "plasticoKg", label: "Plástico", price: 1.92, icon: "🧴" },
+  { key: "vidroKg", label: "Vidro", price: 0.08, icon: "🍾" },
+  { key: "metalKg", label: "Metal", price: 2.9, icon: "🥫" },
+  { key: "sacariaKg", label: "Sacaria", price: 0.12, icon: "🧵" },
+  { key: "papelMistoKg", label: "Papel misto", price: 0.66, icon: "📄" },
+  { key: "papelaoKg", label: "Papelão", price: 0.52, icon: "📦" },
+  { key: "isoporKg", label: "Isopor", price: 0.4, icon: "🧊" },
+  { key: "oleoCozinhaKg", label: "Óleo de cozinha", price: 1.5, icon: "🛢️" }
 ];
+
+const CHART_COLORS = {
+  blue: "#53ACDE",
+  green: "#81B92A",
+  orange: "#EF6B22",
+  yellow: "#FFC107",
+  gray: "#A5A29F"
+};
 
 const els = {
   fTerritorio: document.getElementById("fTerritorio"),
@@ -31,6 +39,12 @@ const els = {
   fIni: document.getElementById("fIni"),
   fFim: document.getElementById("fFim"),
   fBusca: document.getElementById("fBusca"),
+  fSearchType: document.getElementById("fSearchType"),
+
+  chartMainType: document.getElementById("chartMainType"),
+  chartFlowType: document.getElementById("chartFlowType"),
+  chartDeliveryType: document.getElementById("chartDeliveryType"),
+  chartTerritoryType: document.getElementById("chartTerritoryType"),
 
   btnAplicar: document.getElementById("btnAplicar"),
   btnLimpar: document.getElementById("btnLimpar"),
@@ -130,23 +144,33 @@ function safeText(value) {
   return String(value ?? "—");
 }
 
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
 function normalizeText(value) {
-  return String(value || "").trim().toLowerCase();
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
 }
 
 function createdAtToISO(item) {
-  if (item.createdAt?.toDate) {
-    return item.createdAt.toDate().toISOString();
-  }
-  if (item.updatedAt?.toDate) {
-    return item.updatedAt.toDate().toISOString();
-  }
+  if (item.createdAt?.toDate) return item.createdAt.toDate().toISOString();
+  if (item.updatedAt?.toDate) return item.updatedAt.toDate().toISOString();
   return "";
 }
 
 function inferDateISO(item) {
-  if (item.opDate) return item.opDate;
-  return createdAtToISO(item);
+  if (item.opDate) return String(item.opDate).slice(0, 10);
+  const iso = createdAtToISO(item);
+  return iso ? iso.slice(0, 10) : "";
 }
 
 function inferDateTimeISO(item) {
@@ -158,28 +182,19 @@ function firstPhotoUrl(item) {
   if (item.photoUrl) return item.photoUrl;
   if (item.fotoURL) return item.fotoURL;
   if (item.fotoUrl) return item.fotoUrl;
-
   if (Array.isArray(item.photos) && item.photos.length) return item.photos[0];
   if (Array.isArray(item.fotos) && item.fotos.length) return item.fotos[0];
-
-  if (Array.isArray(item.recebimento?.fotosResiduo) && item.recebimento.fotosResiduo.length) {
-    return item.recebimento.fotosResiduo[0];
-  }
-
-  if (
-    Array.isArray(item.recebimento?.fotosNaoComercializado) &&
-    item.recebimento.fotosNaoComercializado.length
-  ) {
-    return item.recebimento.fotosNaoComercializado[0];
-  }
-
+  if (Array.isArray(item.recebimento?.fotosResiduo) && item.recebimento.fotosResiduo.length) return item.recebimento.fotosResiduo[0];
+  if (Array.isArray(item.recebimento?.fotosNaoComercializado) && item.recebimento.fotosNaoComercializado.length) return item.recebimento.fotosNaoComercializado[0];
+  if (Array.isArray(item.finalTurno?.fotosResiduo) && item.finalTurno.fotosResiduo.length) return item.finalTurno.fotosResiduo[0];
+  if (Array.isArray(item.finalTurno?.fotosNaoComercializado) && item.finalTurno.fotosNaoComercializado.length) return item.finalTurno.fotosNaoComercializado[0];
   return "";
 }
 
 function resolveParticipant(item) {
   const participantId = item.participantId || null;
   const participantCode = item.participantCode || null;
-  const familyCode = item.recebimento?.familyCode || null;
+  const familyCode = item.recebimento?.familyCode || item.finalTurno?.familyCode || null;
   const directName = item.participantName || null;
 
   const fromId = participantId ? participantsMap.get(String(participantId)) : null;
@@ -197,7 +212,11 @@ function resolveParticipant(item) {
 }
 
 function getQualidade(item) {
-  const value = item.recebimento?.qualidadeNota;
+  const value =
+    item.recebimento?.qualidadeNota ??
+    item.finalTurno?.qualidadeNota ??
+    item.qualidadeNota;
+
   if (value === null || value === undefined || value === "") return "";
   return String(value);
 }
@@ -210,7 +229,7 @@ function renderQualidadeBadge(item) {
   if (q === "2") return `<span class="quality-badge quality-2">2</span>`;
   if (q === "3") return `<span class="quality-badge quality-3">3</span>`;
 
-  return `<span class="quality-badge">${safeText(q)}</span>`;
+  return `<span class="quality-badge">${escapeHtml(q)}</span>`;
 }
 
 function getStatus(item) {
@@ -239,38 +258,68 @@ function inferFluxo(item) {
   return String(item.flowType || "").toLowerCase() || "—";
 }
 
+function isFinalTurno(item) {
+  return inferFluxo(item) === "final_turno";
+}
+
 function inferEntrega(item) {
   return item.deliveryType || "—";
 }
 
-function inferPesoBase(item) {
-  return Number(item.recebimento?.pesoResiduoSecoKg ?? 0);
-}
-
 function inferResiduoSeco(item) {
-  return Number(item.recebimento?.pesoResiduoSecoKg ?? 0);
+  return Number(
+    item.recebimento?.pesoResiduoSecoKg ??
+    item.finalTurno?.pesoResiduoSecoKg ??
+    item.pesoResiduoSecoKg ??
+    0
+  );
 }
 
 function inferRejeito(item) {
-  return Number(item.recebimento?.pesoRejeitoKg ?? 0);
+  return Number(
+    item.recebimento?.pesoRejeitoKg ??
+    item.finalTurno?.pesoRejeitoKg ??
+    item.pesoRejeitoKg ??
+    0
+  );
 }
 
 function inferNaoComercializado(item) {
-  return Number(item.recebimento?.pesoNaoComercializadoKg ?? 0);
+  return Number(
+    item.recebimento?.pesoNaoComercializadoKg ??
+    item.finalTurno?.pesoNaoComercializadoKg ??
+    item.pesoNaoComercializadoKg ??
+    0
+  );
 }
 
 function inferObservacao(item) {
-  return item.observacao || item.recebimento?.observacao || "";
+  return item.observacao || item.recebimento?.observacao || item.finalTurno?.observacao || "";
+}
+
+function getMaterialValue(item, key) {
+  const fontes = [
+    item.materiais,
+    item.recebimento?.materiais,
+    item.finalTurno?.materiais,
+    item.recebimento,
+    item.finalTurno
+  ].filter(Boolean);
+
+  for (const fonte of fontes) {
+    if (fonte[key] !== undefined && fonte[key] !== null && fonte[key] !== "") {
+      return Number(fonte[key] || 0);
+    }
+  }
+
+  return 0;
 }
 
 function matchesDateRange(item, ini, fim) {
   const dateIso = inferDateISO(item);
   if (!dateIso) return true;
-
-  const onlyDate = String(dateIso).slice(0, 10);
-
-  if (ini && onlyDate < ini) return false;
-  if (fim && onlyDate > fim) return false;
+  if (ini && dateIso < ini) return false;
+  if (fim && dateIso > fim) return false;
   return true;
 }
 
@@ -278,6 +327,7 @@ function fillUser(profile) {
   els.userDisplayName.textContent = profile.displayName || profile.name || "Usuário";
   els.userRole.textContent = profile.role || "cooperativa";
   els.userTerritory.textContent = profile.territoryLabel || profile.territoryId || "—";
+
   const mapMiniText = document.getElementById("mapMiniText");
   if (mapMiniText) {
     mapMiniText.textContent = profile.territoryLabel
@@ -293,27 +343,33 @@ async function getUserProfile(uid) {
 }
 
 function validateProfile(profile) {
-  if (profile.role !== "cooperativa") {
-    throw new Error("Acesso permitido somente para cooperativa.");
+  if (profile.role !== "cooperativa" && profile.role !== "admin") {
+    throw new Error("Acesso permitido somente para cooperativa ou administrador.");
   }
 
   if (profile.status !== "active") {
     throw new Error("Usuário sem acesso ativo.");
   }
 
-  if (!profile.territoryId) {
+  if (!profile.territoryId && profile.role !== "admin") {
     throw new Error("Usuário sem território vinculado.");
   }
 }
 
 async function loadParticipantsMap(territoryId) {
-  const qParticipants = query(
-    collection(db, "participants"),
-    where("territoryId", "==", territoryId)
-  );
+  participantsMap.clear();
+
+  let qParticipants;
+  if (coopProfile?.role === "admin") {
+    qParticipants = query(collection(db, "participants"));
+  } else {
+    qParticipants = query(
+      collection(db, "participants"),
+      where("territoryId", "==", territoryId)
+    );
+  }
 
   const snap = await getDocs(qParticipants);
-  participantsMap.clear();
 
   snap.forEach((d) => {
     const data = d.data();
@@ -325,7 +381,6 @@ async function loadParticipantsMap(territoryId) {
     };
 
     participantsMap.set(d.id, payload);
-
     if (data.participantCode) participantsMap.set(String(data.participantCode), payload);
     if (data.familyCode) participantsMap.set(String(data.familyCode), payload);
     if (data.codigo) participantsMap.set(String(data.codigo), payload);
@@ -347,11 +402,11 @@ function populateFilters(items) {
 
   els.fTerritorio.innerHTML =
     `<option value="__all__">Todos</option>` +
-    Array.from(territorios).sort().map((t) => `<option value="${t}">${t}</option>`).join("");
+    Array.from(territorios).sort().map((t) => `<option value="${escapeHtml(t)}">${escapeHtml(t)}</option>`).join("");
 
   els.fEntrega.innerHTML =
     `<option value="__all__">Todos</option>` +
-    Array.from(entregas).sort().map((e) => `<option value="${e}">${e}</option>`).join("");
+    Array.from(entregas).sort().map((e) => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`).join("");
 
   els.fTerritorio.value = Array.from(territorios).includes(currentTerr) ? currentTerr : "__all__";
   els.fEntrega.value = Array.from(entregas).includes(currentEntrega) ? currentEntrega : "__all__";
@@ -381,7 +436,6 @@ function updateTopInfo() {
   const dates = filteredColetas
     .map((item) => inferDateISO(item))
     .filter(Boolean)
-    .map((v) => String(v).slice(0, 10))
     .sort();
 
   if (dates.length) {
@@ -410,10 +464,15 @@ function renderKpis(items) {
     }
 
     territorios.add(inferTerritorio(item));
-    residuoSeco += inferResiduoSeco(item);
+
+    const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
+    residuoSeco += isFinalTurno(item)
+      ? somaMateriais
+      : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
+
     rejeito += inferRejeito(item);
 
-    if (inferFluxo(item) === "final_turno") finalTurno += 1;
+    if (isFinalTurno(item)) finalTurno += 1;
   });
 
   els.k_totalColetas.textContent = String(ativos.length);
@@ -422,10 +481,6 @@ function renderKpis(items) {
   els.k_rejeito.textContent = formatNumber(rejeito);
   els.k_finalTurno.textContent = String(finalTurno);
   els.k_territoriosAtivos.textContent = String(territorios.size);
-}
-
-function getMaterialValue(item, key) {
-  return Number(item.materiais?.[key] ?? 0);
 }
 
 function sumMaterials(items) {
@@ -438,7 +493,8 @@ function sumMaterials(items) {
     .filter((item) => getStatus(item) !== "cancelado")
     .forEach((item) => {
       MATERIAL_META.forEach((mat) => {
-        totals[mat.key] += getMaterialValue(item, mat.key);
+        const value = getMaterialValue(item, mat.key);
+        totals[mat.key] += Number.isFinite(value) ? value : 0;
       });
     });
 
@@ -457,14 +513,24 @@ function computeExpandedMetrics(items) {
   const familySet = new Set();
 
   ativos.forEach((item) => {
-    reciclavelKg += inferResiduoSeco(item);
+    const somaMateriais = MATERIAL_META.reduce((acc, mat) => {
+      return acc + getMaterialValue(item, mat.key);
+    }, 0);
+
+    if (isFinalTurno(item)) {
+      reciclavelKg += somaMateriais;
+    } else {
+      const pesoBase = inferResiduoSeco(item);
+      reciclavelKg += somaMateriais > 0 ? somaMateriais : pesoBase;
+    }
+
     rejeitoKg += inferRejeito(item);
     naoComercializadoKg += inferNaoComercializado(item);
 
-    const d = String(inferDateISO(item)).slice(0, 10);
+    const d = inferDateISO(item);
     if (d) uniqueDays.add(d);
 
-    const code = item.recebimento?.familyCode || item.participantCode || "";
+    const code = item.recebimento?.familyCode || item.finalTurno?.familyCode || item.participantCode || "";
     if (code) familySet.add(String(code));
   });
 
@@ -501,7 +567,10 @@ function renderWeightTimeline(items) {
     .slice(-40);
 
   const labels = valid.map((item) => String(inferDateISO(item)).slice(5, 10));
-  const reciclavel = valid.map((item) => inferResiduoSeco(item));
+  const reciclavel = valid.map((item) => {
+    const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
+    return isFinalTurno(item) ? somaMateriais : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
+  });
   const rejeito = valid.map((item) => inferRejeito(item));
 
   if (weightTimelineChart) {
@@ -525,20 +594,7 @@ function renderWeightTimeline(items) {
         }
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: {
-          position: "top"
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true
-        }
-      }
-    }
+    options: getChartOptions("bar")
   });
 }
 
@@ -546,7 +602,7 @@ function renderExpandedPanel(items) {
   const m = computeExpandedMetrics(items);
 
   const allDates = items
-    .map((item) => String(inferDateISO(item)).slice(0, 10))
+    .map((item) => inferDateISO(item))
     .filter(Boolean)
     .sort();
 
@@ -616,9 +672,10 @@ function renderExpandedPanel(items) {
 
         return `
           <article class="material-card">
+            <div class="mat-icon">${mat.icon}</div>
             <div class="mat-pct">${formatNumber(pct)}%</div>
             <div class="mat-kg">${formatNumber(kg)} kg</div>
-            <div class="mat-name">${mat.label}</div>
+            <div class="mat-name">${escapeHtml(mat.label)}</div>
             <div class="mat-sub">Receita ≈ ${formatMoneyBR(receita)}</div>
           </article>
         `;
@@ -631,17 +688,23 @@ function renderExpandedPanel(items) {
 
 function renderPhotoCell(item) {
   const photo = firstPhotoUrl(item);
-  const qtdResiduo = Number(item.recebimento?.fotosResiduoQtd ?? 0);
-  const qtdNaoComercializado = Number(item.recebimento?.fotosNaoComercializadoQtd ?? 0);
+  const qtdResiduo =
+    Number(item.recebimento?.fotosResiduoQtd ?? 0) +
+    Number(item.finalTurno?.fotosResiduoQtd ?? 0);
+
+  const qtdNaoComercializado =
+    Number(item.recebimento?.fotosNaoComercializadoQtd ?? 0) +
+    Number(item.finalTurno?.fotosNaoComercializadoQtd ?? 0);
+
   const totalFotos = qtdResiduo + qtdNaoComercializado;
 
   if (photo) {
     return `
       <img
-        src="${photo}"
+        src="${escapeHtml(photo)}"
         alt="Foto do registro"
         class="photo-thumb"
-        data-photo="${photo}"
+        data-photo="${escapeHtml(photo)}"
       />
     `;
   }
@@ -670,14 +733,18 @@ function renderMainTable(items) {
 
       return `
         <tr class="${canceled ? "row-muted" : ""}">
-          <td>${formatDateBR(String(inferDateISO(item)).slice(0, 10))}</td>
-          <td>${safeText(inferTerritorio(item))}</td>
-          <td>${safeText(participant.name)}</td>
-          <td>${safeText(participant.code)}</td>
-          <td>${safeText(inferFluxo(item))}</td>
-          <td>${safeText(inferEntrega(item))}</td>
-          <td>${safeText(item.createdByName || item.createdByPublicCode || item.createdBy || "Usuário")}</td>
-          <td>${formatKg(inferResiduoSeco(item))}</td>
+          <td>${formatDateBR(inferDateISO(item))}</td>
+          <td>${escapeHtml(inferTerritorio(item))}</td>
+          <td>${escapeHtml(participant.name)}</td>
+          <td>${escapeHtml(participant.code)}</td>
+          <td>${escapeHtml(inferFluxo(item))}</td>
+          <td>${escapeHtml(inferEntrega(item))}</td>
+          <td>${escapeHtml(item.createdByName || item.createdByPublicCode || item.createdBy || "Usuário")}</td>
+          <td>${formatKg(
+            isFinalTurno(item)
+              ? MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0)
+              : inferResiduoSeco(item)
+          )}</td>
           <td>${formatKg(inferNaoComercializado(item))}</td>
           <td>${formatKg(inferRejeito(item))}</td>
           <td>${renderQualidadeBadge(item)}</td>
@@ -717,10 +784,14 @@ function renderHistory(items) {
       return `
         <tr class="${canceled ? "row-muted" : ""}">
           <td>${formatDateTimeBR(inferDateTimeISO(item))}</td>
-          <td>${safeText(participant.name)}</td>
-          <td>${safeText(inferFluxo(item))}</td>
-          <td>${safeText(inferEntrega(item))}</td>
-          <td>${formatKg(inferResiduoSeco(item))}</td>
+          <td>${escapeHtml(participant.name)}</td>
+          <td>${escapeHtml(inferFluxo(item))}</td>
+          <td>${escapeHtml(inferEntrega(item))}</td>
+          <td>${formatKg(
+            isFinalTurno(item)
+              ? MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0)
+              : inferResiduoSeco(item)
+          )}</td>
           <td>${renderQualidadeBadge(item)}</td>
           <td>${renderStatusBadge(item)}</td>
           <td>
@@ -741,7 +812,7 @@ function buildDailySeries(items) {
   items
     .filter((item) => getStatus(item) !== "cancelado")
     .forEach((item) => {
-      const d = String(inferDateISO(item)).slice(0, 10);
+      const d = inferDateISO(item);
       if (!d) return;
       map.set(d, (map.get(d) || 0) + 1);
     });
@@ -803,6 +874,28 @@ function buildTerritorioSeries(items) {
   return { labels, values };
 }
 
+function getChartOptions(type, territoryHorizontal = false) {
+  const base = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: type !== "bar" || !territoryHorizontal,
+        position: "bottom"
+      }
+    }
+  };
+
+  if (type === "doughnut" || type === "pie") return base;
+
+  return {
+    ...base,
+    scales: territoryHorizontal
+      ? { x: { beginAtZero: true } }
+      : { y: { beginAtZero: true } }
+  };
+}
+
 function destroyCharts() {
   [mainChart, secA, secB, secC].forEach((chart) => {
     if (chart) chart.destroy();
@@ -817,112 +910,92 @@ function renderCharts(items) {
   const entrega = buildEntregaSeries(items);
   const territorio = buildTerritorioSeries(items);
 
+  const mainType = els.chartMainType?.value || "line";
+  const flowType = els.chartFlowType?.value || "doughnut";
+  const deliveryType = els.chartDeliveryType?.value || "bar";
+  const territoryType = els.chartTerritoryType?.value || "bar";
+
   const ctxMain = document.getElementById("mainChart");
   const ctxA = document.getElementById("secA");
   const ctxB = document.getElementById("secB");
   const ctxC = document.getElementById("secC");
 
   mainChart = new Chart(ctxMain, {
-    type: "line",
+    type: mainType,
     data: {
       labels: daily.labels,
       datasets: [
         {
-          label: "Registros/dia",
+          label: "Registros por dia",
           data: daily.values,
-          borderColor: "#53ACDE",
-          backgroundColor: "rgba(83,172,222,.18)",
-          fill: true,
+          borderColor: CHART_COLORS.blue,
+          backgroundColor: "rgba(83,172,222,.20)",
+          fill: mainType === "line",
           tension: 0.35,
-          pointRadius: 4,
-          pointHoverRadius: 5
+          pointRadius: mainType === "line" ? 4 : 0,
+          pointHoverRadius: mainType === "line" ? 5 : 0
         }
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: true }
-      },
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
+    options: getChartOptions(mainType)
   });
 
   secA = new Chart(ctxA, {
-    type: "doughnut",
+    type: flowType,
     data: {
       labels: flow.labels,
       datasets: [
         {
+          label: "Fluxo",
           data: flow.values,
-          backgroundColor: ["#53ACDE", "#81B92A"],
-          borderWidth: 0
+          backgroundColor: [
+            "rgba(83,172,222,.78)",
+            "rgba(129,185,42,.78)"
+          ],
+          borderColor: [CHART_COLORS.blue, CHART_COLORS.green],
+          borderWidth: flowType === "bar" ? 1.5 : 0
         }
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      cutout: "58%",
-      plugins: {
-        legend: { position: "bottom" }
-      }
-    }
+    options: getChartOptions(flowType)
   });
 
   secB = new Chart(ctxB, {
-    type: "bar",
+    type: deliveryType,
     data: {
       labels: entrega.labels,
       datasets: [
         {
           label: "Entrega",
           data: entrega.values,
-          backgroundColor: "rgba(129,185,42,.36)",
-          borderColor: "#81B92A",
-          borderWidth: 1.5
+          backgroundColor: entrega.labels.map(() => "rgba(129,185,42,.40)"),
+          borderColor: entrega.labels.map(() => CHART_COLORS.green),
+          borderWidth: deliveryType === "line" ? 3 : 1.5,
+          fill: deliveryType === "line"
         }
       ]
     },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        y: { beginAtZero: true }
-      }
-    }
+    options: getChartOptions(deliveryType)
   });
 
   secC = new Chart(ctxC, {
-    type: "bar",
+    type: territoryType,
     data: {
       labels: territorio.labels,
       datasets: [
         {
           label: "Território",
           data: territorio.values,
-          backgroundColor: "rgba(83,172,222,.24)",
-          borderColor: "#53ACDE",
-          borderWidth: 1.5
+          backgroundColor: territorio.labels.map(() => "rgba(83,172,222,.28)"),
+          borderColor: territorio.labels.map(() => CHART_COLORS.blue),
+          borderWidth: territoryType === "line" ? 3 : 1.5,
+          fill: territoryType === "line"
         }
       ]
     },
     options: {
-      indexAxis: "y",
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: {
-        legend: { display: false }
-      },
-      scales: {
-        x: { beginAtZero: true }
-      }
+      ...getChartOptions(territoryType, territoryType === "bar"),
+      indexAxis: territoryType === "bar" ? "y" : "x"
     }
   });
 }
@@ -965,20 +1038,30 @@ async function saveEdit() {
   if (!activeEditId) return;
 
   const ref = doc(db, "coletas", activeEditId);
+  const isEditFinalTurno = els.editFluxo.value === "final_turno";
 
-  await updateDoc(ref, {
+  const payload = {
     flowType: els.editFluxo.value,
     deliveryType: els.editEntrega.value.trim(),
     observacao: els.editObs.value.trim(),
-
-    "recebimento.observacao": els.editObs.value.trim(),
-    "recebimento.pesoResiduoSecoKg": Number(els.editPesoBase.value || 0),
-    "recebimento.qualidadeNota": els.editQualidade.value ? Number(els.editQualidade.value) : null,
-    "recebimento.pesoRejeitoKg": Number(els.editRejeito.value || 0),
-    "recebimento.pesoNaoComercializadoKg": Number(els.editNaoComercializado.value || 0),
-
     updatedAt: serverTimestamp()
-  });
+  };
+
+  if (isEditFinalTurno) {
+    payload["finalTurno.observacao"] = els.editObs.value.trim();
+    payload["finalTurno.pesoResiduoSecoKg"] = Number(els.editPesoBase.value || 0);
+    payload["finalTurno.qualidadeNota"] = els.editQualidade.value ? Number(els.editQualidade.value) : null;
+    payload["finalTurno.pesoRejeitoKg"] = Number(els.editRejeito.value || 0);
+    payload["finalTurno.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado.value || 0);
+  } else {
+    payload["recebimento.observacao"] = els.editObs.value.trim();
+    payload["recebimento.pesoResiduoSecoKg"] = Number(els.editPesoBase.value || 0);
+    payload["recebimento.qualidadeNota"] = els.editQualidade.value ? Number(els.editQualidade.value) : null;
+    payload["recebimento.pesoRejeitoKg"] = Number(els.editRejeito.value || 0);
+    payload["recebimento.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado.value || 0);
+  }
+
+  await updateDoc(ref, payload);
 
   closeModal("editModal");
   activeEditId = null;
@@ -998,48 +1081,11 @@ async function cancelRegistro(itemId) {
   });
 }
 
-function bindUI() {
-  els.btnAplicar?.addEventListener("click", applyFilters);
-  els.btnLimpar?.addEventListener("click", clearFilters);
-  els.btnPrint?.addEventListener("click", () => window.print());
-  els.btnSaveEdit?.addEventListener("click", saveEdit);
-
-  document.addEventListener("click", async (event) => {
-    const photo = event.target.closest("[data-photo]");
-    if (photo) {
-      openPhoto(photo.dataset.photo);
-      return;
-    }
-
-    const editBtn = event.target.closest("[data-edit]");
-    if (editBtn) {
-      openEditModal(editBtn.dataset.edit);
-      return;
-    }
-
-    const cancelBtn = event.target.closest("[data-cancel]");
-    if (cancelBtn) {
-      try {
-        await cancelRegistro(cancelBtn.dataset.cancel);
-      } catch (error) {
-        console.error(error);
-        alert("Não foi possível cancelar o registro.");
-      }
-      return;
-    }
-
-    const closer = event.target.closest("[data-close]");
-    if (closer) {
-      closeModal(closer.dataset.close);
-    }
-  });
-}
-
 function setDefaultDateRange(items) {
   if (els.fIni.value || els.fFim.value || !items.length) return;
 
   const dates = items
-    .map((item) => String(inferDateISO(item)).slice(0, 10))
+    .map((item) => inferDateISO(item))
     .filter(Boolean)
     .sort();
 
@@ -1057,18 +1103,19 @@ function sortColetasLocally(items) {
   });
 }
 
-function applyFilters() {
-  const terr = els.fTerritorio.value;
-  const fluxo = els.fFluxo.value;
-  const entrega = els.fEntrega.value;
-  const ini = els.fIni.value;
-  const fim = els.fFim.value;
-  const busca = normalizeText(els.fBusca.value);
+function getSearchTarget(item, participant, searchType) {
+  const targets = {
+    participant: `${participant.name} ${item.participantName || ""} ${item.recebimento?.familyCode || ""} ${item.finalTurno?.familyCode || ""}`,
+    code: `${participant.code} ${item.participantCode || ""} ${item.recebimento?.familyCode || ""} ${item.finalTurno?.familyCode || ""}`,
+    creator: `${item.createdByName || ""} ${item.createdByPublicCode || ""} ${item.createdBy || ""}`,
+    obs: `${inferObservacao(item)}`,
+    territory: `${inferTerritorio(item)}`,
+    delivery: `${inferEntrega(item)}`,
+    flow: `${inferFluxo(item)}`
+  };
 
-  filteredColetas = allColetas.filter((item) => {
-    const participant = resolveParticipant(item);
-
-    const haystack = [
+  if (searchType === "all") {
+    return [
       participant.name,
       participant.code,
       item.createdByName,
@@ -1077,16 +1124,34 @@ function applyFilters() {
       inferTerritorio(item),
       inferEntrega(item),
       inferFluxo(item),
-      inferObservacao(item)
-    ]
-      .map(normalizeText)
-      .join(" ");
+      inferObservacao(item),
+      item.recebimento?.familyCode || "",
+      item.finalTurno?.familyCode || "",
+      item.participantCode || ""
+    ].join(" ");
+  }
+
+  return targets[searchType] || "";
+}
+
+function applyFilters() {
+  const terr = els.fTerritorio.value;
+  const fluxo = els.fFluxo.value;
+  const entrega = els.fEntrega.value;
+  const ini = els.fIni.value;
+  const fim = els.fFim.value;
+  const busca = normalizeText(els.fBusca.value);
+  const searchType = els.fSearchType?.value || "all";
+
+  filteredColetas = allColetas.filter((item) => {
+    const participant = resolveParticipant(item);
+    const searchTarget = normalizeText(getSearchTarget(item, participant, searchType));
 
     if (terr !== "__all__" && inferTerritorio(item) !== terr) return false;
     if (fluxo !== "__all__" && inferFluxo(item) !== fluxo) return false;
     if (entrega !== "__all__" && inferEntrega(item) !== entrega) return false;
     if (!matchesDateRange(item, ini, fim)) return false;
-    if (busca && !haystack.includes(busca)) return false;
+    if (busca && !searchTarget.includes(busca)) return false;
 
     return true;
   });
@@ -1097,6 +1162,9 @@ function applyFilters() {
   renderMainTable(filteredColetas);
   renderHistory(filteredColetas);
   renderCharts(filteredColetas);
+
+  console.log("filteredColetas", filteredColetas);
+  console.log("materialTotals", computeExpandedMetrics(filteredColetas).materialTotals);
 }
 
 function clearFilters() {
@@ -1106,23 +1174,31 @@ function clearFilters() {
   els.fIni.value = "";
   els.fFim.value = "";
   els.fBusca.value = "";
+  if (els.fSearchType) els.fSearchType.value = "all";
   applyFilters();
 }
 
 function listenColetas(profile) {
   els.dbStatus.textContent = "conectando…";
 
+  const isAdmin = profile.role === "admin";
+
   const startListener = (useFallback = false) => {
-    const qColetas = useFallback
-      ? query(
-          collection(db, "coletas"),
-          where("territoryId", "==", profile.territoryId)
-        )
-      : query(
-          collection(db, "coletas"),
-          where("territoryId", "==", profile.territoryId),
-          orderBy("createdAt", "desc")
-        );
+    let qColetas;
+
+    if (isAdmin) {
+      qColetas = useFallback
+        ? query(collection(db, "coletas"))
+        : query(collection(db, "coletas"), orderBy("createdAt", "desc"));
+    } else {
+      qColetas = useFallback
+        ? query(collection(db, "coletas"), where("territoryId", "==", profile.territoryId))
+        : query(
+            collection(db, "coletas"),
+            where("territoryId", "==", profile.territoryId),
+            orderBy("createdAt", "desc")
+          );
+    }
 
     onSnapshot(
       qColetas,
@@ -1175,6 +1251,65 @@ function initCursorGlow() {
 
   window.addEventListener("mouseleave", () => {
     glow.style.opacity = "0";
+  });
+}
+
+function bindUI() {
+  els.btnAplicar?.addEventListener("click", applyFilters);
+  els.btnLimpar?.addEventListener("click", clearFilters);
+  els.btnPrint?.addEventListener("click", () => window.print());
+  els.btnSaveEdit?.addEventListener("click", saveEdit);
+
+  [
+    els.chartMainType,
+    els.chartFlowType,
+    els.chartDeliveryType,
+    els.chartTerritoryType
+  ].forEach((el) => {
+    el?.addEventListener("change", () => renderCharts(filteredColetas));
+  });
+
+  [
+    els.fTerritorio,
+    els.fFluxo,
+    els.fEntrega,
+    els.fIni,
+    els.fFim,
+    els.fSearchType
+  ].forEach((el) => {
+    el?.addEventListener("change", applyFilters);
+  });
+
+  els.fBusca?.addEventListener("input", applyFilters);
+
+  document.addEventListener("click", async (event) => {
+    const photo = event.target.closest("[data-photo]");
+    if (photo) {
+      openPhoto(photo.dataset.photo);
+      return;
+    }
+
+    const editBtn = event.target.closest("[data-edit]");
+    if (editBtn) {
+      openEditModal(editBtn.dataset.edit);
+      return;
+    }
+
+    const cancelBtn = event.target.closest("[data-cancel]");
+    if (cancelBtn) {
+      try {
+        await cancelRegistro(cancelBtn.dataset.cancel);
+      } catch (error) {
+        console.error(error);
+        alert("Não foi possível cancelar o registro.");
+      }
+      return;
+    }
+
+    const closer = event.target.closest("[data-close]");
+    if (closer) {
+      closeModal(closer.dataset.close);
+    }
   });
 }
 

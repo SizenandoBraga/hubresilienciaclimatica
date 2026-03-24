@@ -9,13 +9,12 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <link rel="stylesheet" href="./dashboard-cooperativa.css">
 </head>
-
 <body>
   <div class="bg-grid"></div>
   <div class="noise"></div>
@@ -29,14 +28,14 @@
             <img src="img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo">
           </div>
           <div>
-            <strong>Dashboard • Coletas</strong>
-            <span>Relatórios operacionais</span>
+            <strong>Dashboard • Cooperativa</strong>
+            <span>Painel operacional de coletas</span>
           </div>
         </a>
 
         <div class="side-section">
           <h3>
-            Filtros
+            <span>⚙️ Filtros operacionais</span>
             <span class="chip chip-orange"><span class="dot"></span> Ao vivo</span>
           </h3>
 
@@ -75,23 +74,76 @@
           </div>
 
           <div class="field">
+            <div class="label">Tipo de pesquisa</div>
+            <select id="fSearchType">
+              <option value="all">Pesquisa geral</option>
+              <option value="participant">Participante / família</option>
+              <option value="code">Código</option>
+              <option value="creator">Criado por</option>
+              <option value="obs">Observação</option>
+              <option value="territory">Território</option>
+              <option value="delivery">Entrega</option>
+              <option value="flow">Fluxo</option>
+            </select>
+          </div>
+
+          <div class="field">
             <div class="label">Busca rápida</div>
-            <input id="fBusca" type="text" placeholder="família, código, criador, observação..." />
+            <input id="fBusca" type="text" placeholder="digite para localizar registros..." />
           </div>
 
           <div class="field stack">
-            <button class="btn btn-primary" id="btnAplicar" type="button">Aplicar filtros →</button>
+            <button class="btn btn-primary" id="btnAplicar" type="button">Aplicar filtros</button>
             <button class="btn btn-ghost" id="btnLimpar" type="button">Limpar filtros</button>
             <a class="btn btn-orange" href="cooperativas.html">Voltar ao menu da cooperativa</a>
           </div>
 
           <p class="hint">
-            O dashboard recebe os dados registrados no formulário de coletas e permite leitura operacional, histórico, edição e cancelamento.
+            O painel mostra indicadores, gráficos, histórico detalhado e lista completa de registros com edição e cancelamento.
           </p>
         </div>
 
         <div class="side-section">
-          <h3>Usuário logado</h3>
+          <h3><span>📊 Configuração dos gráficos</span></h3>
+
+          <div class="field">
+            <div class="label">Gráfico principal</div>
+            <select id="chartMainType">
+              <option value="line">Linha</option>
+              <option value="bar">Barras</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="label">Gráfico de fluxo</div>
+            <select id="chartFlowType">
+              <option value="doughnut">Rosca</option>
+              <option value="pie">Pizza</option>
+              <option value="bar">Barras</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="label">Gráfico de entrega</div>
+            <select id="chartDeliveryType">
+              <option value="bar">Barras</option>
+              <option value="line">Linha</option>
+              <option value="doughnut">Rosca</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="label">Gráfico de território</div>
+            <select id="chartTerritoryType">
+              <option value="bar">Barras horizontais</option>
+              <option value="line">Linha</option>
+              <option value="doughnut">Rosca</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="side-section">
+          <h3><span>👤 Usuário logado</span></h3>
 
           <div class="field">
             <div class="label">Nome</div>
@@ -120,53 +172,72 @@
       <section class="top">
         <div class="top-inner">
           <div class="title">
+            <div class="eyebrow">📍 Painel analítico da cooperativa</div>
             <h1>Dashboard de Coletas Seletivas</h1>
             <p>
-              Visualização operacional das coletas registradas pela cooperativa, com indicadores,
-              histórico, qualidade, rejeito, não comercializado e painéis ampliados.
+              Visualização operacional das coletas registradas pela cooperativa com indicadores,
+              materiais, rejeito, não comercializado, evolução diária, histórico e gestão dos registros.
             </p>
           </div>
 
           <div class="top-actions">
             <span class="pill pill-orange"><span class="b"></span> Período: <span id="txtPeriodo">—</span></span>
             <span class="pill"><span class="b"></span> Registros: <span id="txtRegistrosTopo">0</span></span>
-            <button class="mini-btn mini-btn-orange" id="btnPrint" type="button">Imprimir / PDF ⎙</button>
+            <button class="mini-btn mini-btn-orange" id="btnPrint" type="button">Imprimir / PDF</button>
           </div>
         </div>
 
         <div class="kpis" aria-label="Indicadores principais">
           <div class="kpi kpi-orange">
-            <div class="klabel">Total de coletas</div>
+            <div class="kpi-head">
+              <span class="kpi-icon">📦</span>
+              <span class="klabel">Total de coletas</span>
+            </div>
             <p class="kvalue" id="k_totalColetas">0</p>
             <p class="khint">Quantidade total no período filtrado.</p>
           </div>
 
           <div class="kpi">
-            <div class="klabel">Participantes únicos</div>
+            <div class="kpi-head">
+              <span class="kpi-icon">👥</span>
+              <span class="klabel">Participantes únicos</span>
+            </div>
             <p class="kvalue" id="k_participantes">0</p>
             <p class="khint">Famílias/participantes distintos vinculados às coletas.</p>
           </div>
 
           <div class="kpi">
-            <div class="klabel">Resíduo seco (kg)</div>
+            <div class="kpi-head">
+              <span class="kpi-icon">♻️</span>
+              <span class="klabel">Resíduo seco (kg)</span>
+            </div>
             <p class="kvalue" id="k_residuoSeco">0</p>
             <p class="khint">Somatório informado em recebimento.</p>
           </div>
 
           <div class="kpi kpi-orange-soft">
-            <div class="klabel">Rejeito total (kg)</div>
+            <div class="kpi-head">
+              <span class="kpi-icon">🚯</span>
+              <span class="klabel">Rejeito total (kg)</span>
+            </div>
             <p class="kvalue" id="k_rejeito">0</p>
             <p class="khint">Peso rejeitado no período.</p>
           </div>
 
           <div class="kpi">
-            <div class="klabel">Final de turno</div>
+            <div class="kpi-head">
+              <span class="kpi-icon">🕒</span>
+              <span class="klabel">Final de turno</span>
+            </div>
             <p class="kvalue" id="k_finalTurno">0</p>
             <p class="khint">Quantidade de fechamentos operacionais.</p>
           </div>
 
           <div class="kpi">
-            <div class="klabel">Territórios ativos</div>
+            <div class="kpi-head">
+              <span class="kpi-icon">🗺️</span>
+              <span class="klabel">Territórios ativos</span>
+            </div>
             <p class="kvalue" id="k_territoriosAtivos">0</p>
             <p class="khint">Territórios com atividade no período.</p>
           </div>
@@ -178,33 +249,35 @@
           <div class="panel-head">
             <div class="hgroup">
               <h2>Resumo operacional ampliado</h2>
-             <p>Indicadores executivos, materiais, rejeito e histórico operacional.</p>
+              <p>Indicadores executivos, composição dos materiais, rejeito e série operacional.</p>
             </div>
           </div>
 
           <div class="summary-grid">
             <div class="summary-side">
               <div class="mini-stat-card green">
+                <div class="mini-stat-title">📅 Projeto</div>
                 <div class="mini-stat-value" id="k_totalDiasProjeto">0</div>
-                <div class="mini-stat-label">total de dias do projeto</div>
+                <div class="mini-stat-label">total de dias com operação</div>
                 <div class="mini-stat-sub" id="k_inicioProjeto">Início: —</div>
               </div>
 
               <div class="mini-stat-card green">
+                <div class="mini-stat-title">🧾 Operações</div>
                 <div class="mini-stat-value" id="k_operacoesRealizadas">0</div>
                 <div class="mini-stat-label">operações realizadas</div>
               </div>
 
               <div class="side-duo">
                 <div class="mini-box">
-                  <h4>Famílias</h4>
+                  <h4>🏠 Famílias</h4>
                   <div class="mini-box-line"><strong id="k_familiasCadastradas">0</strong><span>cadastradas</span></div>
                   <div class="mini-box-line"><strong id="k_familiasParticipantes">0</strong><span>participantes</span></div>
                   <div class="mini-box-line"><strong id="k_familiasColetas">0</strong><span>coletas realizadas</span></div>
                 </div>
 
                 <div class="mini-box">
-                  <h4>Condomínio</h4>
+                  <h4>🏢 Condomínio</h4>
                   <div class="mini-box-line"><strong id="k_condominiosCadastrados">0</strong><span>cadastrados</span></div>
                   <div class="mini-box-line"><strong id="k_condominiosParticipantes">0</strong><span>participantes</span></div>
                   <div class="mini-box-line"><strong id="k_condominiosColetas">0</strong><span>coletas realizadas</span></div>
@@ -217,7 +290,7 @@
                 <div class="overall-card recyclable">
                   <div class="overall-icon">♻️</div>
                   <div class="overall-copy">
-                    <div class="overall-topline">GERAL</div>
+                    <div class="overall-topline">GERAL RECICLÁVEL</div>
                     <div class="overall-big">
                       <strong id="k_totalReciclavelKg">0</strong> kg
                       <span>RECICLÁVEL</span>
@@ -226,7 +299,7 @@
                       <strong id="k_totalReciclavelPct">0%</strong> do total
                     </div>
                     <div class="overall-foot">
-                      Receita total ≈ <strong id="k_receitaTotal">R$ 0,00</strong>
+                      Receita total estimada ≈ <strong id="k_receitaTotal">R$ 0,00</strong>
                     </div>
                   </div>
                 </div>
@@ -234,6 +307,7 @@
                 <div class="overall-card reject">
                   <div class="overall-icon">🚯</div>
                   <div class="overall-copy">
+                    <div class="overall-topline">GERAL REJEITO</div>
                     <div class="overall-big">
                       <strong id="k_totalRejeitoKg">0</strong> kg
                       <span>REJEITO</span>
@@ -248,13 +322,13 @@
               <div class="materials-layout">
                 <div>
                   <div class="block-title">Tipo de material reciclável</div>
-                  <div class="block-subtitle">(% sobre o total de recicláveis)</div>
+                  <div class="block-subtitle">Percentual sobre o total de recicláveis</div>
                   <div class="material-cards" id="materialCards"></div>
                 </div>
 
                 <div>
                   <div class="block-title">Tipo de rejeito</div>
-                  <div class="block-subtitle">(% sobre o total do rejeito + não comercializado)</div>
+                  <div class="block-subtitle">Percentual sobre rejeito + não comercializado</div>
 
                   <div class="reject-cards">
                     <div class="reject-card">
@@ -280,7 +354,7 @@
 
               <div class="bottom-analytics">
                 <div class="map-panel-lite">
-                  <div class="block-title">Localização</div>
+                  <div class="block-title">Localização operacional</div>
                   <div class="map-mini" id="mapMini">
                     <div class="map-mini-placeholder" id="mapMiniText">Centro de Triagem / Território ativo</div>
                   </div>
@@ -304,7 +378,7 @@
             <div class="panel-head">
               <div class="hgroup">
                 <h2>Evolução diária de registros</h2>
-                <p>Quantidade de coletas registradas por dia.</p>
+                <p>Quantidade de coletas registradas por dia conforme o tipo de gráfico selecionado.</p>
               </div>
             </div>
 
@@ -347,6 +421,12 @@
             </div>
           </div>
 
+          <div class="table-toolbar">
+            <div class="table-toolbar-info">
+              <span class="toolbar-badge">🕘 Últimos registros</span>
+            </div>
+          </div>
+
           <div class="table-wrap">
             <table>
               <thead>
@@ -372,7 +452,15 @@
           <div class="panel-head">
             <div class="hgroup">
               <h2>Tabela de coletas</h2>
-              <p>Últimos registros recebidos do formulário de coletas.</p>
+              <p>Lista completa dos registros recebidos do formulário de coletas.</p>
+            </div>
+          </div>
+
+          <div class="table-toolbar">
+            <div class="table-toolbar-info">
+              <span class="toolbar-badge">📋 Lista operacional</span>
+              <span class="toolbar-badge">✏️ Edição ativa</span>
+              <span class="toolbar-badge">🛑 Cancelamento controlado</span>
             </div>
           </div>
 
