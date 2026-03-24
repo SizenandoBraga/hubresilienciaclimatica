@@ -1,5 +1,5 @@
 import { auth, db } from "./firebase-init.js";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   doc,
   getDoc,
@@ -7,21 +7,29 @@ import {
   query,
   where,
   orderBy,
-  onSnapshot
-} from "firebase/firestore";
+  onSnapshot,
+  getDocs,
+  limit
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const els = {
   sidebar: document.getElementById("sidebar"),
   menuBtn: document.getElementById("menuBtn"),
   sidebarClose: document.getElementById("sidebarClose"),
+  mobileOverlay: document.getElementById("mobileOverlay"),
+  logoutLink: document.getElementById("logoutLink"),
 
   territoryNameTop: document.getElementById("territoryNameTop"),
+  cooperativeNameTop: document.getElementById("cooperativeNameTop"),
+  roleNameTop: document.getElementById("roleNameTop"),
   userNameTop: document.getElementById("userNameTop"),
+  rolePill: document.getElementById("rolePill"),
+  accessBanner: document.getElementById("accessBanner"),
+  sidebarHelpText: document.getElementById("sidebarHelpText"),
 
   noticesList: document.getElementById("noticesList"),
   featuredTrails: document.getElementById("featuredTrails"),
 
-  territoryTabs: document.getElementById("territoryTabs"),
   territoryPanelTitle: document.getElementById("territoryPanelTitle"),
   territoryPanelSubtitle: document.getElementById("territoryPanelSubtitle"),
 
@@ -44,22 +52,28 @@ const els = {
   participantsTotalCount: document.getElementById("participantsTotalCount"),
   participantsPeopleCount: document.getElementById("participantsPeopleCount"),
   participantsCondoCount: document.getElementById("participantsCondoCount"),
+  participantsSectionText: document.getElementById("participantsSectionText"),
+  newParticipantBtn: document.getElementById("newParticipantBtn"),
 
   mapPointsCount: document.getElementById("mapPointsCount"),
   mapPointsList: document.getElementById("mapPointsList"),
   mapTypeFilter: document.getElementById("mapTypeFilter"),
-  btnNearMe: document.getElementById("btnNearMe")
-};
+  btnNearMe: document.getElementById("btnNearMe"),
+  btnLoadParticipantPoints: document.getElementById("btnLoadParticipantPoints"),
 
-let allParticipants = [];
-let territoryMap = null;
-let territoryMarkers = [];
-let territoryPoints = [];
+  editPointName: document.getElementById("editPointName"),
+  editPointAddress: document.getElementById("editPointAddress"),
+  editPointType: document.getElementById("editPointType"),
+  editPointLat: document.getElementById("editPointLat"),
+  editPointLng: document.getElementById("editPointLng"),
+  btnApplyPointEdit: document.getElementById("btnApplyPointEdit"),
+  btnCancelPointEdit: document.getElementById("btnCancelPointEdit")
+};
 
 const TAB_META = {
   comunicados: {
     title: "Comunicados da cooperativa",
-    subtitle: "Avisos e atualizações do território."
+    subtitle: "Avisos, atualizações e orientações da cooperativa."
   },
   servicos: {
     title: "Serviços disponíveis",
@@ -67,7 +81,7 @@ const TAB_META = {
   },
   mapa: {
     title: "Mapa do território",
-    subtitle: "Pontos e referências acessíveis ao território."
+    subtitle: "Pontos de coleta e endereços operacionais vinculados à cooperativa."
   },
   calendario: {
     title: "Agenda e calendário",
@@ -87,24 +101,111 @@ const TAB_META = {
   }
 };
 
+const STATE = {
+  currentUser: null,
+  profile: null,
+  isAdmin: false,
+  canEditAll: false,
+  allParticipants: [],
+  territoryMap: null,
+  territoryMarkers: [],
+  fixedPoints: [],
+  participantPoints: [],
+  allMapPoints: [],
+  geocodeCache: new Map(),
+  selectedPointId: null
+};
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
+function roleLabel(role) {
+  const map = {
+    admin: "Administrador",
+    cooperativa: "Cooperativa",
+    governanca: "Governança",
+    gestor: "Gestor"
+  };
+  return map[role] || role || "Perfil";
+}
+
+function participantIcon(type) {
+  const key = normalizeText(type);
+
+  if (key === "condominio") return "🏢";
+  if (key === "comercio") return "🏪";
+  if (key === "familia") return "👨‍👩‍👧";
+  if (key === "morador") return "👤";
+  if (key === "lideranca") return "📣";
+  if (key === "participante") return "🧩";
+
+  return "👤";
+}
+
+function formatParticipantType(type) {
+  const map = {
+    morador: "Morador",
+    familia: "Família",
+    condominio: "Condomínio",
+    comercio: "Comércio",
+    lideranca: "Liderança",
+    participante: "Participante"
+  };
+  return map[normalizeText(type)] || type || "Não informado";
+}
+
+function buildFullAddress(participant) {
+  const address = participant?.address || {};
+
+  const pieces = [
+    address.street,
+    address.number,
+    address.neighborhood,
+    address.city || "Porto Alegre",
+    address.state || "RS"
+  ]
+    .map((v) => String(v || "").trim())
+    .filter(Boolean);
+
+  return pieces.join(", ");
+}
+
+function hasValidLatLng(item) {
+  const lat = Number(item?.lat);
+  const lng = Number(item?.lng);
+  return Number.isFinite(lat) && Number.isFinite(lng);
+}
+
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) {
-    throw new Error("Usuário não encontrado.");
-  }
-  return snap.data();
+  if (!snap.exists()) throw new Error("Usuário não encontrado.");
+  return { id: snap.id, ...snap.data() };
 }
 
 function validateProfile(profile) {
-  if (profile.role !== "cooperativa") {
-    throw new Error("Acesso permitido somente para cooperativa.");
+  if (!profile) throw new Error("Perfil de usuário inválido.");
+  if (profile.status !== "active") throw new Error("Usuário sem acesso ativo.");
+
+  const acceptedRoles = ["admin", "cooperativa"];
+  if (!acceptedRoles.includes(profile.role)) {
+    throw new Error("Acesso permitido apenas para administrador ou usuário da cooperativa.");
   }
 
-  if (profile.status !== "active") {
-    throw new Error("Usuário sem acesso ativo.");
-  }
-
-  if (!profile.territoryId) {
+  if (profile.role !== "admin" && !profile.territoryId) {
     throw new Error("Usuário sem território vinculado.");
   }
 }
@@ -112,47 +213,80 @@ function validateProfile(profile) {
 function setupSidebar() {
   els.menuBtn?.addEventListener("click", () => {
     els.sidebar?.classList.add("open");
+    els.mobileOverlay?.classList.add("show");
   });
 
-  els.sidebarClose?.addEventListener("click", () => {
+  function closeSidebar() {
     els.sidebar?.classList.remove("open");
+    els.mobileOverlay?.classList.remove("show");
+  }
+
+  els.sidebarClose?.addEventListener("click", closeSidebar);
+  els.mobileOverlay?.addEventListener("click", closeSidebar);
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 1180) closeSidebar();
+  });
+}
+
+function setupLogout() {
+  els.logoutLink?.addEventListener("click", async (event) => {
+    event.preventDefault();
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Erro ao sair:", error);
+    } finally {
+      window.location.href = "index.html";
+    }
   });
 }
 
 function fillHeader(profile) {
-  if (els.territoryNameTop) {
-    els.territoryNameTop.textContent = profile.territoryLabel || "Território";
+  const isAdmin = profile.role === "admin";
+  const territory = profile.territoryLabel || (isAdmin ? "Todos os territórios" : "Território");
+  const coop = profile.cooperativeName || profile.cooperativeLabel || (isAdmin ? "Todas as cooperativas" : "Cooperativa");
+  const name = profile.displayName || profile.name || "Usuário";
+
+  if (els.territoryNameTop) els.territoryNameTop.textContent = territory;
+  if (els.cooperativeNameTop) els.cooperativeNameTop.textContent = coop;
+  if (els.roleNameTop) els.roleNameTop.textContent = roleLabel(profile.role);
+  if (els.userNameTop) els.userNameTop.textContent = name;
+
+  if (els.accessBanner) {
+    els.accessBanner.className = `access-banner show ${isAdmin ? "admin" : "cooperativa"}`;
+    els.accessBanner.innerHTML = isAdmin
+      ? `<strong>Acesso administrativo ativo.</strong> Você pode visualizar e editar dados de todas as cooperativas cadastradas no sistema.`
+      : `<strong>Acesso da cooperativa ativo.</strong> Você visualiza e insere dados apenas da sua cooperativa e do seu território vinculado.`;
   }
 
-  if (els.userNameTop) {
-    els.userNameTop.textContent = profile.displayName || profile.name || "Usuário";
-  }
+  document.querySelectorAll(".admin-only").forEach((el) => {
+    el.classList.toggle("hidden", !isAdmin);
+  });
 }
 
 function renderInfoList(container, items) {
   if (!container) return;
-
   container.innerHTML = items.map((item) => `
     <article class="info-item">
       <div class="info-copy">
-        <strong>${item.title}</strong>
-        <span>${item.description}</span>
+        <strong>${escapeHtml(item.title)}</strong>
+        <span>${escapeHtml(item.description)}</span>
       </div>
-      ${item.meta ? `<span class="info-meta">${item.meta}</span>` : ""}
+      ${item.meta ? `<span class="info-meta">${escapeHtml(item.meta)}</span>` : ""}
     </article>
   `).join("");
 }
 
 function renderTrailList(container, items) {
   if (!container) return;
-
   container.innerHTML = items.map((item) => `
     <article class="trail-item">
       <div class="trail-copy">
-        <strong>${item.title}</strong>
-        <span>${item.status}</span>
+        <strong>${escapeHtml(item.title)}</strong>
+        <span>${escapeHtml(item.status)}</span>
       </div>
-      ${item.level ? `<span class="trail-level">${item.level}</span>` : ""}
+      ${item.level ? `<span class="trail-level">${escapeHtml(item.level)}</span>` : ""}
     </article>
   `).join("");
 }
@@ -161,12 +295,12 @@ function fillStaticPanels() {
   renderInfoList(els.noticesList, [
     {
       title: "Comunicado do Núcleo",
-      description: "Atualização de conteúdos e trilhas nesta semana.",
+      description: "Atualização de conteúdos, trilhas e materiais operacionais nesta semana.",
       meta: "Hoje"
     },
     {
       title: "Campanha ativa no território",
-      description: "Mutirão de educação ambiental | Inscrições abertas.",
+      description: "Mutirão de educação ambiental com mobilização local.",
       meta: "Esta semana"
     }
   ]);
@@ -187,17 +321,17 @@ function fillStaticPanels() {
   renderInfoList(els.territoryCommunications, [
     {
       title: "Mutirão de limpeza — sábado",
-      description: "Concentração às 8h. Leve luvas e garrafa de água.",
+      description: "Concentração às 8h. Leve luvas, água e identificação da cooperativa.",
       meta: "Ação"
     },
     {
       title: "Mudança de horário",
-      description: "Triagem das 8h às 17h (seg–sex).",
+      description: "Triagem das 8h às 17h de segunda a sexta-feira.",
       meta: "Aviso"
     },
     {
       title: "Coleta especial aberta",
-      description: "Agendamentos para grandes volumes via formulário.",
+      description: "Agendamentos para grandes volumes via registro operacional.",
       meta: "Serviço"
     }
   ]);
@@ -205,11 +339,11 @@ function fillStaticPanels() {
   renderInfoList(els.territoryServices, [
     {
       title: "Apoio operacional",
-      description: "Orientação sobre triagem, rota e organização."
+      description: "Orientação sobre triagem, rota, recebimento e organização dos pontos."
     },
     {
       title: "Ponto de entrega",
-      description: "Recebimento de materiais vinculados ao território."
+      description: "Recebimento de materiais vinculados ao território e parceiros locais."
     }
   ]);
 
@@ -233,15 +367,12 @@ function fillStaticPanels() {
     },
     {
       title: "Boas práticas operacionais",
-      description: "Procedimentos e rotina da cooperativa."
+      description: "Procedimentos, segurança e rotina da cooperativa."
     }
   ]);
 
   if (els.summaryAccepted) els.summaryAccepted.textContent = "4";
   if (els.summaryRejected) els.summaryRejected.textContent = "4";
-  if (els.summaryPoints) els.summaryPoints.textContent = "3";
-
-  if (els.indicatorColetas) els.indicatorColetas.textContent = "0";
   if (els.indicatorDocs) els.indicatorDocs.textContent = "12";
   if (els.indicatorActions) els.indicatorActions.textContent = "5";
 }
@@ -269,54 +400,20 @@ function setupTerritoryTabs() {
       }
 
       if (key === "mapa") {
-        setTimeout(() => {
-          territoryMap?.invalidateSize();
-        }, 200);
+        setTimeout(() => STATE.territoryMap?.invalidateSize(), 200);
       }
     });
   });
-}
-
-function participantIcon(type) {
-  const key = String(type || "").toLowerCase();
-
-  if (key === "condominio") return "🏢";
-  if (key === "comercio") return "🏪";
-  if (key === "familia") return "👨‍👩‍👧";
-  if (key === "morador") return "👤";
-  if (key === "lideranca") return "📣";
-  if (key === "participante") return "🧩";
-
-  return "👤";
-}
-
-function formatParticipantType(type) {
-  if (!type) return "Não informado";
-
-  const map = {
-    morador: "Morador",
-    familia: "Família",
-    condominio: "Condomínio",
-    comercio: "Comércio",
-    lideranca: "Liderança",
-    participante: "Participante"
-  };
-
-  return map[type] || type;
 }
 
 function computeParticipantsKpis(items) {
   const total = items.length;
 
   const peopleCount = items.filter((item) =>
-    ["morador", "familia", "lideranca", "participante"].includes(
-      String(item.participantType || "").toLowerCase()
-    )
+    ["morador", "familia", "lideranca", "participante"].includes(normalizeText(item.participantType))
   ).length;
 
-  const condoCount = items.filter((item) =>
-    String(item.participantType || "").toLowerCase() === "condominio"
-  ).length;
+  const condoCount = items.filter((item) => normalizeText(item.participantType) === "condominio").length;
 
   if (els.participantsTotalCount) els.participantsTotalCount.textContent = String(total);
   if (els.participantsPeopleCount) els.participantsPeopleCount.textContent = String(peopleCount);
@@ -330,45 +427,57 @@ function renderParticipants(items) {
   if (!items.length) {
     els.participantsList.innerHTML = `
       <div class="participants-empty">
-        Nenhum participante encontrado para este território.
+        Nenhum participante encontrado para o filtro atual.
       </div>
     `;
     return;
   }
 
-  els.participantsList.innerHTML = items.map((item) => `
-    <article class="participant-row">
-      <div class="participant-main">
-        <div class="participant-avatar">${participantIcon(item.participantType)}</div>
-
-        <div class="participant-copy">
-          <strong>${item.name || "Sem nome"}</strong>
-          <span>${item.participantCode || "-"}</span>
-          <span>${item.address?.street || "Endereço não informado"}${item.address?.number ? `, ${item.address.number}` : ""}</span>
+  els.participantsList.innerHTML = items.map((item) => {
+    const address = buildFullAddress(item) || "Endereço não informado";
+    return `
+      <article class="participant-row">
+        <div class="participant-main">
+          <div class="participant-avatar">${participantIcon(item.participantType)}</div>
+          <div class="participant-copy">
+            <strong>${escapeHtml(item.name || "Sem nome")}</strong>
+            <span>${escapeHtml(item.participantCode || "-")}</span>
+            <span>${escapeHtml(address)}</span>
+          </div>
         </div>
-      </div>
 
-      <div class="participant-meta">
-        <span class="participant-tag">${formatParticipantType(item.participantType)}</span>
-        <span class="participant-subtag">${item.localType || item.address?.neighborhood || "Território"}</span>
-      </div>
-    </article>
-  `).join("");
+        <div class="participant-meta">
+          <span class="participant-tag">${escapeHtml(formatParticipantType(item.participantType))}</span>
+          <span class="participant-subtag">${escapeHtml(item.localType || item.address?.neighborhood || "Território")}</span>
+        </div>
+      </article>
+    `;
+  }).join("");
 }
 
 function filterParticipants() {
-  const term = String(els.participantSearchInput?.value || "").trim().toLowerCase();
+  const term = normalizeText(els.participantSearchInput?.value);
 
   if (!term) {
-    computeParticipantsKpis(allParticipants);
-    renderParticipants(allParticipants);
+    computeParticipantsKpis(STATE.allParticipants);
+    renderParticipants(STATE.allParticipants);
     return;
   }
 
-  const filtered = allParticipants.filter((item) => {
-    const name = String(item.name || "").toLowerCase();
-    const code = String(item.participantCode || "").toLowerCase();
-    return name.includes(term) || code.includes(term);
+  const filtered = STATE.allParticipants.filter((item) => {
+    const haystack = [
+      item.name,
+      item.participantCode,
+      item.localType,
+      item.address?.street,
+      item.address?.number,
+      item.address?.neighborhood,
+      item.address?.city
+    ]
+      .map(normalizeText)
+      .join(" ");
+
+    return haystack.includes(term);
   });
 
   computeParticipantsKpis(filtered);
@@ -379,28 +488,36 @@ function bindParticipantsSearch() {
   els.participantSearchInput?.addEventListener("input", filterParticipants);
 }
 
-function loadParticipants(territoryId) {
-  const q = query(
+function buildParticipantsQuery(profile) {
+  if (profile.role === "admin") {
+    return query(collection(db, "participants"), orderBy("createdAtISO", "desc"));
+  }
+
+  return query(
     collection(db, "participants"),
-    where("territoryId", "==", territoryId),
+    where("territoryId", "==", profile.territoryId),
     orderBy("createdAtISO", "desc")
   );
+}
+
+function loadParticipants(profile) {
+  const q = buildParticipantsQuery(profile);
 
   onSnapshot(
     q,
     (snapshot) => {
-      allParticipants = snapshot.docs.map((docItem) => ({
+      STATE.allParticipants = snapshot.docs.map((docItem) => ({
         id: docItem.id,
         ...docItem.data()
       }));
 
-      computeParticipantsKpis(allParticipants);
-      renderParticipants(allParticipants);
+      computeParticipantsKpis(STATE.allParticipants);
+      renderParticipants(STATE.allParticipants);
       filterParticipants();
+      updateParticipantIndicator();
     },
     (error) => {
       console.error("Erro ao carregar participantes:", error);
-
       if (els.participantsList) {
         els.participantsList.innerHTML = `
           <div class="participants-empty">
@@ -418,27 +535,27 @@ function getDefaultTerritoryPoints(profile) {
   if (territoryId === "crgr_vila_pinto") {
     return [
       {
-        id: "vp-1",
-        name: "Ponto Bom Jesus",
+        id: "vp-main",
+        name: "Vila Pinto",
         type: "seletiva",
-        lat: -30.036111,
-        lng: -51.158333,
-        address: "Região Bom Jesus / Jardim Carvalho"
+       lat: -30.048729170292532,
+      lng: -51.15652604283108,
+        address: "Vila Pinto, Porto Alegre - RS"
       },
       {
         id: "vp-2",
         name: "Escola parceira",
         type: "papel",
-        lat: -30.0315,
-        lng: -51.1608,
+        lat: -30.0468,
+        lng: -51.1602,
         address: "Área escolar do território"
       },
       {
         id: "vp-3",
         name: "Ponto comunitário",
         type: "plastico",
-        lat: -30.0382,
-        lng: -51.1548,
+        lat: -30.0505,
+        lng: -51.1539,
         address: "Centro comunitário local"
       }
     ];
@@ -448,7 +565,7 @@ function getDefaultTerritoryPoints(profile) {
     return [
       {
         id: "coo-1",
-        name: "COOADESC (CRGR)",
+        name: "COOADESC",
         type: "seletiva",
         lat: -30.003,
         lng: -51.206,
@@ -469,7 +586,7 @@ function getDefaultTerritoryPoints(profile) {
     return [
       {
         id: "coopi-1",
-        name: "Cooperilhas (CRGR)",
+        name: "Cooperilhas",
         type: "seletiva",
         lat: -30.016667,
         lng: -51.216667,
@@ -482,6 +599,19 @@ function getDefaultTerritoryPoints(profile) {
         lat: -30.0182,
         lng: -51.2124,
         address: "Região de apoio local"
+      }
+    ];
+  }
+
+  if (profile.role === "admin") {
+    return [
+      {
+        id: "admin-default",
+        name: "Base geral do NSRU",
+        type: "seletiva",
+        lat: -30.0346,
+        lng: -51.2177,
+        address: "Visualização geral do sistema"
       }
     ];
   }
@@ -499,8 +629,72 @@ function getDefaultTerritoryPoints(profile) {
 }
 
 function clearTerritoryMarkers() {
-  territoryMarkers.forEach((marker) => territoryMap?.removeLayer(marker));
-  territoryMarkers = [];
+  STATE.territoryMarkers.forEach((marker) => STATE.territoryMap?.removeLayer(marker));
+  STATE.territoryMarkers = [];
+}
+
+function getMarkerColor(type) {
+  const normalized = normalizeText(type);
+  if (normalized === "participante") return "#EF6B22";
+  if (normalized === "papel") return "#53ACDE";
+  if (normalized === "plastico") return "#81B92A";
+  if (normalized === "vidro") return "#3C3A39";
+  return "#2F8F4E";
+}
+
+function buildDivIcon(type) {
+  const color = getMarkerColor(type);
+  return L.divIcon({
+    className: "custom-map-pin-wrap",
+    html: `
+      <div style="
+        width:18px;
+        height:18px;
+        border-radius:999px;
+        background:${color};
+        border:3px solid #fff;
+        box-shadow:0 4px 14px rgba(0,0,0,.18);
+      "></div>
+    `,
+    iconSize: [18, 18],
+    iconAnchor: [9, 9]
+  });
+}
+
+function selectPointForEdit(pointId) {
+  const point = STATE.allMapPoints.find((p) => p.id === pointId);
+  if (!point) return;
+
+  STATE.selectedPointId = pointId;
+
+  if (els.editPointName) els.editPointName.value = point.name || "";
+  if (els.editPointAddress) els.editPointAddress.value = point.address || "";
+  if (els.editPointType) els.editPointType.value = point.type || "";
+  if (els.editPointLat) els.editPointLat.value = point.lat ?? "";
+  if (els.editPointLng) els.editPointLng.value = point.lng ?? "";
+}
+
+function clearPointEditor() {
+  STATE.selectedPointId = null;
+  if (els.editPointName) els.editPointName.value = "";
+  if (els.editPointAddress) els.editPointAddress.value = "";
+  if (els.editPointType) els.editPointType.value = "";
+  if (els.editPointLat) els.editPointLat.value = "";
+  if (els.editPointLng) els.editPointLng.value = "";
+}
+
+function updatePointInState(updatedPoint) {
+  STATE.allMapPoints = STATE.allMapPoints.map((item) =>
+    item.id === updatedPoint.id ? { ...item, ...updatedPoint } : item
+  );
+
+  STATE.fixedPoints = STATE.fixedPoints.map((item) =>
+    item.id === updatedPoint.id ? { ...item, ...updatedPoint } : item
+  );
+
+  STATE.participantPoints = STATE.participantPoints.map((item) =>
+    item.id === updatedPoint.id ? { ...item, ...updatedPoint } : item
+  );
 }
 
 function renderMapPointsList(points) {
@@ -515,28 +709,48 @@ function renderMapPointsList(points) {
 
   els.mapPointsList.innerHTML = points.map((point) => `
     <article class="map-point-card">
-      <strong>${point.name}</strong>
-      <span>${point.address || "Endereço não informado"}</span>
-      <span>Tipo: ${point.type || "seletiva"} • ${point.lat.toFixed(4)}, ${point.lng.toFixed(4)}</span>
+      <strong>${escapeHtml(point.name)}</strong>
+      <span>${escapeHtml(point.address || "Endereço não informado")}</span>
+      <span>Tipo: ${escapeHtml(point.type || "seletiva")} • ${Number(point.lat).toFixed(5)}, ${Number(point.lng).toFixed(5)}</span>
+
+      <div class="map-point-card-actions">
+        <button class="map-mini-btn green" type="button" data-edit-point="${escapeHtml(point.id)}">Editar</button>
+        <button class="map-mini-btn orange" type="button" data-focus-point="${escapeHtml(point.id)}">Ver no mapa</button>
+      </div>
     </article>
   `).join("");
+
+  els.mapPointsList.querySelectorAll("[data-edit-point]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      selectPointForEdit(btn.dataset.editPoint);
+    });
+  });
+
+  els.mapPointsList.querySelectorAll("[data-focus-point]").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const point = STATE.allMapPoints.find((p) => p.id === btn.dataset.focusPoint);
+      if (!point || !STATE.territoryMap) return;
+      STATE.territoryMap.setView([point.lat, point.lng], 17);
+    });
+  });
 }
 
 function renderTerritoryMap(points) {
   if (typeof L === "undefined") return;
+
   const mapContainer = document.getElementById("territoryMap");
   if (!mapContainer) return;
 
-  if (!territoryMap) {
+  if (!STATE.territoryMap) {
     const first = points[0] || { lat: -30.0346, lng: -51.2177 };
 
-    territoryMap = L.map("territoryMap", {
+    STATE.territoryMap = L.map("territoryMap", {
       zoomControl: true
     }).setView([first.lat, first.lng], 13);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap"
-    }).addTo(territoryMap);
+    }).addTo(STATE.territoryMap);
   }
 
   clearTerritoryMarkers();
@@ -544,20 +758,44 @@ function renderTerritoryMap(points) {
   const bounds = [];
 
   points.forEach((point) => {
-    const marker = L.marker([point.lat, point.lng]).addTo(territoryMap);
+    const marker = L.marker([point.lat, point.lng], {
+      icon: buildDivIcon(point.type),
+      draggable: true
+    }).addTo(STATE.territoryMap);
+
     marker.bindPopup(`
-      <strong>${point.name}</strong><br>
-      ${point.address || ""}<br>
-      Tipo: ${point.type || "seletiva"}
+      <strong>${escapeHtml(point.name)}</strong><br>
+      ${escapeHtml(point.address || "")}<br>
+      Tipo: ${escapeHtml(point.type || "seletiva")}
     `);
-    territoryMarkers.push(marker);
+
+    marker.on("click", () => {
+      selectPointForEdit(point.id);
+    });
+
+    marker.on("dragend", (event) => {
+      const latlng = event.target.getLatLng();
+      const updatedPoint = {
+        ...point,
+        lat: Number(latlng.lat),
+        lng: Number(latlng.lng)
+      };
+
+      updatePointInState(updatedPoint);
+      selectPointForEdit(point.id);
+      if (els.editPointLat) els.editPointLat.value = updatedPoint.lat;
+      if (els.editPointLng) els.editPointLng.value = updatedPoint.lng;
+      renderMapPointsList(getCurrentMapFilteredPoints());
+    });
+
+    STATE.territoryMarkers.push(marker);
     bounds.push([point.lat, point.lng]);
   });
 
   if (bounds.length === 1) {
-    territoryMap.setView(bounds[0], 14);
+    STATE.territoryMap.setView(bounds[0], 15);
   } else if (bounds.length > 1) {
-    territoryMap.fitBounds(bounds, { padding: [30, 30] });
+    STATE.territoryMap.fitBounds(bounds, { padding: [30, 30] });
   }
 
   if (els.mapPointsCount) {
@@ -571,45 +809,230 @@ function renderTerritoryMap(points) {
   renderMapPointsList(points);
 }
 
-function applyMapFilter() {
+function getCurrentMapFilteredPoints() {
   const filter = els.mapTypeFilter?.value || "all";
 
-  if (filter === "all") {
-    renderTerritoryMap(territoryPoints);
+  if (filter === "all") return STATE.allMapPoints;
+
+  return STATE.allMapPoints.filter((point) => normalizeText(point.type) === normalizeText(filter));
+}
+
+function applyMapFilter() {
+  renderTerritoryMap(getCurrentMapFilteredPoints());
+}
+
+function applyPointEdit() {
+  if (!STATE.selectedPointId) {
+    alert("Selecione um ponto para editar.");
     return;
   }
 
-  const filtered = territoryPoints.filter((point) => point.type === filter);
-  renderTerritoryMap(filtered);
+  const point = STATE.allMapPoints.find((p) => p.id === STATE.selectedPointId);
+  if (!point) return;
+
+  const updatedPoint = {
+    ...point,
+    name: els.editPointName?.value?.trim() || point.name,
+    address: els.editPointAddress?.value?.trim() || point.address,
+    type: els.editPointType?.value?.trim() || point.type,
+    lat: Number(els.editPointLat?.value),
+    lng: Number(els.editPointLng?.value)
+  };
+
+  if (!Number.isFinite(updatedPoint.lat) || !Number.isFinite(updatedPoint.lng)) {
+    alert("Latitude e longitude inválidas.");
+    return;
+  }
+
+  updatePointInState(updatedPoint);
+  applyMapFilter();
+
+  const selected = STATE.allMapPoints.find((p) => p.id === updatedPoint.id);
+  if (selected && STATE.territoryMap) {
+    STATE.territoryMap.setView([selected.lat, selected.lng], 16);
+  }
+
+  alert("Ponto atualizado com sucesso na tela. No próximo passo eu posso ligar isso ao Firebase.");
 }
 
 function setupMapActions() {
   els.mapTypeFilter?.addEventListener("change", applyMapFilter);
 
   els.btnNearMe?.addEventListener("click", () => {
-    if (!navigator.geolocation || !territoryMap) return;
+    if (!navigator.geolocation || !STATE.territoryMap) {
+      alert("Geolocalização não disponível neste dispositivo.");
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        territoryMap.setView([pos.coords.latitude, pos.coords.longitude], 14);
+        const lat = pos.coords.latitude;
+        const lng = pos.coords.longitude;
+
+        STATE.territoryMap.setView([lat, lng], 15);
+
+        const userMarker = L.circleMarker([lat, lng], {
+          radius: 10,
+          weight: 3,
+          color: "#53ACDE",
+          fillColor: "#53ACDE",
+          fillOpacity: 0.35
+        }).addTo(STATE.territoryMap);
+
+        userMarker.bindPopup("Sua localização atual").openPopup();
+
+        setTimeout(() => {
+          try {
+            STATE.territoryMap.removeLayer(userMarker);
+          } catch (_) {}
+        }, 12000);
       },
       () => {
         alert("Não foi possível obter sua localização.");
       }
     );
   });
+
+  els.btnLoadParticipantPoints?.addEventListener("click", async () => {
+    els.btnLoadParticipantPoints.disabled = true;
+    els.btnLoadParticipantPoints.textContent = "Carregando endereços...";
+
+    try {
+      await loadParticipantAddressPoints();
+      applyMapFilter();
+    } catch (error) {
+      console.error("Erro ao carregar pontos dos participantes:", error);
+      alert("Não foi possível carregar os pontos dos participantes.");
+    } finally {
+      els.btnLoadParticipantPoints.disabled = false;
+      els.btnLoadParticipantPoints.textContent = "➕ Carregar pontos por endereço";
+    }
+  });
+
+  els.btnApplyPointEdit?.addEventListener("click", applyPointEdit);
+  els.btnCancelPointEdit?.addEventListener("click", clearPointEditor);
 }
 
 function initTerritoryMap(profile) {
-  territoryPoints = getDefaultTerritoryPoints(profile);
+  STATE.fixedPoints = getDefaultTerritoryPoints(profile);
+  STATE.participantPoints = [];
+  STATE.allMapPoints = [...STATE.fixedPoints];
 
   setTimeout(() => {
-    renderTerritoryMap(territoryPoints);
+    renderTerritoryMap(STATE.allMapPoints);
   }, 120);
+}
+
+async function geocodeAddress(addressText) {
+  const key = addressText.trim();
+  if (!key) return null;
+
+  if (STATE.geocodeCache.has(key)) {
+    return STATE.geocodeCache.get(key);
+  }
+
+  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(key)}`;
+  const response = await fetch(url, {
+    headers: { "Accept": "application/json" }
+  });
+
+  if (!response.ok) {
+    throw new Error("Falha na geocodificação.");
+  }
+
+  const data = await response.json();
+  const result = data?.[0]
+    ? { lat: Number(data[0].lat), lng: Number(data[0].lon) }
+    : null;
+
+  STATE.geocodeCache.set(key, result);
+  return result;
+}
+
+function buildParticipantPoint(participant, coords) {
+  return {
+    id: `participant-${participant.id}`,
+    name: participant.name || participant.participantCode || "Participante",
+    type: "participante",
+    lat: Number(coords.lat),
+    lng: Number(coords.lng),
+    address: buildFullAddress(participant) || "Endereço do participante"
+  };
+}
+
+async function loadParticipantAddressPoints() {
+  if (!STATE.allParticipants.length) return;
+
+  const points = [];
+
+  for (const participant of STATE.allParticipants) {
+    if (hasValidLatLng(participant)) {
+      points.push(buildParticipantPoint(participant, {
+        lat: Number(participant.lat),
+        lng: Number(participant.lng)
+      }));
+      continue;
+    }
+
+    const address = buildFullAddress(participant);
+    if (!address) continue;
+
+    try {
+      const coords = await geocodeAddress(address);
+      if (coords) {
+        points.push(buildParticipantPoint(participant, coords));
+      }
+    } catch (error) {
+      console.warn("Endereço não geocodificado:", address, error);
+    }
+  }
+
+  const uniqueMap = new Map();
+  [...STATE.fixedPoints, ...points].forEach((item) => uniqueMap.set(item.id, item));
+
+  STATE.participantPoints = points;
+  STATE.allMapPoints = [...uniqueMap.values()];
+
+  renderTerritoryMap(getCurrentMapFilteredPoints());
+}
+
+async function loadCollectionCount(collectionName, profile, whereField = "territoryId") {
+  try {
+    let q;
+
+    if (profile.role === "admin") {
+      q = query(collection(db, collectionName), limit(200));
+    } else {
+      q = query(collection(db, collectionName), where(whereField, "==", profile.territoryId), limit(200));
+    }
+
+    const snap = await getDocs(q);
+    return snap.size;
+  } catch (error) {
+    console.warn(`Erro ao contar coleção ${collectionName}:`, error);
+    return 0;
+  }
+}
+
+async function loadIndicators(profile) {
+  const coletas = await loadCollectionCount("coletas", profile, "territoryId");
+  if (els.indicatorColetas) els.indicatorColetas.textContent = String(coletas);
+}
+
+function updateParticipantIndicator() {
+  if (els.indicatorParticipants) {
+    els.indicatorParticipants.textContent = String(STATE.allParticipants.length);
+  }
+}
+
+function applyPermissionRules(profile) {
+  STATE.isAdmin = profile.role === "admin";
+  STATE.canEditAll = STATE.isAdmin || profile.role === "cooperativa";
 }
 
 function boot() {
   setupSidebar();
+  setupLogout();
   setupTerritoryTabs();
   fillStaticPanels();
   bindParticipantsSearch();
@@ -622,12 +1045,16 @@ function boot() {
         return;
       }
 
+      STATE.currentUser = user;
       const profile = await getUserProfile(user.uid);
       validateProfile(profile);
+      STATE.profile = profile;
 
+      applyPermissionRules(profile);
       fillHeader(profile);
-      loadParticipants(profile.territoryId);
+      loadParticipants(profile);
       initTerritoryMap(profile);
+      loadIndicators(profile);
     } catch (error) {
       console.error("Erro ao carregar painel da cooperativa:", error);
       alert(error.message || "Não foi possível carregar o painel.");
