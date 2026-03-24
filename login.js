@@ -1,71 +1,71 @@
-import { auth, db } from "./firebase-init.js";
+import { auth } from "./firebase-init.js";
 
 import {
   signInWithEmailAndPassword,
-  createUserWithEmailAndPassword,
   sendPasswordResetEmail,
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
   browserSessionPersistence,
-  updateProfile,
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-import {
-  doc,
-  getDoc,
-  setDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-// =============================
-// Rotas
-// =============================
-const ROUTES = {
-  governanca: "./governanca.html",
-  cooperativa: "./cooperativas.html",
-  home: "./home.html"
+/* =============================
+   USUÁRIOS AUTORIZADOS
+============================= */
+const ACCESS_RULES = {
+  "admin.vp@teste.com": {
+    cooperativaId: "vila-pinto",
+    cooperativaNome: "Vila Pinto",
+    perfil: "admin"
+  },
+  "user.vp@teste.com": {
+    cooperativaId: "vila-pinto",
+    cooperativaNome: "Vila Pinto",
+    perfil: "user"
+  },
+
+  "admin.cooa@teste.com": {
+    cooperativaId: "cooadesc",
+    cooperativaNome: "Cooadesc",
+    perfil: "admin"
+  },
+  "user.cooa@teste.com": {
+    cooperativaId: "cooadesc",
+    cooperativaNome: "Cooadesc",
+    perfil: "user"
+  },
+
+  "admin.x@teste.com": {
+    cooperativaId: "ultima-cooperativa",
+    cooperativaNome: "Última Cooperativa",
+    perfil: "admin"
+  },
+  "user.x@teste.com": {
+    cooperativaId: "ultima-cooperativa",
+    cooperativaNome: "Última Cooperativa",
+    perfil: "user"
+  }
 };
 
-// =============================
-// UI refs
-// =============================
-const tabLogin = document.getElementById("tabLogin");
-const tabSignup = document.getElementById("tabSignup");
-const loginForm = document.getElementById("loginForm");
-const signupForm = document.getElementById("signupForm");
-const cardTitle = document.getElementById("cardTitle");
-const cardSubtitle = document.getElementById("cardSubtitle");
-const goSignupBtn = document.getElementById("goSignupBtn");
-const goLoginBtn = document.getElementById("goLoginBtn");
+const COOPERATIVAS_PAGE = "./cooperativas.html";
 
+/* =============================
+   UI REFS
+============================= */
 const msgBox = document.getElementById("msgBox");
-const msgBox2 = document.getElementById("msgBox2");
 const loadingbar = document.getElementById("loadingbar");
-const loadingbar2 = document.getElementById("loadingbar2");
-
 const loginBtn = document.getElementById("loginBtn");
-const signupBtn = document.getElementById("signupBtn");
-
 const rememberMe = document.getElementById("rememberMe");
 const resetPwdLink = document.getElementById("resetPwdLink");
-
 const authedActions = document.getElementById("authedActions");
-
+const loginForm = document.getElementById("loginForm");
 const loginEmail = document.getElementById("loginEmail");
 const loginPassword = document.getElementById("loginPassword");
 
-const signupName = document.getElementById("signupName");
-const signupEmail = document.getElementById("signupEmail");
-const signupRole = document.getElementById("signupRole");
-const signupTerritory = document.getElementById("signupTerritory");
-const signupCrgr = document.getElementById("signupCrgr");
-const signupPassword = document.getElementById("signupPassword");
-const signupPassword2 = document.getElementById("signupPassword2");
-
-// =============================
-// Cursor glow
-// =============================
+/* =============================
+   CURSOR GLOW
+============================= */
 const glow = document.getElementById("cursorGlow");
 if (glow) {
   window.addEventListener(
@@ -83,9 +83,9 @@ if (glow) {
   });
 }
 
-// =============================
-// Reveal
-// =============================
+/* =============================
+   REVEAL
+============================= */
 const revealEls = document.querySelectorAll("[data-reveal]");
 if (revealEls.length && "IntersectionObserver" in window) {
   const io = new IntersectionObserver((entries) => {
@@ -101,9 +101,9 @@ if (revealEls.length && "IntersectionObserver" in window) {
   revealEls.forEach((el) => el.classList.add("in"));
 }
 
-// =============================
-// Helpers UI
-// =============================
+/* =============================
+   HELPERS
+============================= */
 function showMsg(el, type, text) {
   if (!el) return;
   el.classList.remove("is-error", "is-success");
@@ -117,22 +117,13 @@ function hideMsg(el) {
   el.textContent = "";
 }
 
-function setLoading(which, isLoading) {
-  if (which === "login") {
-    if (loginBtn) {
-      loginBtn.disabled = isLoading;
-      loginBtn.style.opacity = isLoading ? "0.86" : "1";
-      loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
-    }
-    loadingbar?.classList.toggle("show", isLoading);
-  } else {
-    if (signupBtn) {
-      signupBtn.disabled = isLoading;
-      signupBtn.style.opacity = isLoading ? "0.86" : "1";
-      signupBtn.textContent = isLoading ? "Criando..." : "Criar conta";
-    }
-    loadingbar2?.classList.toggle("show", isLoading);
+function setLoading(isLoading) {
+  if (loginBtn) {
+    loginBtn.disabled = isLoading;
+    loginBtn.style.opacity = isLoading ? "0.86" : "1";
+    loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
   }
+  loadingbar?.classList.toggle("show", isLoading);
 }
 
 function niceError(err) {
@@ -141,122 +132,65 @@ function niceError(err) {
   return `${code}${msg ? " • " + msg : ""}`.trim();
 }
 
-function goTab(mode) {
-  const isLogin = mode === "login";
-
-  tabLogin?.classList.toggle("active", isLogin);
-  tabSignup?.classList.toggle("active", !isLogin);
-  tabLogin?.setAttribute("aria-selected", String(isLogin));
-  tabSignup?.setAttribute("aria-selected", String(!isLogin));
-
-  if (loginForm) loginForm.style.display = isLogin ? "" : "none";
-  if (signupForm) signupForm.style.display = isLogin ? "none" : "";
-
-  if (cardTitle) cardTitle.textContent = isLogin ? "Entrar" : "Criar conta";
-  if (cardSubtitle) {
-    cardSubtitle.textContent = isLogin
-      ? "Acesse sua conta para ver seu território, CRGR e atualizações."
-      : "Crie sua conta para acessar o Hub.";
-  }
-
-  hideMsg(msgBox);
-  hideMsg(msgBox2);
+function normalizeEmail(email) {
+  return String(email || "").trim().toLowerCase();
 }
 
-tabLogin?.addEventListener("click", () => goTab("login"));
-tabSignup?.addEventListener("click", () => goTab("signup"));
-goSignupBtn?.addEventListener("click", () => goTab("signup"));
-goLoginBtn?.addEventListener("click", () => goTab("login"));
-
-// =============================
-// Firestore: Perfil do usuário
-// =============================
-function normalizeRole(role) {
-  const r = (role || "").toLowerCase().trim();
-  if (r === "coorporativa") return "cooperativa";
-  if (r === "governança") return "governanca";
-  return r;
+function getAccessData(email) {
+  return ACCESS_RULES[normalizeEmail(email)] || null;
 }
 
-function routeByRole(profile) {
-  const role = normalizeRole(profile?.role);
-  const rolesMap = profile?.roles || {};
-
-  const isGov =
-    role === "admin" ||
-    role === "governanca" ||
-    role === "gestor" ||
-    rolesMap.admin === true ||
-    rolesMap.gestor === true;
-
-  const isCoop = role === "cooperativa";
-
-  if (isGov) {
-    window.location.href = ROUTES.governanca;
-    return;
-  }
-  if (isCoop) {
-    window.location.href = ROUTES.cooperativa;
-    return;
-  }
-  window.location.href = ROUTES.home;
+function goToCooperativas() {
+  window.location.href = COOPERATIVAS_PAGE;
 }
 
-async function getUserProfile(uid) {
-  const ref = doc(db, "users", uid);
-  const snap = await getDoc(ref);
-  return snap.exists() ? snap.data() : null;
-}
-
-async function ensureInitialProfileActive(user, payload = {}) {
-  const ref = doc(db, "users", user.uid);
-  const snap = await getDoc(ref);
-  if (snap.exists()) return snap.data();
-
-  const requestedRole = normalizeRole(payload.role || "cooperativa") || "cooperativa";
-
-  const minimal = {
-    role: requestedRole === "cooperativa" ? "cooperativa" : "user",
-    status: "active",
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp()
-  };
-
-  await setDoc(ref, minimal, { merge: true });
-
-  try {
-    await setDoc(
-      ref,
-      {
-        email: user.email ?? null,
-        displayName: user.displayName || payload.name || null,
-        name: user.displayName || payload.name || null,
-        territoryLabel: payload.territoryLabel || null,
-        crgrLabel: payload.crgrLabel || null,
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-  } catch (e) {
-    console.warn("Não consegui gravar campos extras no perfil (rules).", e?.code || e);
-  }
-
-  return minimal;
-}
-
-// =============================
-// Estado: já logado?
-// =============================
+/* =============================
+   JÁ LOGADO
+============================= */
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
     if (authedActions) authedActions.style.display = "none";
     return;
   }
 
-  goTab("login");
+  const email = normalizeEmail(user.email);
+  const access = getAccessData(email);
 
   hideMsg(msgBox);
-  showMsg(msgBox, "success", `Você já está conectado como ${user.email}.`);
+
+  if (!access) {
+    showMsg(
+      msgBox,
+      "error",
+      `Sua conta (${email}) foi autenticada, mas não possui acesso liberado.`
+    );
+
+    if (!authedActions) return;
+    authedActions.innerHTML = "";
+    authedActions.style.display = "grid";
+
+    const logoutBtn = document.createElement("button");
+    logoutBtn.type = "button";
+    logoutBtn.className = "btn btn-secondary btn-block";
+    logoutBtn.textContent = "Sair desta conta";
+    logoutBtn.addEventListener("click", async () => {
+      try {
+        await signOut(auth);
+        window.location.reload();
+      } catch {
+        showMsg(msgBox, "error", "Não consegui sair. Tente novamente.");
+      }
+    });
+
+    authedActions.appendChild(logoutBtn);
+    return;
+  }
+
+  showMsg(
+    msgBox,
+    "success",
+    `Você já está conectado como ${email}. Cooperativa vinculada: ${access.cooperativaNome}.`
+  );
 
   if (!authedActions) return;
   authedActions.innerHTML = "";
@@ -266,19 +200,7 @@ onAuthStateChanged(auth, async (user) => {
   continueBtn.type = "button";
   continueBtn.className = "btn btn-primary btn-block";
   continueBtn.textContent = "Continuar";
-  continueBtn.addEventListener("click", async () => {
-    try {
-      let profile = await getUserProfile(user.uid);
-      if (!profile) {
-        await ensureInitialProfileActive(user, { role: "cooperativa" });
-        profile = await getUserProfile(user.uid);
-      }
-      routeByRole(profile || { role: "cooperativa" });
-    } catch (e) {
-      console.error(e);
-      showMsg(msgBox, "error", "Não consegui carregar seu perfil. Tente novamente.");
-    }
-  });
+  continueBtn.addEventListener("click", goToCooperativas);
 
   const logoutBtn = document.createElement("button");
   logoutBtn.type = "button";
@@ -288,7 +210,7 @@ onAuthStateChanged(auth, async (user) => {
     try {
       await signOut(auth);
       window.location.reload();
-    } catch (e) {
+    } catch {
       showMsg(msgBox, "error", "Não consegui sair. Tente novamente.");
     }
   });
@@ -297,15 +219,15 @@ onAuthStateChanged(auth, async (user) => {
   authedActions.appendChild(logoutBtn);
 });
 
-// =============================
-// LOGIN
-// =============================
+/* =============================
+   LOGIN
+============================= */
 loginForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
   hideMsg(msgBox);
-  setLoading("login", true);
+  setLoading(true);
 
-  const email = (loginEmail?.value || "").trim();
+  const email = normalizeEmail(loginEmail?.value);
   const password = loginPassword?.value || "";
 
   try {
@@ -315,21 +237,20 @@ loginForm?.addEventListener("submit", async (e) => {
     );
 
     const cred = await signInWithEmailAndPassword(auth, email, password);
+    const authEmail = normalizeEmail(cred.user.email);
+    const access = getAccessData(authEmail);
 
-    let profile = await getUserProfile(cred.user.uid);
-    if (!profile) {
-      await ensureInitialProfileActive(cred.user, { role: "cooperativa" });
-      profile = await getUserProfile(cred.user.uid);
-    }
-
-    const status = (profile?.status || "active").toLowerCase();
-    if (status === "blocked") {
+    if (!access) {
       await signOut(auth);
-      showMsg(msgBox, "error", "Seu acesso está bloqueado. Fale com a governança.");
+      showMsg(
+        msgBox,
+        "error",
+        "Login realizado, mas este usuário não possui permissão para acessar a plataforma."
+      );
       return;
     }
 
-    routeByRole(profile || { role: "cooperativa" });
+    goToCooperativas();
   } catch (err) {
     console.error("LOGIN ERROR =>", err);
 
@@ -341,92 +262,42 @@ loginForm?.addEventListener("submit", async (e) => {
     else if (code.includes("auth/wrong-password")) text = "Senha incorreta.";
     else if (code.includes("auth/too-many-requests")) text = "Muitas tentativas. Tente novamente mais tarde.";
     else if (code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
-    else if (code.includes("auth/network-request-failed")) text = "Falha de rede. Verifique internet.";
+    else if (code.includes("auth/network-request-failed")) text = "Falha de rede. Verifique sua internet.";
     else if (code.includes("auth/invalid-api-key")) text = "API Key inválida no firebaseConfig.";
     else if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
     else text = "Erro no login: " + niceError(err);
 
     showMsg(msgBox, "error", text);
   } finally {
-    setLoading("login", false);
+    setLoading(false);
   }
 });
 
-// =============================
-// SIGNUP
-// =============================
-signupForm?.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  hideMsg(msgBox2);
-
-  const name = (signupName?.value || "").trim();
-  const email = (signupEmail?.value || "").trim();
-  const role = normalizeRole(signupRole?.value || "cooperativa") || "cooperativa";
-  const territoryLabel = (signupTerritory?.value || "").trim() || null;
-  const crgrLabel = (signupCrgr?.value || "").trim() || null;
-  const pass1 = signupPassword?.value || "";
-  const pass2 = signupPassword2?.value || "";
-
-  if (pass1.length < 6) return showMsg(msgBox2, "error", "Senha fraca. Use pelo menos 6 caracteres.");
-  if (pass1 !== pass2) return showMsg(msgBox2, "error", "As senhas não conferem.");
-
-  setLoading("signup", true);
-
-  try {
-    await setPersistence(auth, browserLocalPersistence);
-
-    const cred = await createUserWithEmailAndPassword(auth, email, pass1);
-
-    try { await updateProfile(cred.user, { displayName: name }); } catch {}
-
-    await ensureInitialProfileActive(cred.user, {
-      name,
-      role,
-      territoryLabel,
-      crgrLabel
-    });
-
-    if (role === "cooperativa") window.location.href = ROUTES.cooperativa;
-    else window.location.href = ROUTES.home;
-  } catch (err) {
-    console.error("SIGNUP ERROR =>", err);
-
-    const code = err?.code || "";
-    let text = "Não foi possível criar a conta.";
-
-    if (code.includes("auth/email-already-in-use")) text = "Este e-mail já está em uso. Use a aba Entrar.";
-    else if (code.includes("auth/weak-password")) text = "Senha fraca. Use pelo menos 6 caracteres.";
-    else if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
-    else if (code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
-    else text = "Erro no cadastro: " + niceError(err);
-
-    showMsg(msgBox2, "error", text);
-  } finally {
-    setLoading("signup", false);
-  }
-});
-
-// =============================
-// RESET SENHA
-// =============================
+/* =============================
+   RESET SENHA
+============================= */
 resetPwdLink?.addEventListener("click", async (e) => {
   e.preventDefault();
   hideMsg(msgBox);
 
-  const email = (loginEmail?.value || "").trim();
-  if (!email) return showMsg(msgBox, "error", "Digite seu e-mail para recuperar a senha.");
+  const email = normalizeEmail(loginEmail?.value);
+  if (!email) {
+    showMsg(msgBox, "error", "Digite seu e-mail para recuperar a senha.");
+    return;
+  }
 
   try {
     await sendPasswordResetEmail(auth, email);
     showMsg(msgBox, "success", "Enviamos um link de recuperação para seu e-mail.");
   } catch (err) {
     console.error("RESET ERROR =>", err);
+
     const code = err?.code || "";
     let text = "Não foi possível enviar o e-mail de recuperação.";
+
     if (code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
-    if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
+    else if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
+
     showMsg(msgBox, "error", text);
   }
 });
-
-goTab("login");
