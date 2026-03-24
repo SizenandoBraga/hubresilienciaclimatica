@@ -60,83 +60,112 @@
   <link rel="stylesheet" href="/index.css" />
 </head>
 
-<body>
+<body id="top">
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
   <div class="bg-grid"></div>
   <div class="noise"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
-<div id="header"></div>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html" aria-label="Ir para a página inicial">
+        <img
+          src="img/NSRU - Logo-Preto.png"
+          alt="Núcleo de Soluções para Resíduos Urbanos"
+          class="brand-logo"
+        >
+      </a>
+
+      <button
+        class="menu-btn"
+        id="menuBtn"
+        type="button"
+        aria-label="Abrir menu"
+        aria-expanded="false"
+        aria-controls="mainNav"
+      >
+        ☰
+      </button>
+
+      <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
+        <a href="index.html" class="nav-link active">Início</a>
+        <a href="quem-somos.html" class="nav-link">Quem Somos</a>
+        <a href="conteudos.html" class="nav-link">Conteúdos</a>
+        <a href="#dados" class="nav-link">Dados e Relatórios</a>
+        <a href="#faq" class="nav-link">FAQ</a>
+      </nav>
+
+      <div class="header-actions">
+        <a href="login.html" class="header-cta">
+          Cadastrar / Login
+        </a>
+      </div>
+    </div>
+  </header>
 
   <main id="conteudo" class="container main-content">
-  
-   
-    <section class="hero hero-premium">
-  <div class="container hero-shell">
-    <div class="hero-copy" data-reveal>
-      
 
-      <h1 class="hero-title">
-        <span class="hero-title-line">Um ponto de encontro para fortalecer a</span>
-        <span class="hero-title-highlight">Resiliência Climática</span> nos centros urbanos
-      </h1>
+    <!-- HERO CENTRALIZADO -->
+    <section class="hero hero-premium hero-centered">
+      <div class="container hero-shell">
+        <div class="hero-copy hero-copy-centered" data-reveal>
+          <h1 class="hero-title hero-title-centered">
+            <span class="hero-title-line">Um ponto de encontro para fortalecer a</span>
+            <span class="hero-title-highlight">Resiliência Climática</span>
+            <span class="hero-title-line">nos centros urbanos</span>
+          </h1>
 
-      <p class="hero-description hero-description-justify">
-        O Núcleo de Soluções para Resíduos Urbanos é um plataforma  digital e presencial que conecta cooperativas, comunidades, técnicos e gestores públicos. 
-        Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular e a resposta aos desafios climáticos nos territórios.
-      </p>
+          <p class="hero-description hero-description-centered">
+            O Núcleo de Soluções para Resíduos Urbanos é uma plataforma digital e presencial
+            que conecta cooperativas, comunidades, técnicos e gestores públicos.
+            Aqui você encontra apoio prático para fortalecer a reciclagem, a economia circular
+            e a resposta aos desafios climáticos nos territórios.
+          </p>
 
-      <div class="hero-bottom-note">
-        Uma plataforma construída para integrar pessoas, dados, cooperativas e territórios em torno de soluções urbanas mais justas, regenerativas e resilientes.
+          <div class="hero-bottom-note hero-bottom-note-centered">
+            Uma plataforma construída para integrar pessoas, dados, cooperativas e territórios
+            em torno de soluções urbanas mais justas, regenerativas e resilientes.
+          </div>
+        </div>
       </div>
-
-      
-    </div>
-  </div>
-</section>
-
-  
+    </section>
 
     <section id="pilares" class="section-shell" data-reveal>
       <div class="section-shell-glow"></div>
       <div class="section-shell-content">
-       
-
-       <div class="section-head section-head-pillars">
-  <div class="section-head-copy">
-    
-    <h2>Pilares do Núcleo</h2>
-    <p>
-      Dois eixos que sustentam o funcionamento do Núcleo: fortalecer a cadeia da
-      reciclagem e organizar a formação, a articulação e a governança territorial.
-    </p>
-  </div>
-</div>
+        <div class="section-head section-head-pillars">
+          <div class="section-head-copy">
+            <h2>Pilares do Núcleo</h2>
+            <p>
+              Dois eixos que sustentam o funcionamento do Núcleo: fortalecer a cadeia da
+              reciclagem e organizar a formação, a articulação e a governança territorial.
+            </p>
+          </div>
+        </div>
 
         <div class="cards-grid two">
           <article class="card">
             <div class="card-top">
               <div class="icon-box">♻</div>
-              <span class="badge-inline">
-                Eixo I
-              </span>
+              <span class="badge-inline">Eixo I</span>
             </div>
 
-            <h3 style="font-size: 32px;"> Reciclagem & Economia Circular</h3>
- <h2>Fortalecer a cadeia da reciclagem com inclusão produtiva dos Catadores
-</h2>
+            <h3>Reciclagem & Economia Circular</h3>
+            <h2>Fortalecer a cadeia da reciclagem com inclusão produtiva dos catadores</h2>
 
             <p>
-           Boas práticas, conteúdos e instrumentos para fortalecer a gestão de resíduos local e a cadeia de reciclagem  
-           como um todo, visando aumento de renda e redução de impacto ambiental. </p>
-
-            
+              Boas práticas, conteúdos e instrumentos para fortalecer a gestão de resíduos local
+              e a cadeia de reciclagem como um todo, visando aumento de renda e redução de impacto ambiental.
+            </p>
 
             <div class="card-actions">
-              <a href="https://aprendizagem.maosverdes.com.br"
-              target="_blank"
-              rel="noopener" class="btn btn-green">
+              <a
+                href="https://aprendizagem.maosverdes.com.br"
+                target="_blank"
+                rel="noopener"
+                class="btn btn-green"
+              >
                 Entrar na página de conteúdos <span aria-hidden="true">→</span>
               </a>
             </div>
@@ -145,115 +174,109 @@
           <article class="card">
             <div class="card-top">
               <div class="icon-box">📚</div>
-              <span class="badge-inline">
-                Eixo II
-              </span>
+              <span class="badge-inline">Eixo II</span>
             </div>
 
-            <h3 style="font-size: 32px;">Governança e Resiliência Local</h3>
-            <h2>Fortalecer a capacidade dos territórios de gerir resíduos em contextos de risco climático, com articulação entre atores locais.
-</h2>
+            <h3>Governança e Resiliência Local</h3>
+            <h2>
+              Fortalecer a capacidade dos territórios de gerir resíduos em contextos de risco climático,
+              com articulação entre atores locais.
+            </h2>
 
             <p>
-             Rastreabilidade da geração e destinação de resíduos, garantindo transparência, melhor tomada de decisão e gestão territorial mais eficiente.
-
-
-
-Engajamento territorial na gestão do resíduo x emergências climáticas
-Formação de lideranças locais e gestão colaborativa dos territórios.
-
+              Rastreabilidade da geração e destinação de resíduos, garantindo transparência,
+              melhor tomada de decisão e gestão territorial mais eficiente.
+              Engajamento territorial na gestão do resíduo frente a emergências climáticas,
+              formação de lideranças locais e gestão colaborativa dos territórios.
             </p>
-
-          
           </article>
         </div>
       </div>
     </section>
 
-  <section id="crgr" class="section-shell" data-reveal>
-  <div class="section-shell-glow"></div>
+    <section id="crgr" class="section-shell" data-reveal>
+      <div class="section-shell-glow"></div>
 
-  <div class="section-shell-content">
-    <div class="section-grid">
+      <div class="section-shell-content">
+        <div class="section-grid">
+          <div class="section-copy">
+            <h2>Rede CRGR — Piloto Porto Alegre</h2>
 
-      <div class="section-copy">
-        <h2>Rede CRGR — Piloto Porto Alegre</h2>
+            <p class="section-text">
+              Os <strong>Centros de Referência na Gestão de Resíduos (CRGRs)</strong>
+              são Unidades de Triagem conveniadas com o DMLU que, além da separação
+              e destinação de materiais recicláveis, atuam no território com serviços
+              comunitários, educação ambiental e orientação sobre boas práticas de
+              descarte antes, durante e após eventos climáticos extremos.
+            </p>
 
-        <p class="section-text">
-          Os <strong>Centros de Referência na Gestão de Resíduos (CRGRs)</strong>
-          são Unidades de Triagem conveniadas com o DMLU que, além da separação
-          e destinação de materiais recicláveis, atuam no território com serviços
-          comunitários, educação ambiental e orientação sobre boas práticas de
-          descarte antes, durante e após eventos climáticos extremos.
-        </p>
+            <p class="section-text">
+              Nesta etapa inicial, o NSRU integra <strong>dois CRGRs pilotos em Porto Alegre</strong>,
+              conectando atuação local, organização territorial e acesso a informações estratégicas.
+            </p>
 
-        <p class="section-text">
-          Nesta etapa inicial, o NSRU integra <strong>dois CRGRs pilotos em Porto Alegre</strong>,
-          conectando atuação local, organização territorial e acesso a informações estratégicas.
-        </p>
+            <div class="action-row">
+              <button data-open-map class="btn btn-secondary">
+                Abrir mapa agora <span aria-hidden="true">→</span>
+              </button>
 
-        <div class="action-row">
-          <button data-open-map class="btn btn-secondary">
-            Abrir mapa agora <span aria-hidden="true">→</span>
-          </button>
+              <a href="#dados" class="btn btn-outline-green">
+                Ver indicadores <span aria-hidden="true">↘</span>
+              </a>
+            </div>
+          </div>
 
-          <a href="#dados" class="btn btn-outline-green">
-            Ver indicadores <span aria-hidden="true">↘</span>
-          </a>
+          <aside class="side-panel">
+            <strong class="panel-title">CRGRs conectados</strong>
+
+            <div class="panel-list">
+              <article class="panel-card">
+                <div class="panel-card-text">
+                  <div class="panel-card-title">COOADESC (Farrapos)</div>
+                  <div class="panel-card-subtitle">
+                    Rua Seis (Vila Esperança), 113 • CEP 90250-000
+                  </div>
+                  <div class="panel-card-meta">Lat/Lng: -30.003, -51.206</div>
+                </div>
+
+                <div class="panel-card-actions">
+                  <button type="button" class="small-btn" data-focus-point="cooadesc">
+                    Ver no mapa
+                  </button>
+                  <a href="cooadesc.html" class="small-btn solid">
+                    Entrar no CRGR
+                  </a>
+                </div>
+              </article>
+
+              <article class="panel-card">
+                <div class="panel-card-text">
+                  <div class="panel-card-title">Vila Pinto (Bom Jesus / Jardim Carvalho)</div>
+                  <div class="panel-card-subtitle">
+                    Avenida Joaquim Porto Vilanova, 143, bairro Bom Jesus
+                  </div>
+                  
+                </div>
+
+                <div class="panel-card-actions">
+                  <button type="button" class="small-btn" data-focus-point="vilapinto">
+                    Ver no mapa
+                  </button>
+                  <a href="vila-pinto.html" class="small-btn solid">
+                    Entrar no CRGR
+                  </a>
+                </div>
+              </article>
+            </div>
+          </aside>
+        </div>
+
+        <div class="map-panel">
+          <div id="map" class="map-box" aria-label="Mapa dos CRGRs"></div>
         </div>
       </div>
+    </section>
 
-      <aside class="side-panel">
-        <strong class="panel-title">CRGRs conectados</strong>
-
-        <div class="panel-list">
-          <article class="panel-card">
-            <div class="panel-card-text">
-              <div class="panel-card-title">COOADESC (Farrapos)</div>
-              <div class="panel-card-subtitle">
-                Rua Seis (Vila Esperança), 113 • CEP 90250-000
-              </div>
-              <div class="panel-card-meta">Lat/Lng: -30.003, -51.206</div>
-            </div>
-
-            <div class="panel-card-actions">
-              <button type="button" class="small-btn" data-focus-point="cooadesc">
-                Ver no mapa
-              </button>
-              <a href="cooadesc.html" class="small-btn solid">
-                Entrar no CRGR
-              </a>
-            </div>
-          </article>
-
-          <article class="panel-card">
-            <div class="panel-card-text">
-              <div class="panel-card-title">Vila Pinto (Bom Jesus / Jardim Carvalho)</div>
-              <div class="panel-card-subtitle">
-                Região da Rua Bom Jesus (aprox.)
-              </div>
-              <div class="panel-card-meta">Lat/Lng: -30.036111, -51.158333</div>
-            </div>
-
-            <div class="panel-card-actions">
-              <button type="button" class="small-btn" data-focus-point="vilapinto">
-                Ver no mapa
-              </button>
-              <a href="vila-pinto.html" class="small-btn solid">
-                Entrar no CRGR
-              </a>
-            </div>
-          </article>
-        </div>
-      </aside>
-
-    </div>
-
-    <div class="map-panel">
-      <div id="map" class="map-box" aria-label="Mapa dos CRGRs"></div>
-    </div>
-  </div>
-</section>
     <section id="dados" class="section-shell" data-reveal>
       <div class="section-shell-glow"></div>
       <div class="section-shell-content">
@@ -296,6 +319,7 @@ Formação de lideranças locais e gestão colaborativa dos territórios.
       </div>
     </section>
 
+    <!-- PARCERIAS COM IMAGENS -->
     <section id="parcerias" class="section-shell" data-reveal>
       <div class="section-shell-glow"></div>
       <div class="section-shell-content">
@@ -305,16 +329,28 @@ Formação de lideranças locais e gestão colaborativa dos territórios.
           <div>
             <h2>Construído em rede</h2>
             <p>
-              O NSRU é construído com instituições, redes e apoiadores comprometidos com desenvolvimento territorial, justiça climática e economia circular.
+              O NSRU é construído com instituições, redes e apoiadores comprometidos com
+              desenvolvimento territorial, justiça climática e economia circular.
             </p>
           </div>
         </div>
 
-        <div class="partner-grid">
-          <div class="partner-card">Mãos Verdes</div>
-          <div class="partner-card">Cluster Ecoar</div>
-          <div class="partner-card">Cooperativas</div>
-          <div class="partner-card">Territórios</div>
+        <div class="partner-grid partner-grid-logos">
+          <div class="partner-card logo-card">
+            <img src="img/maos_verdes_logo.jpg" alt="Logo Mãos Verdes" class="partner-logo">
+          </div>
+
+          <div class="partner-card logo-card">
+            <img src="img/Cluster_ecoar.png" alt="Logo Cluster Ecoar" class="partner-logo">
+          </div>
+
+          <div class="partner-card logo-card">
+            <img src="img/" alt="Logo Cooperativas" class="partner-logo">
+          </div>
+
+          <div class="partner-card logo-card">
+            <img src="img/parceiros/territorios.png" alt="Logo Territórios" class="partner-logo">
+          </div>
         </div>
       </div>
     </section>
@@ -336,7 +372,8 @@ Formação de lideranças locais e gestão colaborativa dos territórios.
               <span class="faq-icon">⌄</span>
             </summary>
             <p>
-              Qualquer pessoa pode acessar os indicadores gerais. Para ter perfis cadastrados, é necessário que o território tenha um CRGR.
+              Qualquer pessoa pode acessar os indicadores gerais. Para ter perfis cadastrados,
+              é necessário que o território tenha um CRGR.
             </p>
           </details>
 
@@ -389,13 +426,14 @@ Formação de lideranças locais e gestão colaborativa dos territórios.
           <div class="footer-title">Núcleo de Soluções para Resíduos Urbanos</div>
           <div class="footer-copy">© <span id="year"></span> • Todos os direitos reservados.</div>
         </div>
-    <div class="footer-links">
-  <a href="#top">Início</a>
-  <a href="#pilares">Sobre</a>
-  <a href="conteudos.html">Conteúdos</a>
-  <a href="#dados">Dados</a>
-  <a href="#faq">FAQ</a>
-</div>
+
+        <div class="footer-links">
+          <a href="#top">Início</a>
+          <a href="#pilares">Sobre</a>
+          <a href="conteudos.html">Conteúdos</a>
+          <a href="#dados">Dados</a>
+          <a href="#faq">FAQ</a>
+        </div>
       </div>
     </footer>
   </main>
@@ -405,19 +443,6 @@ Formação de lideranças locais e gestão colaborativa dos territórios.
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
-  
-  <script>
-  fetch("header.html")
-    .then(res => res.text())
-    .then(data => {
-      document.getElementById("header").innerHTML = data;
-
-      // Carrega JS depois do HTML
-      const script = document.createElement("script");
-      script.src = "header.js";
-      document.body.appendChild(script);
-    });
-</script>
   <script src="/index.js"></script>
 </body>
 </html>

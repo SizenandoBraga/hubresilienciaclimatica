@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
+  // ==========================================
+  // CONFIGURAÇÕES GERAIS
+  // ==========================================
   const LOGIN_URL = "login.html";
 
+  // Pontos que serão exibidos no mapa
   const CRGR_POINTS = {
     cooadesc: {
       name: "COOADESC",
@@ -17,9 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     vilapinto: {
       name: "Vila Pinto",
-      lat: -30.036111,
-      lng: -51.158333,
-      zoom: 15,
+      lat: -30.048729170292532,
+      lng: -51.15652604283108,
+      zoom: 16,
       popup: `
         <div style="font-family:'Archivo Condensed',sans-serif;">
           <strong>Vila Pinto</strong><br>
@@ -30,22 +34,29 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // Funções utilitárias para buscar elementos
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
+  // Scroll suave com compensação para header fixo
   function safeScrollTo(target, offset = 96) {
     if (!target) return;
     const top = target.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: "smooth" });
   }
 
+  // Detecta se o usuário prefere menos animações
   function isReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
+  // Atualiza ano automaticamente no rodapé
   const yearEl = $("#year");
   if (yearEl) yearEl.textContent = String(new Date().getFullYear());
 
+  // ==========================================
+  // BOTÕES DE ENTRADA / LOGIN
+  // ==========================================
   const btnEntrar = $("#btnEntrar");
   const btnEntrarHero = $("#btnEntrarHero");
 
@@ -56,6 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // ==========================================
+  // MENU MOBILE
+  // ==========================================
   const menuBtn = $("#menuBtn");
   const mainNav = $("#mainNav");
 
@@ -77,17 +91,22 @@ document.addEventListener("DOMContentLoaded", () => {
       expanded ? closeMobileMenu() : openMobileMenu();
     });
 
+    // Fecha menu ao clicar em um link no mobile
     $$("a", mainNav).forEach((link) => {
       link.addEventListener("click", () => {
         if (window.innerWidth <= 860) closeMobileMenu();
       });
     });
 
+    // Se voltar para desktop, fecha o menu mobile
     window.addEventListener("resize", () => {
       if (window.innerWidth > 860) closeMobileMenu();
     });
   }
 
+  // ==========================================
+  // EFEITO DE GLOW DO CURSOR
+  // ==========================================
   const cursorGlow = $("#cursorGlow");
 
   if (cursorGlow && !isReducedMotion()) {
@@ -118,6 +137,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // ==========================================
+  // REVEAL DAS SEÇÕES AO ENTRAR NA TELA
+  // ==========================================
   const revealEls = $$("[data-reveal]");
 
   if (revealEls.length) {
@@ -142,6 +164,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ==========================================
+  // CONTADOR ANIMADO DOS INDICADORES
+  // ==========================================
   const countEls = $$(".kcount");
 
   function animateCount(el) {
@@ -195,6 +220,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ==========================================
+  // FAQ - APENAS UM ITEM ABERTO POR VEZ
+  // ==========================================
   $$("details.faq-item, details").forEach((detail) => {
     detail.addEventListener("toggle", () => {
       if (!detail.open) return;
@@ -204,6 +232,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // ==========================================
+  // LINKS INTERNOS COM SCROLL SUAVE
+  // ==========================================
   $$('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", (event) => {
       const href = anchor.getAttribute("href");
@@ -218,6 +249,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // ==========================================
+  // MAPA LEAFLET
+  // ==========================================
   const mapEl = $("#map");
   let map = null;
   const markers = {};
@@ -289,6 +323,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  // ==========================================
+  // AO ENTRAR COM HASH NA URL, POSICIONA A PÁGINA
+  // ==========================================
   if (window.location.hash) {
     const target = document.querySelector(window.location.hash);
     if (target) {
