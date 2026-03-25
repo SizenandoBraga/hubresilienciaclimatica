@@ -121,6 +121,7 @@ let routeControl = null;
 let coopMarker = null;
 let destinationMarker = null;
 let selectedPointKey = null;
+let activeUnsubscribe = null;
 
 function formatDateBR(value) {
   if (!value) return "—";
@@ -171,6 +172,12 @@ function normalizeText(value) {
     .toLowerCase();
 }
 
+function normalizeSlug(value) {
+  return normalizeText(value)
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+}
+
 function createdAtToISO(item) {
   if (item.createdAt?.toDate) return item.createdAt.toDate().toISOString();
   if (item.updatedAt?.toDate) return item.updatedAt.toDate().toISOString();
@@ -203,6 +210,10 @@ function firstPhotoUrl(item) {
 
 function inferTerritorio(item) {
   return item.territoryLabel || coopProfile?.territoryLabel || "Território";
+}
+
+function inferTerritorioId(item) {
+  return String(item.territoryId || "").trim();
 }
 
 function inferFluxo(item) {
@@ -280,10 +291,60 @@ function getMaterialValue(item, key) {
   return 0;
 }
 
+function buildTerritoryAliases(profile) {
+  const aliases = new Set();
+  const id = String(profile?.territoryId || "").trim();
+  const label = String(profile?.territoryLabel || "").trim();
+
+  if (id) {
+    aliases.add(id);
+    aliases.add(id.replaceAll("-", "_"));
+    aliases.add(id.replaceAll("_", "-"));
+    aliases.add(normalizeSlug(id));
+    aliases.add(normalizeSlug(id).replaceAll("_", "-"));
+  }
+
+  if (label) {
+    const slug = normalizeSlug(label);
+    if (slug) {
+      aliases.add(slug);
+      aliases.add(slug.replaceAll("_", "-"));
+    }
+  }
+
+  const normalized = [...aliases].map(normalizeSlug).filter(Boolean);
+
+  if (
+    normalized.some((v) => v.includes("vila_pinto")) ||
+    normalized.some((v) => v.includes("crgr_vila_pinto"))
+  ) {
+    aliases.add("crgr_vila_pinto");
+    aliases.add("crgr-vila-pinto");
+    aliases.add("vila_pinto");
+    aliases.add("vila-pinto");
+  }
+
+  return [...aliases].filter(Boolean);
+}
+
+function matchesProfileTerritory(item, profile) {
+  if (!profile || profile.role === "admin") return true;
+
+  const itemId = inferTerritorioId(item);
+  if (!itemId) return false;
+
+  const aliases = buildTerritoryAliases(profile);
+  return aliases.includes(itemId);
+}
+
 function resolveParticipant(item) {
   const participantId = item.participantId || null;
   const participantCode = item.participantCode || null;
-  const familyCode = item.recebimento?.familyCode || item.finalTurno?.familyCode || null;
+  const familyCode =
+    item.familyCode ||
+    item.recebimento?.familyCode ||
+    item.finalTurno?.familyCode ||
+    null;
   const directName = item.participantName || null;
 
   const fromId = participantId ? participantsMap.get(String(participantId)) : null;
@@ -376,16 +437,47 @@ function validateProfile(profile) {
 async function loadParticipantsMap(territoryId) {
   participantsMap.clear();
 
-  let qParticipants;
+  let queriesToRun = [];
+
   if (coopProfile?.role === "admin") {
-    qParticipants = query(collection(db, "participants"));
+    queriesToRun = [query(collection(db, "participants"))];
   } else {
-    qParticipants = query(collection(db, "participants"), where("territoryId", "==", territoryId));
+    const aliases = buildTerritoryAliases({
+      territoryId,
+      territoryLabel: coopProfile?.territoryLabel || ""
+    });
+
+    const uniqueAliases = [...new Set(aliases)].filter(Boolean).slice(0, 10);
+
+    if (uniqueAliases.length > 1) {
+      queriesToRun = [
+        query(collection(db, "participants"), where("territoryId", "in", uniqueAliases))
+      ];
+    } else {
+      queriesToRun = [
+        query(collection(db, "participants"), where("territoryId", "==", uniqueAliases[0] || territoryId))
+      ];
+    }
   }
 
-  const snap = await getDocs(qParticipants);
+  let docs = [];
+  try {
+    for (const qRef of queriesToRun) {
+      const snap = await getDocs(qRef);
+      docs = docs.concat(snap.docs);
+    }
+  } catch (error) {
+    console.warn("Falha ao carregar participantes por aliases. Tentando fallback simples.", error);
+    const snap = await getDocs(query(collection(db, "participants"), where("territoryId", "==", territoryId)));
+    docs = snap.docs;
+  }
 
-  snap.forEach((d) => {
+  const seen = new Set();
+
+  docs.forEach((d) => {
+    if (seen.has(d.id)) return;
+    seen.add(d.id);
+
     const data = d.data();
     const payload = {
       id: d.id,
@@ -644,7 +736,10 @@ function renderExpandedPanel(items) {
 }
 
 function getCoopBaseLatLng() {
-  if (coopProfile?.territoryId === "crgr_vila_pinto") {
+  if (
+    coopProfile?.territoryId === "crgr_vila_pinto" ||
+    coopProfile?.territoryId === "vila-pinto"
+  ) {
     return { lat: -30.048729170292532, lng: -51.15652604283108 };
   }
 
@@ -735,9 +830,7 @@ function drawRouteToPoint(point) {
     fitSelectedRoutes: true,
     show: false,
     lineOptions: {
-      styles: [
-        { color: "#53ACDE", opacity: 0.9, weight: 6 }
-      ]
+      styles: [{ color: "#53ACDE", opacity: 0.9, weight: 6 }]
     },
     createMarker: () => null
   }).addTo(routeMap);
@@ -756,7 +849,6 @@ function getParticipantPointDataFromMapItems(items) {
   items.forEach((item) => {
     const participant = resolveParticipant(item);
     if (!participant.name || participant.name === "Sem participante vinculado") return;
-
     if (!participant.lat || !participant.lng) return;
 
     const key = participant.code || participant.name;
@@ -1196,12 +1288,18 @@ async function cancelRegistro(itemId) {
 }
 
 function getSearchTarget(item, participant, searchType) {
+  const familyCode =
+    item.familyCode ||
+    item.recebimento?.familyCode ||
+    item.finalTurno?.familyCode ||
+    "";
+
   const targets = {
-    participant: `${participant.name} ${item.participantName || ""} ${item.recebimento?.familyCode || ""} ${item.finalTurno?.familyCode || ""}`,
-    code: `${participant.code} ${item.participantCode || ""} ${item.recebimento?.familyCode || ""} ${item.finalTurno?.familyCode || ""}`,
+    participant: `${participant.name} ${item.participantName || ""} ${familyCode}`,
+    code: `${participant.code} ${item.participantCode || ""} ${familyCode}`,
     creator: `${item.createdByName || ""} ${item.createdByPublicCode || ""} ${item.createdBy || ""}`,
     obs: `${inferObservacao(item)}`,
-    territory: `${inferTerritorio(item)}`,
+    territory: `${inferTerritorio(item)} ${inferTerritorioId(item)}`,
     delivery: `${inferEntrega(item)}`,
     flow: `${inferFluxo(item)}`
   };
@@ -1214,11 +1312,11 @@ function getSearchTarget(item, participant, searchType) {
       item.createdByPublicCode,
       item.createdBy,
       inferTerritorio(item),
+      inferTerritorioId(item),
       inferEntrega(item),
       inferFluxo(item),
       inferObservacao(item),
-      item.recebimento?.familyCode || "",
-      item.finalTurno?.familyCode || "",
+      familyCode,
       item.participantCode || ""
     ].join(" ");
   }
@@ -1287,63 +1385,113 @@ function sortColetasLocally(items) {
   });
 }
 
+function subscribeToQuery(qRef, useFallbackLabel = false) {
+  if (activeUnsubscribe) {
+    activeUnsubscribe();
+    activeUnsubscribe = null;
+  }
+
+  activeUnsubscribe = onSnapshot(
+    qRef,
+    (snapshot) => {
+      let loaded = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...d.data()
+      }));
+
+      if (useFallbackLabel) {
+        loaded = sortColetasLocally(loaded);
+      }
+
+      if (coopProfile?.role !== "admin") {
+        loaded = loaded.filter((item) => matchesProfileTerritory(item, coopProfile));
+      }
+
+      allColetas = loaded;
+
+      populateFilters(allColetas);
+      setDefaultDateRange(allColetas);
+      applyFilters();
+
+      els.dbStatus.textContent = useFallbackLabel ? "conectado (modo provisório)" : "conectado";
+
+      console.log("Dashboard carregado:", {
+        territoryIdUsuario: coopProfile?.territoryId,
+        aliasesTerritorio: buildTerritoryAliases(coopProfile),
+        totalColetas: allColetas.length
+      });
+    },
+    async (error) => {
+      console.error("Erro ao carregar coletas:", error);
+
+      const msg = String(error?.message || "").toLowerCase();
+      const aliases = buildTerritoryAliases(coopProfile).slice(0, 10);
+
+      if (!useFallbackLabel && aliases.length > 1) {
+        try {
+          console.warn("Falha no modo principal. Tentando fallback com filtro simples por território.");
+          const fallbackQuery = query(
+            collection(db, "coletas"),
+            where("territoryId", "==", aliases[0])
+          );
+          subscribeToQuery(fallbackQuery, true);
+          return;
+        } catch (fallbackError) {
+          console.error("Fallback simples falhou:", fallbackError);
+        }
+      }
+
+      if (!useFallbackLabel && msg.includes("index")) {
+        try {
+          console.warn("Índice ausente. Tentando fallback local.");
+          const fallbackQuery =
+            coopProfile?.role === "admin"
+              ? query(collection(db, "coletas"))
+              : query(collection(db, "coletas"), where("territoryId", "==", coopProfile.territoryId));
+          subscribeToQuery(fallbackQuery, true);
+          return;
+        } catch (fallbackError) {
+          console.error("Fallback local falhou:", fallbackError);
+        }
+      }
+
+      els.dbStatus.textContent = "erro";
+      alert("Não foi possível carregar os dados do dashboard.");
+    }
+  );
+}
+
 function listenColetas(profile) {
   els.dbStatus.textContent = "conectando…";
 
-  const isAdmin = profile.role === "admin";
+  if (profile.role === "admin") {
+    const qRef = query(collection(db, "coletas"), orderBy("createdAt", "desc"));
+    subscribeToQuery(qRef, false);
+    return;
+  }
 
-  const startListener = (useFallback = false) => {
-    let qColetas;
+  const aliases = buildTerritoryAliases(profile).slice(0, 10);
 
-    if (isAdmin) {
-      qColetas = useFallback
-        ? query(collection(db, "coletas"))
-        : query(collection(db, "coletas"), orderBy("createdAt", "desc"));
-    } else {
-      qColetas = useFallback
-        ? query(collection(db, "coletas"), where("territoryId", "==", profile.territoryId))
-        : query(
-            collection(db, "coletas"),
-            where("territoryId", "==", profile.territoryId),
-            orderBy("createdAt", "desc")
-          );
+  if (aliases.length > 1) {
+    try {
+      const qRef = query(
+        collection(db, "coletas"),
+        where("territoryId", "in", aliases),
+        orderBy("createdAt", "desc")
+      );
+      subscribeToQuery(qRef, false);
+      return;
+    } catch (error) {
+      console.warn("Consulta com aliases falhou ao montar. Usando território principal.", error);
     }
+  }
 
-    onSnapshot(
-      qColetas,
-      (snapshot) => {
-        allColetas = snapshot.docs.map((d) => ({
-          id: d.id,
-          ...d.data()
-        }));
-
-        if (useFallback) {
-          allColetas = sortColetasLocally(allColetas);
-        }
-
-        populateFilters(allColetas);
-        setDefaultDateRange(allColetas);
-        applyFilters();
-
-        els.dbStatus.textContent = useFallback ? "conectado (modo provisório)" : "conectado";
-      },
-      (error) => {
-        const msg = String(error?.message || "").toLowerCase();
-
-        if (!useFallback && msg.includes("index")) {
-          console.warn("Índice ainda em construção. Usando fallback local.");
-          startListener(true);
-          return;
-        }
-
-        console.error("Erro ao carregar coletas:", error);
-        els.dbStatus.textContent = "erro";
-        alert("Não foi possível carregar os dados do dashboard.");
-      }
-    );
-  };
-
-  startListener(false);
+  const qRef = query(
+    collection(db, "coletas"),
+    where("territoryId", "==", profile.territoryId),
+    orderBy("createdAt", "desc")
+  );
+  subscribeToQuery(qRef, false);
 }
 
 function initCursorGlow() {
