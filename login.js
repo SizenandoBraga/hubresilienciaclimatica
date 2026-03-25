@@ -14,37 +14,50 @@ import {
    USUÁRIOS AUTORIZADOS
 ============================= */
 const ACCESS_RULES = {
+  "governanca@teste.com": {
+    cooperativaId: null,
+    cooperativaNome: "Todas",
+    perfil: "governanca",
+    scope: "global"
+  },
+
   "admin.vp@teste.com": {
     cooperativaId: "vila-pinto",
     cooperativaNome: "Vila Pinto",
-    perfil: "admin"
+    perfil: "admin",
+    scope: "cooperativa"
   },
   "user.vp@teste.com": {
     cooperativaId: "vila-pinto",
     cooperativaNome: "Vila Pinto",
-    perfil: "user"
+    perfil: "user",
+    scope: "cooperativa"
   },
 
   "admin.cooa@teste.com": {
     cooperativaId: "cooadesc",
     cooperativaNome: "Cooadesc",
-    perfil: "admin"
+    perfil: "admin",
+    scope: "cooperativa"
   },
   "user.cooa@teste.com": {
     cooperativaId: "cooadesc",
     cooperativaNome: "Cooadesc",
-    perfil: "user"
+    perfil: "user",
+    scope: "cooperativa"
   },
 
   "admin.x@teste.com": {
     cooperativaId: "ultima-cooperativa",
     cooperativaNome: "Última Cooperativa",
-    perfil: "admin"
+    perfil: "admin",
+    scope: "cooperativa"
   },
   "user.x@teste.com": {
     cooperativaId: "ultima-cooperativa",
     cooperativaNome: "Última Cooperativa",
-    perfil: "user"
+    perfil: "user",
+    scope: "cooperativa"
   }
 };
 
@@ -144,6 +157,13 @@ function goToCooperativas() {
   window.location.href = COOPERATIVAS_PAGE;
 }
 
+function describeAccess(access) {
+  if (!access) return "sem acesso";
+  if (access.perfil === "governanca") return "Governança • acesso a todas as cooperativas";
+  if (access.perfil === "admin") return `Administrador local • acesso total da cooperativa ${access.cooperativaNome}`;
+  return `Usuário local • acesso à cooperativa ${access.cooperativaNome}`;
+}
+
 /* =============================
    JÁ LOGADO
 ============================= */
@@ -186,11 +206,7 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  showMsg(
-    msgBox,
-    "success",
-    `Você já está conectado como ${email}. Cooperativa vinculada: ${access.cooperativaNome}.`
-  );
+  showMsg(msgBox, "success", `Você já está conectado como ${email}. Perfil: ${describeAccess(access)}.`);
 
   if (!authedActions) return;
   authedActions.innerHTML = "";
