@@ -1,129 +1,185 @@
 /**
  * quem-somos.js
- * Script da página "Quem Somos"
+ * Página "Quem Somos"
  *
- * Responsabilidades:
- * 1. Atualizar ano do rodapé
- * 2. Carregar header global com fallback
- * 3. Aplicar efeito de cursor glow em desktop
- * 4. Aplicar animação de reveal ao rolar a página
- * 5. Garantir fallback seguro para botão de entrada, se existir no header
+ * Funções:
+ * - Atualiza o ano do rodapé
+ * - Controla o efeito glow do cursor em desktop
+ * - Mostra elementos com animação ao entrar na viewport
+ * - Controla o menu mobile do header
+ * - Fecha menu ao clicar em link, pressionar ESC ou voltar para desktop
  */
 
 document.addEventListener("DOMContentLoaded", () => {
   updateFooterYear();
   initCursorGlow();
   initRevealOnScroll();
-  loadGlobalHeader();
+  initMobileMenu();
 });
 
-/**
- * Atualiza o ano atual no rodapé.
- */
+/* =========================================
+   ANO DO RODAPÉ
+========================================= */
 function updateFooterYear() {
   const yearEl = document.getElementById("year");
+
   if (yearEl) {
     yearEl.textContent = String(new Date().getFullYear());
   }
 }
 
-/**
- * Inicializa o efeito visual do brilho seguindo o cursor.
- * Ativado apenas em dispositivos com mouse/pointer fino.
- */
+/* =========================================
+   CURSOR GLOW
+   Ativo apenas em dispositivos com ponteiro fino
+========================================= */
 function initCursorGlow() {
   const cursorGlow = document.getElementById("cursorGlow");
   const hasFinePointer = window.matchMedia("(pointer:fine)").matches;
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  if (!cursorGlow || !hasFinePointer) return;
+  if (!cursorGlow || !hasFinePointer || prefersReducedMotion) {
+    if (cursorGlow) {
+      cursorGlow.style.display = "none";
+    }
+    return;
+  }
+
+  let rafId = null;
+
+  function updateGlowPosition(clientX, clientY) {
+    cursorGlow.style.transform =
+      `translate(${clientX}px, ${clientY}px) translate(-50%, -50%)`;
+  }
 
   window.addEventListener("mousemove", (event) => {
-    cursorGlow.style.transform = `translate(${event.clientX}px, ${event.clientY}px) translate(-50%, -50%)`;
-  });
+    if (rafId) cancelAnimationFrame(rafId);
 
-  window.addEventListener("mouseleave", () => {
-    cursorGlow.style.opacity = "0";
+    rafId = requestAnimationFrame(() => {
+      updateGlowPosition(event.clientX, event.clientY);
+    });
   });
 
   window.addEventListener("mouseenter", () => {
     cursorGlow.style.opacity = "0.22";
   });
+
+  window.addEventListener("mouseleave", () => {
+    cursorGlow.style.opacity = "0";
+  });
 }
 
-/**
- * Anima elementos com atributo [data-reveal] quando entram na viewport.
- * Usa IntersectionObserver para melhor performance.
- */
+/* =========================================
+   REVEAL AO SCROLL
+========================================= */
 function initRevealOnScroll() {
   const revealItems = document.querySelectorAll("[data-reveal]");
+  const prefersReducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
   if (!revealItems.length) return;
 
+  if (prefersReducedMotion) {
+    revealItems.forEach((item) => item.classList.add("is-visible"));
+    return;
+  }
+
   if ("IntersectionObserver" in window) {
     const observer = new IntersectionObserver(
-      (entries) => {
+      (entries, currentObserver) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
 
           entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target);
+          currentObserver.unobserve(entry.target);
         });
       },
       {
-        threshold: 0.15
+        threshold: 0.15,
+        rootMargin: "0px 0px -20px 0px"
       }
     );
 
     revealItems.forEach((item) => observer.observe(item));
   } else {
-    /* Fallback para navegadores mais antigos */
     revealItems.forEach((item) => item.classList.add("is-visible"));
   }
 }
 
+/* =========================================
+   MENU MOBILE
+========================================= */
+function initMobileMenu() {
+  const menuBtn = document.getElementById("menuBtn");
+  const mainNav = document.getElementById("mainNav");
 
-/**
- * Injeta um script externo no body.
- * @param {string} src Caminho do script
- * @returns {Promise<void>}
- */
-function loadScript(src) {
-  return new Promise((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = src;
-    script.defer = true;
+  if (!menuBtn || !mainNav) return;
 
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error(`Erro ao carregar script: ${src}`));
+  const navLinks = mainNav.querySelectorAll(".nav-link");
+  const desktopMediaQuery = window.matchMedia("(min-width: 861px)");
 
-    document.body.appendChild(script);
+  function openMenu() {
+    mainNav.classList.add("open");
+    menuBtn.setAttribute("aria-expanded", "true");
+    menuBtn.setAttribute("aria-label", "Fechar menu");
+    menuBtn.innerHTML = "✕";
+    document.body.classList.add("menu-open");
+  }
+
+  function closeMenu() {
+    mainNav.classList.remove("open");
+    menuBtn.setAttribute("aria-expanded", "false");
+    menuBtn.setAttribute("aria-label", "Abrir menu");
+    menuBtn.innerHTML = "☰";
+    document.body.classList.remove("menu-open");
+  }
+
+  function isMenuOpen() {
+    return mainNav.classList.contains("open");
+  }
+
+  function toggleMenu() {
+    if (isMenuOpen()) {
+      closeMenu();
+    } else {
+      openMenu();
+    }
+  }
+
+  menuBtn.addEventListener("click", toggleMenu);
+
+  navLinks.forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 860) {
+        closeMenu();
+      }
+    });
   });
-}
 
-/**
- * Fallback para ações simples do header, caso existam elementos específicos.
- * Mantém o comportamento resiliente sem depender 100% do header.js.
- */
-function bindHeaderFallbackActions() {
-  const btnEntrar = document.getElementById("btnEntrar");
-  if (btnEntrar) {
-    btnEntrar.addEventListener("click", () => {
-      window.location.href = "../html/login.html";
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && isMenuOpen()) {
+      closeMenu();
+      menuBtn.focus();
+    }
+  });
+
+  if (typeof desktopMediaQuery.addEventListener === "function") {
+    desktopMediaQuery.addEventListener("change", (event) => {
+      if (event.matches) {
+        closeMenu();
+      }
+    });
+  } else if (typeof desktopMediaQuery.addListener === "function") {
+    desktopMediaQuery.addListener((event) => {
+      if (event.matches) {
+        closeMenu();
+      }
     });
   }
 
-  /**
-   * Caso o header tenha menu mobile com botão e nav,
-   * este fallback ajuda a abrir/fechar o menu mesmo se o header.js
-   * não estiver disponível ou não estiver tratando isso.
-   */
-  const menuBtn = document.querySelector(".menu-btn");
-  const mainNav = document.querySelector(".main-nav");
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 860 && isMenuOpen()) {
+      closeMenu();
+    }
+  });
 
-  if (menuBtn && mainNav) {
-    menuBtn.addEventListener("click", () => {
-      const isOpen = mainNav.classList.toggle("open");
-      menuBtn.setAttribute("aria-expanded", String(isOpen));
-    });
-  }
+  closeMenu();
 }

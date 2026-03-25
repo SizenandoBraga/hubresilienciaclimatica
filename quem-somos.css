@@ -1,34 +1,26 @@
 :root {
-  /* Cores institucionais */
   --green: #81B92A;
   --black: #3C3A39;
   --blue: #53ACDE;
   --orange: #EF6B22;
 
-  /* Superfícies e fundo */
   --bg: #F6F5F2;
-  --bg-soft: #FBFBF9;
-  --surface: #FFFFFF;
   --surface-soft: rgba(255, 255, 255, 0.72);
-  --surface-strong: rgba(255, 255, 255, 0.9);
+  --surface-strong: rgba(255, 255, 255, 0.92);
   --border: rgba(60, 58, 57, 0.10);
 
-  /* Texto */
   --text: #3C3A39;
   --muted: #6B6866;
 
-  /* Sombras */
   --shadow-xs: 0 8px 18px rgba(60, 58, 57, 0.06);
   --shadow-sm: 0 14px 30px rgba(60, 58, 57, 0.08);
   --shadow: 0 18px 48px rgba(60, 58, 57, 0.08);
   --shadow-lg: 0 24px 70px rgba(60, 58, 57, 0.10);
 
-  /* Bordas */
   --radius-sm: 16px;
   --radius-md: 22px;
   --radius-lg: 34px;
 
-  /* Largura máxima */
   --container: 1320px;
 }
 
@@ -58,27 +50,36 @@ body {
     linear-gradient(180deg, #fcfcfb 0%, var(--bg) 60%, #efedea 100%);
 }
 
+body.menu-open {
+  overflow: hidden;
+}
+
+img {
+  max-width: 100%;
+}
+
+h1,
+h2,
+h3,
+strong {
+  margin-top: 0;
+  font-style: normal;
+  font-weight: 700;
+}
+
+p {
+  margin-top: 0;
+}
+
 /* =========================
    CAMADAS VISUAIS
 ========================= */
 
-.bg-grid,
 .noise {
   position: fixed;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-}
-
-.bg-grid {
-  background-image:
-    linear-gradient(rgba(60, 58, 57, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(60, 58, 57, 0.03) 1px, transparent 1px);
-  background-size: 28px 28px;
-  mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1), transparent 82%);
-}
-
-.noise {
   opacity: 0.035;
   background-image:
     radial-gradient(rgba(0, 0, 0, 0.35) 0.45px, transparent 0.45px);
@@ -96,208 +97,6 @@ body {
   background: radial-gradient(circle, rgba(83, 172, 222, 0.18) 0%, rgba(83, 172, 222, 0) 70%);
   filter: blur(10px);
   transform: translate(-50%, -50%);
-}
-
-/* HEADER */
-
-.site-header{
-  position:sticky;
-  top:0;
-  z-index:60;
-  backdrop-filter:blur(16px);
-  -webkit-backdrop-filter:blur(16px);
-  background:rgba(246,245,242,.84);
-  border-bottom:1px solid rgba(60,58,57,.08);
-}
-
-.header-inner{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:20px;
-  min-height:92px;
-}
-
-.brand{
-  flex:0 0 auto;
-  display:flex;
-  align-items:center;
-  text-decoration:none;
-}
-
-.brand-logo{
-  width:168px;
-  height:auto;
-  display:block;
-  object-fit:contain;
-}
-
-.main-nav{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:8px;
-  flex:1 1 auto;
-}
-
-.nav-link{
-  position:relative;
-  padding:12px 16px;
-  border-radius:999px;
-  text-decoration:none;
-  color:var(--black);
-  font-size:15px;
-  font-weight:700;
-  transition:color .2s ease, background .2s ease, transform .2s ease;
-}
-
-.nav-link:hover{
-  background:rgba(83,172,222,.10);
-  color:var(--blue);
-  transform:translateY(-1px);
-}
-
-.nav-link.active{
-  background:rgba(129,185,42,.12);
-  color:var(--green);
-}
-
-.nav-link::after{
-  content:"";
-  position:absolute;
-  left:16px;
-  right:16px;
-  bottom:8px;
-  height:2px;
-  border-radius:999px;
-  background:linear-gradient(90deg, var(--green), var(--blue));
-  transform:scaleX(0);
-  transform-origin:center;
-  transition:transform .22s ease;
-}
-
-.nav-link:hover::after,
-.nav-link.active::after{
-  transform:scaleX(1);
-}
-
-.header-actions{
-  flex:0 0 auto;
-  display:flex;
-  align-items:center;
-  justify-content:flex-end;
-}
-
-.header-cta{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  padding:13px 18px;
-  border-radius:999px;
-  text-decoration:none;
-  font-size:14px;
-  font-weight:700;
-  color:#fff;
-  background:linear-gradient(135deg, var(--orange), #f49457);
-  box-shadow:0 16px 30px rgba(239,107,34,.24);
-  transition:transform .18s ease, filter .2s ease, box-shadow .2s ease;
-}
-
-.header-cta:hover{
-  transform:translateY(-2px);
-  filter:brightness(1.02);
-  box-shadow:0 20px 36px rgba(239,107,34,.28);
-}
-
-.menu-btn{
-  display:none;
-  border:none;
-  background:#fff;
-  color:var(--black);
-  width:48px;
-  height:48px;
-  border-radius:16px;
-  box-shadow:var(--shadow-xs);
-  cursor:pointer;
-  font-size:22px;
-  align-items:center;
-  justify-content:center;
-}
-
-/* BOTÕES */
-
-.btn{
-  border:none;
-  cursor:pointer;
-  border-radius:18px;
-  padding:13px 18px;
-  transition:transform .18s ease, box-shadow .2s ease, filter .2s ease, background .2s ease;
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  gap:10px;
-  white-space:nowrap;
-}
-
-.btn-primary{
-  color:#fff;
-  background:linear-gradient(135deg, var(--orange), #f49457);
-  box-shadow:0 16px 30px rgba(239,107,34,.24);
-}
-
-.btn-primary:hover{
-  transform:translateY(-2px);
-  filter:brightness(1.02);
-}
-
-.btn-secondary{
-  background:#fff;
-  border:1px solid rgba(60,58,57,.12);
-  color:var(--black);
-  box-shadow:var(--shadow-xs);
-}
-
-.btn-secondary:hover{
-  transform:translateY(-2px);
-}
-
-.btn-green{
-  background:linear-gradient(135deg, var(--green), #96ca44);
-  color:#fff;
-  box-shadow:0 16px 30px rgba(129,185,42,.24);
-}
-
-.btn-green:hover{
-  transform:translateY(-2px);
-}
-
-.btn-outline-green{
-  background:rgba(129,185,42,.12);
-  border:1px solid rgba(129,185,42,.22);
-  color:var(--green);
-}
-
-.btn-outline-green:hover{
-  transform:translateY(-2px);
-}
-
-
-
-/* =========================
-   TIPOGRAFIA
-========================= */
-
-h1,
-h2,
-h3,
-strong {
-  margin-top: 0;
-  font-style: normal;
-  font-weight: 700;
-}
-
-p {
-  margin-top: 0;
 }
 
 /* =========================
@@ -318,6 +117,134 @@ p {
 }
 
 /* =========================
+   HEADER
+========================= */
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 60;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  background: rgba(246, 245, 242, 0.84);
+  border-bottom: 1px solid rgba(60, 58, 57, 0.08);
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 92px;
+}
+
+.brand {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.brand-logo {
+  width: 168px;
+  height: auto;
+  display: block;
+  object-fit: contain;
+}
+
+.main-nav {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 auto;
+}
+
+.nav-link {
+  position: relative;
+  padding: 12px 16px;
+  border-radius: 999px;
+  text-decoration: none;
+  color: var(--black);
+  font-size: 15px;
+  font-weight: 700;
+  transition: color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.nav-link:hover {
+  background: rgba(83, 172, 222, 0.10);
+  color: var(--blue);
+  transform: translateY(-1px);
+}
+
+.nav-link.active {
+  background: rgba(129, 185, 42, 0.12);
+  color: var(--green);
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  bottom: 8px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--green), var(--blue));
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 0.22s ease;
+}
+
+.nav-link:hover::after,
+.nav-link.active::after {
+  transform: scaleX(1);
+}
+
+.header-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.header-cta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 13px 18px;
+  border-radius: 999px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  background: linear-gradient(135deg, var(--orange), #f49457);
+  box-shadow: 0 16px 30px rgba(239, 107, 34, 0.24);
+  transition: transform 0.18s ease, filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.header-cta:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.02);
+  box-shadow: 0 20px 36px rgba(239, 107, 34, 0.28);
+}
+
+.menu-btn {
+  display: none;
+  border: none;
+  background: #fff;
+  color: var(--black);
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  box-shadow: var(--shadow-xs);
+  cursor: pointer;
+  font-size: 22px;
+  align-items: center;
+  justify-content: center;
+}
+
+/* =========================
    HERO
 ========================= */
 
@@ -327,7 +254,7 @@ p {
 
 .hero-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1.1fr) minmax(320px, 0.9fr);
+  grid-template-columns: minmax(0, 1.08fr) minmax(320px, 0.92fr);
   gap: 42px;
   align-items: center;
 }
@@ -368,7 +295,7 @@ p {
   min-height: 360px;
   padding: 32px;
   border-radius: 30px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.55));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.80), rgba(255, 255, 255, 0.58));
   border: 1px solid rgba(60, 58, 57, 0.08);
   box-shadow: var(--shadow);
 }
@@ -435,7 +362,233 @@ p {
   font-size: 1rem;
   line-height: 1.75;
 }
+/* =========================
+   RÉGUA DE LOGOS
+   ESTILO LADO A LADO AJUSTADO
+========================= */
 
+.logo-ruler-full {
+  display: grid;
+  grid-template-columns: 1.2fr 1px 1fr 1px 0.9fr;
+  align-items: center;
+  gap: 24px;
+
+  padding: 32px 34px;
+  border-radius: 24px;
+  background: #fff;
+  border: 1px solid rgba(60, 58, 57, 0.12);
+  box-shadow: var(--shadow-xs);
+}
+
+.logo-group {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.logo-label {
+  font-size: 13px;
+  font-style: normal;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  line-height: 1;
+}
+
+/* cada faixa de logos */
+.logo-items {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  flex-wrap: nowrap;
+  min-height: 96px;
+  width: 100%;
+}
+
+/* tamanho base maior */
+.logo-items img {
+  display: block;
+  width: auto;
+  height: 64px;
+  max-width: 220px;
+  object-fit: contain;
+  object-position: center;
+}
+
+/* grupos com melhor distribuição */
+.logo-group:nth-child(1) .logo-items {
+  justify-content: space-evenly;
+}
+
+.logo-group:nth-child(3) .logo-items {
+  justify-content: space-evenly;
+}
+
+.logo-group:nth-child(5) .logo-items {
+  justify-content: center;
+}
+
+/* divisores */
+.logo-divider-vertical {
+  width: 1px;
+  height: 108px;
+  background: rgba(60, 58, 57, 0.14);
+  justify-self: center;
+}
+
+/* =========================
+   AJUSTES INDIVIDUAIS DOS LOGOS
+========================= */
+
+.logo-items img[alt="Mãos Verdes"] {
+  height: 74px;
+  max-width: 260px;
+}
+
+.logo-items img[alt="Cluster Ecoar"] {
+  height: 68px;
+  max-width: 220px;
+}
+
+.logo-items img[alt="CEA"] {
+  height: 66px;
+  max-width: 120px;
+}
+
+.logo-items img[alt="COOADESC"] {
+  height: 74px;
+  max-width: 140px;
+}
+
+.logo-items img[alt="Regenera RS"] {
+  height: 54px;
+  max-width: 240px;
+}
+
+/* =========================
+   RESPONSIVIDADE DA RÉGUA
+========================= */
+
+@media (max-width: 1180px) {
+  .logo-ruler-full {
+    grid-template-columns: 1.1fr 1px 1fr 1px 0.9fr;
+    gap: 18px;
+    padding: 26px 24px;
+  }
+
+  .logo-items {
+    gap: 18px;
+    min-height: 84px;
+  }
+
+  .logo-items img {
+    height: 56px;
+    max-width: 180px;
+  }
+
+  .logo-items img[alt="Mãos Verdes"] {
+    height: 64px;
+    max-width: 220px;
+  }
+
+  .logo-items img[alt="Cluster Ecoar"] {
+    height: 58px;
+    max-width: 180px;
+  }
+
+  .logo-items img[alt="CEA"] {
+    height: 56px;
+    max-width: 100px;
+  }
+
+  .logo-items img[alt="COOADESC"] {
+    height: 62px;
+    max-width: 120px;
+  }
+
+  .logo-items img[alt="Regenera RS"] {
+    height: 46px;
+    max-width: 190px;
+  }
+
+  .logo-divider-vertical {
+    height: 94px;
+  }
+}
+
+@media (max-width: 860px) {
+  .logo-ruler-full {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .logo-divider-vertical {
+    width: 100%;
+    height: 1px;
+  }
+
+  .logo-group {
+    width: 100%;
+  }
+
+  .logo-items {
+    justify-content: center;
+    flex-wrap: wrap;
+    min-height: auto;
+  }
+}
+
+@media (max-width: 520px) {
+  .logo-ruler-full {
+    padding: 18px;
+    gap: 16px;
+  }
+
+  .logo-label {
+    font-size: 12px;
+  }
+
+  .logo-items {
+    gap: 14px;
+    justify-content: center;
+  }
+
+  .logo-items img {
+    height: 42px;
+    max-width: 140px;
+  }
+
+  .logo-items img[alt="Mãos Verdes"] {
+    height: 50px;
+    max-width: 170px;
+  }
+
+  .logo-items img[alt="Cluster Ecoar"] {
+    height: 46px;
+    max-width: 150px;
+  }
+
+  .logo-items img[alt="CEA"] {
+    height: 44px;
+    max-width: 84px;
+  }
+
+  .logo-items img[alt="COOADESC"] {
+    height: 50px;
+    max-width: 92px;
+  }
+
+.logo-items img[alt="Regenera RS"] {
+  height: 72px;
+  max-width: 350px;
+}
+}
 /* =========================
    GRIDS DE ORGANIZAÇÕES
 ========================= */
@@ -581,6 +734,27 @@ p {
    RESPONSIVIDADE
 ========================= */
 
+@media (max-width: 1180px) {
+  .logo-ruler-full {
+    gap: 20px;
+    padding: 24px;
+  }
+
+  .logo-items {
+    gap: 18px;
+  }
+
+  .logo-items img {
+    max-width: 150px;
+    height: 48px;
+  }
+
+  .logo-items img[alt="Regenera RS"] {
+    max-width: 160px;
+    height: 38px;
+  }
+}
+
 @media (max-width: 1100px) {
   .hero-grid {
     grid-template-columns: 1fr;
@@ -593,6 +767,65 @@ p {
 
   .org-grid-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .menu-btn {
+    display: inline-flex;
+  }
+
+  .header-actions {
+    display: none;
+  }
+
+  .header-inner {
+    flex-wrap: wrap;
+    padding-top: 14px;
+    padding-bottom: 14px;
+  }
+
+  .main-nav {
+    display: none;
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 14px;
+    margin-top: 8px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid rgba(60, 58, 57, 0.08);
+    box-shadow: var(--shadow-sm);
+  }
+
+  .main-nav.open {
+    display: flex;
+  }
+
+  .nav-link {
+    width: 100%;
+    text-align: center;
+  }
+
+  .logo-ruler-full {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 18px;
+  }
+
+  .logo-divider-vertical {
+    width: 100%;
+    height: 1px;
+  }
+
+  .logo-group {
+    width: 100%;
+  }
+
+  .logo-items {
+    flex-wrap: wrap;
+    gap: 16px;
   }
 }
 
@@ -666,9 +899,55 @@ p {
   .cursor-glow {
     display: none;
   }
+
+  .logo-ruler-full {
+    padding: 18px;
+  }
+
+  .logo-label {
+    font-size: 12px;
+  }
+
+  .logo-items {
+    justify-content: flex-start;
+    gap: 14px;
+  }
+
+  .logo-items img {
+    height: 40px;
+    max-width: 140px;
+  }
+
+  .logo-items img[alt="Mãos Verdes"] {
+    max-width: 150px;
+    height: 42px;
+  }
+
+  .logo-items img[alt="Cluster Ecoar"] {
+    max-width: 135px;
+    height: 42px;
+  }
+
+  .logo-items img[alt="CEA"] {
+    max-width: 80px;
+    height: 42px;
+  }
+
+  .logo-items img[alt="COOADESC"] {
+    max-width: 84px;
+    height: 46px;
+  }
+
+  .logo-items img[alt="Regenera RS"] {
+    max-width: 150px;
+    height: 32px;
+  }
 }
 
-/* Redução de animação para acessibilidade */
+/* =========================
+   ACESSIBILIDADE
+========================= */
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -684,5 +963,9 @@ p {
   [data-reveal] {
     opacity: 1 !important;
     transform: none !important;
+  }
+
+  .cursor-glow {
+    display: none !important;
   }
 }
