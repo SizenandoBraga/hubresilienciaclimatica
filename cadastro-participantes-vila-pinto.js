@@ -5,6 +5,9 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+async function saveParticipant(payload) {
+  return await addDoc(collection(db, "participants"), payload);
+}
 /* =========================
    CONFIGURAÇÃO DA PÁGINA PÚBLICA
 ========================= */
