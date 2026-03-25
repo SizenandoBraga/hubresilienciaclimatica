@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/cadastro-participantes-vila-pinto.css">
+  <link rel="stylesheet" href="cadastro-participantes-vila-pinto.css">
 </head>
 <body>
   <div class="page-bg"></div>
@@ -32,7 +32,7 @@
       <nav class="site-nav" aria-label="Navegação principal">
         <a href="../index.html">Início</a>
         <a href="../html/cooperativa.html">Painel</a>
-        <a class="is-active" href="../html/cadastro-participantes.html">Participantes</a>
+        <a class="is-active" href="../html/cadastro-participantes-publico.html">Participantes</a>
         <a href="../html/registro-coletas-fases.html">Coletas</a>
         <a href="../html/dashboard-cooperativa.html">Dashboard</a>
       </nav>
@@ -47,7 +47,7 @@
     <div class="site-mobile-menu" id="mobileMenu">
       <a href="../index.html">Início</a>
       <a href="../html/cooperativa.html">Painel</a>
-      <a href="../html/cadastro-participantes.html">Participantes</a>
+      <a href="../html/cadastro-participantes-publico.html">Participantes</a>
       <a href="../html/registro-coletas-fases.html">Coletas</a>
       <a href="../html/dashboard-cooperativa.html">Dashboard</a>
       <a href="/vila-pinto.html">Voltar ao território</a>
@@ -66,7 +66,7 @@
         <div class="wizard-meta">
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Território</span>
-            <strong id="territoryLabelView">Vila Pinto</strong>
+            <strong id="territoryLabelView">Centro de Triagem Vila Pinto</strong>
           </div>
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Acesso</span>
@@ -261,8 +261,9 @@
 
           <div class="location-card">
             <strong>Localização para o dashboard</strong>
-            <p>Ao buscar o CEP e informar o número, a localização poderá ser usada depois para mapa e visualizações do território.</p>
+            <p>Ao buscar o CEP e informar o número, o sistema tenta calcular latitude e longitude para uso no mapa e no dashboard territorial.</p>
             <div class="geo-line">Geo: <span id="geoPreview">ainda não calculado</span></div>
+            <div class="geo-line">Lat/Lng: <span id="latLngPreview">ainda não calculado</span></div>
           </div>
         </div>
 
@@ -326,15 +327,12 @@
 
     <div class="success-modal-card" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
       <div class="success-modal-icon">💚</div>
-
       <h3 id="successModalTitle">Inscrição realizada com sucesso</h3>
-
       <p>
         Agradecemos pela sua inscrição no projeto.
         Nossa cooperativa irá analisar suas informações e entrar em contato para informar
         se você está dentro da zona de coleta atendida pelo território.
       </p>
-
       <div class="success-modal-actions">
         <button type="button" class="btn-primary" id="closeSuccessModal">
           Fechar e voltar à página do território
