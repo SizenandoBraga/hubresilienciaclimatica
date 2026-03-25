@@ -27,9 +27,7 @@ const MATERIAL_META = [
 const CHART_COLORS = {
   blue: "#53ACDE",
   green: "#81B92A",
-  orange: "#EF6B22",
-  yellow: "#FFC107",
-  gray: "#A5A29F"
+  orange: "#EF6B22"
 };
 
 const els = {
@@ -63,13 +61,36 @@ const els = {
   k_residuoSeco: document.getElementById("k_residuoSeco"),
   k_rejeito: document.getElementById("k_rejeito"),
   k_finalTurno: document.getElementById("k_finalTurno"),
-  k_territoriosAtivos: document.getElementById("k_territoriosAtivos"),
 
+  k_totalDiasProjeto: document.getElementById("k_totalDiasProjeto"),
+  k_inicioProjeto: document.getElementById("k_inicioProjeto"),
+  k_operacoesRealizadas: document.getElementById("k_operacoesRealizadas"),
+  k_participantesProjeto: document.getElementById("k_participantesProjeto"),
+  k_condominiosParticipantes: document.getElementById("k_condominiosParticipantes"),
+  k_entregaVoluntaria: document.getElementById("k_entregaVoluntaria"),
+  k_comercioParticipantes: document.getElementById("k_comercioParticipantes"),
+  k_totalReciclavelKg: document.getElementById("k_totalReciclavelKg"),
+  k_totalReciclavelPct: document.getElementById("k_totalReciclavelPct"),
+  k_receitaTotal: document.getElementById("k_receitaTotal"),
+  k_totalRejeitoKg: document.getElementById("k_totalRejeitoKg"),
+  k_totalRejeitoPct: document.getElementById("k_totalRejeitoPct"),
+  k_rejeitoNaoReciclavelPct: document.getElementById("k_rejeitoNaoReciclavelPct"),
+  k_rejeitoNaoReciclavelKg: document.getElementById("k_rejeitoNaoReciclavelKg"),
+  k_naoComercializadoPct: document.getElementById("k_naoComercializadoPct"),
+  k_naoComercializadoKg: document.getElementById("k_naoComercializadoKg"),
+  k_outroKg: document.getElementById("k_outroKg"),
+
+  materialCards: document.getElementById("materialCards"),
+  collectionPointsGrid: document.getElementById("collectionPointsGrid"),
   tableColetasBody: document.getElementById("tableColetasBody"),
-  historyBody: document.getElementById("historyBody"),
 
   photoModal: document.getElementById("photoModal"),
   photoModalImg: document.getElementById("photoModalImg"),
+
+  routeOriginLabel: document.getElementById("routeOriginLabel"),
+  routeDestLabel: document.getElementById("routeDestLabel"),
+  routeDistanceLabel: document.getElementById("routeDistanceLabel"),
+  routeTimeLabel: document.getElementById("routeTimeLabel"),
 
   editModal: document.getElementById("editModal"),
   editParticipantName: document.getElementById("editParticipantName"),
@@ -95,24 +116,17 @@ let secB = null;
 let secC = null;
 let weightTimelineChart = null;
 
+let routeMap = null;
+let routeControl = null;
+let coopMarker = null;
+let destinationMarker = null;
+let selectedPointKey = null;
+
 function formatDateBR(value) {
   if (!value) return "—";
   try {
     const date = typeof value === "string" ? new Date(`${value}T12:00:00`) : value;
     return new Intl.DateTimeFormat("pt-BR").format(date);
-  } catch {
-    return "—";
-  }
-}
-
-function formatDateTimeBR(value) {
-  if (!value) return "—";
-  try {
-    const date = typeof value === "string" ? new Date(value) : value;
-    return new Intl.DateTimeFormat("pt-BR", {
-      dateStyle: "short",
-      timeStyle: "short"
-    }).format(date);
   } catch {
     return "—";
   }
@@ -138,10 +152,6 @@ function formatMoneyBR(value) {
     style: "currency",
     currency: "BRL"
   });
-}
-
-function safeText(value) {
-  return String(value ?? "—");
 }
 
 function escapeHtml(value) {
@@ -191,65 +201,6 @@ function firstPhotoUrl(item) {
   return "";
 }
 
-function resolveParticipant(item) {
-  const participantId = item.participantId || null;
-  const participantCode = item.participantCode || null;
-  const familyCode = item.recebimento?.familyCode || item.finalTurno?.familyCode || null;
-  const directName = item.participantName || null;
-
-  const fromId = participantId ? participantsMap.get(String(participantId)) : null;
-  const fromParticipantCode = participantCode ? participantsMap.get(String(participantCode)) : null;
-  const fromFamilyCode = familyCode ? participantsMap.get(String(familyCode)) : null;
-
-  const matched = fromId || fromParticipantCode || fromFamilyCode || null;
-  const fallbackCode = participantCode || familyCode || "—";
-
-  return {
-    id: participantId || matched?.id || "",
-    code: matched?.participantCode || fallbackCode,
-    name: directName || matched?.name || (fallbackCode !== "—" ? `Família ${fallbackCode}` : "Sem participante vinculado")
-  };
-}
-
-function getQualidade(item) {
-  const value =
-    item.recebimento?.qualidadeNota ??
-    item.finalTurno?.qualidadeNota ??
-    item.qualidadeNota;
-
-  if (value === null || value === undefined || value === "") return "";
-  return String(value);
-}
-
-function renderQualidadeBadge(item) {
-  const q = getQualidade(item);
-
-  if (!q) return `<span class="quality-badge">—</span>`;
-  if (q === "1") return `<span class="quality-badge quality-1">1</span>`;
-  if (q === "2") return `<span class="quality-badge quality-2">2</span>`;
-  if (q === "3") return `<span class="quality-badge quality-3">3</span>`;
-
-  return `<span class="quality-badge">${escapeHtml(q)}</span>`;
-}
-
-function getStatus(item) {
-  return String(item.status || "ativo").toLowerCase();
-}
-
-function renderStatusBadge(item) {
-  const status = getStatus(item);
-
-  if (status === "cancelado") {
-    return `<span class="status-badge status-cancelado">Cancelado</span>`;
-  }
-
-  if (item.updatedAt) {
-    return `<span class="status-badge status-editado">Editado</span>`;
-  }
-
-  return `<span class="status-badge status-ok">Ativo</span>`;
-}
-
 function inferTerritorio(item) {
   return item.territoryLabel || coopProfile?.territoryLabel || "Território";
 }
@@ -297,6 +248,20 @@ function inferObservacao(item) {
   return item.observacao || item.recebimento?.observacao || item.finalTurno?.observacao || "";
 }
 
+function getQualidade(item) {
+  const value =
+    item.recebimento?.qualidadeNota ??
+    item.finalTurno?.qualidadeNota ??
+    item.qualidadeNota;
+
+  if (value === null || value === undefined || value === "") return "";
+  return String(value);
+}
+
+function getStatus(item) {
+  return String(item.status || "ativo").toLowerCase();
+}
+
 function getMaterialValue(item, key) {
   const fontes = [
     item.materiais,
@@ -315,6 +280,65 @@ function getMaterialValue(item, key) {
   return 0;
 }
 
+function resolveParticipant(item) {
+  const participantId = item.participantId || null;
+  const participantCode = item.participantCode || null;
+  const familyCode = item.recebimento?.familyCode || item.finalTurno?.familyCode || null;
+  const directName = item.participantName || null;
+
+  const fromId = participantId ? participantsMap.get(String(participantId)) : null;
+  const fromParticipantCode = participantCode ? participantsMap.get(String(participantCode)) : null;
+  const fromFamilyCode = familyCode ? participantsMap.get(String(familyCode)) : null;
+
+  const matched = fromId || fromParticipantCode || fromFamilyCode || null;
+  const fallbackCode = participantCode || familyCode || "—";
+
+  let address = "";
+  if (matched) {
+    address =
+      matched.enderecoCompleto ||
+      matched.address ||
+      matched.fullAddress ||
+      [matched.rua || "", matched.numero || "", matched.bairro ? `- ${matched.bairro}` : "", matched.cidade || ""]
+        .filter(Boolean)
+        .join(" ");
+  }
+
+  return {
+    id: participantId || matched?.id || "",
+    code: matched?.participantCode || fallbackCode,
+    name: directName || matched?.name || (fallbackCode !== "—" ? `Participante ${fallbackCode}` : "Sem participante vinculado"),
+    type: matched?.participantType || matched?.type || "",
+    address,
+    localColeta: matched?.localColeta || matched?.collectionPoint || item.localColeta || "",
+    lat: Number(matched?.lat ?? matched?.latitude ?? matched?.coords?.lat ?? item.lat ?? item.latitude ?? 0),
+    lng: Number(matched?.lng ?? matched?.longitude ?? matched?.coords?.lng ?? item.lng ?? item.longitude ?? 0)
+  };
+}
+
+function renderQualidadeBadge(item) {
+  const q = getQualidade(item);
+  if (!q) return `<span class="quality-badge">—</span>`;
+  if (q === "1") return `<span class="quality-badge quality-1">1</span>`;
+  if (q === "2") return `<span class="quality-badge quality-2">2</span>`;
+  if (q === "3") return `<span class="quality-badge quality-3">3</span>`;
+  return `<span class="quality-badge">${escapeHtml(q)}</span>`;
+}
+
+function renderStatusBadge(item) {
+  const status = getStatus(item);
+
+  if (status === "cancelado") {
+    return `<span class="status-badge status-cancelado">Cancelado</span>`;
+  }
+
+  if (item.updatedAt) {
+    return `<span class="status-badge status-editado">Editado</span>`;
+  }
+
+  return `<span class="status-badge status-ok">Ativo</span>`;
+}
+
 function matchesDateRange(item, ini, fim) {
   const dateIso = inferDateISO(item);
   if (!dateIso) return true;
@@ -327,13 +351,6 @@ function fillUser(profile) {
   els.userDisplayName.textContent = profile.displayName || profile.name || "Usuário";
   els.userRole.textContent = profile.role || "cooperativa";
   els.userTerritory.textContent = profile.territoryLabel || profile.territoryId || "—";
-
-  const mapMiniText = document.getElementById("mapMiniText");
-  if (mapMiniText) {
-    mapMiniText.textContent = profile.territoryLabel
-      ? `${profile.territoryLabel}\nTerritório ativo`
-      : "Centro de Triagem / Território ativo";
-  }
 }
 
 async function getUserProfile(uid) {
@@ -363,10 +380,7 @@ async function loadParticipantsMap(territoryId) {
   if (coopProfile?.role === "admin") {
     qParticipants = query(collection(db, "participants"));
   } else {
-    qParticipants = query(
-      collection(db, "participants"),
-      where("territoryId", "==", territoryId)
-    );
+    qParticipants = query(collection(db, "participants"), where("territoryId", "==", territoryId));
   }
 
   const snap = await getDocs(qParticipants);
@@ -377,7 +391,18 @@ async function loadParticipantsMap(territoryId) {
       id: d.id,
       name: data.name || data.participantName || "Sem nome",
       participantCode: data.participantCode || data.familyCode || data.codigo || d.id,
-      participantType: data.participantType || data.type || ""
+      participantType: data.participantType || data.type || "",
+      enderecoCompleto: data.enderecoCompleto || "",
+      address: data.address || "",
+      fullAddress: data.fullAddress || "",
+      rua: data.rua || "",
+      numero: data.numero || "",
+      bairro: data.bairro || "",
+      cidade: data.cidade || "",
+      localColeta: data.localColeta || "",
+      lat: data.lat ?? data.latitude ?? null,
+      lng: data.lng ?? data.longitude ?? null,
+      coords: data.coords || null
     };
 
     participantsMap.set(d.id, payload);
@@ -433,10 +458,7 @@ function updateTopInfo() {
     return;
   }
 
-  const dates = filteredColetas
-    .map((item) => inferDateISO(item))
-    .filter(Boolean)
-    .sort();
+  const dates = filteredColetas.map((item) => inferDateISO(item)).filter(Boolean).sort();
 
   if (dates.length) {
     els.txtPeriodo.textContent = `${formatDateBR(dates[0])} → ${formatDateBR(dates[dates.length - 1])}`;
@@ -448,7 +470,6 @@ function updateTopInfo() {
 function renderKpis(items) {
   const ativos = items.filter((item) => getStatus(item) !== "cancelado");
   const participantIds = new Set();
-  const territorios = new Set();
 
   let residuoSeco = 0;
   let rejeito = 0;
@@ -457,15 +478,11 @@ function renderKpis(items) {
   ativos.forEach((item) => {
     const p = resolveParticipant(item);
 
-    if (p.code && p.code !== "—") {
-      participantIds.add(p.code);
-    } else if (p.name && p.name !== "Sem participante vinculado") {
-      participantIds.add(p.name);
-    }
-
-    territorios.add(inferTerritorio(item));
+    if (p.code && p.code !== "—") participantIds.add(p.code);
+    else if (p.name && p.name !== "Sem participante vinculado") participantIds.add(p.name);
 
     const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
+
     residuoSeco += isFinalTurno(item)
       ? somaMateriais
       : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
@@ -480,7 +497,6 @@ function renderKpis(items) {
   els.k_residuoSeco.textContent = formatNumber(residuoSeco);
   els.k_rejeito.textContent = formatNumber(rejeito);
   els.k_finalTurno.textContent = String(finalTurno);
-  els.k_territoriosAtivos.textContent = String(territorios.size);
 }
 
 function sumMaterials(items) {
@@ -510,12 +526,17 @@ function computeExpandedMetrics(items) {
   let naoComercializadoKg = 0;
 
   const uniqueDays = new Set();
-  const familySet = new Set();
+  const participantSet = new Set();
+  const participantCondominioSet = new Set();
+  const participantComercioSet = new Set();
+
+  let entregaVoluntaria = 0;
 
   ativos.forEach((item) => {
-    const somaMateriais = MATERIAL_META.reduce((acc, mat) => {
-      return acc + getMaterialValue(item, mat.key);
-    }, 0);
+    const participant = resolveParticipant(item);
+    const type = normalizeText(participant.type);
+
+    const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
 
     if (isFinalTurno(item)) {
       reciclavelKg += somaMateriais;
@@ -530,8 +551,16 @@ function computeExpandedMetrics(items) {
     const d = inferDateISO(item);
     if (d) uniqueDays.add(d);
 
-    const code = item.recebimento?.familyCode || item.finalTurno?.familyCode || item.participantCode || "";
-    if (code) familySet.add(String(code));
+    if (participant.code && participant.code !== "—") {
+      participantSet.add(participant.code);
+    }
+
+    if (type === "condominio") participantCondominioSet.add(participant.code || participant.name);
+    if (type === "comercio") participantComercioSet.add(participant.code || participant.name);
+
+    if (normalizeText(inferEntrega(item)).includes("volunt")) {
+      entregaVoluntaria += 1;
+    }
   });
 
   const totalGeral = reciclavelKg + rejeitoKg;
@@ -553,8 +582,239 @@ function computeExpandedMetrics(items) {
     receitaTotal,
     totalDiasProjeto: uniqueDays.size,
     operacoesRealizadas: ativos.length,
-    familiasComColeta: familySet.size
+    participantesProjeto: participantSet.size,
+    condominiosParticipantes: participantCondominioSet.size,
+    comercioParticipantes: participantComercioSet.size,
+    entregaVoluntaria
   };
+}
+
+function renderExpandedPanel(items) {
+  const m = computeExpandedMetrics(items);
+
+  const allDates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
+  const projectStart = allDates.length ? formatDateBR(allDates[0]) : "—";
+
+  els.k_totalDiasProjeto.textContent = String(m.totalDiasProjeto);
+  els.k_inicioProjeto.textContent = `Início: ${projectStart}`;
+  els.k_operacoesRealizadas.textContent = String(m.operacoesRealizadas);
+  els.k_participantesProjeto.textContent = String(m.participantesProjeto);
+  els.k_condominiosParticipantes.textContent = String(m.condominiosParticipantes);
+  els.k_entregaVoluntaria.textContent = String(m.entregaVoluntaria);
+  els.k_comercioParticipantes.textContent = String(m.comercioParticipantes);
+
+  els.k_totalReciclavelKg.textContent = formatNumber(m.reciclavelKg);
+  els.k_totalReciclavelPct.textContent = `${formatNumber(m.reciclavelPct)}%`;
+  els.k_receitaTotal.textContent = formatMoneyBR(m.receitaTotal);
+  els.k_totalRejeitoKg.textContent = formatNumber(m.rejeitoKg);
+  els.k_totalRejeitoPct.textContent = `${formatNumber(m.rejeitoPct)}%`;
+
+  const rejeitoBase = m.rejeitoKg + m.naoComercializadoKg;
+  const pctNaoReciclavel = rejeitoBase ? (m.rejeitoKg / rejeitoBase) * 100 : 0;
+  const pctNaoComercializado = rejeitoBase ? (m.naoComercializadoKg / rejeitoBase) * 100 : 0;
+
+  els.k_rejeitoNaoReciclavelPct.textContent = `${formatNumber(pctNaoReciclavel)}%`;
+  els.k_rejeitoNaoReciclavelKg.textContent = formatKg(m.rejeitoKg);
+  els.k_naoComercializadoPct.textContent = `${formatNumber(pctNaoComercializado)}%`;
+  els.k_naoComercializadoKg.textContent = formatKg(m.naoComercializadoKg);
+  els.k_outroKg.textContent = formatKg(m.materialTotals.oleoCozinhaKg || 0);
+
+  const totalMateriais = Object.values(m.materialTotals).reduce((acc, v) => acc + v, 0);
+
+  els.materialCards.innerHTML = MATERIAL_META
+    .filter((mat) => mat.key !== "oleoCozinhaKg")
+    .map((mat) => {
+      const kg = m.materialTotals[mat.key] || 0;
+      const pct = totalMateriais ? (kg / totalMateriais) * 100 : 0;
+      const receita = kg * mat.price;
+
+      return `
+        <article class="material-card">
+          <div class="material-top">
+            <div class="mat-icon">${mat.icon}</div>
+            <div class="mat-pct">${formatNumber(pct)}%</div>
+          </div>
+          <div class="mat-name">${escapeHtml(mat.label)}</div>
+          <div class="mat-kg">${formatNumber(kg)} kg</div>
+          <div class="mat-sub">Receita estimada ≈ ${formatMoneyBR(receita)}</div>
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function getCoopBaseLatLng() {
+  if (coopProfile?.territoryId === "crgr_vila_pinto") {
+    return { lat: -30.048729170292532, lng: -51.15652604283108 };
+  }
+
+  if (coopProfile?.baseLat && coopProfile?.baseLng) {
+    return {
+      lat: Number(coopProfile.baseLat),
+      lng: Number(coopProfile.baseLng)
+    };
+  }
+
+  return { lat: -30.048729170292532, lng: -51.15652604283108 };
+}
+
+function initCollectionRouteMap() {
+  const mapEl = document.getElementById("collectionRouteMap");
+  if (!mapEl || typeof L === "undefined") return;
+
+  if (routeMap) {
+    routeMap.invalidateSize();
+    return;
+  }
+
+  const base = getCoopBaseLatLng();
+
+  routeMap = L.map("collectionRouteMap", {
+    zoomControl: true
+  }).setView([base.lat, base.lng], 12);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: "&copy; OpenStreetMap"
+  }).addTo(routeMap);
+
+  coopMarker = L.marker([base.lat, base.lng]).addTo(routeMap).bindPopup("Cooperativa");
+}
+
+function setRouteSummary(origin, dest, summary = null) {
+  if (els.routeOriginLabel) els.routeOriginLabel.textContent = origin || "—";
+  if (els.routeDestLabel) els.routeDestLabel.textContent = dest || "—";
+
+  if (!summary) {
+    if (els.routeDistanceLabel) els.routeDistanceLabel.textContent = "—";
+    if (els.routeTimeLabel) els.routeTimeLabel.textContent = "—";
+    return;
+  }
+
+  const km = (summary.totalDistance || 0) / 1000;
+  const min = Math.round((summary.totalTime || 0) / 60);
+
+  if (els.routeDistanceLabel) {
+    els.routeDistanceLabel.textContent = `${km.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`;
+  }
+  if (els.routeTimeLabel) {
+    els.routeTimeLabel.textContent = `${min} min`;
+  }
+}
+
+function clearRouteControl() {
+  if (routeControl && routeMap) {
+    routeMap.removeControl(routeControl);
+    routeControl = null;
+  }
+
+  if (destinationMarker && routeMap) {
+    routeMap.removeLayer(destinationMarker);
+    destinationMarker = null;
+  }
+}
+
+function drawRouteToPoint(point) {
+  if (!routeMap || !point?.lat || !point?.lng || typeof L === "undefined") return;
+
+  const base = getCoopBaseLatLng();
+
+  clearRouteControl();
+
+  destinationMarker = L.marker([point.lat, point.lng]).addTo(routeMap)
+    .bindPopup(point.name || "Destino");
+
+  routeControl = L.Routing.control({
+    waypoints: [
+      L.latLng(base.lat, base.lng),
+      L.latLng(point.lat, point.lng)
+    ],
+    routeWhileDragging: false,
+    addWaypoints: false,
+    draggableWaypoints: false,
+    fitSelectedRoutes: true,
+    show: false,
+    lineOptions: {
+      styles: [
+        { color: "#53ACDE", opacity: 0.9, weight: 6 }
+      ]
+    },
+    createMarker: () => null
+  }).addTo(routeMap);
+
+  routeControl.on("routesfound", (e) => {
+    const route = e.routes?.[0];
+    setRouteSummary("Cooperativa", point.name || "Ponto de coleta", route?.summary || null);
+  });
+
+  setRouteSummary("Cooperativa", point.name || "Ponto de coleta", null);
+}
+
+function getParticipantPointDataFromMapItems(items) {
+  const map = new Map();
+
+  items.forEach((item) => {
+    const participant = resolveParticipant(item);
+    if (!participant.name || participant.name === "Sem participante vinculado") return;
+
+    if (!participant.lat || !participant.lng) return;
+
+    const key = participant.code || participant.name;
+
+    if (!map.has(key)) {
+      map.set(key, {
+        key,
+        name: participant.name,
+        code: participant.code,
+        address: participant.address || "Endereço não informado",
+        localColeta: participant.localColeta || inferEntrega(item) || "Coleta",
+        territory: inferTerritorio(item),
+        lat: participant.lat,
+        lng: participant.lng
+      });
+    }
+  });
+
+  return Array.from(map.values());
+}
+
+function renderCollectionPoints(items) {
+  initCollectionRouteMap();
+
+  const points = getParticipantPointDataFromMapItems(items);
+
+  if (!points.length) {
+    els.collectionPointsGrid.innerHTML = `
+      <div class="point-card">
+        <h4>Pontos de coleta</h4>
+        <div class="point-address">Nenhum ponto de coleta com coordenadas cadastrado para os filtros atuais.</div>
+      </div>
+    `;
+    setRouteSummary("—", "—", null);
+    clearRouteControl();
+    return;
+  }
+
+  els.collectionPointsGrid.innerHTML = points.map((point) => `
+    <article class="point-card ${selectedPointKey === point.key ? "active" : ""}" data-route-point="${escapeHtml(point.key)}">
+      <div class="point-code">${escapeHtml(point.code || "sem código")}</div>
+      <h4>${escapeHtml(point.name)}</h4>
+      <div class="point-address">${escapeHtml(point.address || "Endereço não informado")}</div>
+      <div class="point-meta">
+        <span class="point-chip">📍 ${escapeHtml(point.localColeta || "Coleta")}</span>
+        <span class="point-chip">🗺️ ${escapeHtml(point.territory || "Território")}</span>
+      </div>
+    </article>
+  `).join("");
+
+  if (!selectedPointKey) {
+    selectedPointKey = points[0].key;
+  }
+
+  const selectedPoint = points.find((p) => p.key === selectedPointKey) || points[0];
+  if (selectedPoint) {
+    drawRouteToPoint(selectedPoint);
+  }
 }
 
 function renderWeightTimeline(items) {
@@ -573,9 +833,7 @@ function renderWeightTimeline(items) {
   });
   const rejeito = valid.map((item) => inferRejeito(item));
 
-  if (weightTimelineChart) {
-    weightTimelineChart.destroy();
-  }
+  if (weightTimelineChart) weightTimelineChart.destroy();
 
   weightTimelineChart = new Chart(canvas, {
     type: "bar",
@@ -598,92 +856,188 @@ function renderWeightTimeline(items) {
   });
 }
 
-function renderExpandedPanel(items) {
-  const m = computeExpandedMetrics(items);
+function buildDailySeries(items) {
+  const map = new Map();
 
-  const allDates = items
-    .map((item) => inferDateISO(item))
-    .filter(Boolean)
-    .sort();
+  items
+    .filter((item) => getStatus(item) !== "cancelado")
+    .forEach((item) => {
+      const d = inferDateISO(item);
+      if (!d) return;
+      map.set(d, (map.get(d) || 0) + 1);
+    });
 
-  const projectStart = allDates.length ? formatDateBR(allDates[0]) : "—";
+  const labels = Array.from(map.keys()).sort();
+  const values = labels.map((l) => map.get(l));
+  return { labels, values };
+}
 
-  const participants = Array.from(participantsMap.values());
-  const uniqueParticipants = new Map();
+function buildFlowSeries(items) {
+  const map = { recebimento: 0, final_turno: 0 };
 
-  participants.forEach((p) => {
-    uniqueParticipants.set(p.id || p.participantCode, p);
+  items
+    .filter((item) => getStatus(item) !== "cancelado")
+    .forEach((item) => {
+      const fluxo = inferFluxo(item);
+      if (map[fluxo] !== undefined) map[fluxo] += 1;
+    });
+
+  return {
+    labels: ["recebimento", "final_turno"],
+    values: [map.recebimento, map.final_turno]
+  };
+}
+
+function buildMaterialSeries(items) {
+  const totals = sumMaterials(items);
+  const filtered = MATERIAL_META.filter((mat) => (totals[mat.key] || 0) > 0);
+
+  return {
+    labels: filtered.map((m) => m.label),
+    values: filtered.map((m) => totals[m.key] || 0)
+  };
+}
+
+function buildCollectionPointsSeries(items) {
+  const map = new Map();
+
+  items
+    .filter((item) => getStatus(item) !== "cancelado")
+    .forEach((item) => {
+      const participant = resolveParticipant(item);
+      const key = participant.localColeta || participant.address || inferEntrega(item) || "Ponto não informado";
+      map.set(key, (map.get(key) || 0) + 1);
+    });
+
+  const labels = Array.from(map.keys());
+  const values = labels.map((l) => map.get(l));
+  return { labels, values };
+}
+
+function getChartOptions(type, horizontal = false) {
+  const base = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        display: true,
+        position: "bottom"
+      }
+    }
+  };
+
+  if (type === "doughnut" || type === "pie") return base;
+
+  return {
+    ...base,
+    scales: horizontal
+      ? { x: { beginAtZero: true } }
+      : { y: { beginAtZero: true } }
+  };
+}
+
+function destroyCharts() {
+  [mainChart, secA, secB, secC].forEach((chart) => {
+    if (chart) chart.destroy();
+  });
+}
+
+function renderCharts(items) {
+  destroyCharts();
+
+  const daily = buildDailySeries(items);
+  const flow = buildFlowSeries(items);
+  const material = buildMaterialSeries(items);
+  const points = buildCollectionPointsSeries(items);
+
+  const mainType = els.chartMainType?.value || "line";
+  const flowType = els.chartFlowType?.value || "doughnut";
+  const materialType = els.chartDeliveryType?.value || "bar";
+  const pointsType = els.chartTerritoryType?.value || "bar";
+
+  const ctxMain = document.getElementById("mainChart");
+  const ctxA = document.getElementById("secA");
+  const ctxB = document.getElementById("secB");
+  const ctxC = document.getElementById("secC");
+
+  mainChart = new Chart(ctxMain, {
+    type: mainType,
+    data: {
+      labels: daily.labels,
+      datasets: [
+        {
+          label: "Quantidade de coletas",
+          data: daily.values,
+          borderColor: CHART_COLORS.blue,
+          backgroundColor: "rgba(83,172,222,.20)",
+          fill: mainType === "line",
+          tension: 0.35,
+          pointRadius: mainType === "line" ? 4 : 0,
+          pointHoverRadius: mainType === "line" ? 5 : 0
+        }
+      ]
+    },
+    options: getChartOptions(mainType)
   });
 
-  const participantList = Array.from(uniqueParticipants.values());
+  secA = new Chart(ctxA, {
+    type: flowType,
+    data: {
+      labels: flow.labels,
+      datasets: [
+        {
+          label: "Tipos de coletas",
+          data: flow.values,
+          backgroundColor: [
+            "rgba(83,172,222,.78)",
+            "rgba(129,185,42,.78)"
+          ],
+          borderColor: [CHART_COLORS.blue, CHART_COLORS.green],
+          borderWidth: flowType === "bar" ? 1.5 : 0
+        }
+      ]
+    },
+    options: getChartOptions(flowType)
+  });
 
-  const familiasCadastradas = participantList.filter((p) => {
-    const type = String(p.participantType || "").toLowerCase();
-    return type !== "condominio";
-  }).length;
+  secB = new Chart(ctxB, {
+    type: materialType,
+    data: {
+      labels: material.labels,
+      datasets: [
+        {
+          label: "Coletas por materiais",
+          data: material.values,
+          backgroundColor: material.labels.map(() => "rgba(129,185,42,.40)"),
+          borderColor: material.labels.map(() => CHART_COLORS.green),
+          borderWidth: materialType === "line" ? 3 : 1.5,
+          fill: materialType === "line"
+        }
+      ]
+    },
+    options: getChartOptions(materialType)
+  });
 
-  const condominiosCadastrados = participantList.filter((p) => {
-    const type = String(p.participantType || "").toLowerCase();
-    return type === "condominio";
-  }).length;
-
-  document.getElementById("k_totalDiasProjeto").textContent = String(m.totalDiasProjeto);
-  document.getElementById("k_inicioProjeto").textContent = `Início: ${projectStart}`;
-  document.getElementById("k_operacoesRealizadas").textContent = String(m.operacoesRealizadas);
-
-  document.getElementById("k_familiasCadastradas").textContent = String(familiasCadastradas);
-  document.getElementById("k_familiasParticipantes").textContent = String(m.familiasComColeta);
-  document.getElementById("k_familiasColetas").textContent = String(m.operacoesRealizadas);
-
-  document.getElementById("k_condominiosCadastrados").textContent = String(condominiosCadastrados);
-  document.getElementById("k_condominiosParticipantes").textContent = "0";
-  document.getElementById("k_condominiosColetas").textContent = "0";
-
-  document.getElementById("k_totalReciclavelKg").textContent = formatNumber(m.reciclavelKg);
-  document.getElementById("k_totalReciclavelPct").textContent = `${formatNumber(m.reciclavelPct)}%`;
-  document.getElementById("k_receitaTotal").textContent = formatMoneyBR(m.receitaTotal);
-
-  document.getElementById("k_totalRejeitoKg").textContent = formatNumber(m.rejeitoKg);
-  document.getElementById("k_totalRejeitoPct").textContent = `${formatNumber(m.rejeitoPct)}%`;
-
-  const rejeitoBase = m.rejeitoKg + m.naoComercializadoKg;
-  const pctNaoReciclavel = rejeitoBase ? (m.rejeitoKg / rejeitoBase) * 100 : 0;
-  const pctNaoComercializado = rejeitoBase ? (m.naoComercializadoKg / rejeitoBase) * 100 : 0;
-
-  document.getElementById("k_rejeitoNaoReciclavelPct").textContent = `${formatNumber(pctNaoReciclavel)}%`;
-  document.getElementById("k_rejeitoNaoReciclavelKg").textContent = formatKg(m.rejeitoKg);
-
-  document.getElementById("k_naoComercializadoPct").textContent = `${formatNumber(pctNaoComercializado)}%`;
-  document.getElementById("k_naoComercializadoKg").textContent = formatKg(m.naoComercializadoKg);
-
-  const oleoKg = m.materialTotals.oleoCozinhaKg || 0;
-  document.getElementById("k_outroKg").textContent = formatKg(oleoKg);
-
-  const totalMateriais = Object.values(m.materialTotals).reduce((acc, v) => acc + v, 0);
-  const materialCards = document.getElementById("materialCards");
-
-  if (materialCards) {
-    materialCards.innerHTML = MATERIAL_META
-      .filter((mat) => mat.key !== "oleoCozinhaKg")
-      .map((mat) => {
-        const kg = m.materialTotals[mat.key] || 0;
-        const pct = totalMateriais ? (kg / totalMateriais) * 100 : 0;
-        const receita = kg * mat.price;
-
-        return `
-          <article class="material-card">
-            <div class="mat-icon">${mat.icon}</div>
-            <div class="mat-pct">${formatNumber(pct)}%</div>
-            <div class="mat-kg">${formatNumber(kg)} kg</div>
-            <div class="mat-name">${escapeHtml(mat.label)}</div>
-            <div class="mat-sub">Receita ≈ ${formatMoneyBR(receita)}</div>
-          </article>
-        `;
-      })
-      .join("");
-  }
-
-  renderWeightTimeline(items);
+  secC = new Chart(ctxC, {
+    type: pointsType,
+    data: {
+      labels: points.labels,
+      datasets: [
+        {
+          label: "Pontos de coleta",
+          data: points.values,
+          backgroundColor: points.labels.map(() => "rgba(83,172,222,.28)"),
+          borderColor: points.labels.map(() => CHART_COLORS.blue),
+          borderWidth: pointsType === "line" ? 3 : 1.5,
+          fill: pointsType === "line"
+        }
+      ]
+    },
+    options: {
+      ...getChartOptions(pointsType, pointsType === "bar"),
+      indexAxis: pointsType === "bar" ? "y" : "x"
+    }
+  });
 }
 
 function renderPhotoCell(item) {
@@ -726,278 +1080,38 @@ function renderMainTable(items) {
     return;
   }
 
-  els.tableColetasBody.innerHTML = items
-    .map((item) => {
-      const participant = resolveParticipant(item);
-      const canceled = getStatus(item) === "cancelado";
+  els.tableColetasBody.innerHTML = items.map((item) => {
+    const participant = resolveParticipant(item);
+    const canceled = getStatus(item) === "cancelado";
 
-      return `
-        <tr class="${canceled ? "row-muted" : ""}">
-          <td>${formatDateBR(inferDateISO(item))}</td>
-          <td>${escapeHtml(inferTerritorio(item))}</td>
-          <td>${escapeHtml(participant.name)}</td>
-          <td>${escapeHtml(participant.code)}</td>
-          <td>${escapeHtml(inferFluxo(item))}</td>
-          <td>${escapeHtml(inferEntrega(item))}</td>
-          <td>${escapeHtml(item.createdByName || item.createdByPublicCode || item.createdBy || "Usuário")}</td>
-          <td>${formatKg(
-            isFinalTurno(item)
-              ? MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0)
-              : inferResiduoSeco(item)
-          )}</td>
-          <td>${formatKg(inferNaoComercializado(item))}</td>
-          <td>${formatKg(inferRejeito(item))}</td>
-          <td>${renderQualidadeBadge(item)}</td>
-          <td>${renderPhotoCell(item)}</td>
-          <td>${renderStatusBadge(item)}</td>
-          <td>
-            <div class="table-actions">
-              <button class="action-btn edit" data-edit="${item.id}" ${canceled ? "disabled" : ""}>Editar</button>
-              <button class="action-btn cancel" data-cancel="${item.id}" ${canceled ? "disabled" : ""}>Cancelar</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
-}
-
-function renderHistory(items) {
-  const recent = [...items]
-    .sort((a, b) => String(inferDateTimeISO(b)).localeCompare(String(inferDateTimeISO(a))))
-    .slice(0, 12);
-
-  if (!recent.length) {
-    els.historyBody.innerHTML = `
-      <tr>
-        <td colspan="8">Nenhum histórico disponível.</td>
+    return `
+      <tr class="${canceled ? "row-muted" : ""}">
+        <td>${formatDateBR(inferDateISO(item))}</td>
+        <td>${escapeHtml(inferTerritorio(item))}</td>
+        <td>${escapeHtml(participant.name)}</td>
+        <td>${escapeHtml(participant.code)}</td>
+        <td>${escapeHtml(inferFluxo(item))}</td>
+        <td>${escapeHtml(inferEntrega(item))}</td>
+        <td>${escapeHtml(item.createdByName || item.createdByPublicCode || item.createdBy || "Usuário")}</td>
+        <td>${formatKg(
+          isFinalTurno(item)
+            ? MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0)
+            : inferResiduoSeco(item)
+        )}</td>
+        <td>${formatKg(inferNaoComercializado(item))}</td>
+        <td>${formatKg(inferRejeito(item))}</td>
+        <td>${renderQualidadeBadge(item)}</td>
+        <td>${renderPhotoCell(item)}</td>
+        <td>${renderStatusBadge(item)}</td>
+        <td>
+          <div class="table-actions">
+            <button class="action-btn edit" data-edit="${item.id}" ${canceled ? "disabled" : ""}>Editar</button>
+            <button class="action-btn cancel" data-cancel="${item.id}" ${canceled ? "disabled" : ""}>Cancelar</button>
+          </div>
+        </td>
       </tr>
     `;
-    return;
-  }
-
-  els.historyBody.innerHTML = recent
-    .map((item) => {
-      const participant = resolveParticipant(item);
-      const canceled = getStatus(item) === "cancelado";
-
-      return `
-        <tr class="${canceled ? "row-muted" : ""}">
-          <td>${formatDateTimeBR(inferDateTimeISO(item))}</td>
-          <td>${escapeHtml(participant.name)}</td>
-          <td>${escapeHtml(inferFluxo(item))}</td>
-          <td>${escapeHtml(inferEntrega(item))}</td>
-          <td>${formatKg(
-            isFinalTurno(item)
-              ? MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0)
-              : inferResiduoSeco(item)
-          )}</td>
-          <td>${renderQualidadeBadge(item)}</td>
-          <td>${renderStatusBadge(item)}</td>
-          <td>
-            <div class="table-actions">
-              <button class="action-btn edit" data-edit="${item.id}" ${canceled ? "disabled" : ""}>Editar</button>
-              <button class="action-btn cancel" data-cancel="${item.id}" ${canceled ? "disabled" : ""}>Cancelar</button>
-            </div>
-          </td>
-        </tr>
-      `;
-    })
-    .join("");
-}
-
-function buildDailySeries(items) {
-  const map = new Map();
-
-  items
-    .filter((item) => getStatus(item) !== "cancelado")
-    .forEach((item) => {
-      const d = inferDateISO(item);
-      if (!d) return;
-      map.set(d, (map.get(d) || 0) + 1);
-    });
-
-  const labels = Array.from(map.keys()).sort();
-  const values = labels.map((l) => map.get(l));
-
-  return { labels, values };
-}
-
-function buildFlowSeries(items) {
-  const map = {
-    recebimento: 0,
-    final_turno: 0
-  };
-
-  items
-    .filter((item) => getStatus(item) !== "cancelado")
-    .forEach((item) => {
-      const fluxo = inferFluxo(item);
-      if (map[fluxo] !== undefined) map[fluxo] += 1;
-    });
-
-  return {
-    labels: ["recebimento", "final_turno"],
-    values: [map.recebimento, map.final_turno]
-  };
-}
-
-function buildEntregaSeries(items) {
-  const map = new Map();
-
-  items
-    .filter((item) => getStatus(item) !== "cancelado")
-    .forEach((item) => {
-      const entrega = inferEntrega(item);
-      map.set(entrega, (map.get(entrega) || 0) + 1);
-    });
-
-  const labels = Array.from(map.keys());
-  const values = labels.map((l) => map.get(l));
-
-  return { labels, values };
-}
-
-function buildTerritorioSeries(items) {
-  const map = new Map();
-
-  items
-    .filter((item) => getStatus(item) !== "cancelado")
-    .forEach((item) => {
-      const territorio = inferTerritorio(item);
-      map.set(territorio, (map.get(territorio) || 0) + 1);
-    });
-
-  const labels = Array.from(map.keys());
-  const values = labels.map((l) => map.get(l));
-
-  return { labels, values };
-}
-
-function getChartOptions(type, territoryHorizontal = false) {
-  const base = {
-    responsive: true,
-    maintainAspectRatio: false,
-    plugins: {
-      legend: {
-        display: type !== "bar" || !territoryHorizontal,
-        position: "bottom"
-      }
-    }
-  };
-
-  if (type === "doughnut" || type === "pie") return base;
-
-  return {
-    ...base,
-    scales: territoryHorizontal
-      ? { x: { beginAtZero: true } }
-      : { y: { beginAtZero: true } }
-  };
-}
-
-function destroyCharts() {
-  [mainChart, secA, secB, secC].forEach((chart) => {
-    if (chart) chart.destroy();
-  });
-}
-
-function renderCharts(items) {
-  destroyCharts();
-
-  const daily = buildDailySeries(items);
-  const flow = buildFlowSeries(items);
-  const entrega = buildEntregaSeries(items);
-  const territorio = buildTerritorioSeries(items);
-
-  const mainType = els.chartMainType?.value || "line";
-  const flowType = els.chartFlowType?.value || "doughnut";
-  const deliveryType = els.chartDeliveryType?.value || "bar";
-  const territoryType = els.chartTerritoryType?.value || "bar";
-
-  const ctxMain = document.getElementById("mainChart");
-  const ctxA = document.getElementById("secA");
-  const ctxB = document.getElementById("secB");
-  const ctxC = document.getElementById("secC");
-
-  mainChart = new Chart(ctxMain, {
-    type: mainType,
-    data: {
-      labels: daily.labels,
-      datasets: [
-        {
-          label: "Registros por dia",
-          data: daily.values,
-          borderColor: CHART_COLORS.blue,
-          backgroundColor: "rgba(83,172,222,.20)",
-          fill: mainType === "line",
-          tension: 0.35,
-          pointRadius: mainType === "line" ? 4 : 0,
-          pointHoverRadius: mainType === "line" ? 5 : 0
-        }
-      ]
-    },
-    options: getChartOptions(mainType)
-  });
-
-  secA = new Chart(ctxA, {
-    type: flowType,
-    data: {
-      labels: flow.labels,
-      datasets: [
-        {
-          label: "Fluxo",
-          data: flow.values,
-          backgroundColor: [
-            "rgba(83,172,222,.78)",
-            "rgba(129,185,42,.78)"
-          ],
-          borderColor: [CHART_COLORS.blue, CHART_COLORS.green],
-          borderWidth: flowType === "bar" ? 1.5 : 0
-        }
-      ]
-    },
-    options: getChartOptions(flowType)
-  });
-
-  secB = new Chart(ctxB, {
-    type: deliveryType,
-    data: {
-      labels: entrega.labels,
-      datasets: [
-        {
-          label: "Entrega",
-          data: entrega.values,
-          backgroundColor: entrega.labels.map(() => "rgba(129,185,42,.40)"),
-          borderColor: entrega.labels.map(() => CHART_COLORS.green),
-          borderWidth: deliveryType === "line" ? 3 : 1.5,
-          fill: deliveryType === "line"
-        }
-      ]
-    },
-    options: getChartOptions(deliveryType)
-  });
-
-  secC = new Chart(ctxC, {
-    type: territoryType,
-    data: {
-      labels: territorio.labels,
-      datasets: [
-        {
-          label: "Território",
-          data: territorio.values,
-          backgroundColor: territorio.labels.map(() => "rgba(83,172,222,.28)"),
-          borderColor: territorio.labels.map(() => CHART_COLORS.blue),
-          borderWidth: territoryType === "line" ? 3 : 1.5,
-          fill: territoryType === "line"
-        }
-      ]
-    },
-    options: {
-      ...getChartOptions(territoryType, territoryType === "bar"),
-      indexAxis: territoryType === "bar" ? "y" : "x"
-    }
-  });
+  }).join("");
 }
 
 function openPhoto(url) {
@@ -1081,28 +1195,6 @@ async function cancelRegistro(itemId) {
   });
 }
 
-function setDefaultDateRange(items) {
-  if (els.fIni.value || els.fFim.value || !items.length) return;
-
-  const dates = items
-    .map((item) => inferDateISO(item))
-    .filter(Boolean)
-    .sort();
-
-  if (!dates.length) return;
-
-  els.fIni.value = dates[0];
-  els.fFim.value = dates[dates.length - 1];
-}
-
-function sortColetasLocally(items) {
-  return items.sort((a, b) => {
-    const aDate = String(inferDateTimeISO(a) || "");
-    const bDate = String(inferDateTimeISO(b) || "");
-    return bDate.localeCompare(aDate);
-  });
-}
-
 function getSearchTarget(item, participant, searchType) {
   const targets = {
     participant: `${participant.name} ${item.participantName || ""} ${item.recebimento?.familyCode || ""} ${item.finalTurno?.familyCode || ""}`,
@@ -1159,12 +1251,10 @@ function applyFilters() {
   updateTopInfo();
   renderKpis(filteredColetas);
   renderExpandedPanel(filteredColetas);
-  renderMainTable(filteredColetas);
-  renderHistory(filteredColetas);
+  renderWeightTimeline(filteredColetas);
   renderCharts(filteredColetas);
-
-  console.log("filteredColetas", filteredColetas);
-  console.log("materialTotals", computeExpandedMetrics(filteredColetas).materialTotals);
+  renderCollectionPoints(filteredColetas);
+  renderMainTable(filteredColetas);
 }
 
 function clearFilters() {
@@ -1176,6 +1266,25 @@ function clearFilters() {
   els.fBusca.value = "";
   if (els.fSearchType) els.fSearchType.value = "all";
   applyFilters();
+}
+
+function setDefaultDateRange(items) {
+  if (els.fIni.value || els.fFim.value || !items.length) return;
+
+  const dates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
+
+  if (!dates.length) return;
+
+  els.fIni.value = dates[0];
+  els.fFim.value = dates[dates.length - 1];
+}
+
+function sortColetasLocally(items) {
+  return items.sort((a, b) => {
+    const aDate = String(inferDateTimeISO(a) || "");
+    const bDate = String(inferDateTimeISO(b) || "");
+    return bDate.localeCompare(aDate);
+  });
 }
 
 function listenColetas(profile) {
@@ -1216,9 +1325,7 @@ function listenColetas(profile) {
         setDefaultDateRange(allColetas);
         applyFilters();
 
-        els.dbStatus.textContent = useFallback
-          ? "conectado (modo provisório)"
-          : "conectado";
+        els.dbStatus.textContent = useFallback ? "conectado (modo provisório)" : "conectado";
       },
       (error) => {
         const msg = String(error?.message || "").toLowerCase();
@@ -1286,6 +1393,13 @@ function bindUI() {
     const photo = event.target.closest("[data-photo]");
     if (photo) {
       openPhoto(photo.dataset.photo);
+      return;
+    }
+
+    const routePointBtn = event.target.closest("[data-route-point]");
+    if (routePointBtn) {
+      selectedPointKey = routePointBtn.dataset.routePoint;
+      renderCollectionPoints(filteredColetas);
       return;
     }
 
