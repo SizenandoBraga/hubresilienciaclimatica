@@ -10,20 +10,24 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-STATE GLOBAL
+   STATE GLOBAL
 ========================= */
 
 const STATE = {
   user: null,
   userDoc: null,
-  territoryId: null
+  territoryId: null,
+  operacao: null,
+  ultimaEtiqueta: null,
+  salvando: false
 };
 
 /* =========================
-UTILS
+   HELPERS
 ========================= */
 
 const $ = (id) => document.getElementById(id);
+const $$ = (selector) => document.querySelectorAll(selector);
 
 function setText(id, value) {
   const el = $(id);
@@ -36,17 +40,57 @@ function setMsg(el, kind, text) {
   el.textContent = text;
 }
 
-function toISODate(d) {
-  return d.toISOString().split("T")[0];
+function toISODate(date) {
+  return date.toISOString().split("T")[0];
 }
 
-function parseNum(v) {
-  const n = Number(String(v).replace(",", "."));
+function parseNum(value) {
+  if (value === null || value === undefined || value === "") return null;
+  const n = Number(String(value).replace(",", "."));
   return Number.isFinite(n) ? n : null;
 }
 
+function formatDateBR(dateStr) {
+  if (!dateStr) return "-";
+  const [year, month, day] = dateStr.split("-");
+  return `${day}/${month}/${year}`;
+}
+
+function formatFlow(value) {
+  const map = {
+    recebimento: "Recebimento",
+    final_turno: "Final do turno"
+  };
+  return map[value] || value || "-";
+}
+
+function gerarCodigoEtiqueta() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, "0");
+  const d = String(now.getDate()).padStart(2, "0");
+  const h = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  const s = String(now.getSeconds()).padStart(2, "0");
+
+  return `ETQ-${y}${m}${d}-${h}${min}${s}`;
+}
+
+function togglePanels(flowType) {
+  $("panelRecebimento")?.classList.toggle("hidden", flowType !== "recebimento");
+  $("panelFinalTurno")?.classList.toggle("hidden", flowType !== "final_turno");
+}
+
+function ensureTerritory() {
+  if (!STATE.territoryId) {
+    throw new Error(
+      "Usuário sem territoryId definido. Verifique o documento em users/{uid} no Firebase."
+    );
+  }
+}
+
 /* =========================
-AUTH + USER
+   AUTH + USER
 ========================= */
 
 async function loadUserDoc(uid) {
@@ -55,7 +99,6 @@ async function loadUserDoc(uid) {
 }
 
 async function bootstrap(user) {
-
   setText("dbStatus", "conectado");
 
   const userDoc = await loadUserDoc(user.uid);
@@ -68,118 +111,135 @@ async function bootstrap(user) {
 
   STATE.user = user;
   STATE.userDoc = userDoc;
-  STATE.territoryId = userDoc.territoryId;
+  STATE.territoryId =
+    userDoc.territoryId ||
+    userDoc.territorioId ||
+    userDoc.territory ||
+    userDoc.cooperativaId ||
+    null;
 
-  console.log("👤 UserDoc:", userDoc);
+  console.log("UID logado:", user.uid);
+  console.log("UserDoc:", userDoc);
+  console.log("territoryId resolvido:", STATE.territoryId);
 
   if (!STATE.territoryId) {
-    alert("Usuário sem território definido.");
+    setText("dbStatus", "usuário sem território");
+    alert(
+      `Usuário sem território definido. Cadastre o campo territoryId no documento users/${user.uid}`
+    );
   }
 }
 
 /* =========================
-CHOICES
+   CHOICES / SELEÇÕES
 ========================= */
 
+function activateGroup(selector, activeBtn, hiddenInputId, value) {
+  document.querySelectorAll(selector).forEach((el) => {
+    el.classList.remove("active");
+    el.setAttribute("aria-pressed", "false");
+  });
+
+  activeBtn.classList.add("active");
+  activeBtn.setAttribute("aria-pressed", "true");
+
+  const hidden = $(hiddenInputId);
+  if (hidden) hidden.value = value;
+}
+
 function wireChoices() {
+  document.querySelectorAll("[data-delivery]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", "false");
 
-  document.querySelectorAll("[data-delivery]").forEach(btn => {
     btn.onclick = () => {
-      document.querySelectorAll("[data-delivery]").forEach(el => el.classList.remove("active"));
-      btn.classList.add("active");
-      $("deliveryType").value = btn.dataset.delivery;
+      activateGroup("[data-delivery]", btn, "deliveryType", btn.dataset.delivery);
     };
   });
 
-  document.querySelectorAll("[data-flow]").forEach(btn => {
+  document.querySelectorAll("[data-flow]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", "false");
+
     btn.onclick = () => {
-      document.querySelectorAll("[data-flow]").forEach(el => el.classList.remove("active"));
-      btn.classList.add("active");
-
-      $("flowType").value = btn.dataset.flow;
-
-      $("panelRecebimento").classList.toggle("hidden", btn.dataset.flow !== "recebimento");
-      $("panelFinalTurno").classList.toggle("hidden", btn.dataset.flow !== "final_turno");
+      activateGroup("[data-flow]", btn, "flowType", btn.dataset.flow);
+      setText("flowStatus", formatFlow(btn.dataset.flow));
+      togglePanels(btn.dataset.flow);
     };
   });
 
-  document.querySelectorAll(".quality-btn").forEach(btn => {
+  document.querySelectorAll(".quality-btn").forEach((btn) => {
+    btn.setAttribute("aria-pressed", "false");
+
     btn.onclick = () => {
-      document.querySelectorAll(".quality-btn").forEach(el => el.classList.remove("active"));
+      document.querySelectorAll(".quality-btn").forEach((el) => {
+        el.classList.remove("active");
+        el.setAttribute("aria-pressed", "false");
+      });
+
       btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
       $("qualidadeNota").value = btn.dataset.quality;
     };
   });
+
+  $("btnPreviewOperacao")?.addEventListener("click", () => {
+    const delivery = $("deliveryType")?.value || "não definido";
+    const flow = $("flowType")?.value || "não definido";
+
+    setMsg(
+      $("msgOperacao"),
+      "ok",
+      `Prévia pronta: entrega ${delivery} / fluxo ${formatFlow(flow)}.`
+    );
+  });
 }
 
 /* =========================
-SALVAR (AGORA COM TERRITORY)
+   EXTRAS - FINAL DO TURNO
 ========================= */
 
-async function salvarRecebimento() {
+function buildExtraRow() {
+  const row = document.createElement("div");
+  row.className = "extra-row";
+  row.innerHTML = `
+    <input type="text" class="extra-name" placeholder="Nome do material">
+    <input type="number" step="0.01" class="extra-weight" placeholder="kg">
+    <button type="button" class="remove-extra">Remover</button>
+  `;
 
-  await addDoc(collection(db, "coletas"), {
-    createdAt: serverTimestamp(),
+  const removeBtn = row.querySelector(".remove-extra");
+  removeBtn?.addEventListener("click", () => row.remove());
 
-    territoryId: STATE.territoryId, // 🔥 ESSENCIAL
+  return row;
+}
 
-    opDate: $("opDate").value,
-    flowType: "recebimento",
+function wireExtras() {
+  $("btnAddExtra")?.addEventListener("click", () => {
+    $("extrasWrap")?.appendChild(buildExtraRow());
+  });
 
-    recebimento: {
-      pesoResiduoSecoKg: parseNum($("pesoResiduoSecoKg").value),
-      qualidadeNota: parseNum($("qualidadeNota").value)
-    }
+  $$("#extrasWrap .extra-row").forEach((row) => {
+    const removeBtn = row.querySelector(".remove-extra");
+    removeBtn?.addEventListener("click", () => row.remove());
   });
 }
 
-async function salvarFinalTurno() {
+function getExtras() {
+  const extras = [];
 
-  await addDoc(collection(db, "coletas"), {
-    createdAt: serverTimestamp(),
+  $$("#extrasWrap .extra-row").forEach((row) => {
+    const nome = row.querySelector(".extra-name")?.value.trim();
+    const pesoKg = parseNum(row.querySelector(".extra-weight")?.value);
 
-    territoryId: STATE.territoryId, // 🔥 ESSENCIAL
-
-    opDate: $("opDate").value,
-    flowType: "final_turno",
-
-    fotosQtd: fotosFinalTurno.length
-  });
-}
-
-/* =========================
-FORMS
-========================= */
-
-function wireForms() {
-
-  $("formRecebimento")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    try {
-      await salvarRecebimento();
-      setMsg($("msgRecebimento"), "ok", "Salvo ✓");
-    } catch (e) {
-      console.error(e);
-      setMsg($("msgRecebimento"), "bad", e.message);
+    if (nome && pesoKg !== null) {
+      extras.push({ nome, pesoKg });
     }
   });
 
-  $("formFinalTurno")?.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    try {
-      await salvarFinalTurno();
-      setMsg($("msgFinalTurno"), "ok", "Salvo ✓");
-    } catch (e) {
-      console.error(e);
-      setMsg($("msgFinalTurno"), "bad", e.message);
-    }
-  });
+  return extras;
 }
 
 /* =========================
-FOTOS COM MINIATURA
+   FOTOS COM MINIATURA
 ========================= */
 
 const inputFotosFinalTurno = $("fotoFinalTurno");
@@ -189,46 +249,43 @@ let fotosFinalTurno = [];
 const MAX_FOTOS = 10;
 
 inputFotosFinalTurno?.addEventListener("change", (e) => {
-
-  const files = Array.from(e.target.files);
-  const imagens = files.filter(f => f.type.startsWith("image/"));
+  const files = Array.from(e.target.files || []);
+  const imagens = files.filter((f) => f.type.startsWith("image/"));
 
   if (fotosFinalTurno.length + imagens.length > MAX_FOTOS) {
     alert(`Máximo de ${MAX_FOTOS} fotos`);
+    inputFotosFinalTurno.value = "";
     return;
   }
 
   fotosFinalTurno = [...fotosFinalTurno, ...imagens];
-
   renderPreviewFinalTurno();
-
   inputFotosFinalTurno.value = "";
 });
 
 function renderPreviewFinalTurno() {
+  if (!previewFinalTurno) return;
 
   previewFinalTurno.innerHTML = "";
 
   fotosFinalTurno.forEach((file, index) => {
-
     const reader = new FileReader();
 
     reader.onload = (e) => {
-
       const div = document.createElement("div");
       div.className = "preview-item";
 
       div.innerHTML = `
-        <img src="${e.target.result}">
-        <button class="preview-remove" data-index="${index}">×</button>
+        <img src="${e.target.result}" alt="Pré-visualização da foto ${index + 1}">
+        <button type="button" class="preview-remove" data-index="${index}">×</button>
       `;
 
       previewFinalTurno.appendChild(div);
 
-      div.querySelector(".preview-remove").onclick = () => {
+      div.querySelector(".preview-remove")?.addEventListener("click", () => {
         fotosFinalTurno.splice(index, 1);
         renderPreviewFinalTurno();
-      };
+      });
     };
 
     reader.readAsDataURL(file);
@@ -236,29 +293,402 @@ function renderPreviewFinalTurno() {
 }
 
 /* =========================
-INIT
+   ETAPA 1 - DADOS INICIAIS
+========================= */
+
+function saveOperacaoBase() {
+  const opDate = $("opDate")?.value;
+  const deliveryType = $("deliveryType")?.value;
+  const flowType = $("flowType")?.value;
+  const opNotes = $("opNotes")?.value.trim() || null;
+
+  if (!opDate || !deliveryType || !flowType) {
+    setMsg(
+      $("msgOperacao"),
+      "bad",
+      "Preencha a data, o tipo de entrega e o fluxo da operação."
+    );
+    return false;
+  }
+
+  STATE.operacao = {
+    opDate,
+    deliveryType,
+    flowType,
+    opNotes
+  };
+
+  togglePanels(flowType);
+
+  setMsg(
+    $("msgOperacao"),
+    "ok",
+    "Etapa inicial salva com sucesso. Continue o preenchimento da coleta."
+  );
+
+  return true;
+}
+
+/* =========================
+   ETIQUETA / MODAL / QR CODE
+========================= */
+
+function gerarQrCode(valor) {
+  const qrContainer = $("qrcode");
+  if (!qrContainer) return;
+
+  qrContainer.innerHTML = "";
+
+  if (typeof QRCode === "undefined") {
+    console.error("Biblioteca QRCode não carregada.");
+    qrContainer.innerHTML = "<small>QRCode não disponível</small>";
+    return;
+  }
+
+  new QRCode(qrContainer, {
+    text: valor,
+    width: 200,
+    height: 200,
+    correctLevel: QRCode.CorrectLevel.H
+  });
+}
+
+function preencherEtiquetaSimples(registro) {
+  STATE.ultimaEtiqueta = registro;
+
+  const familyCode =
+    registro.familyCode ||
+    registro.condCode ||
+    registro.codigoFamilia ||
+    "SEM-CODIGO";
+
+  const qrPayload = JSON.stringify({
+    codigoFamilia: familyCode,
+    territoryId: STATE.territoryId || null,
+    flowType: registro.flowType || null,
+    opDate: registro.opDate || null,
+    id: registro.id || null
+  });
+
+  setText("labelFamilyCode", familyCode);
+  setText("labelDate", formatDateBR(registro.opDate));
+  gerarQrCode(qrPayload);
+}
+
+function openLabelModal() {
+  const modal = $("labelModal");
+  if (!modal) return;
+
+  modal.classList.remove("hidden");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeLabelModal() {
+  const modal = $("labelModal");
+  if (!modal) return;
+
+  modal.classList.add("hidden");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+function wireLabelModal() {
+  $("btnPrintLabel")?.addEventListener("click", () => {
+    if (!STATE.ultimaEtiqueta) return;
+    window.print();
+  });
+
+  $("btnCloseLabelModal")?.addEventListener("click", closeLabelModal);
+  $("btnCloseLabelModalFooter")?.addEventListener("click", closeLabelModal);
+  $("labelModalBackdrop")?.addEventListener("click", closeLabelModal);
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") closeLabelModal();
+  });
+}
+
+/* =========================
+   SALVAMENTO FIRESTORE
+========================= */
+
+async function salvarRecebimento() {
+  ensureTerritory();
+
+  const familyCode = $("familyCode")?.value.trim() || null;
+  const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
+  const qualidadeNota = parseNum($("qualidadeNota")?.value);
+  const recebimentoObs = $("recebimentoObs")?.value.trim() || null;
+  const pesoRejeitoKg = parseNum($("pesoRejeitoKg")?.value);
+  const pesoNaoComercializadoKg = parseNum($("pesoNaoComercializadoKg")?.value);
+
+  if (
+    !STATE.operacao ||
+    !familyCode ||
+    pesoResiduoSecoKg === null ||
+    qualidadeNota === null ||
+    pesoRejeitoKg === null ||
+    pesoNaoComercializadoKg === null
+  ) {
+    throw new Error("Preencha o código da família e todos os campos obrigatórios do recebimento.");
+  }
+
+  const codigoEtiqueta = gerarCodigoEtiqueta();
+
+  const payload = {
+    createdAt: serverTimestamp(),
+    createdAtClient: new Date().toISOString(),
+
+    territoryId: STATE.territoryId || null,
+    createdBy: STATE.user?.uid || null,
+    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
+
+    opDate: STATE.operacao.opDate,
+    deliveryType: STATE.operacao.deliveryType,
+    flowType: "recebimento",
+    observacao: STATE.operacao.opNotes || null,
+    codigoEtiqueta,
+
+    familyCode,
+
+    recebimento: {
+      pesoResiduoSecoKg,
+      qualidadeNota,
+      observacao: recebimentoObs,
+      pesoRejeitoKg,
+      pesoNaoComercializadoKg,
+      fotosResiduoQtd: $("fotoResiduo")?.files?.length || 0,
+      fotosNaoComercializadoQtd: $("fotoNaoComercializado")?.files?.length || 0
+    }
+  };
+
+  const docRef = await addDoc(collection(db, "coletas"), payload);
+
+  return {
+    ...payload,
+    id: docRef.id,
+    createdAtLabel: new Date().toISOString(),
+    familyCode,
+    opDate: STATE.operacao.opDate,
+    flowType: "recebimento"
+  };
+}
+
+async function salvarFinalTurno() {
+  ensureTerritory();
+
+  const condCode = $("condCode")?.value.trim() || null;
+  const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
+
+  if (!STATE.operacao || !condCode || pesoRejeitoGeralKg === null) {
+    throw new Error("Preencha o código do condomínio/família e os campos obrigatórios do fechamento do turno.");
+  }
+
+  const extras = getExtras();
+  const codigoEtiqueta = gerarCodigoEtiqueta();
+
+  const payload = {
+    createdAt: serverTimestamp(),
+    createdAtClient: new Date().toISOString(),
+
+    territoryId: STATE.territoryId || null,
+    createdBy: STATE.user?.uid || null,
+    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
+
+    opDate: STATE.operacao.opDate,
+    deliveryType: STATE.operacao.deliveryType,
+    flowType: "final_turno",
+    observacao: STATE.operacao.opNotes || null,
+    codigoEtiqueta,
+
+    condCode,
+
+    finalTurno: {
+      pesoRejeitoGeralKg,
+      plasticoKg: parseNum($("plasticoKg")?.value) || 0,
+      papelMistoKg: parseNum($("papelMistoKg")?.value) || 0,
+      papelaoKg: parseNum($("papelaoKg")?.value) || 0,
+      aluminioMetalKg: parseNum($("aluminioMetalKg")?.value) || 0,
+      vidroKg: parseNum($("vidroKg")?.value) || 0,
+      sacariaKg: parseNum($("sacariaKg")?.value) || 0,
+      isoporKg: parseNum($("isoporKg")?.value) || 0,
+      oleoKg: parseNum($("oleoKg")?.value) || 0,
+      extras,
+      fotosQtd: fotosFinalTurno.length
+    }
+  };
+
+  const docRef = await addDoc(collection(db, "coletas"), payload);
+
+  return {
+    ...payload,
+    id: docRef.id,
+    createdAtLabel: new Date().toISOString(),
+    condCode,
+    opDate: STATE.operacao.opDate,
+    flowType: "final_turno"
+  };
+}
+
+/* =========================
+   FORMS
+========================= */
+
+function resetRecebimentoForm() {
+  $("formRecebimento")?.reset();
+  if ($("qualidadeNota")) $("qualidadeNota").value = "";
+
+  document.querySelectorAll(".quality-btn").forEach((btn) => {
+    btn.classList.remove("active");
+    btn.setAttribute("aria-pressed", "false");
+  });
+}
+
+function resetFinalTurnoForm() {
+  $("formFinalTurno")?.reset();
+
+  fotosFinalTurno = [];
+  renderPreviewFinalTurno();
+
+  const wrap = $("extrasWrap");
+  if (wrap) {
+    wrap.innerHTML = "";
+    wrap.appendChild(buildExtraRow());
+  }
+}
+
+function wireForms() {
+  $("formOperacao")?.addEventListener("submit", (e) => {
+    e.preventDefault();
+    saveOperacaoBase();
+  });
+
+  $("formRecebimento")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (STATE.salvando) return;
+
+    if (!saveOperacaoBase() && !STATE.operacao) return;
+
+    try {
+      STATE.salvando = true;
+      const submitBtn = e.target.querySelector("button[type='submit']");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando coleta...";
+      }
+
+      const registro = await salvarRecebimento();
+
+      preencherEtiquetaSimples(registro);
+      openLabelModal();
+
+      setMsg(
+        $("msgRecebimento"),
+        "ok",
+        "Coleta de recebimento salva com sucesso. Cartão pronto para impressão."
+      );
+
+      resetRecebimentoForm();
+    } catch (error) {
+      console.error(error);
+      setMsg(
+        $("msgRecebimento"),
+        "bad",
+        error.message || "Erro ao salvar recebimento."
+      );
+    } finally {
+      STATE.salvando = false;
+      const submitBtn = e.target.querySelector("button[type='submit']");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Salvar coleta de recebimento";
+      }
+    }
+  });
+
+  $("formFinalTurno")?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    if (STATE.salvando) return;
+
+    if (!saveOperacaoBase() && !STATE.operacao) return;
+
+    try {
+      STATE.salvando = true;
+      const submitBtn = e.target.querySelector("button[type='submit']");
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando fechamento...";
+      }
+
+      const registro = await salvarFinalTurno();
+
+      preencherEtiquetaSimples(registro);
+      openLabelModal();
+
+      setMsg(
+        $("msgFinalTurno"),
+        "ok",
+        "Registro final do turno salvo com sucesso. Cartão pronto para impressão."
+      );
+
+      resetFinalTurnoForm();
+    } catch (error) {
+      console.error(error);
+      setMsg(
+        $("msgFinalTurno"),
+        "bad",
+        error.message || "Erro ao salvar fechamento do turno."
+      );
+    } finally {
+      STATE.salvando = false;
+      const submitBtn = e.target.querySelector("button[type='submit']");
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Salvar registro final do turno";
+      }
+    }
+  });
+
+  $("btnVoltarRecebimento")?.addEventListener("click", () => {
+    $("panelRecebimento")?.classList.add("hidden");
+  });
+
+  $("btnVoltarFinalTurno")?.addEventListener("click", () => {
+    $("panelFinalTurno")?.classList.add("hidden");
+  });
+}
+
+/* =========================
+   INIT
 ========================= */
 
 function init() {
-
   wireChoices();
+  wireExtras();
   wireForms();
+  wireLabelModal();
 
   if ($("opDate")) {
     $("opDate").value = toISODate(new Date());
   }
 
   onAuthStateChanged(auth, async (user) => {
-
     if (!user) {
       setText("dbStatus", "deslogado");
       location.href = "index.html";
       return;
     }
 
-    await bootstrap(user);
-
-    console.log("🔥 Firebase conectado");
+    try {
+      await bootstrap(user);
+      console.log("🔥 Firebase conectado");
+    } catch (error) {
+      console.error("Erro no bootstrap:", error);
+      setText("dbStatus", "erro");
+      alert("Não foi possível carregar os dados do usuário.");
+    }
   });
 }
 
