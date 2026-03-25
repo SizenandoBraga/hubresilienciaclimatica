@@ -15,12 +15,8 @@
     rel="stylesheet"
   >
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-
-  <link rel="stylesheet" href="usuarios.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/usuarios.css">
 </head>
 <body>
   <div class="page-bg"></div>
@@ -36,14 +32,14 @@
 
       <nav class="site-nav" aria-label="Navegação principal">
         <a href="/index.html">Início</a>
-        <a href="/cooperativas.html">Painel</a>
+        <a href="/cooperativa.html">Painel</a>
         <a class="is-active" href="/usuarios.html">Usuários</a>
         <a href="/registro-coletas-fases.html">Coletas</a>
         <a href="/dashboard-cooperativa.html">Dashboard</a>
       </nav>
 
       <div class="site-header-actions">
-        <a class="site-login-btn" href="/cadastro-participantes-vila-pinto.html">+ Novo usuário</a>
+        <a class="site-login-btn" href="/cadastro-participantes.html">+ Novo usuário</a>
       </div>
 
       <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
@@ -51,7 +47,7 @@
 
     <div class="site-mobile-menu" id="mobileMenu">
       <a href="/index.html">Início</a>
-      <a href="/cooperativas.html">Painel</a>
+      <a href="/cooperativa.html">Painel</a>
       <a href="/usuarios.html">Usuários</a>
       <a href="/registro-coletas-fases.html">Coletas</a>
       <a href="/dashboard-cooperativa.html">Dashboard</a>
@@ -304,6 +300,16 @@
             </select>
           </div>
 
+          <div class="field">
+            <label for="editParticipantTerritoryId">territoryId</label>
+            <input type="text" id="editParticipantTerritoryId" placeholder="Ex.: crgr_vila_pinto">
+          </div>
+
+          <div class="field">
+            <label for="editParticipantTerritoryLabel">Nome do território</label>
+            <input type="text" id="editParticipantTerritoryLabel" placeholder="Ex.: Centro de Triagem Vila Pinto">
+          </div>
+
           <div class="field field-full">
             <label for="editUserSchedule">Horário de coleta</label>
             <input type="text" id="editUserSchedule" placeholder="Ex.: Terça e quinta • 14h às 16h">
@@ -354,6 +360,6 @@
   </div>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module" src="usuarios.js"></script>
+  <script type="module" src="/usuarios.js"></script>
 </body>
 </html>

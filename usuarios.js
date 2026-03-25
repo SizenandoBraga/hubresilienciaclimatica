@@ -45,6 +45,8 @@ const els = {
   editUserStatus: document.getElementById("editUserStatus"),
   editUserTerritory: document.getElementById("editUserTerritory"),
   editUserOperation: document.getElementById("editUserOperation"),
+  editParticipantTerritoryId: document.getElementById("editParticipantTerritoryId"),
+  editParticipantTerritoryLabel: document.getElementById("editParticipantTerritoryLabel"),
   editUserSchedule: document.getElementById("editUserSchedule"),
   editUserAddress: document.getElementById("editUserAddress"),
   editUserLat: document.getElementById("editUserLat"),
@@ -205,6 +207,8 @@ function resetModalForm() {
   if (!els.userEditForm) return;
   els.userEditForm.reset();
   if (els.editUserId) els.editUserId.value = "";
+  if (els.editParticipantTerritoryId) els.editParticipantTerritoryId.value = "";
+  if (els.editParticipantTerritoryLabel) els.editParticipantTerritoryLabel.value = "";
   clearGeoStatus();
 }
 
@@ -566,7 +570,8 @@ function renderUsersTable(items) {
       <td>
         <span class="flag-badge ${user.inTerritory === "sim" ? "flag-ok" : "flag-no"}">
           ${territoryLabel(user.inTerritory)}
-        </span>
+        </span><br>
+        <small>${safeText(user.territoryId, "Sem territoryId")}</small>
       </td>
 
       <td>
@@ -621,7 +626,9 @@ function applyFilters() {
       user.name.toLowerCase().includes(term) ||
       user.code.toLowerCase().includes(term) ||
       String(user.phone || "").toLowerCase().includes(term) ||
-      String(user.address || "").toLowerCase().includes(term);
+      String(user.address || "").toLowerCase().includes(term) ||
+      String(user.territoryId || "").toLowerCase().includes(term) ||
+      String(user.territoryLabel || "").toLowerCase().includes(term);
 
     const matchStatus = status === "all" || user.status === status;
     const matchTerritory = territory === "all" || user.inTerritory === territory;
@@ -674,6 +681,7 @@ function renderMap(items) {
       <strong>${user.name}</strong><br>
       Código: ${user.code}<br>
       Endereço: ${safeText(user.address)}<br>
+      Território: ${safeText(user.territoryLabel || user.territoryId, "Não definido")}<br>
       Horário: ${safeText(user.schedule, "A definir")}<br>
       Resíduos: ${formatKg(user.wasteKg)}
     `);
@@ -716,6 +724,7 @@ function renderMap(items) {
     <div class="route-item">
       <strong>${index + 1}. ${user.name}</strong>
       <span>${safeText(user.address)}</span>
+      <span>${safeText(user.territoryLabel || user.territoryId, "Sem território")}</span>
     </div>
   `).join("");
 }
@@ -734,6 +743,8 @@ function openModal(userId) {
   els.editUserStatus.value = user.status;
   els.editUserTerritory.value = user.inTerritory;
   els.editUserOperation.value = user.inOperation;
+  els.editParticipantTerritoryId.value = safeText(user.territoryId, "");
+  els.editParticipantTerritoryLabel.value = safeText(user.territoryLabel, "");
   els.editUserSchedule.value = safeText(user.schedule, "");
   els.editUserAddress.value = safeText(user.address, "");
   els.editUserLat.value = isValidCoord(user.geo?.lat) ? user.geo.lat : "";
@@ -821,6 +832,9 @@ async function saveUserForm(event) {
     );
   }
 
+  const manualTerritoryId = els.editParticipantTerritoryId?.value.trim() || "";
+  const manualTerritoryLabel = els.editParticipantTerritoryLabel?.value.trim() || "";
+
   const payload = {
     name: els.editUserName.value.trim(),
     participantCode: els.editUserCode.value.trim(),
@@ -838,8 +852,8 @@ async function saveUserForm(event) {
   };
 
   if (inTerritory === "sim") {
-    payload.territoryId = getMyTerritoryId() || null;
-    payload.territoryLabel = getMyTerritoryLabel() || "";
+    payload.territoryId = manualTerritoryId || getMyTerritoryId() || null;
+    payload.territoryLabel = manualTerritoryLabel || getMyTerritoryLabel() || "";
   } else {
     payload.territoryId = null;
     payload.territoryLabel = "";
@@ -853,11 +867,11 @@ async function saveUserForm(event) {
     status: normalizeStatus(payload.status),
     inTerritory: yesNo(payload.inTerritory),
     inOperation: yesNo(payload.inOperation),
+    territoryId: payload.territoryId,
+    territoryLabel: payload.territoryLabel,
     schedule: payload.schedule,
     wasteKg: Number(payload.wasteKg || 0),
     address: payload.enderecoCompleto || previousUser.address,
-    territoryId: payload.territoryId,
-    territoryLabel: payload.territoryLabel,
     geo: {
       lat: toNumberOrNull(payload.lat),
       lng: toNumberOrNull(payload.lng)
@@ -873,6 +887,7 @@ async function saveUserForm(event) {
     applyFilters();
 
     await updateDoc(doc(db, "participants", id), payload);
+
     await refreshOneUserFromServer(id);
     applyFilters();
 
