@@ -9,12 +9,12 @@ import {
    CONFIGURAÇÃO DA PÁGINA PÚBLICA
 ========================= */
 const PUBLIC_TERRITORY = {
-  territoryId: "vila-pinto",
-  territoryLabel: "Vila Pinto"
+  territoryId: "crgr_vila_pinto",
+  territoryLabel: "Centro de Triagem Vila Pinto"
 };
 
 const PUBLIC_SOURCE = {
-  createdBy: null,
+  createdBy: "",
   createdByName: "Cadastro público",
   createdByRole: "public"
 };
@@ -194,13 +194,17 @@ function validateStep(step) {
   }
 
   if (step === 2) {
-    if (!getValue(els.fullName)) throw new Error("Informe o nome completo.");
+    if (!getValue(els.fullName)) {
+      throw new Error("Informe o nome completo.");
+    }
 
     const phone = normalizePhone(getValue(els.phone));
     if (!phone) throw new Error("Informe o telefone / WhatsApp.");
     if (phone.length < 10) throw new Error("Informe um telefone válido com DDD.");
 
-    if (!getValue(els.generatedCode)) throw new Error("O código do cadastro não foi gerado.");
+    if (!getValue(els.generatedCode)) {
+      throw new Error("O código do cadastro não foi gerado.");
+    }
   }
 
   if (step === 3) {
@@ -251,7 +255,8 @@ function updateGeoPreview() {
   const city = getValue(els.city);
 
   if (cep && number && street) {
-    els.geoPreview.textContent = `${street}, ${number}${neighborhood ? ` • ${neighborhood}` : ""}${city ? ` • ${city}` : ""} • CEP ${cep}`;
+    els.geoPreview.textContent =
+      `${street}, ${number}${neighborhood ? ` • ${neighborhood}` : ""}${city ? ` • ${city}` : ""} • CEP ${cep}`;
   } else {
     els.geoPreview.textContent = "ainda não calculado";
   }
@@ -284,56 +289,69 @@ function closeSuccessModalAndGoBack() {
 function buildPayload() {
   const nowIso = new Date().toISOString();
 
+  const rua = getValue(els.street);
+  const numero = getValue(els.number);
+  const bairro = getValue(els.neighborhood);
+  const cidade = getValue(els.city);
+  const uf = getValue(els.state);
+  const cep = getValue(els.cep);
+  const complemento = getValue(els.referencePoint);
+
+  const enderecoCompleto =
+    `${rua}, ${numero} - ${bairro}, ${cidade}, ${uf} - CEP ${cep}`;
+
   return {
-    territoryId: PUBLIC_TERRITORY.territoryId,
-    territoryLabel: PUBLIC_TERRITORY.territoryLabel,
+    bairro: bairro || "",
+    cep: cep || "",
+    cidade: cidade || "",
+    complemento: complemento || "",
 
-    name: getValue(els.fullName),
-    participantCode: getValue(els.generatedCode),
-    participantType: selectedRegisterType,
-    localType: selectedLocalType,
-
-    phone: normalizePhone(getValue(els.phone)),
-    email: getValue(els.email),
-    cpf: onlyDigits(getValue(els.cpf)),
-
-    consent: {
-      lgpd: !!els.consentLgpd?.checked,
-      whatsapp: !!els.consentWhatsapp?.checked,
-      image: !!els.consentImage?.checked
-    },
-
-    address: {
-      cep: getValue(els.cep),
-      number: getValue(els.number),
-      street: getValue(els.street),
-      neighborhood: getValue(els.neighborhood),
-      city: getValue(els.city),
-      state: getValue(els.state),
-      referencePoint: getValue(els.referencePoint)
-    },
-
-    difficulty: {
-      hasDifficulty: selectedDifficulty === "sim",
-      details: getValue(els.difficultyDetail)
-    },
-
-    projectSource: getValue(els.projectSource),
-
-    source: "public_form",
-    status: "pending_review",
+    createdAt: serverTimestamp(),
+    createdAtIso: nowIso,
 
     createdBy: PUBLIC_SOURCE.createdBy,
     createdByName: PUBLIC_SOURCE.createdByName,
     createdByRole: PUBLIC_SOURCE.createdByRole,
 
-    createdAt: serverTimestamp(),
-    createdAtISO: nowIso
+    enderecoCompleto: enderecoCompleto || "",
+    localColeta: selectedLocalType || "",
+
+    name: getValue(els.fullName) || "",
+    numero: numero || "",
+    participanteCode: getValue(els.generatedCode) || "",
+    phone: normalizePhone(getValue(els.phone)) || "",
+    rua: rua || "",
+
+    territoryId: PUBLIC_TERRITORY.territoryId || "",
+    territoryLabel: PUBLIC_TERRITORY.territoryLabel || "",
+    uf: uf || "",
+
+    source: "public_form",
+    status: "pending_review",
+    active: true
   };
 }
 
 async function saveParticipant(payload) {
-  return addDoc(collection(db, "participants"), payload);
+  return await addDoc(collection(db, "participants"), payload);
+}
+
+function getFirebaseErrorMessage(error) {
+  const code = error?.code || "";
+
+  if (code === "permission-denied") {
+    return "O Firestore recusou a gravação. Verifique se as rules publicadas no console são as novas regras ajustadas.";
+  }
+
+  if (code === "unavailable") {
+    return "O Firebase está indisponível no momento. Tente novamente em instantes.";
+  }
+
+  if (code === "failed-precondition") {
+    return "Há uma configuração pendente no Firebase. Revise a coleção participants e as regras.";
+  }
+
+  return error?.message || "Não foi possível salvar o participante.";
 }
 
 /* =========================
@@ -422,16 +440,17 @@ function bindEvents() {
       validateStep(1);
       validateStep(2);
       validateStep(3);
-      validateStep(4);
 
       const payload = buildPayload();
+      console.log("Payload enviado ao Firebase:", payload);
 
       if (els.btnSubmitParticipant) {
         els.btnSubmitParticipant.disabled = true;
         els.btnSubmitParticipant.textContent = "Salvando...";
       }
 
-      await saveParticipant(payload);
+      const docRef = await saveParticipant(payload);
+      console.log("Participante salvo com ID:", docRef.id);
 
       hideMessage();
       openSuccessModal();
@@ -458,7 +477,7 @@ function bindEvents() {
       showStep(1);
     } catch (error) {
       console.error("Erro ao salvar participante:", error);
-      showMessage(error.message || "Não foi possível salvar o participante.", "error");
+      showMessage(getFirebaseErrorMessage(error), "error");
     } finally {
       if (els.btnSubmitParticipant) {
         els.btnSubmitParticipant.disabled = false;
