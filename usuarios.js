@@ -7,7 +7,8 @@ import {
   onSnapshot,
   updateDoc,
   deleteDoc,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const els = {
@@ -62,7 +63,10 @@ const STATE = {
   userDoc: null,
   users: [],
   filteredUsers: [],
+  participants: [],
+  approvalRequests: [],
   unsubscribeParticipants: null,
+  unsubscribeApprovalRequests: null,
   isSaving: false
 };
 
@@ -87,15 +91,44 @@ function initMenu() {
 function normalizeStatus(value) {
   const v = String(value || "").toLowerCase().trim();
 
-  if (["pending", "pendente", "aguardando", "analise", "análise"].includes(v)) {
+  if (
+    [
+      "pending",
+      "pendente",
+      "aguardando",
+      "analise",
+      "análise",
+      "pending_review",
+      "pending_approval"
+    ].includes(v)
+  ) {
     return "pendente";
   }
 
-  if (["approved", "aprovado", "ativo", "active", "operacao", "operação"].includes(v)) {
+  if (
+    [
+      "approved",
+      "aprovado",
+      "ativo",
+      "active",
+      "operacao",
+      "operação"
+    ].includes(v)
+  ) {
     return "aprovado";
   }
 
-  if (["inactive", "inativo", "blocked", "bloqueado", "desativado"].includes(v)) {
+  if (
+    [
+      "inactive",
+      "inativo",
+      "blocked",
+      "bloqueado",
+      "desativado",
+      "rejected",
+      "rejeitado"
+    ].includes(v)
+  ) {
     return "inativo";
   }
 
@@ -164,13 +197,14 @@ function emptyCard(title, text) {
 
 function buildAddress(data) {
   if (data.enderecoCompleto) return data.enderecoCompleto;
+  if (data.address?.addressLine) return data.address.addressLine;
 
-  const rua = data.rua || "";
-  const numero = data.numero || "";
-  const bairro = data.bairro || "";
-  const cidade = data.cidade || "";
-  const uf = data.uf || "";
-  const cep = data.cep || "";
+  const rua = data.rua || data.address?.street || "";
+  const numero = data.numero || data.address?.number || "";
+  const bairro = data.bairro || data.address?.neighborhood || "";
+  const cidade = data.cidade || data.address?.city || "";
+  const uf = data.uf || data.address?.state || "";
+  const cep = data.cep || data.address?.cep || "";
 
   const linha1 = [rua, numero].filter(Boolean).join(", ");
   const linha2 = [bairro, cidade, uf].filter(Boolean).join(" - ");
@@ -214,14 +248,12 @@ function resetModalForm() {
 
 function getSortableTime(value) {
   if (!value) return 0;
-
   if (typeof value?.toMillis === "function") return value.toMillis();
   if (typeof value === "string") {
     const parsed = Date.parse(value);
     return Number.isFinite(parsed) ? parsed : 0;
   }
   if (typeof value === "number") return value;
-
   return 0;
 }
 
@@ -317,14 +349,18 @@ function mapParticipantDoc(docSnap) {
   const lat =
     toNumberOrNull(data.lat) ??
     toNumberOrNull(data.latitude) ??
-    toNumberOrNull(data.geo?.lat);
+    toNumberOrNull(data.geo?.lat) ??
+    toNumberOrNull(data.address?.lat);
 
   const lng =
     toNumberOrNull(data.lng) ??
     toNumberOrNull(data.longitude) ??
-    toNumberOrNull(data.geo?.lng);
+    toNumberOrNull(data.geo?.lng) ??
+    toNumberOrNull(data.address?.lng);
 
-  const status = normalizeStatus(data.status);
+  const status = normalizeStatus(
+    data.approvalStatus || data.status
+  );
 
   const inTerritory =
     data.territoryId || data.territoryLabel
@@ -350,6 +386,21 @@ function mapParticipantDoc(docSnap) {
     territoryId: data.territoryId || null,
     territoryLabel: data.territoryLabel || "",
     geo: { lat, lng },
+    approvalRequestId: data.approvalRequestId || null,
+    raw: data
+  };
+}
+
+function mapApprovalRequestDoc(docSnap) {
+  const data = docSnap.data() || {};
+  return {
+    id: docSnap.id,
+    status: String(data.status || "pending").toLowerCase(),
+    participantId: data.participantId || null,
+    participantCode: data.participantCode || "",
+    participantName: data.participantName || "",
+    territoryId: data.territoryId || null,
+    territoryLabel: data.territoryLabel || "",
     raw: data
   };
 }
@@ -371,7 +422,6 @@ function filterUsersByPermission(items) {
   if (canViewAllTerritories()) return items;
 
   const myTerritoryId = getMyTerritoryId();
-
   if (!myTerritoryId) return items;
 
   return items.filter((user) => {
@@ -380,20 +430,82 @@ function filterUsersByPermission(items) {
   });
 }
 
+function mergeParticipantsWithApprovals() {
+  const approvalByParticipantId = new Map();
+  const approvalByRequestId = new Map();
+
+  STATE.approvalRequests.forEach((req) => {
+    if (req.participantId) {
+      approvalByParticipantId.set(req.participantId, req);
+    }
+    approvalByRequestId.set(req.id, req);
+  });
+
+  const merged = STATE.participants.map((user) => {
+    const approval =
+      approvalByParticipantId.get(user.id) ||
+      approvalByRequestId.get(user.approvalRequestId);
+
+    if (!approval) return user;
+
+    if (approval.status === "pending") {
+      return {
+        ...user,
+        status: "pendente",
+        inOperation: "nao",
+        raw: {
+          ...user.raw,
+          approvalStatus: "pending"
+        }
+      };
+    }
+
+    if (approval.status === "approved") {
+      return {
+        ...user,
+        status: "aprovado",
+        raw: {
+          ...user.raw,
+          approvalStatus: "approved"
+        }
+      };
+    }
+
+    if (approval.status === "rejected") {
+      return {
+        ...user,
+        status: "inativo",
+        inOperation: "nao",
+        raw: {
+          ...user.raw,
+          approvalStatus: "rejected"
+        }
+      };
+    }
+
+    return user;
+  });
+
+  STATE.users = filterUsersByPermission(sortParticipants(merged));
+  applyFilters();
+}
+
 function replaceLocalUser(serverUser) {
-  const index = STATE.users.findIndex((u) => u.id === serverUser.id);
+  const index = STATE.participants.findIndex((u) => u.id === serverUser.id);
 
   if (index >= 0) {
-    STATE.users[index] = serverUser;
+    STATE.participants[index] = serverUser;
   } else {
-    STATE.users.unshift(serverUser);
+    STATE.participants.unshift(serverUser);
   }
 
-  STATE.users = sortParticipants(STATE.users);
+  mergeParticipantsWithApprovals();
 }
 
 function removeLocalUser(id) {
-  STATE.users = STATE.users.filter((u) => u.id !== id);
+  STATE.participants = STATE.participants.filter((u) => u.id !== id);
+  STATE.approvalRequests = STATE.approvalRequests.filter((req) => req.participantId !== id);
+  mergeParticipantsWithApprovals();
 }
 
 async function refreshOneUserFromServer(id) {
@@ -615,10 +727,10 @@ function renderAll() {
    FILTROS
 ========================= */
 function applyFilters() {
-  const term = (els.searchUser.value || "").trim().toLowerCase();
-  const status = els.filterStatus.value;
-  const territory = els.filterTerritory.value;
-  const operation = els.filterOperation.value;
+  const term = (els.searchUser?.value || "").trim().toLowerCase();
+  const status = els.filterStatus?.value || "all";
+  const territory = els.filterTerritory?.value || "all";
+  const operation = els.filterOperation?.value || "all";
 
   STATE.filteredUsers = STATE.users.filter((user) => {
     const matchTerm =
@@ -835,11 +947,23 @@ async function saveUserForm(event) {
   const manualTerritoryId = els.editParticipantTerritoryId?.value.trim() || "";
   const manualTerritoryLabel = els.editParticipantTerritoryLabel?.value.trim() || "";
 
-  const payload = {
+  const participantPayload = {
     name: els.editUserName.value.trim(),
     participantCode: els.editUserCode.value.trim(),
     phone: els.editUserPhone.value.trim(),
-    status,
+    status:
+      status === "aprovado"
+        ? "approved"
+        : status === "inativo"
+          ? "inactive"
+          : "pending_review",
+    approvalStatus:
+      status === "aprovado"
+        ? "approved"
+        : status === "inativo"
+          ? "rejected"
+          : "pending",
+    active: status === "aprovado",
     inTerritory,
     inOperation,
     schedule: els.editUserSchedule.value.trim() || "A definir",
@@ -852,33 +976,51 @@ async function saveUserForm(event) {
   };
 
   if (inTerritory === "sim") {
-    payload.territoryId = manualTerritoryId || getMyTerritoryId() || null;
-    payload.territoryLabel = manualTerritoryLabel || getMyTerritoryLabel() || "";
+    participantPayload.territoryId = manualTerritoryId || getMyTerritoryId() || null;
+    participantPayload.territoryLabel = manualTerritoryLabel || getMyTerritoryLabel() || "";
   } else {
-    payload.territoryId = null;
-    payload.territoryLabel = "";
+    participantPayload.territoryId = null;
+    participantPayload.territoryLabel = "";
   }
+
+  const approvalRequestId = previousUser.approvalRequestId || previousUser.raw?.approvalRequestId || null;
+  const approvalPayload =
+    approvalRequestId
+      ? {
+          status:
+            status === "aprovado"
+              ? "approved"
+              : status === "inativo"
+                ? "rejected"
+                : "pending",
+          active: status === "pendente",
+          updatedAt: serverTimestamp(),
+          resolvedAt: status === "pendente" ? null : serverTimestamp(),
+          resolvedBy: status === "pendente" ? null : (STATE.user?.uid || null),
+          resolvedByName: status === "pendente" ? null : (STATE.userDoc?.name || STATE.userDoc?.nome || null)
+        }
+      : null;
 
   const optimisticUser = {
     ...previousUser,
-    name: payload.name,
-    code: payload.participantCode,
-    phone: payload.phone,
-    status: normalizeStatus(payload.status),
-    inTerritory: yesNo(payload.inTerritory),
-    inOperation: yesNo(payload.inOperation),
-    territoryId: payload.territoryId,
-    territoryLabel: payload.territoryLabel,
-    schedule: payload.schedule,
-    wasteKg: Number(payload.wasteKg || 0),
-    address: payload.enderecoCompleto || previousUser.address,
+    name: participantPayload.name,
+    code: participantPayload.participantCode,
+    phone: participantPayload.phone,
+    status: normalizeStatus(participantPayload.approvalStatus),
+    inTerritory: yesNo(participantPayload.inTerritory),
+    inOperation: yesNo(participantPayload.inOperation),
+    territoryId: participantPayload.territoryId,
+    territoryLabel: participantPayload.territoryLabel,
+    schedule: participantPayload.schedule,
+    wasteKg: Number(participantPayload.wasteKg || 0),
+    address: participantPayload.enderecoCompleto || previousUser.address,
     geo: {
-      lat: toNumberOrNull(payload.lat),
-      lng: toNumberOrNull(payload.lng)
+      lat: toNumberOrNull(participantPayload.lat),
+      lng: toNumberOrNull(participantPayload.lng)
     },
     raw: {
       ...previousUser.raw,
-      ...payload
+      ...participantPayload
     }
   };
 
@@ -886,10 +1028,17 @@ async function saveUserForm(event) {
     replaceLocalUser(optimisticUser);
     applyFilters();
 
-    await updateDoc(doc(db, "participants", id), payload);
+    const batch = writeBatch(db);
+    batch.update(doc(db, "participants", id), participantPayload);
+
+    if (approvalRequestId && approvalPayload) {
+      batch.update(doc(db, "approvalRequests", approvalRequestId), approvalPayload);
+    }
+
+    await batch.commit();
 
     await refreshOneUserFromServer(id);
-    applyFilters();
+    mergeParticipantsWithApprovals();
 
     const nextPendingId = getNextPendingUserId(id);
 
@@ -905,13 +1054,12 @@ async function saveUserForm(event) {
   } catch (error) {
     console.error("Erro ao salvar participante:", error);
 
-    replaceLocalUser(previousUser);
-    applyFilters();
+    mergeParticipantsWithApprovals();
 
     let msg = "Não foi possível salvar o participante.";
 
     if (error?.code === "permission-denied") {
-      msg = "O Firestore recusou a gravação. Verifique as regras da coleção participants.";
+      msg = "O Firestore recusou a gravação. Verifique as regras das coleções participants e approvalRequests.";
     } else if (error?.code === "not-found") {
       msg = "O documento do participante não foi encontrado para atualização.";
     } else if (error?.message) {
@@ -928,24 +1076,36 @@ async function handleDeleteUser(id) {
   const confirmed = window.confirm("Deseja realmente excluir este participante?");
   if (!confirmed) return;
 
-  const previousUsers = [...STATE.users];
+  const previousParticipants = [...STATE.participants];
+  const previousApprovals = [...STATE.approvalRequests];
 
   try {
     removeLocalUser(id);
     applyFilters();
 
-    await deleteDoc(doc(db, "participants", id));
+    const user = previousParticipants.find((u) => u.id === id);
+    const approvalRequestId = user?.approvalRequestId || user?.raw?.approvalRequestId || null;
+
+    const batch = writeBatch(db);
+    batch.delete(doc(db, "participants", id));
+
+    if (approvalRequestId) {
+      batch.delete(doc(db, "approvalRequests", approvalRequestId));
+    }
+
+    await batch.commit();
     alert("Participante excluído com sucesso.");
   } catch (error) {
     console.error("Erro ao excluir participante:", error);
 
-    STATE.users = previousUsers;
-    applyFilters();
+    STATE.participants = previousParticipants;
+    STATE.approvalRequests = previousApprovals;
+    mergeParticipantsWithApprovals();
 
     let msg = "Não foi possível excluir o participante.";
 
     if (error?.code === "permission-denied") {
-      msg = "O Firestore recusou a exclusão. Verifique as regras da coleção participants.";
+      msg = "O Firestore recusou a exclusão. Verifique as regras das coleções participants e approvalRequests.";
     } else if (error?.message) {
       msg = `Erro ao excluir: ${error.message}`;
     }
@@ -960,22 +1120,36 @@ function startParticipantsListener() {
     STATE.unsubscribeParticipants = null;
   }
 
-  const ref = collection(db, "participants");
-
   STATE.unsubscribeParticipants = onSnapshot(
-    ref,
+    collection(db, "participants"),
     (snapshot) => {
-      const allDocs = snapshot.docs.map(mapParticipantDoc);
-      const sortedDocs = sortParticipants(allDocs);
-
-      STATE.users = filterUsersByPermission(sortedDocs);
-      applyFilters();
-
-      console.log("Participantes carregados:", STATE.users.length, STATE.users);
+      STATE.participants = snapshot.docs.map(mapParticipantDoc);
+      mergeParticipantsWithApprovals();
+      console.log("Participantes carregados:", STATE.participants.length);
     },
     (error) => {
       console.error("Erro ao ouvir participants:", error);
       alert("Não foi possível carregar os participantes em tempo real.");
+    }
+  );
+}
+
+function startApprovalRequestsListener() {
+  if (STATE.unsubscribeApprovalRequests) {
+    STATE.unsubscribeApprovalRequests();
+    STATE.unsubscribeApprovalRequests = null;
+  }
+
+  STATE.unsubscribeApprovalRequests = onSnapshot(
+    collection(db, "approvalRequests"),
+    (snapshot) => {
+      STATE.approvalRequests = snapshot.docs.map(mapApprovalRequestDoc);
+      mergeParticipantsWithApprovals();
+      console.log("Solicitações carregadas:", STATE.approvalRequests.length);
+    },
+    (error) => {
+      console.error("Erro ao ouvir approvalRequests:", error);
+      alert("Não foi possível carregar as solicitações de aprovação em tempo real.");
     }
   );
 }
@@ -1055,6 +1229,7 @@ onAuthStateChanged(auth, async (user) => {
     STATE.userDoc = await loadCurrentUserProfile(user.uid);
 
     startParticipantsListener();
+    startApprovalRequestsListener();
   } catch (err) {
     console.error(err);
     alert("Erro ao carregar a gestão de usuários.");
