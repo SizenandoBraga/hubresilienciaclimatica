@@ -2,7 +2,9 @@ import { db } from "./firebase-init.js";
 import {
   collection,
   addDoc,
-  serverTimestamp
+  serverTimestamp,
+  doc,
+  updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
@@ -312,7 +314,7 @@ async function geocodeAddress() {
 
   const response = await fetch(url, {
     headers: {
-      "Accept": "application/json"
+      Accept: "application/json"
     }
   });
 
@@ -371,7 +373,7 @@ function closeSuccessModalAndGoBack() {
 }
 
 /* =========================
-   PAYLOAD
+   PAYLOAD DO PARTICIPANTE
 ========================= */
 function buildPayload() {
   const nowIso = new Date().toISOString();
@@ -382,8 +384,10 @@ function buildPayload() {
     createdBy: PUBLIC_SOURCE.createdBy,
     createdByName: PUBLIC_SOURCE.createdByName,
     createdByRole: PUBLIC_SOURCE.createdByRole,
+
     status: "pending_review",
-    active: true,
+    approvalStatus: "pending",
+    active: false,
 
     territoryId: PUBLIC_TERRITORY.territoryId,
     territoryLabel: PUBLIC_TERRITORY.territoryLabel,
@@ -424,21 +428,83 @@ function buildPayload() {
 
     projectSource: getValue(els.projectSource) || null,
 
+    review: {
+      requestedAt: serverTimestamp(),
+      requestedAtISO: nowIso,
+      requestedToRole: "admin",
+      requestedToTerritoryId: PUBLIC_TERRITORY.territoryId,
+      approvedAt: null,
+      approvedBy: null,
+      approvedByName: null,
+      rejectedAt: null,
+      rejectedBy: null,
+      rejectedByName: null,
+      note: null
+    },
+
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     createdAtISO: nowIso
   };
 }
 
-async function saveParticipant(payload) {
-  return addDoc(collection(db, "participants"), payload);
+/* =========================
+   SALVAR PARTICIPANTE + CRIAR SOLICITAÇÃO
+========================= */
+async function saveParticipantWithApproval(payload) {
+  const participantRef = await addDoc(collection(db, "participants"), payload);
+
+  const approvalRequest = {
+    type: "participant_registration",
+    status: "pending",
+    active: true,
+
+    territoryId: payload.territoryId,
+    territoryLabel: payload.territoryLabel,
+
+    participantId: participantRef.id,
+    participantCode: payload.participantCode,
+    participantName: payload.name,
+    participantType: payload.participantType,
+    localType: payload.localType,
+
+    requestedToRole: "admin",
+    requestedToScope: "territory_admin",
+    requestedBy: null,
+    requestedByName: "Cadastro público",
+    requestedByRole: "public",
+
+    applicantSnapshot: {
+      name: payload.name,
+      phone: payload.phone,
+      email: payload.email,
+      cpf: payload.cpf,
+      address: payload.address
+    },
+
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+    createdAtISO: new Date().toISOString()
+  };
+
+  const approvalRef = await addDoc(collection(db, "approvalRequests"), approvalRequest);
+
+  await updateDoc(doc(db, "participants", participantRef.id), {
+    approvalRequestId: approvalRef.id,
+    updatedAt: serverTimestamp()
+  });
+
+  return {
+    participantId: participantRef.id,
+    approvalRequestId: approvalRef.id
+  };
 }
 
 function getFirebaseErrorMessage(error) {
   const code = error?.code || "";
 
   if (code === "permission-denied") {
-    return "O Firestore recusou a gravação. Verifique se as regras publicadas aceitam os campos da coleção participants, incluindo lat e lng.";
+    return "O Firestore recusou a gravação. Verifique se as regras aceitam salvar em participants e approvalRequests.";
   }
 
   if (code === "unavailable") {
@@ -446,7 +512,7 @@ function getFirebaseErrorMessage(error) {
   }
 
   if (code === "failed-precondition") {
-    return "Há uma configuração pendente no Firebase. Revise as rules e a estrutura da coleção participants.";
+    return "Há uma configuração pendente no Firebase. Revise as rules e as coleções participants e approvalRequests.";
   }
 
   return error?.message || "Não foi possível salvar o participante.";
@@ -495,6 +561,29 @@ function bindMasks() {
   els.phone?.addEventListener("input", (event) => {
     event.target.value = event.target.value.replace(/[^\d()\-\s+]/g, "");
   });
+}
+
+function resetFormState() {
+  selectedLocalType = "casa";
+  selectedRegisterType = "participante";
+  selectedDifficulty = "sim";
+  geoCoords = { lat: null, lng: null };
+
+  document.querySelectorAll("[data-local-type]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.localType === "casa");
+  });
+
+  document.querySelectorAll("[data-register-type]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.registerType === "participante");
+  });
+
+  document.querySelectorAll("[data-difficulty]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.difficulty === "sim");
+  });
+
+  generateParticipantCode();
+  updateGeoPreview();
+  showStep(1);
 }
 
 function bindEvents() {
@@ -563,40 +652,19 @@ function bindEvents() {
       }
 
       const payload = buildPayload();
-      console.log("Payload enviado ao Firebase:", payload);
 
       if (els.btnSubmitParticipant) {
         els.btnSubmitParticipant.disabled = true;
-        els.btnSubmitParticipant.textContent = "Salvando...";
+        els.btnSubmitParticipant.textContent = "Enviando solicitação...";
       }
 
-      const docRef = await saveParticipant(payload);
-      console.log("Participante salvo com ID:", docRef.id);
+      const result = await saveParticipantWithApproval(payload);
+      console.log("Participante e solicitação criados:", result);
 
       hideMessage();
       openSuccessModal();
       els.form.reset();
-
-      selectedLocalType = "casa";
-      selectedRegisterType = "participante";
-      selectedDifficulty = "sim";
-      geoCoords = { lat: null, lng: null };
-
-      document.querySelectorAll("[data-local-type]").forEach((btn) => {
-        btn.classList.toggle("selected", btn.dataset.localType === "casa");
-      });
-
-      document.querySelectorAll("[data-register-type]").forEach((btn) => {
-        btn.classList.toggle("selected", btn.dataset.registerType === "participante");
-      });
-
-      document.querySelectorAll("[data-difficulty]").forEach((btn) => {
-        btn.classList.toggle("selected", btn.dataset.difficulty === "sim");
-      });
-
-      generateParticipantCode();
-      updateGeoPreview();
-      showStep(1);
+      resetFormState();
     } catch (error) {
       console.error("Erro ao salvar participante:", error);
       showMessage(getFirebaseErrorMessage(error), "error");
