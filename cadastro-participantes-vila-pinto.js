@@ -442,6 +442,8 @@ function buildPayload() {
       note: null
     },
 
+    approvalRequestId: null,
+
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
     createdAtISO: nowIso
@@ -454,7 +456,7 @@ function buildPayload() {
 async function saveParticipantWithApproval(payload) {
   const participantRef = await addDoc(collection(db, "participants"), payload);
 
-  const approvalRequest = {
+  const approvalPayload = {
     type: "participant_registration",
     status: "pending",
     active: true,
@@ -470,6 +472,7 @@ async function saveParticipantWithApproval(payload) {
 
     requestedToRole: "admin",
     requestedToScope: "territory_admin",
+
     requestedBy: null,
     requestedByName: "Cadastro público",
     requestedByRole: "public",
@@ -479,7 +482,9 @@ async function saveParticipantWithApproval(payload) {
       phone: payload.phone,
       email: payload.email,
       cpf: payload.cpf,
-      address: payload.address
+      address: payload.address,
+      difficulty: payload.difficulty,
+      projectSource: payload.projectSource
     },
 
     createdAt: serverTimestamp(),
@@ -487,7 +492,7 @@ async function saveParticipantWithApproval(payload) {
     createdAtISO: new Date().toISOString()
   };
 
-  const approvalRef = await addDoc(collection(db, "approvalRequests"), approvalRequest);
+  const approvalRef = await addDoc(collection(db, "approvalRequests"), approvalPayload);
 
   await updateDoc(doc(db, "participants", participantRef.id), {
     approvalRequestId: approvalRef.id,
@@ -504,7 +509,7 @@ function getFirebaseErrorMessage(error) {
   const code = error?.code || "";
 
   if (code === "permission-denied") {
-    return "O Firestore recusou a gravação. Verifique se as regras aceitam salvar em participants e approvalRequests.";
+    return "O Firestore recusou a gravação. Verifique se as rules publicadas aceitam criar documentos em participants e approvalRequests.";
   }
 
   if (code === "unavailable") {
@@ -512,10 +517,36 @@ function getFirebaseErrorMessage(error) {
   }
 
   if (code === "failed-precondition") {
-    return "Há uma configuração pendente no Firebase. Revise as rules e as coleções participants e approvalRequests.";
+    return "Há uma configuração pendente no Firebase. Revise as rules e a estrutura das coleções participants e approvalRequests.";
   }
 
   return error?.message || "Não foi possível salvar o participante.";
+}
+
+/* =========================
+   RESET FORM
+========================= */
+function resetFormState() {
+  selectedLocalType = "casa";
+  selectedRegisterType = "participante";
+  selectedDifficulty = "sim";
+  geoCoords = { lat: null, lng: null };
+
+  document.querySelectorAll("[data-local-type]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.localType === "casa");
+  });
+
+  document.querySelectorAll("[data-register-type]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.registerType === "participante");
+  });
+
+  document.querySelectorAll("[data-difficulty]").forEach((btn) => {
+    btn.classList.toggle("selected", btn.dataset.difficulty === "sim");
+  });
+
+  generateParticipantCode();
+  updateGeoPreview();
+  showStep(1);
 }
 
 /* =========================
@@ -561,29 +592,6 @@ function bindMasks() {
   els.phone?.addEventListener("input", (event) => {
     event.target.value = event.target.value.replace(/[^\d()\-\s+]/g, "");
   });
-}
-
-function resetFormState() {
-  selectedLocalType = "casa";
-  selectedRegisterType = "participante";
-  selectedDifficulty = "sim";
-  geoCoords = { lat: null, lng: null };
-
-  document.querySelectorAll("[data-local-type]").forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.localType === "casa");
-  });
-
-  document.querySelectorAll("[data-register-type]").forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.registerType === "participante");
-  });
-
-  document.querySelectorAll("[data-difficulty]").forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.difficulty === "sim");
-  });
-
-  generateParticipantCode();
-  updateGeoPreview();
-  showStep(1);
 }
 
 function bindEvents() {
@@ -652,6 +660,7 @@ function bindEvents() {
       }
 
       const payload = buildPayload();
+      console.log("Payload enviado ao Firebase:", payload);
 
       if (els.btnSubmitParticipant) {
         els.btnSubmitParticipant.disabled = true;
@@ -659,7 +668,7 @@ function bindEvents() {
       }
 
       const result = await saveParticipantWithApproval(payload);
-      console.log("Participante e solicitação criados:", result);
+      console.log("Participante salvo com solicitação:", result);
 
       hideMessage();
       openSuccessModal();
