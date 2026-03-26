@@ -5,10 +5,10 @@ import {
   doc,
   getDoc,
   onSnapshot,
-  updateDoc,
-  deleteDoc,
   serverTimestamp,
-  writeBatch
+  writeBatch,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const els = {
@@ -91,44 +91,38 @@ function initMenu() {
 function normalizeStatus(value) {
   const v = String(value || "").toLowerCase().trim();
 
-  if (
-    [
-      "pending",
-      "pendente",
-      "aguardando",
-      "analise",
-      "análise",
-      "pending_review",
-      "pending_approval"
-    ].includes(v)
-  ) {
+  if ([
+    "pending",
+    "pendente",
+    "aguardando",
+    "analise",
+    "análise",
+    "pending_review",
+    "pending_approval"
+  ].includes(v)) {
     return "pendente";
   }
 
-  if (
-    [
-      "approved",
-      "aprovado",
-      "ativo",
-      "active",
-      "operacao",
-      "operação"
-    ].includes(v)
-  ) {
+  if ([
+    "approved",
+    "aprovado",
+    "ativo",
+    "active",
+    "operacao",
+    "operação"
+  ].includes(v)) {
     return "aprovado";
   }
 
-  if (
-    [
-      "inactive",
-      "inativo",
-      "blocked",
-      "bloqueado",
-      "desativado",
-      "rejected",
-      "rejeitado"
-    ].includes(v)
-  ) {
+  if ([
+    "inactive",
+    "inativo",
+    "blocked",
+    "bloqueado",
+    "desativado",
+    "rejected",
+    "rejeitado"
+  ].includes(v)) {
     return "inativo";
   }
 
@@ -358,9 +352,7 @@ function mapParticipantDoc(docSnap) {
     toNumberOrNull(data.geo?.lng) ??
     toNumberOrNull(data.address?.lng);
 
-  const status = normalizeStatus(
-    data.approvalStatus || data.status
-  );
+  const status = normalizeStatus(data.approvalStatus || data.status);
 
   const inTerritory =
     data.territoryId || data.territoryLabel
@@ -387,6 +379,7 @@ function mapParticipantDoc(docSnap) {
     territoryLabel: data.territoryLabel || "",
     geo: { lat, lng },
     approvalRequestId: data.approvalRequestId || null,
+    linkedApprovalRequestId: data.approvalRequestId || null,
     raw: data
   };
 }
@@ -426,7 +419,7 @@ function filterUsersByPermission(items) {
 
   return items.filter((user) => {
     const userTerritoryId = user.territoryId || user.raw?.territoryId || null;
-    return !userTerritoryId || userTerritoryId === myTerritoryId;
+    return userTerritoryId === myTerritoryId;
   });
 }
 
@@ -441,18 +434,24 @@ function mergeParticipantsWithApprovals() {
     approvalByRequestId.set(req.id, req);
   });
 
-  const merged = STATE.participants.map((user) => {
+  const mergedParticipants = STATE.participants.map((user) => {
     const approval =
       approvalByParticipantId.get(user.id) ||
       approvalByRequestId.get(user.approvalRequestId);
 
-    if (!approval) return user;
+    if (!approval) {
+      return {
+        ...user,
+        linkedApprovalRequestId: user.approvalRequestId || null
+      };
+    }
 
     if (approval.status === "pending") {
       return {
         ...user,
         status: "pendente",
         inOperation: "nao",
+        linkedApprovalRequestId: approval.id,
         raw: {
           ...user.raw,
           approvalStatus: "pending"
@@ -464,6 +463,7 @@ function mergeParticipantsWithApprovals() {
       return {
         ...user,
         status: "aprovado",
+        linkedApprovalRequestId: approval.id,
         raw: {
           ...user.raw,
           approvalStatus: "approved"
@@ -476,6 +476,7 @@ function mergeParticipantsWithApprovals() {
         ...user,
         status: "inativo",
         inOperation: "nao",
+        linkedApprovalRequestId: approval.id,
         raw: {
           ...user.raw,
           approvalStatus: "rejected"
@@ -483,10 +484,45 @@ function mergeParticipantsWithApprovals() {
       };
     }
 
-    return user;
+    return {
+      ...user,
+      linkedApprovalRequestId: approval.id
+    };
   });
 
-  STATE.users = filterUsersByPermission(sortParticipants(merged));
+  const participantIds = new Set(mergedParticipants.map((u) => u.id));
+
+  const pendingWithoutParticipant = STATE.approvalRequests
+    .filter((req) => req.status === "pending" && req.participantId && !participantIds.has(req.participantId))
+    .map((req) => ({
+      id: req.participantId,
+      name: req.participantName || "Solicitação pendente",
+      code: req.participantCode || "—",
+      phone: req.raw?.applicantSnapshot?.phone || "",
+      status: "pendente",
+      inTerritory: req.territoryId || req.territoryLabel ? "sim" : "nao",
+      inOperation: "nao",
+      schedule: "A definir",
+      wasteKg: 0,
+      address: buildAddress(req.raw?.applicantSnapshot || {}),
+      territoryId: req.territoryId || null,
+      territoryLabel: req.territoryLabel || "",
+      geo: {
+        lat: toNumberOrNull(req.raw?.applicantSnapshot?.address?.lat),
+        lng: toNumberOrNull(req.raw?.applicantSnapshot?.address?.lng)
+      },
+      approvalRequestId: req.id,
+      linkedApprovalRequestId: req.id,
+      raw: {
+        ...req.raw,
+        approvalStatus: "pending"
+      }
+    }));
+
+  STATE.users = filterUsersByPermission(
+    sortParticipants([...mergedParticipants, ...pendingWithoutParticipant])
+  );
+
   applyFilters();
 }
 
@@ -521,13 +557,15 @@ async function refreshOneUserFromServer(id) {
    KPI / RENDER
 ========================= */
 function computeKpis(items) {
-  els.kpiTotalUsuarios.textContent = String(items.length);
-  els.kpiPendentes.textContent = String(items.filter((u) => u.status === "pendente").length);
-  els.kpiOperacao.textContent = String(items.filter((u) => u.status === "aprovado" && u.inOperation === "sim").length);
-  els.kpiSemGeo.textContent = String(items.filter((u) => !hasValidGeo(u)).length);
+  if (els.kpiTotalUsuarios) els.kpiTotalUsuarios.textContent = String(items.length);
+  if (els.kpiPendentes) els.kpiPendentes.textContent = String(items.filter((u) => u.status === "pendente").length);
+  if (els.kpiOperacao) els.kpiOperacao.textContent = String(items.filter((u) => u.status === "aprovado" && u.inOperation === "sim").length);
+  if (els.kpiSemGeo) els.kpiSemGeo.textContent = String(items.filter((u) => !hasValidGeo(u)).length);
 }
 
 function renderPendingUsers(items) {
+  if (!els.pendingUsersList) return;
+
   const pendentes = items.filter((u) => u.status === "pendente");
 
   if (!pendentes.length) {
@@ -555,6 +593,8 @@ function renderPendingUsers(items) {
 }
 
 function renderApprovedUsers(items) {
+  if (!els.approvedUsersList) return;
+
   const aprovadosOperando = items.filter(
     (u) => u.status === "aprovado" && u.inOperation === "sim"
   );
@@ -584,6 +624,8 @@ function renderApprovedUsers(items) {
 }
 
 function renderScheduleSummary(items) {
+  if (!els.scheduleSummary) return;
+
   const scheduled = items.filter(
     (u) => u.status === "aprovado" && u.inOperation === "sim"
   );
@@ -607,6 +649,8 @@ function renderScheduleSummary(items) {
 }
 
 function renderMappedSummary(items) {
+  if (!els.mappedUsersSummary) return;
+
   const mapped = items.filter(isVisibleOnMap);
 
   if (!mapped.length) {
@@ -628,6 +672,8 @@ function renderMappedSummary(items) {
 }
 
 function renderGeoPendingSummary(items) {
+  if (!els.geoPendingSummary) return;
+
   const invalidGeo = items.filter((u) => !hasValidGeo(u));
 
   if (!invalidGeo.length) {
@@ -657,6 +703,8 @@ function coordBadge(user) {
 }
 
 function renderUsersTable(items) {
+  if (!els.usersTableBody) return;
+
   if (!items.length) {
     els.usersTableBody.innerHTML = `
       <tr>
@@ -760,7 +808,7 @@ function initMap() {
 
   map = L.map("usersMap").setView([-30.0295, -51.1210], 13);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png".replace("/{y}/", "/{z}/"), {
     attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 }
@@ -822,6 +870,8 @@ function renderMap(items) {
     els.mappedUsersCount.textContent = `${visibleUsers.length} usuários/pontos`;
   }
 
+  if (!els.routeList) return;
+
   if (!visibleUsers.length) {
     els.routeList.innerHTML = `
       <div class="route-item">
@@ -846,22 +896,22 @@ function renderMap(items) {
 ========================= */
 function openModal(userId) {
   const user = STATE.users.find((u) => u.id === userId);
-  if (!user) return;
+  if (!user || !els.userModal) return;
 
-  els.editUserId.value = user.id;
-  els.editUserName.value = safeText(user.name, "");
-  els.editUserCode.value = safeText(user.code, "");
-  els.editUserPhone.value = safeText(user.phone, "");
-  els.editUserStatus.value = user.status;
-  els.editUserTerritory.value = user.inTerritory;
-  els.editUserOperation.value = user.inOperation;
-  els.editParticipantTerritoryId.value = safeText(user.territoryId, "");
-  els.editParticipantTerritoryLabel.value = safeText(user.territoryLabel, "");
-  els.editUserSchedule.value = safeText(user.schedule, "");
-  els.editUserAddress.value = safeText(user.address, "");
-  els.editUserLat.value = isValidCoord(user.geo?.lat) ? user.geo.lat : "";
-  els.editUserLng.value = isValidCoord(user.geo?.lng) ? user.geo.lng : "";
-  els.editUserWasteKg.value = Number(user.wasteKg || 0);
+  if (els.editUserId) els.editUserId.value = user.id;
+  if (els.editUserName) els.editUserName.value = safeText(user.name, "");
+  if (els.editUserCode) els.editUserCode.value = safeText(user.code, "");
+  if (els.editUserPhone) els.editUserPhone.value = safeText(user.phone, "");
+  if (els.editUserStatus) els.editUserStatus.value = user.status;
+  if (els.editUserTerritory) els.editUserTerritory.value = user.inTerritory;
+  if (els.editUserOperation) els.editUserOperation.value = user.inOperation;
+  if (els.editParticipantTerritoryId) els.editParticipantTerritoryId.value = safeText(user.territoryId, "");
+  if (els.editParticipantTerritoryLabel) els.editParticipantTerritoryLabel.value = safeText(user.territoryLabel, "");
+  if (els.editUserSchedule) els.editUserSchedule.value = safeText(user.schedule, "");
+  if (els.editUserAddress) els.editUserAddress.value = safeText(user.address, "");
+  if (els.editUserLat) els.editUserLat.value = isValidCoord(user.geo?.lat) ? user.geo.lat : "";
+  if (els.editUserLng) els.editUserLng.value = isValidCoord(user.geo?.lng) ? user.geo.lng : "";
+  if (els.editUserWasteKg) els.editUserWasteKg.value = Number(user.wasteKg || 0);
 
   clearGeoStatus();
 
@@ -871,7 +921,7 @@ function openModal(userId) {
 
 function closeModal() {
   resetModalForm();
-  els.userModal.classList.add("hidden");
+  if (els.userModal) els.userModal.classList.add("hidden");
   document.body.classList.remove("modal-open");
 }
 
@@ -889,13 +939,29 @@ async function loadCurrentUserProfile(uid) {
   return { id: snap.id, ...snap.data() };
 }
 
+function getScopedCollectionQuery(collectionName) {
+  if (canViewAllTerritories()) {
+    return collection(db, collectionName);
+  }
+
+  const myTerritoryId = getMyTerritoryId();
+  if (!myTerritoryId) {
+    throw new Error("Usuário sem territoryId definido.");
+  }
+
+  return query(
+    collection(db, collectionName),
+    where("territoryId", "==", myTerritoryId)
+  );
+}
+
 async function saveUserForm(event) {
   event.preventDefault();
 
   if (STATE.isSaving) return;
   STATE.isSaving = true;
 
-  const id = els.editUserId.value;
+  const id = els.editUserId?.value;
   if (!id) {
     STATE.isSaving = false;
     alert("Participante inválido para edição.");
@@ -909,9 +975,9 @@ async function saveUserForm(event) {
     return;
   }
 
-  const status = els.editUserStatus.value;
-  const inTerritory = els.editUserTerritory.value;
-  let inOperation = els.editUserOperation.value;
+  const status = els.editUserStatus?.value || "pendente";
+  const inTerritory = els.editUserTerritory?.value || "nao";
+  let inOperation = els.editUserOperation?.value || "nao";
 
   if (status === "aprovado") {
     inOperation = "sim";
@@ -919,9 +985,9 @@ async function saveUserForm(event) {
     inOperation = "nao";
   }
 
-  let lat = toNumberOrNull(els.editUserLat.value.trim());
-  let lng = toNumberOrNull(els.editUserLng.value.trim());
-  const address = els.editUserAddress.value.trim();
+  let lat = toNumberOrNull(els.editUserLat?.value?.trim());
+  let lng = toNumberOrNull(els.editUserLng?.value?.trim());
+  const address = els.editUserAddress?.value?.trim() || "";
 
   try {
     if ((!Number.isFinite(lat) || !Number.isFinite(lng)) && address) {
@@ -931,8 +997,8 @@ async function saveUserForm(event) {
       lat = geo.lat;
       lng = geo.lng;
 
-      els.editUserLat.value = lat;
-      els.editUserLng.value = lng;
+      if (els.editUserLat) els.editUserLat.value = lat;
+      if (els.editUserLng) els.editUserLng.value = lng;
 
       setGeoStatus("Coordenadas encontradas automaticamente.", "success");
     }
@@ -948,9 +1014,9 @@ async function saveUserForm(event) {
   const manualTerritoryLabel = els.editParticipantTerritoryLabel?.value.trim() || "";
 
   const participantPayload = {
-    name: els.editUserName.value.trim(),
-    participantCode: els.editUserCode.value.trim(),
-    phone: els.editUserPhone.value.trim(),
+    name: els.editUserName?.value.trim() || "",
+    participantCode: els.editUserCode?.value.trim() || "",
+    phone: els.editUserPhone?.value.trim() || "",
     status:
       status === "aprovado"
         ? "approved"
@@ -966,11 +1032,11 @@ async function saveUserForm(event) {
     active: status === "aprovado",
     inTerritory,
     inOperation,
-    schedule: els.editUserSchedule.value.trim() || "A definir",
+    schedule: els.editUserSchedule?.value.trim() || "A definir",
     enderecoCompleto: address || null,
     lat: Number.isFinite(lat) ? lat : null,
     lng: Number.isFinite(lng) ? lng : null,
-    wasteKg: Number(els.editUserWasteKg.value || 0),
+    wasteKg: Number(els.editUserWasteKg?.value || 0),
     updatedAt: serverTimestamp(),
     updatedBy: STATE.user?.uid || null
   };
@@ -983,23 +1049,27 @@ async function saveUserForm(event) {
     participantPayload.territoryLabel = "";
   }
 
-  const approvalRequestId = previousUser.approvalRequestId || previousUser.raw?.approvalRequestId || null;
-  const approvalPayload =
-    approvalRequestId
-      ? {
-          status:
-            status === "aprovado"
-              ? "approved"
-              : status === "inativo"
-                ? "rejected"
-                : "pending",
-          active: status === "pendente",
-          updatedAt: serverTimestamp(),
-          resolvedAt: status === "pendente" ? null : serverTimestamp(),
-          resolvedBy: status === "pendente" ? null : (STATE.user?.uid || null),
-          resolvedByName: status === "pendente" ? null : (STATE.userDoc?.name || STATE.userDoc?.nome || null)
-        }
-      : null;
+  const approvalRequestId =
+    previousUser.linkedApprovalRequestId ||
+    previousUser.approvalRequestId ||
+    previousUser.raw?.approvalRequestId ||
+    null;
+
+  const approvalPayload = approvalRequestId
+    ? {
+        status:
+          status === "aprovado"
+            ? "approved"
+            : status === "inativo"
+              ? "rejected"
+              : "pending",
+        active: status === "pendente",
+        updatedAt: serverTimestamp(),
+        resolvedAt: status === "pendente" ? null : serverTimestamp(),
+        resolvedBy: status === "pendente" ? null : (STATE.user?.uid || null),
+        resolvedByName: status === "pendente" ? null : (STATE.userDoc?.name || STATE.userDoc?.nome || null)
+      }
+    : null;
 
   const optimisticUser = {
     ...previousUser,
@@ -1014,6 +1084,7 @@ async function saveUserForm(event) {
     schedule: participantPayload.schedule,
     wasteKg: Number(participantPayload.wasteKg || 0),
     address: participantPayload.enderecoCompleto || previousUser.address,
+    linkedApprovalRequestId: approvalRequestId,
     geo: {
       lat: toNumberOrNull(participantPayload.lat),
       lng: toNumberOrNull(participantPayload.lng)
@@ -1026,7 +1097,6 @@ async function saveUserForm(event) {
 
   try {
     replaceLocalUser(optimisticUser);
-    applyFilters();
 
     const batch = writeBatch(db);
     batch.update(doc(db, "participants", id), participantPayload);
@@ -1045,15 +1115,12 @@ async function saveUserForm(event) {
     closeModal();
 
     if (nextPendingId) {
-      setTimeout(() => {
-        openModal(nextPendingId);
-      }, 120);
+      setTimeout(() => openModal(nextPendingId), 120);
     }
 
     alert("Participante atualizado com sucesso.");
   } catch (error) {
     console.error("Erro ao salvar participante:", error);
-
     mergeParticipantsWithApprovals();
 
     let msg = "Não foi possível salvar o participante.";
@@ -1081,10 +1148,14 @@ async function handleDeleteUser(id) {
 
   try {
     removeLocalUser(id);
-    applyFilters();
 
     const user = previousParticipants.find((u) => u.id === id);
-    const approvalRequestId = user?.approvalRequestId || user?.raw?.approvalRequestId || null;
+    const approvalRequestId =
+      user?.linkedApprovalRequestId ||
+      user?.approvalRequestId ||
+      user?.raw?.approvalRequestId ||
+      previousApprovals.find((req) => req.participantId === id)?.id ||
+      null;
 
     const batch = writeBatch(db);
     batch.delete(doc(db, "participants", id));
@@ -1120,8 +1191,17 @@ function startParticipantsListener() {
     STATE.unsubscribeParticipants = null;
   }
 
+  let ref;
+  try {
+    ref = getScopedCollectionQuery("participants");
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Não foi possível montar a consulta de participantes.");
+    return;
+  }
+
   STATE.unsubscribeParticipants = onSnapshot(
-    collection(db, "participants"),
+    ref,
     (snapshot) => {
       STATE.participants = snapshot.docs.map(mapParticipantDoc);
       mergeParticipantsWithApprovals();
@@ -1140,8 +1220,17 @@ function startApprovalRequestsListener() {
     STATE.unsubscribeApprovalRequests = null;
   }
 
+  let ref;
+  try {
+    ref = getScopedCollectionQuery("approvalRequests");
+  } catch (error) {
+    console.error(error);
+    alert(error.message || "Não foi possível montar a consulta de solicitações.");
+    return;
+  }
+
   STATE.unsubscribeApprovalRequests = onSnapshot(
-    collection(db, "approvalRequests"),
+    ref,
     (snapshot) => {
       STATE.approvalRequests = snapshot.docs.map(mapApprovalRequestDoc);
       mergeParticipantsWithApprovals();
@@ -1199,7 +1288,7 @@ function bindEvents() {
   });
 
   els.deleteUserBtn?.addEventListener("click", async () => {
-    const id = els.editUserId.value;
+    const id = els.editUserId?.value;
     if (!id) return;
 
     closeModal();
