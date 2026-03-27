@@ -2,364 +2,636 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR">
-  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>NSRU • Gestão de Usuários</title>
 
-  <title>Gestão de Usuários • Núcleo de Soluções para Resíduos Urbanos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap"
     rel="stylesheet"
-  >
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/usuarios.css">
+  <style>
+    :root {
+      --bg: #f4f7f1;
+      --panel: #ffffff;
+      --ink: #17301a;
+      --muted: #5e7162;
+      --line: #dbe7d7;
+      --brand: #81b92a;
+      --brand-dark: #5b8818;
+      --danger: #c94b4b;
+      --warn: #d89a1d;
+      --ok: #2f9158;
+      --shadow: 0 10px 30px rgba(23, 48, 26, 0.08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: "Archivo Condensed", Arial, sans-serif;
+    }
+
+    a { color: inherit; text-decoration: none; }
+
+    .shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px 1fr;
+    }
+
+    .sidebar {
+      background: #14361b;
+      color: #fff;
+      padding: 24px 18px;
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .brand {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,.14);
+    }
+
+    .brand strong {
+      font-size: 24px;
+      letter-spacing: .4px;
+    }
+
+    .brand span {
+      color: rgba(255,255,255,.76);
+      font-size: 15px;
+    }
+
+    .nav {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .nav a {
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,.06);
+      color: #fff;
+    }
+
+    .nav a.active {
+      background: var(--brand);
+      color: #17301a;
+      font-weight: 700;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      font-size: 14px;
+      color: rgba(255,255,255,.72);
+    }
+
+    .content {
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+
+    .topbar h1 {
+      margin: 0;
+      font-size: 34px;
+      line-height: 1;
+    }
+
+    .topbar p {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+    }
+
+    .topbar-meta {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pill {
+      background: #fff;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 10px 14px;
+      box-shadow: var(--shadow);
+      font-size: 15px;
+    }
+
+    .grid-kpi {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+
+    .kpi {
+      padding: 18px;
+    }
+
+    .kpi-label {
+      color: var(--muted);
+      font-size: 14px;
+      margin-bottom: 8px;
+    }
+
+    .kpi-value {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .filters {
+      padding: 18px;
+      display: grid;
+      grid-template-columns: 1.2fr repeat(3, minmax(160px, 1fr)) auto;
+      gap: 12px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .field label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fff;
+      min-height: 46px;
+      border-radius: 12px;
+      padding: 0 14px;
+      font: inherit;
+      color: var(--ink);
+      outline: none;
+    }
+
+    .btn {
+      border: 0;
+      min-height: 46px;
+      border-radius: 12px;
+      padding: 0 16px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      transition: .2s ease;
+    }
+
+    .btn:hover { transform: translateY(-1px); }
+    .btn-primary { background: var(--brand); color: #17301a; }
+    .btn-dark { background: #17361c; color: #fff; }
+    .btn-ok { background: var(--ok); color: #fff; }
+    .btn-warn { background: var(--warn); color: #fff; }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-soft {
+      background: #eef6e3;
+      color: #335114;
+      border: 1px solid #d5e5be;
+    }
+
+    .layout-main {
+      display: grid;
+      grid-template-columns: 380px 1fr;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .stack {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      min-width: 0;
+    }
+
+    .section-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .section-head h2 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .section-head span {
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    .panel {
+      padding: 18px;
+      min-width: 0;
+    }
+
+    .list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 14px;
+      align-items: flex-start;
+      background: #fff;
+    }
+
+    .item-main {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      min-width: 0;
+    }
+
+    .item-main strong {
+      font-size: 18px;
+    }
+
+    .item-main span {
+      color: var(--muted);
+      font-size: 15px;
+      word-break: break-word;
+    }
+
+    .item-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      min-width: 120px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 30px;
+      padding: 0 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .badge-pending { background: #fff4d6; color: #9a6700; }
+    .badge-approved { background: #dbf2e3; color: #1b6f40; }
+    .badge-inactive { background: #f7dddd; color: #9e2a2a; }
+
+    .map-wrap {
+      overflow: hidden;
+      min-width: 0;
+    }
+
+    #usersMap {
+      width: 100%;
+      height: 520px;
+      border-radius: 16px;
+      overflow: hidden;
+      background: #dce7da;
+    }
+
+    .map-summary {
+      margin-top: 14px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .mini {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 14px;
+      background: #fff;
+    }
+
+    .mini strong {
+      display: block;
+      font-size: 22px;
+      line-height: 1;
+      margin-bottom: 6px;
+    }
+
+    .mini span {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .table-panel {
+      padding: 18px;
+      overflow: hidden;
+    }
+
+    .table-wrap {
+      overflow: auto;
+      border-radius: 14px;
+      border: 1px solid var(--line);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      min-width: 980px;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      vertical-align: top;
+    }
+
+    th {
+      background: #f7faf5;
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    td strong {
+      font-size: 17px;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .empty {
+      border: 1px dashed var(--line);
+      border-radius: 14px;
+      padding: 18px;
+      color: var(--muted);
+      background: #fbfdf9;
+    }
+
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .route-status {
+      margin-top: 14px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: #f7faf5;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 15px;
+    }
+
+    @media (max-width: 1200px) {
+      .grid-kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .layout-main { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: 1fr 1fr; }
+    }
+
+    @media (max-width: 900px) {
+      .shell { grid-template-columns: 1fr; }
+      .sidebar {
+        position: relative;
+        height: auto;
+      }
+      .filters { grid-template-columns: 1fr; }
+      .grid-kpi { grid-template-columns: 1fr; }
+      .map-summary { grid-template-columns: 1fr; }
+    }
+  </style>
 </head>
 <body>
-  <div class="page-bg"></div>
-  <div class="page-noise"></div>
+  <div class="shell">
+    <aside class="sidebar">
+      <div class="brand">
+        <strong>NSRU</strong>
+        <span>Gestão de usuários e rota</span>
+      </div>
 
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a class="site-brand site-brand--only-logo" href="/index.html" aria-label="Ir para o início">
-        <div class="site-brand-mark site-brand-mark--highlight">
-          <img src="/img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos">
-        </div>
-      </a>
-
-      <nav class="site-nav" aria-label="Navegação principal">
-        <a href="/index.html">Início</a>
-        <a href="/cooperativa.html">Painel</a>
-        <a class="is-active" href="/usuarios.html">Usuários</a>
-        <a href="/registro-coletas-fases.html">Coletas</a>
-        <a href="/dashboard-cooperativa.html">Dashboard</a>
+      <nav class="nav">
+        <a href="/cooperativa.html">Cooperativa</a>
+        <a href="/dashboard-coletas.html">Coletas</a>
+        <a href="/usuarios-gestao.html" class="active">Gestão de usuários</a>
       </nav>
 
-      <div class="site-header-actions">
-        <a class="site-login-btn" href="/cadastro-participantes.html">+ Novo usuário</a>
+      <div class="sidebar-footer">
+        <div id="sidebarUserName">Carregando usuário...</div>
+        <div id="sidebarTerritoryLabel">Carregando território...</div>
       </div>
+    </aside>
 
-      <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
-    </div>
-
-    <div class="site-mobile-menu" id="mobileMenu">
-      <a href="/index.html">Início</a>
-      <a href="/cooperativa.html">Painel</a>
-      <a href="/usuarios.html">Usuários</a>
-      <a href="/registro-coletas-fases.html">Coletas</a>
-      <a href="/dashboard-cooperativa.html">Dashboard</a>
-      <a href="/cadastro-participantes.html">+ Novo usuário</a>
-    </div>
-  </header>
-
-  <main class="page-shell">
-    <section class="hero-card glass-card">
-      <div>
-        <span class="section-badge">Gestão de usuários</span>
-        <h1>Base operacional de participantes e pontos de coleta</h1>
-        <p>
-          Avalie solicitações, aprove participantes, vincule ao território,
-          organize a operação e corrija coordenadas para o mapa.
-        </p>
-      </div>
-
-      <div class="hero-actions">
-        <a href="/cadastro-participantes.html" class="btn-primary">+ Cadastrar participante</a>
-        <button class="btn-secondary" type="button" id="btnExportarLista">Exportar lista</button>
-      </div>
-    </section>
-
-    <section class="kpi-grid">
-      <article class="kpi-card glass-card">
-        <span>Total cadastrados</span>
-        <strong id="kpiTotalUsuarios">0</strong>
-        <small>Base geral carregada do Firestore</small>
-      </article>
-
-      <article class="kpi-card glass-card">
-        <span>Solicitações pendentes</span>
-        <strong id="kpiPendentes">0</strong>
-        <small>Aguardando avaliação</small>
-      </article>
-
-      <article class="kpi-card glass-card">
-        <span>Em operação</span>
-        <strong id="kpiOperacao">0</strong>
-        <small>Exibidos no mapa quando tiverem coordenadas</small>
-      </article>
-
-      <article class="kpi-card glass-card">
-        <span>Coordenadas pendentes</span>
-        <strong id="kpiSemGeo">0</strong>
-        <small>Precisam de ajuste manual ou busca automática</small>
-      </article>
-    </section>
-
-    <section class="toolbar-grid">
-      <div class="toolbar-card glass-card search-card">
-        <label for="searchUser">Buscar participante</label>
-        <input type="text" id="searchUser" placeholder="Buscar por nome, código, telefone ou endereço...">
-      </div>
-
-      <div class="toolbar-card glass-card">
-        <label for="filterStatus">Status</label>
-        <select id="filterStatus">
-          <option value="all">Todos</option>
-          <option value="pendente">Pendentes</option>
-          <option value="aprovado">Aprovados</option>
-          <option value="inativo">Inativos</option>
-        </select>
-      </div>
-
-      <div class="toolbar-card glass-card">
-        <label for="filterTerritory">Território</label>
-        <select id="filterTerritory">
-          <option value="all">Todos</option>
-          <option value="sim">Vinculados</option>
-          <option value="nao">Não vinculados</option>
-        </select>
-      </div>
-
-      <div class="toolbar-card glass-card">
-        <label for="filterOperation">Operação</label>
-        <select id="filterOperation">
-          <option value="all">Todos</option>
-          <option value="sim">Em operação</option>
-          <option value="nao">Fora de operação</option>
-        </select>
-      </div>
-    </section>
-
-    <section class="panel-card glass-card map-panel">
-      <div class="panel-head">
+    <main class="content">
+      <header class="topbar">
         <div>
-          <span class="section-tag">Mapa operacional</span>
-          <h2>Pontos em operação</h2>
+          <h1>Gestão de Usuários</h1>
+          <p>Participantes cadastrados, pendências de aprovação e rota dos pontos de coleta.</p>
         </div>
-      </div>
 
-      <div class="map-layout">
-        <div id="usersMap" class="users-map"></div>
+        <div class="topbar-meta">
+          <div class="pill" id="baseInfo">Base da cooperativa: carregando...</div>
+          <div class="pill" id="routeInfo">Rota: aguardando dados...</div>
+        </div>
+      </header>
 
-        <aside class="map-side">
-          <div class="map-side-card">
-            <strong>Pontos visíveis</strong>
-            <span id="mappedUsersCount">0 usuários/pontos</span>
-          </div>
-
-          <div class="map-side-card">
-            <strong>Critério do mapa</strong>
-            <span>Somente participantes aprovados, em operação e com coordenadas válidas.</span>
-          </div>
-
-          <div id="routeList" class="route-list"></div>
-        </aside>
-      </div>
-    </section>
-
-    <section class="content-grid">
-      <section class="left-column">
-        <article class="panel-card glass-card">
-          <div class="panel-head">
-            <div>
-              <span class="section-tag">Solicitações</span>
-              <h2>Pendentes de avaliação</h2>
-            </div>
-          </div>
-          <div id="pendingUsersList" class="user-list"></div>
+      <section class="grid-kpi">
+        <article class="card kpi">
+          <div class="kpi-label">Total de participantes</div>
+          <div class="kpi-value" id="kpiTotal">0</div>
         </article>
 
-        <article class="panel-card glass-card">
-          <div class="panel-head">
-            <div>
-              <span class="section-tag">Base ativa</span>
-              <h2>Aprovados e em operação</h2>
-            </div>
-          </div>
-          <div id="approvedUsersList" class="user-list"></div>
+        <article class="card kpi">
+          <div class="kpi-label">Pendentes de aprovação</div>
+          <div class="kpi-value" id="kpiPending">0</div>
+        </article>
+
+        <article class="card kpi">
+          <div class="kpi-label">Em operação</div>
+          <div class="kpi-value" id="kpiActive">0</div>
+        </article>
+
+        <article class="card kpi">
+          <div class="kpi-label">Com coordenadas válidas</div>
+          <div class="kpi-value" id="kpiGeo">0</div>
         </article>
       </section>
 
-      <aside class="right-column">
-        <article class="panel-card glass-card">
-          <div class="panel-head">
-            <div>
-              <span class="section-tag">Horários</span>
-              <h2>Resumo operacional</h2>
+      <section class="card filters">
+        <div class="field">
+          <label for="searchInput">Buscar</label>
+          <input id="searchInput" type="text" placeholder="Nome, código, telefone, endereço..." />
+        </div>
+
+        <div class="field">
+          <label for="statusFilter">Status</label>
+          <select id="statusFilter">
+            <option value="all">Todos</option>
+            <option value="pendente">Pendentes</option>
+            <option value="aprovado">Aprovados</option>
+            <option value="inativo">Inativos</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="operationFilter">Operação</label>
+          <select id="operationFilter">
+            <option value="all">Todos</option>
+            <option value="sim">Em operação</option>
+            <option value="nao">Fora da operação</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="routeMode">Rota</label>
+          <select id="routeMode">
+            <option value="approved">Apenas aprovados em operação</option>
+            <option value="allgeo">Todos com coordenadas</option>
+          </select>
+        </div>
+
+        <button class="btn btn-primary" id="btnReload">Atualizar</button>
+      </section>
+
+      <section class="layout-main">
+        <div class="stack">
+          <article class="card panel">
+            <div class="section-head">
+              <h2>Solicitações pendentes</h2>
+              <span id="pendingCountLabel">0 itens</span>
             </div>
-          </div>
-          <div id="scheduleSummary" class="schedule-summary"></div>
-        </article>
+            <div class="list" id="pendingList"></div>
+          </article>
 
-        <article class="panel-card glass-card">
-          <div class="panel-head">
-            <div>
-              <span class="section-tag">Mapa</span>
-              <h2>Participantes exibidos</h2>
+          <article class="card panel">
+            <div class="section-head">
+              <h2>Participantes em operação</h2>
+              <span id="activeCountLabel">0 itens</span>
             </div>
-          </div>
-          <div id="mappedUsersSummary" class="mapped-users-summary"></div>
-        </article>
+            <div class="list" id="activeList"></div>
+          </article>
+        </div>
 
-        <article class="panel-card glass-card">
-          <div class="panel-head">
-            <div>
-              <span class="section-tag">Geolocalização</span>
-              <h2>Coordenadas pendentes</h2>
+        <div class="stack">
+          <article class="card panel map-wrap">
+            <div class="section-head">
+              <h2>Mapa de pontos e rota</h2>
+              <div class="toolbar">
+                <button class="btn btn-soft" id="btnCenterBase">Centralizar base</button>
+                <button class="btn btn-dark" id="btnBuildRoute">Montar rota</button>
+              </div>
             </div>
-          </div>
-          <div id="geoPendingSummary" class="mapped-users-summary"></div>
-        </article>
-      </aside>
-    </section>
 
-    <section class="panel-card glass-card">
-      <div class="panel-head">
-        <div>
-          <span class="section-tag">Gestão completa</span>
-          <h2>Todos os participantes cadastrados</h2>
+            <div id="usersMap"></div>
+
+            <div class="map-summary">
+              <div class="mini">
+                <strong id="mapPointsCount">0</strong>
+                <span>Pontos no mapa</span>
+              </div>
+              <div class="mini">
+                <strong id="routeDistance">0 km</strong>
+                <span>Distância estimada</span>
+              </div>
+              <div class="mini">
+                <strong id="routeDuration">0 min</strong>
+                <span>Tempo estimado</span>
+              </div>
+            </div>
+
+            <div class="route-status" id="routeStatus">
+              Aguardando pontos suficientes para montar a rota.
+            </div>
+          </article>
         </div>
-      </div>
+      </section>
 
-      <div class="table-wrap">
-        <table class="users-table">
-          <thead>
-            <tr>
-              <th>Participante</th>
-              <th>Status</th>
-              <th>Território</th>
-              <th>Operação</th>
-              <th>Horário</th>
-              <th>Coordenadas</th>
-              <th>Ações</th>
-            </tr>
-          </thead>
-          <tbody id="usersTableBody"></tbody>
-        </table>
-      </div>
-    </section>
-  </main>
-
-  <div id="userModal" class="modal hidden" aria-hidden="true">
-    <div class="modal-backdrop"></div>
-
-    <div class="modal-card modal-card-lg">
-      <div class="modal-head">
-        <div>
-          <span class="section-tag">Avaliação de participante</span>
-          <h3 id="modalTitle">Editar participante</h3>
+      <section class="card table-panel">
+        <div class="section-head">
+          <h2>Todos os usuários</h2>
+          <span id="tableCountLabel">0 registros</span>
         </div>
 
-        <button class="modal-close" type="button" id="closeModalBtn" aria-label="Fechar modal">×</button>
-      </div>
-
-      <form id="userEditForm" class="modal-form">
-        <input type="hidden" id="editUserId">
-
-        <div class="form-grid">
-          <div class="field">
-            <label for="editUserName">Nome</label>
-            <input type="text" id="editUserName">
-          </div>
-
-          <div class="field">
-            <label for="editUserCode">Código</label>
-            <input type="text" id="editUserCode">
-          </div>
-
-          <div class="field">
-            <label for="editUserPhone">Telefone</label>
-            <input type="text" id="editUserPhone">
-          </div>
-
-          <div class="field">
-            <label for="editUserStatus">Status</label>
-            <select id="editUserStatus">
-              <option value="pendente">Pendente</option>
-              <option value="aprovado">Aprovado</option>
-              <option value="inativo">Inativo</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="editUserTerritory">Inserido no território?</label>
-            <select id="editUserTerritory">
-              <option value="sim">Sim</option>
-              <option value="nao">Não</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="editUserOperation">Em operação?</label>
-            <select id="editUserOperation">
-              <option value="sim">Sim</option>
-              <option value="nao">Não</option>
-            </select>
-          </div>
-
-          <div class="field">
-            <label for="editParticipantTerritoryId">territoryId</label>
-            <input type="text" id="editParticipantTerritoryId" placeholder="Ex.: crgr_vila_pinto">
-          </div>
-
-          <div class="field">
-            <label for="editParticipantTerritoryLabel">Nome do território</label>
-            <input type="text" id="editParticipantTerritoryLabel" placeholder="Ex.: Centro de Triagem Vila Pinto">
-          </div>
-
-          <div class="field field-full">
-            <label for="editUserSchedule">Horário de coleta</label>
-            <input type="text" id="editUserSchedule" placeholder="Ex.: Terça e quinta • 14h às 16h">
-          </div>
-
-          <div class="field field-full">
-            <label for="editUserAddress">Endereço completo</label>
-            <input type="text" id="editUserAddress" placeholder="Rua, número, bairro, cidade, UF, Brasil">
-          </div>
-
-          <div class="field field-full">
-            <button type="button" class="btn-secondary btn-full" id="btnBuscarCoordenadas">
-              Buscar coordenadas pelo endereço
-            </button>
-          </div>
-
-          <div class="field">
-            <label for="editUserLat">Latitude</label>
-            <input type="number" step="any" id="editUserLat" placeholder="-30.000000">
-          </div>
-
-          <div class="field">
-            <label for="editUserLng">Longitude</label>
-            <input type="number" step="any" id="editUserLng" placeholder="-51.000000">
-          </div>
-
-          <div class="field">
-            <label for="editUserWasteKg">Resíduos registrados (kg)</label>
-            <input type="number" step="0.01" id="editUserWasteKg">
-          </div>
-
-          <div class="field field-full">
-            <div id="geoSearchStatus" class="modal-note hidden-status"></div>
-          </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Participante</th>
+                <th>Status</th>
+                <th>Operação</th>
+                <th>Território</th>
+                <th>Endereço</th>
+                <th>Coordenadas</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="7">Carregando...</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-
-        <div class="modal-note modal-note-soft">
-          O participante só aparecerá no mapa quando estiver <strong>aprovado</strong>,
-          <strong>em operação</strong> e com <strong>latitude/longitude válidas</strong>.
-        </div>
-
-        <div class="modal-actions">
-          <button type="button" class="btn-danger" id="deleteUserBtn">Excluir participante</button>
-          <button type="submit" class="btn-primary">Salvar alterações</button>
-        </div>
-      </form>
-    </div>
+      </section>
+    </main>
   </div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script type="module" src="/usuarios.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script type="module" src="./usuarios.js"></script>
 </body>
 </html>
