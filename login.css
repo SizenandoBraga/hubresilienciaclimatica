@@ -76,7 +76,7 @@ p,span,small{
   z-index:0;
 }
 .hero-title{
-  font-size:42px;
+  font-size:32px;
   margin-bottom:20px;
   white-space:nowrap; /* força ficar em uma linha */
 }
