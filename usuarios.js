@@ -1,10 +1,9 @@
 import { auth, db } from "./firebase-init.js";
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   collection,
   doc,
   getDoc,
-  getDocs,
   onSnapshot,
   query,
   where,
@@ -13,6 +12,8 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const els = {
+  btnLogout: document.getElementById("btnLogout"),
+
   sidebarUserName: document.getElementById("sidebarUserName"),
   sidebarTerritoryLabel: document.getElementById("sidebarTerritoryLabel"),
 
@@ -44,7 +45,36 @@ const els = {
   mapPointsCount: document.getElementById("mapPointsCount"),
   routeDistance: document.getElementById("routeDistance"),
   routeDuration: document.getElementById("routeDuration"),
-  routeStatus: document.getElementById("routeStatus")
+  routeStatus: document.getElementById("routeStatus"),
+
+  userModal: document.getElementById("userModal"),
+  userModalBackdrop: document.getElementById("userModalBackdrop"),
+  closeUserModal: document.getElementById("closeUserModal"),
+  modalCloseBtn: document.getElementById("modalCloseBtn"),
+  userModalForm: document.getElementById("userModalForm"),
+  modalUserId: document.getElementById("modalUserId"),
+  modalApprovalRequestId: document.getElementById("modalApprovalRequestId"),
+  modalUserName: document.getElementById("modalUserName"),
+  modalUserCode: document.getElementById("modalUserCode"),
+  modalUserPhone: document.getElementById("modalUserPhone"),
+  modalUserStatus: document.getElementById("modalUserStatus"),
+  modalOperation: document.getElementById("modalOperation"),
+  modalTerritoryLabel: document.getElementById("modalTerritoryLabel"),
+  modalAddress: document.getElementById("modalAddress"),
+  modalLat: document.getElementById("modalLat"),
+  modalLng: document.getElementById("modalLng"),
+  modalInOperationHint: document.getElementById("modalInOperationHint"),
+  modalRequestInfo: document.getElementById("modalRequestInfo"),
+  userModalStatusNote: document.getElementById("userModalStatusNote"),
+  modalFocusMap: document.getElementById("modalFocusMap"),
+  modalRejectBtn: document.getElementById("modalRejectBtn"),
+  modalApproveBtn: document.getElementById("modalApproveBtn")
+};
+
+const DEFAULT_BASE = {
+  label: "Base da cooperativa",
+  lat: -30.048729170292532,
+  lng: -51.15652604283108
 };
 
 const STATE = {
@@ -54,7 +84,7 @@ const STATE = {
   approvalRequests: [],
   mergedUsers: [],
   filteredUsers: [],
-  territoryBase: null,
+  territoryBase: DEFAULT_BASE,
   unsubParticipants: null,
   unsubApprovals: null
 };
@@ -63,12 +93,6 @@ let map = null;
 let baseMarker = null;
 let userMarkers = [];
 let routePolyline = null;
-
-const DEFAULT_BASE = {
-  label: "Base cooperativa",
-  lat: -30.048729170292532,
-  lng: -51.15652604283108
-};
 
 function safeText(value, fallback = "—") {
   const text = String(value ?? "").trim();
@@ -92,25 +116,17 @@ function isValidCoord(lat, lng) {
 function normalizeStatus(value) {
   const raw = String(value || "").toLowerCase().trim();
 
-  if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) {
-    return "pendente";
-  }
-
-  if (["approved", "aprovado", "active", "ativo"].includes(raw)) {
-    return "aprovado";
-  }
-
-  if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) {
-    return "inativo";
-  }
+  if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) return "pendente";
+  if (["approved", "aprovado", "active", "ativo"].includes(raw)) return "aprovado";
+  if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) return "inativo";
 
   return "pendente";
 }
 
-function statusBadge(status) {
-  if (status === "aprovado") return "badge badge-approved";
-  if (status === "inativo") return "badge badge-inactive";
-  return "badge badge-pending";
+function badgeClass(status) {
+  if (status === "aprovado") return "badge badge-aprovado";
+  if (status === "inativo") return "badge badge-inativo";
+  return "badge badge-pendente";
 }
 
 function formatDistanceKm(meters) {
@@ -138,11 +154,11 @@ function buildAddress(data) {
   const uf = data?.uf || data?.address?.state || "";
   const cep = data?.cep || data?.address?.cep || "";
 
-  const line1 = [rua, numero].filter(Boolean).join(", ");
-  const line2 = [bairro, cidade, uf].filter(Boolean).join(" - ");
-  const line3 = cep ? `CEP ${cep}` : "";
-
-  return [line1, line2, line3].filter(Boolean).join(" • ");
+  return [
+    [rua, numero].filter(Boolean).join(", "),
+    [bairro, cidade, uf].filter(Boolean).join(" - "),
+    cep ? `CEP ${cep}` : ""
+  ].filter(Boolean).join(" • ");
 }
 
 function canViewAllTerritories() {
@@ -155,30 +171,16 @@ function getMyTerritoryId() {
 }
 
 function makeScopedQuery(collectionName) {
-  if (canViewAllTerritories()) {
-    return collection(db, collectionName);
-  }
+  if (canViewAllTerritories()) return collection(db, collectionName);
 
   const territoryId = getMyTerritoryId();
-  if (!territoryId) {
-    throw new Error("Usuário sem territoryId definido.");
-  }
+  if (!territoryId) throw new Error("Usuário sem territoryId definido.");
 
   return query(collection(db, collectionName), where("territoryId", "==", territoryId));
 }
 
 function mapParticipantDoc(docSnap) {
   const data = docSnap.data() || {};
-
-  const lat =
-    toNumberOrNull(data.lat) ??
-    toNumberOrNull(data.address?.lat) ??
-    toNumberOrNull(data.geo?.lat);
-
-  const lng =
-    toNumberOrNull(data.lng) ??
-    toNumberOrNull(data.address?.lng) ??
-    toNumberOrNull(data.geo?.lng);
 
   return {
     id: docSnap.id,
@@ -191,8 +193,8 @@ function mapParticipantDoc(docSnap) {
     inOperation: data.inOperation === "sim" || data.inOperation === true ? "sim" : "nao",
     approvalRequestId: data.approvalRequestId || null,
     address: buildAddress(data),
-    lat,
-    lng,
+    lat: toNumberOrNull(data.lat) ?? toNumberOrNull(data.address?.lat),
+    lng: toNumberOrNull(data.lng) ?? toNumberOrNull(data.address?.lng),
     raw: data
   };
 }
@@ -286,11 +288,9 @@ function mergeUsers() {
       raw: req.raw
     }));
 
-  STATE.mergedUsers = [...merged, ...pendingOrphans].sort((a, b) => {
-    const nameA = String(a.name || "").toLowerCase();
-    const nameB = String(b.name || "").toLowerCase();
-    return nameA.localeCompare(nameB, "pt-BR");
-  });
+  STATE.mergedUsers = [...merged, ...pendingOrphans].sort((a, b) =>
+    String(a.name || "").localeCompare(String(b.name || ""), "pt-BR")
+  );
 
   applyFilters();
 }
@@ -301,60 +301,55 @@ function applyFilters() {
   const operation = String(els.operationFilter?.value || "all");
 
   STATE.filteredUsers = STATE.mergedUsers.filter((user) => {
-    const matchesTerm =
+    const matchTerm =
       !term ||
       String(user.name || "").toLowerCase().includes(term) ||
       String(user.code || "").toLowerCase().includes(term) ||
       String(user.phone || "").toLowerCase().includes(term) ||
       String(user.address || "").toLowerCase().includes(term);
 
-    const matchesStatus = status === "all" || user.status === status;
-    const matchesOperation = operation === "all" || user.inOperation === operation;
+    const matchStatus = status === "all" || user.status === status;
+    const matchOperation = operation === "all" || user.inOperation === operation;
 
-    return matchesTerm && matchesStatus && matchesOperation;
+    return matchTerm && matchStatus && matchOperation;
   });
 
   renderAll();
 }
 
 function computeKpis() {
-  const total = STATE.filteredUsers.length;
-  const pending = STATE.filteredUsers.filter((u) => u.status === "pendente").length;
-  const active = STATE.filteredUsers.filter((u) => u.status === "aprovado" && u.inOperation === "sim").length;
-  const geo = STATE.filteredUsers.filter((u) => isValidCoord(u.lat, u.lng)).length;
+  els.kpiTotal.textContent = String(STATE.filteredUsers.length);
+  els.kpiPending.textContent = String(STATE.filteredUsers.filter((u) => u.status === "pendente").length);
+  els.kpiActive.textContent = String(STATE.filteredUsers.filter((u) => u.status === "aprovado" && u.inOperation === "sim").length);
+  els.kpiGeo.textContent = String(STATE.filteredUsers.filter((u) => isValidCoord(u.lat, u.lng)).length);
 
-  els.kpiTotal.textContent = String(total);
-  els.kpiPending.textContent = String(pending);
-  els.kpiActive.textContent = String(active);
-  els.kpiGeo.textContent = String(geo);
-
-  els.pendingCountLabel.textContent = `${pending} itens`;
-  els.activeCountLabel.textContent = `${active} itens`;
-  els.tableCountLabel.textContent = `${total} registros`;
+  els.pendingCountLabel.textContent = `${STATE.filteredUsers.filter((u) => u.status === "pendente").length} itens`;
+  els.activeCountLabel.textContent = `${STATE.filteredUsers.filter((u) => u.status === "aprovado" && u.inOperation === "sim").length} itens`;
+  els.tableCountLabel.textContent = `${STATE.filteredUsers.length} registros`;
 }
 
 function renderPendingList() {
   const pending = STATE.filteredUsers.filter((u) => u.status === "pendente");
 
   if (!pending.length) {
-    els.pendingList.innerHTML = `<div class="empty">Nenhuma solicitação pendente no momento.</div>`;
+    els.pendingList.innerHTML = `<div class="empty-state">Nenhuma solicitação pendente no momento.</div>`;
     return;
   }
 
   els.pendingList.innerHTML = pending.map((user) => `
-    <article class="item">
-      <div class="item-main">
+    <article class="user-item">
+      <div class="user-main">
         <strong>${safeText(user.name)}</strong>
         <span>Código: ${safeText(user.code)}</span>
         <span>Telefone: ${safeText(user.phone)}</span>
         <span>${safeText(user.address)}</span>
       </div>
 
-      <div class="item-actions">
-        <span class="${statusBadge(user.status)}">Pendente</span>
-        <button class="btn btn-ok" data-action="approve" data-id="${user.id}">Aprovar</button>
-        <button class="btn btn-danger" data-action="reject" data-id="${user.id}">Rejeitar</button>
-        <button class="btn btn-soft" data-action="focus" data-id="${user.id}">Ver no mapa</button>
+      <div class="user-actions">
+        <span class="${badgeClass(user.status)}">Pendente</span>
+        <button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>
+        <button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>
+        <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
       </div>
     </article>
   `).join("");
@@ -364,21 +359,22 @@ function renderActiveList() {
   const active = STATE.filteredUsers.filter((u) => u.status === "aprovado" && u.inOperation === "sim");
 
   if (!active.length) {
-    els.activeList.innerHTML = `<div class="empty">Nenhum participante em operação.</div>`;
+    els.activeList.innerHTML = `<div class="empty-state">Nenhum participante em operação.</div>`;
     return;
   }
 
   els.activeList.innerHTML = active.map((user) => `
-    <article class="item">
-      <div class="item-main">
+    <article class="user-item">
+      <div class="user-main">
         <strong>${safeText(user.name)}</strong>
         <span>${safeText(user.address)}</span>
         <span>Telefone: ${safeText(user.phone)}</span>
       </div>
 
-      <div class="item-actions">
-        <span class="${statusBadge(user.status)}">Aprovado</span>
-        <button class="btn btn-soft" data-action="focus" data-id="${user.id}">Ver no mapa</button>
+      <div class="user-actions">
+        <span class="${badgeClass(user.status)}">Aprovado</span>
+        <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
+        <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
       </div>
     </article>
   `).join("");
@@ -386,11 +382,7 @@ function renderActiveList() {
 
 function renderTable() {
   if (!STATE.filteredUsers.length) {
-    els.usersTableBody.innerHTML = `
-      <tr>
-        <td colspan="7">Nenhum usuário encontrado.</td>
-      </tr>
-    `;
+    els.usersTableBody.innerHTML = `<tr><td colspan="7">Nenhum usuário encontrado.</td></tr>`;
     return;
   }
 
@@ -401,26 +393,17 @@ function renderTable() {
         <small>${safeText(user.code)}</small><br>
         <small>${safeText(user.phone)}</small>
       </td>
-
-      <td>
-        <span class="${statusBadge(user.status)}">${safeText(user.status)}</span>
-      </td>
-
+      <td><span class="${badgeClass(user.status)}">${safeText(user.status)}</span></td>
       <td>${user.inOperation === "sim" ? "Em operação" : "Fora da operação"}</td>
-
       <td>${safeText(user.territoryLabel || user.territoryId)}</td>
-
       <td>${safeText(user.address)}</td>
-
+      <td>${isValidCoord(user.lat, user.lng) ? `${user.lat}, ${user.lng}` : "Sem coordenadas"}</td>
       <td>
-        ${isValidCoord(user.lat, user.lng) ? `${user.lat}, ${user.lng}` : "Sem coordenadas"}
-      </td>
-
-      <td>
-        <div class="row-actions">
-          ${user.status === "pendente" ? `<button class="btn btn-ok" data-action="approve" data-id="${user.id}">Aprovar</button>` : ""}
-          ${user.status === "pendente" ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}">Rejeitar</button>` : ""}
-          <button class="btn btn-soft" data-action="focus" data-id="${user.id}">Mapa</button>
+        <div class="table-actions">
+          ${user.status === "pendente" ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
+          ${user.status === "pendente" ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
+          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Mapa</button>
+          <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
         </div>
       </td>
     </tr>
@@ -430,7 +413,7 @@ function renderTable() {
 function initMap() {
   if (!els.usersMap || typeof L === "undefined" || map) return;
 
-  map = L.map("usersMap").setView([DEFAULT_BASE.lat, DEFAULT_BASE.lng], 13);
+  map = L.map("usersMap").setView([STATE.territoryBase.lat, STATE.territoryBase.lng], 13);
 
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap"
@@ -473,7 +456,7 @@ function renderMap() {
   const points = getMapUsers();
 
   baseMarker = L.marker([base.lat, base.lng]).addTo(map);
-  baseMarker.bindPopup(`<strong>${safeText(base.label, "Base da cooperativa")}</strong>`);
+  baseMarker.bindPopup(`<strong>${safeText(base.label)}</strong>`);
 
   const bounds = [[base.lat, base.lng]];
 
@@ -492,7 +475,6 @@ function renderMap() {
   });
 
   map.fitBounds(bounds, { padding: [30, 30] });
-
   els.mapPointsCount.textContent = String(points.length);
 }
 
@@ -549,16 +531,9 @@ async function buildRoute() {
     ...ordered.map((item) => [item.lng, item.lat])
   ];
 
-  if (coords.length < 2) {
-    els.routeStatus.textContent = "São necessários pelo menos dois pontos para desenhar a rota.";
-    return;
-  }
-
-  const coordsParam = coords.map((pair) => `${pair[0]},${pair[1]}`).join(";");
-
   try {
     els.routeStatus.textContent = "Calculando rota da cooperativa até os pontos...";
-    const url = `https://router.project-osrm.org/route/v1/driving/${coordsParam}?overview=full&geometries=geojson`;
+    const url = `https://router.project-osrm.org/route/v1/driving/${coords.map((p) => `${p[0]},${p[1]}`).join(";")}?overview=full&geometries=geojson`;
     const response = await fetch(url);
     const data = await response.json();
 
@@ -604,54 +579,17 @@ async function buildRoute() {
 }
 
 async function loadTerritoryBase() {
-  const userDoc = STATE.userDoc || {};
-  const userLat = toNumberOrNull(userDoc.cooperativeBaseLat);
-  const userLng = toNumberOrNull(userDoc.cooperativeBaseLng);
+  const userLat = toNumberOrNull(STATE.userDoc?.cooperativeBaseLat);
+  const userLng = toNumberOrNull(STATE.userDoc?.cooperativeBaseLng);
 
   if (isValidCoord(userLat, userLng)) {
     STATE.territoryBase = {
-      label: userDoc.cooperativeBaseLabel || "Base da cooperativa",
+      label: STATE.userDoc?.cooperativeBaseLabel || "Base da cooperativa",
       lat: userLat,
       lng: userLng
     };
     updateBaseInfo();
     return;
-  }
-
-  const territoryId = userDoc.territoryId;
-  if (!territoryId) {
-    STATE.territoryBase = DEFAULT_BASE;
-    updateBaseInfo();
-    return;
-  }
-
-  try {
-    const snap = await getDoc(doc(db, "territories", territoryId));
-
-    if (snap.exists()) {
-      const data = snap.data() || {};
-      const lat =
-        toNumberOrNull(data.baseLat) ??
-        toNumberOrNull(data.lat) ??
-        toNumberOrNull(data.location?.lat);
-
-      const lng =
-        toNumberOrNull(data.baseLng) ??
-        toNumberOrNull(data.lng) ??
-        toNumberOrNull(data.location?.lng);
-
-      if (isValidCoord(lat, lng)) {
-        STATE.territoryBase = {
-          label: data.name || data.label || userDoc.territoryLabel || "Base da cooperativa",
-          lat,
-          lng
-        };
-        updateBaseInfo();
-        return;
-      }
-    }
-  } catch (error) {
-    console.error("Erro ao carregar base do território:", error);
   }
 
   STATE.territoryBase = DEFAULT_BASE;
@@ -675,10 +613,7 @@ async function approveUser(userId) {
   const user = STATE.mergedUsers.find((item) => item.id === userId);
   if (!user) return;
 
-  const approvalRequestId =
-    user.linkedApprovalRequestId ||
-    user.approvalRequestId ||
-    null;
+  const approvalRequestId = user.linkedApprovalRequestId || user.approvalRequestId || null;
 
   try {
     const batch = writeBatch(db);
@@ -703,7 +638,7 @@ async function approveUser(userId) {
       });
     }
 
-    await batch.commit();
+    closeUserModal();
   } catch (error) {
     console.error("Erro ao aprovar usuário:", error);
     alert("Não foi possível aprovar este usuário.");
@@ -714,10 +649,7 @@ async function rejectUser(userId) {
   const user = STATE.mergedUsers.find((item) => item.id === userId);
   if (!user) return;
 
-  const approvalRequestId =
-    user.linkedApprovalRequestId ||
-    user.approvalRequestId ||
-    null;
+  const approvalRequestId = user.linkedApprovalRequestId || user.approvalRequestId || null;
 
   try {
     const batch = writeBatch(db);
@@ -742,7 +674,7 @@ async function rejectUser(userId) {
       });
     }
 
-    await batch.commit();
+    closeUserModal();
   } catch (error) {
     console.error("Erro ao rejeitar usuário:", error);
     alert("Não foi possível rejeitar este usuário.");
@@ -756,11 +688,123 @@ function focusUserOnMap(userId) {
   map.setView([user.lat, user.lng], 16);
 
   userMarkers.forEach((marker) => {
-    const latlng = marker.getLatLng();
-    if (Math.abs(latlng.lat - user.lat) < 0.000001 && Math.abs(latlng.lng - user.lng) < 0.000001) {
+    const pos = marker.getLatLng();
+    if (Math.abs(pos.lat - user.lat) < 0.000001 && Math.abs(pos.lng - user.lng) < 0.000001) {
       marker.openPopup();
     }
   });
+}
+
+function openUserModal(userId) {
+  const user = STATE.mergedUsers.find((item) => item.id === userId);
+  if (!user) return;
+
+  els.modalUserId.value = user.id;
+  els.modalApprovalRequestId.value = user.linkedApprovalRequestId || user.approvalRequestId || "";
+  els.modalUserName.value = user.name || "";
+  els.modalUserCode.value = user.code || "";
+  els.modalUserPhone.value = user.phone || "";
+  els.modalUserStatus.value = user.status || "pendente";
+  els.modalOperation.value = user.inOperation || "nao";
+  els.modalTerritoryLabel.value = user.territoryLabel || user.territoryId || "";
+  els.modalAddress.value = user.address || "";
+  els.modalLat.value = user.lat ?? "";
+  els.modalLng.value = user.lng ?? "";
+  els.modalInOperationHint.value = user.inOperation === "sim" ? "Na rota operacional" : "Fora da rota";
+
+  els.userModalStatusNote.textContent =
+    user.status === "pendente"
+      ? "Este participante está aguardando decisão do administrador."
+      : user.status === "aprovado"
+        ? "Este participante está aprovado e pode operar na rota."
+        : "Este participante está inativo ou rejeitado.";
+
+  els.modalRequestInfo.textContent = user.linkedApprovalRequestId
+    ? `Solicitação vinculada: ${user.linkedApprovalRequestId}`
+    : "Sem solicitação vinculada.";
+
+  els.userModal.classList.remove("hidden");
+  els.userModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeUserModal() {
+  els.userModal.classList.add("hidden");
+  els.userModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+async function saveModalUserChanges() {
+  const userId = els.modalUserId.value;
+  if (!userId) return;
+
+  const user = STATE.mergedUsers.find((item) => item.id === userId);
+  if (!user) return;
+
+  const approvalRequestId =
+    els.modalApprovalRequestId.value ||
+    user.linkedApprovalRequestId ||
+    user.approvalRequestId ||
+    null;
+
+  const chosenStatus = els.modalUserStatus.value;
+  const chosenOperation = chosenStatus === "aprovado" ? els.modalOperation.value : "nao";
+
+  const participantPayload = {
+    name: els.modalUserName.value.trim(),
+    participantCode: els.modalUserCode.value.trim(),
+    phone: onlyDigits(els.modalUserPhone.value),
+    territoryLabel: els.modalTerritoryLabel.value.trim(),
+    enderecoCompleto: els.modalAddress.value.trim() || null,
+    lat: toNumberOrNull(els.modalLat.value),
+    lng: toNumberOrNull(els.modalLng.value),
+    inOperation: chosenOperation,
+    status:
+      chosenStatus === "aprovado"
+        ? "approved"
+        : chosenStatus === "inativo"
+          ? "inactive"
+          : "pending_review",
+    approvalStatus:
+      chosenStatus === "aprovado"
+        ? "approved"
+        : chosenStatus === "inativo"
+          ? "rejected"
+          : "pending",
+    active: chosenStatus === "aprovado",
+    updatedAt: serverTimestamp(),
+    updatedBy: STATE.authUser?.uid || null
+  };
+
+  const approvalPayload = approvalRequestId
+    ? {
+        status:
+          chosenStatus === "aprovado"
+            ? "approved"
+            : chosenStatus === "inativo"
+              ? "rejected"
+              : "pending",
+        active: chosenStatus === "pendente",
+        resolvedAt: chosenStatus === "pendente" ? null : serverTimestamp(),
+        resolvedBy: chosenStatus === "pendente" ? null : (STATE.authUser?.uid || null),
+        resolvedByName: chosenStatus === "pendente" ? null : (STATE.userDoc?.name || STATE.userDoc?.nome || null),
+        updatedAt: serverTimestamp()
+      }
+    : null;
+
+  try {
+    const batch = writeBatch(db);
+    batch.update(doc(db, "participants", userId), participantPayload);
+
+    if (approvalRequestId && approvalPayload) {
+      batch.update(doc(db, "approvalRequests", approvalRequestId), approvalPayload);
+    }
+
+    closeUserModal();
+  } catch (error) {
+    console.error("Erro ao salvar alterações:", error);
+    alert("Não foi possível salvar as alterações do participante.");
+  }
 }
 
 function startParticipantsListener() {
@@ -805,30 +849,50 @@ function startApprovalsListener() {
   );
 }
 
+async function loadCurrentUser(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+
+  if (!snap.exists()) {
+    throw new Error("Usuário autenticado sem documento em /users.");
+  }
+
+  return { id: snap.id, ...snap.data() };
+}
+
+function fillSidebar() {
+  els.sidebarUserName.textContent = STATE.userDoc?.name || STATE.userDoc?.nome || "Usuário";
+  els.sidebarTerritoryLabel.textContent = STATE.userDoc?.territoryLabel || STATE.userDoc?.territoryId || "Sem território";
+}
+
 function bindEvents() {
   els.searchInput?.addEventListener("input", applyFilters);
   els.statusFilter?.addEventListener("change", applyFilters);
   els.operationFilter?.addEventListener("change", applyFilters);
-  els.routeMode?.addEventListener("change", () => {
+
+  els.routeMode?.addEventListener("change", async () => {
     renderMap();
-    buildRoute();
+    await buildRoute();
   });
 
-  els.btnReload?.addEventListener("click", () => {
+  els.btnReload?.addEventListener("click", async () => {
     mergeUsers();
-    buildRoute();
+    await buildRoute();
   });
 
   els.btnCenterBase?.addEventListener("click", () => {
     const base = STATE.territoryBase || DEFAULT_BASE;
-    if (map) {
-      map.setView([base.lat, base.lng], 15);
-      if (baseMarker) baseMarker.openPopup();
-    }
+    if (!map) return;
+    map.setView([base.lat, base.lng], 15);
+    if (baseMarker) baseMarker.openPopup();
   });
 
   els.btnBuildRoute?.addEventListener("click", async () => {
     await buildRoute();
+  });
+
+  els.btnLogout?.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "/login.html";
   });
 
   document.addEventListener("click", async (event) => {
@@ -851,23 +915,40 @@ function bindEvents() {
 
     if (action === "focus") {
       focusUserOnMap(userId);
+      return;
+    }
+
+    if (action === "open") {
+      openUserModal(userId);
     }
   });
-}
 
-async function loadCurrentUser(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
+  els.closeUserModal?.addEventListener("click", closeUserModal);
+  els.modalCloseBtn?.addEventListener("click", closeUserModal);
+  els.userModalBackdrop?.addEventListener("click", closeUserModal);
 
-  if (!snap.exists()) {
-    throw new Error("Usuário autenticado sem documento em /users.");
-  }
+  els.modalFocusMap?.addEventListener("click", () => {
+    const userId = els.modalUserId.value;
+    if (userId) {
+      focusUserOnMap(userId);
+      closeUserModal();
+    }
+  });
 
-  return { id: snap.id, ...snap.data() };
-}
+  els.modalApproveBtn?.addEventListener("click", async () => {
+    const userId = els.modalUserId.value;
+    if (userId) await approveUser(userId);
+  });
 
-function fillSidebar() {
-  els.sidebarUserName.textContent = STATE.userDoc?.name || STATE.userDoc?.nome || "Usuário";
-  els.sidebarTerritoryLabel.textContent = STATE.userDoc?.territoryLabel || STATE.userDoc?.territoryId || "Sem território";
+  els.modalRejectBtn?.addEventListener("click", async () => {
+    const userId = els.modalUserId.value;
+    if (userId) await rejectUser(userId);
+  });
+
+  els.userModalForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await saveModalUserChanges();
+  });
 }
 
 initMap();
@@ -885,11 +966,17 @@ onAuthStateChanged(auth, async (user) => {
 
     fillSidebar();
     await loadTerritoryBase();
+
+    if (map) {
+      map.setView([STATE.territoryBase.lat, STATE.territoryBase.lng], 13);
+    }
+
     startParticipantsListener();
     startApprovalsListener();
 
-    setTimeout(() => {
-      buildRoute();
+    setTimeout(async () => {
+      renderMap();
+      await buildRoute();
     }, 1200);
   } catch (error) {
     console.error(error);
