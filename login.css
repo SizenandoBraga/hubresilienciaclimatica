@@ -75,7 +75,30 @@ p,span,small{
   mask-image:radial-gradient(circle at center, black 0%, transparent 78%);
   z-index:0;
 }
+.hero-title{
+  font-size:42px;
+  margin-bottom:20px;
+  white-space:nowrap; /* força ficar em uma linha */
+}
 
+.hero-title span{
+  color:var(--green);
+  font-weight:700;
+}
+
+/* Responsivo */
+@media(max-width:1200px){
+  .hero-title{
+    font-size:34px;
+  }
+}
+
+@media(max-width:900px){
+  .hero-title{
+    white-space:normal; /* libera quebra no mobile */
+    font-size:28px;
+  }
+}
 .noise{
   position:fixed;
   inset:0;
