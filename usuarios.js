@@ -198,7 +198,9 @@ function filterVisibleUsers(items) {
   const myTerritoryId = getMyTerritoryId();
   if (!myTerritoryId) return items;
 
-  return items.filter((item) => sameTerritory(item.territoryId, myTerritoryId));
+  return items.filter((item) => {
+    return sameTerritory(item.territoryId, myTerritoryId);
+  });
 }
 
 function mapParticipantDoc(docSnap) {
@@ -243,87 +245,102 @@ function mapApprovalRequestDoc(docSnap) {
 }
 
 function mergeUsers() {
-  const approvalsByParticipantId = new Map();
-  const approvalsByRequestId = new Map();
+  const participantById = new Map();
+  const participantByApprovalRequestId = new Map();
 
-  STATE.approvalRequests.forEach((req) => {
-    if (req.participantId) approvalsByParticipantId.set(req.participantId, req);
-    approvalsByRequestId.set(req.id, req);
+  STATE.participants.forEach((participant) => {
+    participantById.set(participant.id, participant);
+    if (participant.approvalRequestId) {
+      participantByApprovalRequestId.set(participant.approvalRequestId, participant);
+    }
   });
 
-  const merged = STATE.participants.map((participant) => {
-    const approval =
-      approvalsByParticipantId.get(participant.id) ||
-      approvalsByRequestId.get(participant.approvalRequestId);
+  const mergedFromRequests = STATE.approvalRequests.map((req) => {
+    const participant =
+      participantById.get(req.participantId) ||
+      participantByApprovalRequestId.get(req.id) ||
+      null;
 
-    if (!approval) {
-      return {
-        ...participant,
-        linkedApprovalRequestId: participant.approvalRequestId || null
-      };
-    }
+    const snapshot = req.raw?.applicantSnapshot || {};
+    const snapshotAddress = snapshot.address || {};
 
-    if (approval.status === "pending") {
-      return {
-        ...participant,
-        status: "pendente",
-        inOperation: "nao",
-        linkedApprovalRequestId: approval.id
-      };
-    }
+    const territoryId = participant?.territoryId || req.territoryId || null;
+    const territoryLabel = participant?.territoryLabel || req.territoryLabel || "";
 
-    if (approval.status === "approved") {
-      return {
-        ...participant,
-        status: "aprovado",
-        linkedApprovalRequestId: approval.id
-      };
-    }
+    const requestStatus = String(req.status || "pending").toLowerCase();
 
-    if (approval.status === "rejected") {
-      return {
-        ...participant,
-        status: "inativo",
-        inOperation: "nao",
-        linkedApprovalRequestId: approval.id
-      };
-    }
+    let status = "pendente";
+    if (requestStatus === "approved") status = "aprovado";
+    if (requestStatus === "rejected") status = "inativo";
 
     return {
-      ...participant,
-      linkedApprovalRequestId: approval.id
+      id: participant?.id || req.participantId || req.id,
+      linkedApprovalRequestId: req.id,
+      approvalRequestId: req.id,
+
+      name: participant?.name || req.participantName || snapshot.name || "Solicitação pendente",
+      code: participant?.code || req.participantCode || "—",
+      phone: participant?.phone || snapshot.phone || "",
+      email: participant?.email || snapshot.email || "",
+      cpf: participant?.cpf || snapshot.cpf || "",
+
+      territoryId,
+      territoryLabel,
+
+      status,
+      rawStatus: participant?.rawStatus || status,
+      approvalStatus: participant?.approvalStatus || requestStatus,
+
+      inOperation:
+        status === "aprovado"
+          ? (participant?.inOperation || "sim")
+          : "nao",
+
+      inTerritory:
+        participant?.inTerritory ||
+        (territoryId ? "sim" : "nao"),
+
+      address:
+        participant?.address ||
+        buildAddress(snapshot) ||
+        buildAddress({ address: snapshotAddress }) ||
+        "—",
+
+      lat:
+        participant?.lat ??
+        toNumberOrNull(snapshot.lat) ??
+        toNumberOrNull(snapshotAddress.lat),
+
+      lng:
+        participant?.lng ??
+        toNumberOrNull(snapshot.lng) ??
+        toNumberOrNull(snapshotAddress.lng),
+
+      schedule: participant?.schedule || "A definir",
+      raw: participant?.raw || req.raw
     };
   });
 
-  const participantIds = new Set(merged.map((item) => item.id));
+  const requestIds = new Set(STATE.approvalRequests.map((req) => req.id));
+  const participantIdsAlreadyMerged = new Set(mergedFromRequests.map((item) => item.id));
 
-  const pendingOrphans = STATE.approvalRequests
-    .filter((req) => req.status === "pending" && req.participantId && !participantIds.has(req.participantId))
-    .map((req) => ({
-      id: req.participantId,
-      name: req.participantName || "Solicitação pendente",
-      code: req.participantCode || "—",
-      phone: req.raw?.applicantSnapshot?.phone || "",
-      email: req.raw?.applicantSnapshot?.email || "",
-      cpf: req.raw?.applicantSnapshot?.cpf || "",
-      territoryId: req.territoryId || null,
-      territoryLabel: req.territoryLabel || "",
-      status: "pendente",
-      rawStatus: "pendente",
-      approvalStatus: "pending",
-      inOperation: "nao",
-      inTerritory: "sim",
-      approvalRequestId: req.id,
-      linkedApprovalRequestId: req.id,
-      address: buildAddress(req.raw?.applicantSnapshot || {}),
-      lat: toNumberOrNull(req.raw?.applicantSnapshot?.address?.lat),
-      lng: toNumberOrNull(req.raw?.applicantSnapshot?.address?.lng),
-      schedule: "A definir",
-      raw: req.raw
+  const standaloneParticipants = STATE.participants
+    .filter((participant) => {
+      if (participant.approvalRequestId && requestIds.has(participant.approvalRequestId)) {
+        return false;
+      }
+      if (participantIdsAlreadyMerged.has(participant.id)) {
+        return false;
+      }
+      return true;
+    })
+    .map((participant) => ({
+      ...participant,
+      linkedApprovalRequestId: participant.approvalRequestId || null
     }));
 
   STATE.mergedUsers = filterVisibleUsers(
-    [...merged, ...pendingOrphans].sort((a, b) =>
+    [...mergedFromRequests, ...standaloneParticipants].sort((a, b) =>
       String(a.name || "").localeCompare(String(b.name || ""), "pt-BR")
     )
   );
@@ -660,16 +677,18 @@ async function approveUser(userId) {
   try {
     const batch = writeBatch(db);
 
-    batch.update(doc(db, "participants", user.id), {
-      status: "aprovado",
-      approvalStatus: "approved",
-      active: true,
-      inOperation: "sim",
-      inTerritory: "sim",
-      schedule: user.raw?.schedule || "A definir",
-      updatedAt: serverTimestamp(),
-      updatedBy: STATE.authUser?.uid || null
-    });
+    if (userId && !String(userId).startsWith("approval_")) {
+      batch.update(doc(db, "participants", user.id), {
+        status: "aprovado",
+        approvalStatus: "approved",
+        active: true,
+        inOperation: "sim",
+        inTerritory: "sim",
+        schedule: user.raw?.schedule || "A definir",
+        updatedAt: serverTimestamp(),
+        updatedBy: STATE.authUser?.uid || null
+      });
+    }
 
     if (approvalRequestId) {
       batch.update(doc(db, "approvalRequests", approvalRequestId), {
@@ -699,16 +718,18 @@ async function rejectUser(userId) {
   try {
     const batch = writeBatch(db);
 
-    batch.update(doc(db, "participants", user.id), {
-      status: "inativo",
-      approvalStatus: "rejected",
-      active: false,
-      inOperation: "nao",
-      inTerritory: "sim",
-      schedule: user.raw?.schedule || "A definir",
-      updatedAt: serverTimestamp(),
-      updatedBy: STATE.authUser?.uid || null
-    });
+    if (userId && !String(userId).startsWith("approval_")) {
+      batch.update(doc(db, "participants", user.id), {
+        status: "inativo",
+        approvalStatus: "rejected",
+        active: false,
+        inOperation: "nao",
+        inTerritory: "sim",
+        schedule: user.raw?.schedule || "A definir",
+        updatedAt: serverTimestamp(),
+        updatedBy: STATE.authUser?.uid || null
+      });
+    }
 
     if (approvalRequestId) {
       batch.update(doc(db, "approvalRequests", approvalRequestId), {
@@ -762,7 +783,7 @@ function openUserModal(userId) {
 
   els.userModalStatusNote.textContent =
     user.status === "pendente"
-      ? "Este participante está aguardando decisão do administrador."
+      ? "Esta solicitação está aguardando decisão do administrador."
       : user.status === "aprovado"
         ? "Este participante está aprovado e pode operar na rota."
         : "Este participante está inativo ou rejeitado.";
@@ -798,36 +819,41 @@ async function saveModalUserChanges() {
   const chosenStatus = els.modalUserStatus.value;
   const chosenOperation = chosenStatus === "aprovado" ? els.modalOperation.value : "nao";
 
-  const participantPayload = {
-    name: els.modalUserName.value.trim(),
-    participantCode: els.modalUserCode.value.trim(),
-    phone: onlyDigits(els.modalUserPhone.value),
-    territoryLabel: els.modalTerritoryLabel.value.trim() || user.territoryLabel || "",
-    enderecoCompleto: els.modalAddress.value.trim() || null,
-    lat: toNumberOrNull(els.modalLat.value),
-    lng: toNumberOrNull(els.modalLng.value),
-    inOperation: chosenOperation,
-    inTerritory: "sim",
-    schedule: user.raw?.schedule || "A definir",
-    status:
-      chosenStatus === "aprovado"
-        ? "aprovado"
-        : chosenStatus === "inativo"
-          ? "inativo"
-          : "pendente",
-    approvalStatus:
-      chosenStatus === "aprovado"
-        ? "approved"
-        : chosenStatus === "inativo"
-          ? "rejected"
-          : "pending",
-    active: chosenStatus === "aprovado",
-    updatedAt: serverTimestamp(),
-    updatedBy: STATE.authUser?.uid || null
-  };
+  try {
+    const batch = writeBatch(db);
 
-  const approvalPayload = approvalRequestId
-    ? {
+    if (userId && !String(userId).startsWith("approval_")) {
+      batch.update(doc(db, "participants", userId), {
+        name: els.modalUserName.value.trim(),
+        participantCode: els.modalUserCode.value.trim(),
+        phone: onlyDigits(els.modalUserPhone.value),
+        territoryLabel: els.modalTerritoryLabel.value.trim() || user.territoryLabel || "",
+        enderecoCompleto: els.modalAddress.value.trim() || null,
+        lat: toNumberOrNull(els.modalLat.value),
+        lng: toNumberOrNull(els.modalLng.value),
+        inOperation: chosenOperation,
+        inTerritory: "sim",
+        schedule: user.raw?.schedule || "A definir",
+        status:
+          chosenStatus === "aprovado"
+            ? "aprovado"
+            : chosenStatus === "inativo"
+              ? "inativo"
+              : "pendente",
+        approvalStatus:
+          chosenStatus === "aprovado"
+            ? "approved"
+            : chosenStatus === "inativo"
+              ? "rejected"
+              : "pending",
+        active: chosenStatus === "aprovado",
+        updatedAt: serverTimestamp(),
+        updatedBy: STATE.authUser?.uid || null
+      });
+    }
+
+    if (approvalRequestId) {
+      batch.update(doc(db, "approvalRequests", approvalRequestId), {
         status:
           chosenStatus === "aprovado"
             ? "approved"
@@ -839,16 +865,7 @@ async function saveModalUserChanges() {
         resolvedBy: chosenStatus === "pendente" ? null : (STATE.authUser?.uid || null),
         resolvedByName: chosenStatus === "pendente" ? null : (STATE.userDoc?.name || STATE.userDoc?.nome || null),
         updatedAt: serverTimestamp()
-      }
-    : null;
-
-  try {
-    const batch = writeBatch(db);
-
-    batch.update(doc(db, "participants", userId), participantPayload);
-
-    if (approvalRequestId && approvalPayload) {
-      batch.update(doc(db, "approvalRequests", approvalRequestId), approvalPayload);
+      });
     }
 
     await batch.commit();
@@ -1095,11 +1112,11 @@ onAuthStateChanged(auth, async (user) => {
       map.setView([STATE.territoryBase.lat, STATE.territoryBase.lng], 13);
     }
 
-    await loadParticipantsInitial();
     await loadApprovalsInitial();
+    await loadParticipantsInitial();
 
-    startParticipantsListener();
     startApprovalsListener();
+    startParticipantsListener();
 
     setTimeout(async () => {
       renderMap();
