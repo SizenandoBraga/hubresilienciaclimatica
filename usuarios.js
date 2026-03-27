@@ -116,9 +116,17 @@ function isValidCoord(lat, lng) {
 function normalizeStatus(value) {
   const raw = String(value || "").toLowerCase().trim();
 
-  if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) return "pendente";
-  if (["approved", "aprovado", "active", "ativo"].includes(raw)) return "aprovado";
-  if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) return "inativo";
+  if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) {
+    return "pendente";
+  }
+
+  if (["approved", "aprovado", "active", "ativo"].includes(raw)) {
+    return "aprovado";
+  }
+
+  if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) {
+    return "inativo";
+  }
 
   return "pendente";
 }
@@ -189,8 +197,9 @@ function mapParticipantDoc(docSnap) {
     phone: data.phone || "",
     territoryId: data.territoryId || null,
     territoryLabel: data.territoryLabel || "",
-    status: normalizeStatus(data.approvalStatus || data.status),
+    status: normalizeStatus(data.status || data.approvalStatus),
     inOperation: data.inOperation === "sim" || data.inOperation === true ? "sim" : "nao",
+    inTerritory: data.inTerritory === "sim" || data.inTerritory === true ? "sim" : "nao",
     approvalRequestId: data.approvalRequestId || null,
     address: buildAddress(data),
     lat: toNumberOrNull(data.lat) ?? toNumberOrNull(data.address?.lat),
@@ -280,6 +289,7 @@ function mergeUsers() {
       territoryLabel: req.territoryLabel || "",
       status: "pendente",
       inOperation: "nao",
+      inTerritory: "sim",
       approvalRequestId: req.id,
       linkedApprovalRequestId: req.id,
       address: buildAddress(req.raw?.applicantSnapshot || {}),
@@ -613,16 +623,21 @@ async function approveUser(userId) {
   const user = STATE.mergedUsers.find((item) => item.id === userId);
   if (!user) return;
 
-  const approvalRequestId = user.linkedApprovalRequestId || user.approvalRequestId || null;
+  const approvalRequestId =
+    user.linkedApprovalRequestId ||
+    user.approvalRequestId ||
+    null;
 
   try {
     const batch = writeBatch(db);
 
     batch.update(doc(db, "participants", user.id), {
-      status: "approved",
+      status: "aprovado",
       approvalStatus: "approved",
       active: true,
       inOperation: "sim",
+      inTerritory: "sim",
+      schedule: user.raw?.schedule || "A definir",
       updatedAt: serverTimestamp(),
       updatedBy: STATE.authUser?.uid || null
     });
@@ -638,6 +653,7 @@ async function approveUser(userId) {
       });
     }
 
+    await batch.commit();
     closeUserModal();
   } catch (error) {
     console.error("Erro ao aprovar usuário:", error);
@@ -649,16 +665,21 @@ async function rejectUser(userId) {
   const user = STATE.mergedUsers.find((item) => item.id === userId);
   if (!user) return;
 
-  const approvalRequestId = user.linkedApprovalRequestId || user.approvalRequestId || null;
+  const approvalRequestId =
+    user.linkedApprovalRequestId ||
+    user.approvalRequestId ||
+    null;
 
   try {
     const batch = writeBatch(db);
 
     batch.update(doc(db, "participants", user.id), {
-      status: "inactive",
+      status: "inativo",
       approvalStatus: "rejected",
       active: false,
       inOperation: "nao",
+      inTerritory: "sim",
+      schedule: user.raw?.schedule || "A definir",
       updatedAt: serverTimestamp(),
       updatedBy: STATE.authUser?.uid || null
     });
@@ -674,6 +695,7 @@ async function rejectUser(userId) {
       });
     }
 
+    await batch.commit();
     closeUserModal();
   } catch (error) {
     console.error("Erro ao rejeitar usuário:", error);
@@ -754,17 +776,19 @@ async function saveModalUserChanges() {
     name: els.modalUserName.value.trim(),
     participantCode: els.modalUserCode.value.trim(),
     phone: onlyDigits(els.modalUserPhone.value),
-    territoryLabel: els.modalTerritoryLabel.value.trim(),
+    territoryLabel: els.modalTerritoryLabel.value.trim() || user.territoryLabel || "",
     enderecoCompleto: els.modalAddress.value.trim() || null,
     lat: toNumberOrNull(els.modalLat.value),
     lng: toNumberOrNull(els.modalLng.value),
     inOperation: chosenOperation,
+    inTerritory: "sim",
+    schedule: user.raw?.schedule || "A definir",
     status:
       chosenStatus === "aprovado"
-        ? "approved"
+        ? "aprovado"
         : chosenStatus === "inativo"
-          ? "inactive"
-          : "pending_review",
+          ? "inativo"
+          : "pendente",
     approvalStatus:
       chosenStatus === "aprovado"
         ? "approved"
@@ -794,12 +818,14 @@ async function saveModalUserChanges() {
 
   try {
     const batch = writeBatch(db);
+
     batch.update(doc(db, "participants", userId), participantPayload);
 
     if (approvalRequestId && approvalPayload) {
       batch.update(doc(db, "approvalRequests", approvalRequestId), approvalPayload);
     }
 
+    await batch.commit();
     closeUserModal();
   } catch (error) {
     console.error("Erro ao salvar alterações:", error);

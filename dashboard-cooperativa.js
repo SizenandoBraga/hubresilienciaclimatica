@@ -315,12 +315,12 @@ function buildTerritoryAliases(profile) {
   const normalized = [...aliases].map(normalizeSlug).filter(Boolean);
 
   if (
-    normalized.some((v) => v.includes("vila-pinto")) ||
-    normalized.some((v) => v.includes("vila-pinto"))
+    normalized.some((v) => v.includes("vila_pinto")) ||
+    normalized.some((v) => v.includes("crgr_vila_pinto"))
   ) {
-    aliases.add("vila-pinto");
-    aliases.add("vila-pinto");
-    aliases.add("vila-pinto");
+    aliases.add("crgr_vila_pinto");
+    aliases.add("crgr-vila-pinto");
+    aliases.add("vila_pinto");
     aliases.add("vila-pinto");
   }
 
@@ -737,7 +737,7 @@ function renderExpandedPanel(items) {
 
 function getCoopBaseLatLng() {
   if (
-    coopProfile?.territoryId === "vila-pinto" ||
+    coopProfile?.territoryId === "crgr_vila_pinto" ||
     coopProfile?.territoryId === "vila-pinto"
   ) {
     return { lat: -30.048729170292532, lng: -51.15652604283108 };
