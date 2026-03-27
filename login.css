@@ -114,7 +114,29 @@ p,span,small{
   gap:24px;
   align-items:stretch;
 }
+.back-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(60, 58, 57, 0.12);
+  background: rgba(255, 255, 255, 0.55);
+  color: #3C3A39;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
 
+.back-tag:hover {
+  background: rgba(129, 185, 42, 0.10);
+  border-color: rgba(129, 185, 42, 0.28);
+  color: #2f2d2c;
+  transform: translateY(-1px);
+}
 .hero,
 .panel{
   position:relative;
