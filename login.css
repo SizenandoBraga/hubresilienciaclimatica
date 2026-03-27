@@ -274,7 +274,8 @@ p,span,small{
 
 .hero h1{
   margin:0;
-  max-width:10ch;
+  max-width:none; /* REMOVE a quebra */
+  white-space:nowrap; /* força 1 linha */
   font-size:clamp(3rem, 5vw, 5.2rem);
   line-height:.92;
   letter-spacing:-.05em;
@@ -587,9 +588,12 @@ p,span,small{
     min-height:auto;
   }
 
+
   .hero h1{
     max-width:none;
+    white-space:normal; /* quebra no mobile */
   }
+
 
   .hero-logo-bg img{
     width:min(80%, 540px);
