@@ -198,9 +198,7 @@ function filterVisibleUsers(items) {
   const myTerritoryId = getMyTerritoryId();
   if (!myTerritoryId) return items;
 
-  return items.filter((item) => {
-    return sameTerritory(item.territoryId, myTerritoryId);
-  });
+  return items.filter((item) => sameTerritory(item.territoryId, myTerritoryId));
 }
 
 function mapParticipantDoc(docSnap) {
@@ -264,9 +262,6 @@ function mergeUsers() {
     const snapshot = req.raw?.applicantSnapshot || {};
     const snapshotAddress = snapshot.address || {};
 
-    const territoryId = participant?.territoryId || req.territoryId || null;
-    const territoryLabel = participant?.territoryLabel || req.territoryLabel || "";
-
     const requestStatus = String(req.status || "pending").toLowerCase();
 
     let status = "pendente";
@@ -274,18 +269,48 @@ function mergeUsers() {
     if (requestStatus === "rejected") status = "inativo";
 
     return {
-      id: participant?.id || req.participantId || req.id,
+      id: participant?.id || req.participantId || `approval_${req.id}`,
       linkedApprovalRequestId: req.id,
       approvalRequestId: req.id,
 
-      name: participant?.name || req.participantName || snapshot.name || "Solicitação pendente",
-      code: participant?.code || req.participantCode || "—",
-      phone: participant?.phone || snapshot.phone || "",
-      email: participant?.email || snapshot.email || "",
-      cpf: participant?.cpf || snapshot.cpf || "",
+      name:
+        participant?.name ||
+        req.participantName ||
+        snapshot.name ||
+        "Solicitação pendente",
 
-      territoryId,
-      territoryLabel,
+      code:
+        participant?.code ||
+        req.participantCode ||
+        snapshot.participantCode ||
+        "—",
+
+      phone:
+        participant?.phone ||
+        snapshot.phone ||
+        "",
+
+      email:
+        participant?.email ||
+        snapshot.email ||
+        "",
+
+      cpf:
+        participant?.cpf ||
+        snapshot.cpf ||
+        "",
+
+      territoryId:
+        participant?.territoryId ||
+        req.territoryId ||
+        snapshot.territoryId ||
+        null,
+
+      territoryLabel:
+        participant?.territoryLabel ||
+        req.territoryLabel ||
+        snapshot.territoryLabel ||
+        "",
 
       status,
       rawStatus: participant?.rawStatus || status,
@@ -298,7 +323,7 @@ function mergeUsers() {
 
       inTerritory:
         participant?.inTerritory ||
-        (territoryId ? "sim" : "nao"),
+        (req.territoryId || snapshot.territoryId ? "sim" : "nao"),
 
       address:
         participant?.address ||
@@ -322,7 +347,11 @@ function mergeUsers() {
   });
 
   const requestIds = new Set(STATE.approvalRequests.map((req) => req.id));
-  const participantIdsAlreadyMerged = new Set(mergedFromRequests.map((item) => item.id));
+  const participantIdsAlreadyMerged = new Set(
+    mergedFromRequests
+      .map((item) => item.id)
+      .filter(Boolean)
+  );
 
   const standaloneParticipants = STATE.participants
     .filter((participant) => {
@@ -374,7 +403,7 @@ function applyFilters() {
 
 function computeKpis() {
   const total = STATE.filteredUsers.length;
-  const pending = STATE.filteredUsers.filter((u) => u.status === "pendente").length;
+  const pending = STATE.filteredUsers.filter((u) => u.linkedApprovalRequestId && u.status === "pendente").length;
   const active = STATE.filteredUsers.filter((u) => u.status === "aprovado" && u.inOperation === "sim").length;
   const geo = STATE.filteredUsers.filter((u) => isValidCoord(u.lat, u.lng)).length;
 
@@ -389,7 +418,9 @@ function computeKpis() {
 }
 
 function renderPendingList() {
-  const pending = STATE.filteredUsers.filter((u) => u.status === "pendente");
+  const pending = STATE.filteredUsers.filter((u) => u.linkedApprovalRequestId && u.status === "pendente");
+
+  els.pendingCountLabel.textContent = `${pending.length} itens`;
 
   if (!pending.length) {
     els.pendingList.innerHTML = `<div class="empty-state">Nenhuma solicitação pendente no momento.</div>`;
@@ -677,7 +708,7 @@ async function approveUser(userId) {
   try {
     const batch = writeBatch(db);
 
-    if (userId && !String(userId).startsWith("approval_")) {
+    if (user.id && !String(user.id).startsWith("approval_")) {
       batch.update(doc(db, "participants", user.id), {
         status: "aprovado",
         approvalStatus: "approved",
@@ -718,14 +749,13 @@ async function rejectUser(userId) {
   try {
     const batch = writeBatch(db);
 
-    if (userId && !String(userId).startsWith("approval_")) {
+    if (user.id && !String(user.id).startsWith("approval_")) {
       batch.update(doc(db, "participants", user.id), {
         status: "inativo",
         approvalStatus: "rejected",
         active: false,
         inOperation: "nao",
         inTerritory: "sim",
-        schedule: user.raw?.schedule || "A definir",
         updatedAt: serverTimestamp(),
         updatedBy: STATE.authUser?.uid || null
       });
@@ -1015,8 +1045,8 @@ function bindEvents() {
   });
 
   els.btnReload?.addEventListener("click", async () => {
-    await loadParticipantsInitial();
     await loadApprovalsInitial();
+    await loadParticipantsInitial();
     await buildRoute();
   });
 
