@@ -316,7 +316,7 @@ async function buscarCoordenadasPorEndereco(address) {
 
 async function preencherCoordenadasPeloEndereco() {
   try {
-    const address = els.editUserAddress.value.trim();
+    const address = els.editUserAddress?.value.trim();
 
     if (!address) {
       setGeoStatus("Informe o endereço antes de buscar as coordenadas.", "error");
@@ -327,8 +327,8 @@ async function preencherCoordenadasPeloEndereco() {
 
     const geo = await buscarCoordenadasPorEndereco(address);
 
-    els.editUserLat.value = geo.lat;
-    els.editUserLng.value = geo.lng;
+    if (els.editUserLat) els.editUserLat.value = geo.lat;
+    if (els.editUserLng) els.editUserLng.value = geo.lng;
 
     setGeoStatus("Coordenadas encontradas e preenchidas com sucesso.", "success");
   } catch (error) {
@@ -337,6 +337,9 @@ async function preencherCoordenadasPeloEndereco() {
   }
 }
 
+/* =========================
+   MAPEAMENTO FIRESTORE
+========================= */
 function mapParticipantDoc(docSnap) {
   const data = docSnap.data() || {};
 
@@ -354,24 +357,14 @@ function mapParticipantDoc(docSnap) {
 
   const status = normalizeStatus(data.approvalStatus || data.status);
 
-  const inTerritory =
-    data.territoryId || data.territoryLabel
-      ? "sim"
-      : yesNo(data.inTerritory);
-
-  const inOperation =
-    yesNo(data.inOperation) === "sim" && status === "aprovado"
-      ? "sim"
-      : "nao";
-
   return {
     id: docSnap.id,
     name: data.name || data.nome || "Sem nome",
     code: data.participantCode || data.code || "—",
     phone: data.phone || data.telefone || "",
     status,
-    inTerritory,
-    inOperation,
+    inTerritory: data.territoryId ? "sim" : yesNo(data.inTerritory),
+    inOperation: status === "aprovado" && yesNo(data.inOperation) === "sim" ? "sim" : "nao",
     schedule: data.schedule || data.collectionSchedule || data.horarioColeta || "A definir",
     wasteKg: Number(data.wasteKg || data.totalWasteKg || 0),
     address: buildAddress(data),
@@ -386,6 +379,7 @@ function mapParticipantDoc(docSnap) {
 
 function mapApprovalRequestDoc(docSnap) {
   const data = docSnap.data() || {};
+
   return {
     id: docSnap.id,
     status: String(data.status || "pending").toLowerCase(),
@@ -398,6 +392,9 @@ function mapApprovalRequestDoc(docSnap) {
   };
 }
 
+/* =========================
+   PERMISSÕES
+========================= */
 function canViewAllTerritories() {
   const role = String(STATE.userDoc?.role || "").toLowerCase();
   return ["governanca", "gestor", "admin_master", "superadmin"].includes(role);
@@ -415,7 +412,7 @@ function filterUsersByPermission(items) {
   if (canViewAllTerritories()) return items;
 
   const myTerritoryId = getMyTerritoryId();
-  if (!myTerritoryId) return items;
+  if (!myTerritoryId) return [];
 
   return items.filter((user) => {
     const userTerritoryId = user.territoryId || user.raw?.territoryId || null;
@@ -423,14 +420,15 @@ function filterUsersByPermission(items) {
   });
 }
 
+/* =========================
+   MERGE PARTICIPANTES + APROVAÇÕES
+========================= */
 function mergeParticipantsWithApprovals() {
   const approvalByParticipantId = new Map();
   const approvalByRequestId = new Map();
 
   STATE.approvalRequests.forEach((req) => {
-    if (req.participantId) {
-      approvalByParticipantId.set(req.participantId, req);
-    }
+    if (req.participantId) approvalByParticipantId.set(req.participantId, req);
     approvalByRequestId.set(req.id, req);
   });
 
@@ -500,7 +498,7 @@ function mergeParticipantsWithApprovals() {
       code: req.participantCode || "—",
       phone: req.raw?.applicantSnapshot?.phone || "",
       status: "pendente",
-      inTerritory: req.territoryId || req.territoryLabel ? "sim" : "nao",
+      inTerritory: req.territoryId ? "sim" : "nao",
       inOperation: "nao",
       schedule: "A definir",
       wasteKg: 0,
@@ -808,7 +806,7 @@ function initMap() {
 
   map = L.map("usersMap").setView([-30.0295, -51.1210], 13);
 
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{y}/{x}.png".replace("/{y}/", "/{z}/"), {
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap"
   }).addTo(map);
 }
@@ -962,31 +960,20 @@ async function saveUserForm(event) {
   STATE.isSaving = true;
 
   const id = els.editUserId?.value;
-  if (!id) {
-    STATE.isSaving = false;
-    alert("Participante inválido para edição.");
-    return;
-  }
-
   const previousUser = STATE.users.find((u) => u.id === id);
+
   if (!previousUser) {
     STATE.isSaving = false;
-    alert("Participante não encontrado na lista local.");
+    alert("Participante não encontrado.");
     return;
   }
 
   const status = els.editUserStatus?.value || "pendente";
   const inTerritory = els.editUserTerritory?.value || "nao";
-  let inOperation = els.editUserOperation?.value || "nao";
+  const inOperation = status === "aprovado" ? "sim" : "nao";
 
-  if (status === "aprovado") {
-    inOperation = "sim";
-  } else {
-    inOperation = "nao";
-  }
-
-  let lat = toNumberOrNull(els.editUserLat?.value?.trim());
-  let lng = toNumberOrNull(els.editUserLng?.value?.trim());
+  let lat = toNumberOrNull(els.editUserLat?.value);
+  let lng = toNumberOrNull(els.editUserLng?.value);
   const address = els.editUserAddress?.value?.trim() || "";
 
   try {
@@ -1010,25 +997,18 @@ async function saveUserForm(event) {
     );
   }
 
-  const manualTerritoryId = els.editParticipantTerritoryId?.value.trim() || "";
-  const manualTerritoryLabel = els.editParticipantTerritoryLabel?.value.trim() || "";
-
   const participantPayload = {
     name: els.editUserName?.value.trim() || "",
     participantCode: els.editUserCode?.value.trim() || "",
     phone: els.editUserPhone?.value.trim() || "",
     status:
-      status === "aprovado"
-        ? "approved"
-        : status === "inativo"
-          ? "inactive"
-          : "pending_review",
+      status === "aprovado" ? "approved" :
+      status === "inativo" ? "inactive" :
+      "pending_review",
     approvalStatus:
-      status === "aprovado"
-        ? "approved"
-        : status === "inativo"
-          ? "rejected"
-          : "pending",
+      status === "aprovado" ? "approved" :
+      status === "inativo" ? "rejected" :
+      "pending",
     active: status === "aprovado",
     inTerritory,
     inOperation,
@@ -1037,17 +1017,11 @@ async function saveUserForm(event) {
     lat: Number.isFinite(lat) ? lat : null,
     lng: Number.isFinite(lng) ? lng : null,
     wasteKg: Number(els.editUserWasteKg?.value || 0),
+    territoryId: (els.editParticipantTerritoryId?.value.trim() || previousUser.territoryId || null),
+    territoryLabel: (els.editParticipantTerritoryLabel?.value.trim() || previousUser.territoryLabel || ""),
     updatedAt: serverTimestamp(),
     updatedBy: STATE.user?.uid || null
   };
-
-  if (inTerritory === "sim") {
-    participantPayload.territoryId = manualTerritoryId || getMyTerritoryId() || null;
-    participantPayload.territoryLabel = manualTerritoryLabel || getMyTerritoryLabel() || "";
-  } else {
-    participantPayload.territoryId = null;
-    participantPayload.territoryLabel = "";
-  }
 
   const approvalRequestId =
     previousUser.linkedApprovalRequestId ||
@@ -1055,49 +1029,19 @@ async function saveUserForm(event) {
     previousUser.raw?.approvalRequestId ||
     null;
 
-  const approvalPayload = approvalRequestId
-    ? {
-        status:
-          status === "aprovado"
-            ? "approved"
-            : status === "inativo"
-              ? "rejected"
-              : "pending",
-        active: status === "pendente",
-        updatedAt: serverTimestamp(),
-        resolvedAt: status === "pendente" ? null : serverTimestamp(),
-        resolvedBy: status === "pendente" ? null : (STATE.user?.uid || null),
-        resolvedByName: status === "pendente" ? null : (STATE.userDoc?.name || STATE.userDoc?.nome || null)
-      }
-    : null;
-
-  const optimisticUser = {
-    ...previousUser,
-    name: participantPayload.name,
-    code: participantPayload.participantCode,
-    phone: participantPayload.phone,
-    status: normalizeStatus(participantPayload.approvalStatus),
-    inTerritory: yesNo(participantPayload.inTerritory),
-    inOperation: yesNo(participantPayload.inOperation),
-    territoryId: participantPayload.territoryId,
-    territoryLabel: participantPayload.territoryLabel,
-    schedule: participantPayload.schedule,
-    wasteKg: Number(participantPayload.wasteKg || 0),
-    address: participantPayload.enderecoCompleto || previousUser.address,
-    linkedApprovalRequestId: approvalRequestId,
-    geo: {
-      lat: toNumberOrNull(participantPayload.lat),
-      lng: toNumberOrNull(participantPayload.lng)
-    },
-    raw: {
-      ...previousUser.raw,
-      ...participantPayload
-    }
-  };
+  const approvalPayload = approvalRequestId ? {
+    status:
+      status === "aprovado" ? "approved" :
+      status === "inativo" ? "rejected" :
+      "pending",
+    active: status === "pendente",
+    updatedAt: serverTimestamp(),
+    resolvedAt: status === "pendente" ? null : serverTimestamp(),
+    resolvedBy: status === "pendente" ? null : (STATE.user?.uid || null),
+    resolvedByName: status === "pendente" ? null : (STATE.userDoc?.name || STATE.userDoc?.nome || null)
+  } : null;
 
   try {
-    replaceLocalUser(optimisticUser);
-
     const batch = writeBatch(db);
     batch.update(doc(db, "participants", id), participantPayload);
 
@@ -1120,20 +1064,8 @@ async function saveUserForm(event) {
 
     alert("Participante atualizado com sucesso.");
   } catch (error) {
-    console.error("Erro ao salvar participante:", error);
-    mergeParticipantsWithApprovals();
-
-    let msg = "Não foi possível salvar o participante.";
-
-    if (error?.code === "permission-denied") {
-      msg = "O Firestore recusou a gravação. Verifique as regras das coleções participants e approvalRequests.";
-    } else if (error?.code === "not-found") {
-      msg = "O documento do participante não foi encontrado para atualização.";
-    } else if (error?.message) {
-      msg = `Erro ao salvar: ${error.message}`;
-    }
-
-    alert(msg);
+    console.error(error);
+    alert("Não foi possível salvar a aprovação.");
   } finally {
     STATE.isSaving = false;
   }
@@ -1143,18 +1075,14 @@ async function handleDeleteUser(id) {
   const confirmed = window.confirm("Deseja realmente excluir este participante?");
   if (!confirmed) return;
 
-  const previousParticipants = [...STATE.participants];
-  const previousApprovals = [...STATE.approvalRequests];
-
   try {
-    removeLocalUser(id);
+    const user = STATE.users.find((u) => u.id === id);
 
-    const user = previousParticipants.find((u) => u.id === id);
     const approvalRequestId =
       user?.linkedApprovalRequestId ||
       user?.approvalRequestId ||
       user?.raw?.approvalRequestId ||
-      previousApprovals.find((req) => req.participantId === id)?.id ||
+      STATE.approvalRequests.find((req) => req.participantId === id)?.id ||
       null;
 
     const batch = writeBatch(db);
@@ -1165,23 +1093,11 @@ async function handleDeleteUser(id) {
     }
 
     await batch.commit();
+    removeLocalUser(id);
     alert("Participante excluído com sucesso.");
   } catch (error) {
-    console.error("Erro ao excluir participante:", error);
-
-    STATE.participants = previousParticipants;
-    STATE.approvalRequests = previousApprovals;
-    mergeParticipantsWithApprovals();
-
-    let msg = "Não foi possível excluir o participante.";
-
-    if (error?.code === "permission-denied") {
-      msg = "O Firestore recusou a exclusão. Verifique as regras das coleções participants e approvalRequests.";
-    } else if (error?.message) {
-      msg = `Erro ao excluir: ${error.message}`;
-    }
-
-    alert(msg);
+    console.error(error);
+    alert("Não foi possível excluir o participante.");
   }
 }
 
@@ -1191,25 +1107,17 @@ function startParticipantsListener() {
     STATE.unsubscribeParticipants = null;
   }
 
-  let ref;
-  try {
-    ref = getScopedCollectionQuery("participants");
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Não foi possível montar a consulta de participantes.");
-    return;
-  }
+  const ref = getScopedCollectionQuery("participants");
 
   STATE.unsubscribeParticipants = onSnapshot(
     ref,
     (snapshot) => {
       STATE.participants = snapshot.docs.map(mapParticipantDoc);
       mergeParticipantsWithApprovals();
-      console.log("Participantes carregados:", STATE.participants.length);
     },
     (error) => {
       console.error("Erro ao ouvir participants:", error);
-      alert("Não foi possível carregar os participantes em tempo real.");
+      alert("Não foi possível carregar os participantes.");
     }
   );
 }
@@ -1220,25 +1128,17 @@ function startApprovalRequestsListener() {
     STATE.unsubscribeApprovalRequests = null;
   }
 
-  let ref;
-  try {
-    ref = getScopedCollectionQuery("approvalRequests");
-  } catch (error) {
-    console.error(error);
-    alert(error.message || "Não foi possível montar a consulta de solicitações.");
-    return;
-  }
+  const ref = getScopedCollectionQuery("approvalRequests");
 
   STATE.unsubscribeApprovalRequests = onSnapshot(
     ref,
     (snapshot) => {
       STATE.approvalRequests = snapshot.docs.map(mapApprovalRequestDoc);
       mergeParticipantsWithApprovals();
-      console.log("Solicitações carregadas:", STATE.approvalRequests.length);
     },
     (error) => {
       console.error("Erro ao ouvir approvalRequests:", error);
-      alert("Não foi possível carregar as solicitações de aprovação em tempo real.");
+      alert("Não foi possível carregar as solicitações.");
     }
   );
 }
