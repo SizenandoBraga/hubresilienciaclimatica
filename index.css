@@ -337,6 +337,7 @@ p,span,small,li{
   overflow:hidden;
 }
 
+/* efeitos de fundo */
 .hero-premium::before{
   content:"";
   position:absolute;
@@ -361,19 +362,35 @@ p,span,small,li{
   pointer-events:none;
 }
 
+/* CONTAINER */
 .hero-shell{
   position:relative;
   z-index:1;
   padding:12px 0 10px;
 }
 
-.hero-copy{
-  max-width:980px;
+/* HERO DIVIDIDO */
+.hero-split{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:60px;
 }
 
+/* TEXTO */
+.hero-split .hero-copy{
+  flex:1;
+  max-width:640px;
+}
+
+/* REMOVE CONFLITO ANTIGO */
+.hero-copy{
+  width:100%;
+}
+
+/* TITULO */
 .hero-title{
   margin:0;
-  max-width:980px;
   font-size:clamp(2.5rem, 4.5vw, 4.4rem);
   line-height:1;
   letter-spacing:-.045em;
@@ -394,24 +411,18 @@ p,span,small,li{
   -webkit-text-fill-color:transparent;
   background-clip:text;
   color:transparent;
-  font-style:normal;
-  font-weight:700;
 }
 
+/* DESCRIÇÃO */
 .hero-description{
   max-width:72ch;
   margin:26px 0 0;
   font-size:18px;
   line-height:1.9;
   color:rgba(60,58,57,.86);
-  text-wrap:pretty;
 }
 
-.hero-description-justify{
-  text-align:justify;
-  text-justify:inter-word;
-}
-
+/* NOTA */
 .hero-bottom-note{
   margin-top:28px;
   padding:16px 0 0 18px;
@@ -424,11 +435,66 @@ p,span,small,li{
   font-style:normal;
 }
 
+/* IMAGEM */
+.hero-image{
+  flex:1;
+  display:flex;
+  justify-content:flex-end;
+  align-items:center;
+  position:relative;
+}
+
+.hero-image img{
+  width:100%;
+  max-width:520px;
+  height:auto;
+
+  border-radius:24px;
+  box-shadow:0 30px 80px rgba(0,0,0,.12);
+}
+
+/* glow decorativo */
+.hero-image::before{
+  content:"";
+  position:absolute;
+  width:300px;
+  height:300px;
+  background:radial-gradient(circle, rgba(129,185,42,.25), transparent 70%);
+  filter:blur(40px);
+  z-index:-1;
+}
+
+/* BOTÕES (se usar dentro do hero) */
 .hero .card-actions{
   display:flex;
   flex-wrap:wrap;
   gap:12px;
   margin-top:24px;
+}
+
+/* RESPONSIVO */
+@media (max-width:980px){
+  .hero-split{
+    flex-direction:column;
+    text-align:center;
+    gap:30px;
+  }
+
+  .hero-image{
+    justify-content:center;
+  }
+
+  .hero-image img{
+    max-width:360px;
+  }
+
+  .hero-title{
+    max-width:100%;
+  }
+
+  .hero-description{
+    max-width:100%;
+  }
 }
 /* SEÇÕES */
 
