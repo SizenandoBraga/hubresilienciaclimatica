@@ -10,7 +10,7 @@ import {
 ========================= */
 
 const CONFIG = {
-  territoryId: "crgr_vila_pinto",
+  territoryId: "vila-pinto",
   territoryLabel: "Centro de Triagem Vila Pinto",
   redirectAfterSuccess: "/vila-pinto.html",
   viacepBase: "https://viacep.com.br/ws",
