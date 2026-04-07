@@ -192,20 +192,35 @@ function getMyTerritoryId() {
   return STATE.userDoc?.territoryId || null;
 }
 
+function getMyTerritoryLabel() {
+  return STATE.userDoc?.territoryLabel || null;
+}
+
 function filterVisibleUsers(items) {
   if (canViewAllTerritories()) return items;
 
   const myTerritoryId = getMyTerritoryId();
-  if (!myTerritoryId) return items;
+  const myTerritoryLabel = getMyTerritoryLabel();
+
+  if (!myTerritoryId && !myTerritoryLabel) return items;
 
   return items.filter((item) => {
-    const territory =
+    const territoryId =
       item.territoryId ||
       item.raw?.territoryId ||
       item.raw?.applicantSnapshot?.territoryId ||
       null;
 
-    return sameTerritory(territory, myTerritoryId);
+    const territoryLabel =
+      item.territoryLabel ||
+      item.raw?.territoryLabel ||
+      item.raw?.applicantSnapshot?.territoryLabel ||
+      null;
+
+    if (myTerritoryId && territoryId && sameTerritory(territoryId, myTerritoryId)) return true;
+    if (myTerritoryLabel && territoryLabel && sameTerritory(territoryLabel, myTerritoryLabel)) return true;
+
+    return false;
   });
 }
 
@@ -213,7 +228,9 @@ function filterVisibleApprovalRequests(items) {
   if (canViewAllTerritories()) return items;
 
   const myTerritoryId = getMyTerritoryId();
-  if (!myTerritoryId) return items;
+  const myTerritoryLabel = getMyTerritoryLabel();
+
+  if (!myTerritoryId && !myTerritoryLabel) return items;
 
   return items.filter((item) => {
     const reqTerritoryId =
@@ -222,7 +239,21 @@ function filterVisibleApprovalRequests(items) {
       item.raw?.applicantSnapshot?.territoryId ||
       null;
 
-    return sameTerritory(reqTerritoryId, myTerritoryId);
+    const reqTerritoryLabel =
+      item.territoryLabel ||
+      item.raw?.territoryLabel ||
+      item.raw?.applicantSnapshot?.territoryLabel ||
+      null;
+
+    if (myTerritoryId && reqTerritoryId && sameTerritory(reqTerritoryId, myTerritoryId)) {
+      return true;
+    }
+
+    if (myTerritoryLabel && reqTerritoryLabel && sameTerritory(reqTerritoryLabel, myTerritoryLabel)) {
+      return true;
+    }
+
+    return false;
   });
 }
 
@@ -272,7 +303,9 @@ async function maybeRequestNotificationPermission() {
   if (Notification.permission === "default") {
     try {
       await Notification.requestPermission();
-    } catch (_err) {}
+    } catch (_err) {
+      // ignore
+    }
   }
 }
 
@@ -284,7 +317,9 @@ function notifyNewRequest(user) {
       new Notification("Nova solicitação de participação", {
         body: `${safeText(user.name)} • ${safeText(user.territoryLabel || user.territoryId)}`
       });
-    } catch (_err) {}
+    } catch (_err) {
+      // ignore
+    }
   }
 }
 
@@ -335,11 +370,11 @@ function mapApprovalRequestDoc(docSnap) {
   return {
     id: docSnap.id,
     participantId: data.participantId || null,
-    participantName: data.participantName || "",
-    participantCode: data.participantCode || "",
-    territoryId: data.territoryId || null,
-    territoryLabel: data.territoryLabel || "",
-    status: String(data.status || "pending").toLowerCase(),
+    participantName: data.participantName || data.name || data.applicantSnapshot?.name || "",
+    participantCode: data.participantCode || data.applicantSnapshot?.participantCode || "",
+    territoryId: data.territoryId || data.applicantSnapshot?.territoryId || null,
+    territoryLabel: data.territoryLabel || data.applicantSnapshot?.territoryLabel || "",
+    status: String(data.status || data.approvalStatus || "pending").toLowerCase().trim(),
     raw: data
   };
 }
@@ -379,7 +414,10 @@ function mergeUsers() {
   });
 
   const mergedFromRequests = STATE.approvalRequests
-    .filter((req) => !["rejected", "approved"].includes(String(req.status || "").toLowerCase()))
+    .filter((req) => {
+      const status = String(req.status || "").toLowerCase().trim();
+      return !["approved", "rejected"].includes(status);
+    })
     .map((req) => {
       const snapshot = req.raw?.applicantSnapshot || {};
       const snapshotAddress = snapshot.address || {};
@@ -423,7 +461,10 @@ function mergeUsers() {
 
   const pendingRequestIds = new Set(
     STATE.approvalRequests
-      .filter((req) => !["rejected", "approved"].includes(String(req.status || "").toLowerCase()))
+      .filter((req) => {
+        const status = String(req.status || "").toLowerCase().trim();
+        return !["approved", "rejected"].includes(status);
+      })
       .map((req) => req.id)
   );
 
@@ -1126,7 +1167,12 @@ async function loadApprovalsInitial() {
     }
 
     const allApprovals = snap.docs.map(mapApprovalRequestDoc);
-    STATE.approvalRequests = filterVisibleApprovalRequests(allApprovals);
+
+    STATE.approvalRequests = filterVisibleApprovalRequests(allApprovals).filter((req) => {
+      const status = String(req.status || "").toLowerCase().trim();
+      return !["approved", "rejected"].includes(status);
+    });
+
     mergeUsers();
   } catch (error) {
     console.error("Erro ao carregar approvalRequests:", error);
@@ -1170,7 +1216,9 @@ function startParticipantsListener() {
         await loadParticipantsInitial();
       }
     );
-  } catch (_error) {}
+  } catch (_error) {
+    // ignore
+  }
 }
 
 function startApprovalsListener() {
@@ -1202,17 +1250,18 @@ function startApprovalsListener() {
           if (!items.length) {
             try {
               const fallbackSnap = await getDocs(collection(db, "approvalRequests"));
-              const fallbackItems = fallbackSnap.docs.map(mapApprovalRequestDoc);
-              STATE.approvalRequests = filterVisibleApprovalRequests(fallbackItems);
-              mergeUsers();
-              return;
+              items = filterVisibleApprovalRequests(fallbackSnap.docs.map(mapApprovalRequestDoc));
             } catch (err) {
               console.warn("Fallback de approvalRequests falhou:", err);
             }
           }
         }
 
-        STATE.approvalRequests = items;
+        STATE.approvalRequests = items.filter((req) => {
+          const status = String(req.status || "").toLowerCase().trim();
+          return !["approved", "rejected"].includes(status);
+        });
+
         mergeUsers();
       },
       async (error) => {
