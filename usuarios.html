@@ -5,377 +5,383 @@
   <meta http-equiv="Content-Language" content="pt-BR" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Registro de Coletas • Núcleo de Soluções para Resíduos Urbanos</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
+  <title>NSRU • Gestão de usuários</title>
+  <meta name="theme-color" content="#81B92A" />
 
-  <link rel="stylesheet" href="cadastro-coletas.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <link rel="stylesheet" href="/usuarios.css" />
 </head>
 <body>
-  <div class="page-bg"></div>
-  <div class="page-noise"></div>
-
-  <header class="site-header">
-    <div class="site-header-inner">
-      <a class="site-brand" href="/index.html" aria-label="Ir para o início">
-        <div class="site-brand-mark">
-          <img src="/img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos">
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-wrap">
+          <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo" />
+         
         </div>
-        <div class="site-brand-copy">
-          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-          <span>Plataforma • Territórios & CRGR</span>
-        </div>
-      </a>
+      </div>
 
-      <nav class="site-nav" aria-label="Navegação principal">
-        <a href="/index.html">Início</a>
-        <a href="/html/cooperativa.html">Painel</a>
-        <a href="/html/cadastro-participantes-publico.html">Participantes</a>
-        <a class="is-active" href="/html/registro-coletas-fases.html">Coletas</a>
-        <a href="/html/dashboard-cooperativa.html">Dashboard</a>
+      <nav class="sidebar-nav">
+        <p class="nav-label">Menu</p>
+
+        <a href="/cooperativas.html" class="nav-link">
+          <span class="nav-ico">🏠</span>
+          <span>Painel inicial</span>
+        </a>
+
+        <a href="/usuarios.html" class="nav-link active">
+          <span class="nav-ico">👥</span>
+          <span>Usuários cadastrados</span>
+        </a>
+
+        <a href="/registro-coletas-fase.html" class="nav-link">
+          <span class="nav-ico">♻️</span>
+          <span>Registro de coletas</span>
+        </a>
+
+        <a href="/dashboard-cooperativa.html" class="nav-link">
+          <span class="nav-ico">📊</span>
+          <span>Dashboard da cooperativa</span>
+        </a>
       </nav>
 
-      <div class="site-header-actions">
-        <a class="site-login-btn" href="/vila-pinto.html">Voltar ao território →</a>
-      </div>
-    </div>
-  </header>
+      <div class="sidebar-bottom">
+        <p class="nav-label">Sessão</p>
 
-  <main class="page-shell">
-    <section class="wizard-header glass-card">
-      <div class="wizard-header-top">
-        <div>
-          <span class="page-badge">Operação territorial</span>
-          <h1>Registro de Coletas</h1>
-          <p>Registre recebimentos e fechamento de turno do território com os dados de operação, materiais e etiqueta final.</p>
-        </div>
+        <button class="nav-link nav-button" id="btnLogout" type="button">
+          <span class="nav-ico">↩</span>
+          <span>Sair</span>
+        </button>
 
-        <div class="wizard-meta">
-          <div class="wizard-meta-item">
-            <span class="wizard-meta-label">Status Firebase</span>
-            <strong id="dbStatus">conectando...</strong>
-          </div>
-          <div class="wizard-meta-item">
-            <span class="wizard-meta-label">Fluxo selecionado</span>
-            <strong id="flowStatus">—</strong>
-          </div>
+        <div class="sidebar-userbox">
+          <strong id="sidebarUserName">Carregando usuário...</strong>
+          <span id="sidebarTerritoryLabel">Carregando território...</span>
         </div>
       </div>
-    </section>
+    </aside>
 
-    <!-- ETAPA 1 -->
-    <section class="glass-card">
-      <div class="step-title-row">
-        <div>
-          <span class="step-badge">Etapa 1</span>
-          <h2>Dados iniciais da operação</h2>
+    <main class="main">
+      <header class="topbar">
+       
+
+        <div class="topbar-right">
+          <span class="status-pill status-green">🟢 Todos os territórios</span>
+          <span class="status-pill status-lime">🏢 Todas as cooperativas</span>
+          <span class="status-pill status-orange">🔐 Administrador</span>
+          <span class="status-pill status-purple">👤 Admin Governança</span>
         </div>
-      </div>
+      </header>
 
-      <form id="formOperacao" class="step-card-inner">
-        <div class="grid grid-2">
+      <section class="notice-banner">
+        <strong>Acesso administrativo ativo.</strong>
+        <span>
+          Você pode visualizar e editar dados de usuários, solicitações pendentes
+          e rotas operacionais da cooperativa.
+        </span>
+      </section>
+
+      <section class="hero-card">
+        <div class="hero-badge">Área de gestão da cooperativa</div>
+        <h1>Gestão de usuários, solicitações e rota de coleta</h1>
+        <p>
+          Acompanhe participantes cadastrados, aprove pedidos pendentes, visualize
+          os pontos de coleta no mapa e monte a rota da cooperativa até os locais.
+        </p>
+      </section>
+
+      <section class="kpi-grid">
+        <article class="kpi-card">
+          <span class="kpi-label">Total de participantes</span>
+          <strong class="kpi-value" id="kpiTotal">0</strong>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Pendentes</span>
+          <strong class="kpi-value" id="kpiPending">0</strong>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Em operação</span>
+          <strong class="kpi-value" id="kpiActive">0</strong>
+        </article>
+
+        <article class="kpi-card">
+          <span class="kpi-label">Com coordenadas</span>
+          <strong class="kpi-value" id="kpiGeo">0</strong>
+        </article>
+      </section>
+
+      <section class="filters-card">
+        <div class="filters-grid">
           <div class="field">
-            <label for="opDate">Data da operação <span>*</span></label>
-            <input type="date" id="opDate">
+            <label for="searchInput">Buscar participante</label>
+            <input id="searchInput" type="text" placeholder="Nome, código, telefone ou endereço" />
           </div>
 
           <div class="field">
-            <label for="participantCode">Código do participante <span>*</span></label>
-            <input type="text" id="participantCode" placeholder="Ex.: RB-ABC123 ou COND-ABC123">
+            <label for="statusFilter">Status</label>
+            <select id="statusFilter">
+              <option value="all">Todos</option>
+              <option value="pendente">Pendentes</option>
+              <option value="aprovado">Aprovados</option>
+              <option value="inativo">Inativos</option>
+            </select>
           </div>
 
-          <div class="field field-full">
-            <label>Fluxo da operação <span>*</span></label>
-            <div class="choice-grid choice-grid-2">
-              <button type="button" class="choice-card" data-flow="recebimento">
-                <strong>Recebimento</strong>
-                <span>entrada de material</span>
-              </button>
+          <div class="field">
+            <label for="operationFilter">Operação</label>
+            <select id="operationFilter">
+              <option value="all">Todos</option>
+              <option value="sim">Em operação</option>
+              <option value="nao">Fora da operação</option>
+            </select>
+          </div>
 
-              <button type="button" class="choice-card" data-flow="final_turno">
-                <strong>Registro final de turno</strong>
-                <span>fechamento consolidado</span>
-              </button>
+          <div class="field">
+            <label for="routeMode">Modo da rota</label>
+            <select id="routeMode">
+              <option value="approved">Apenas aprovados em operação</option>
+              <option value="allgeo">Todos com coordenadas</option>
+            </select>
+          </div>
+
+          <div class="field field-btn">
+            <label>&nbsp;</label>
+            <button class="btn btn-primary" id="btnReload" type="button">Atualizar dados</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="content-grid">
+        <div class="left-column">
+          <article class="panel-card">
+            <div class="panel-head">
+              <div>
+                <span class="section-kicker">Aprovação</span>
+                <h2>Solicitações pendentes</h2>
+              </div>
+              <span class="panel-count" id="pendingCountLabel">0 itens</span>
             </div>
-            <input type="hidden" id="flowType">
-          </div>
+            <div class="panel-list" id="pendingList"></div>
+          </article>
 
-          <div class="field field-full">
-            <label for="opNotes">Observações da operação</label>
-            <textarea id="opNotes" rows="3" placeholder="Informações complementares da operação..."></textarea>
-          </div>
-        </div>
-
-        <div class="step-actions">
-          <button type="button" class="btn-secondary" id="btnPreviewOperacao">Prévia</button>
-          <button type="submit" class="btn-primary">Salvar etapa inicial</button>
-        </div>
-
-        <div id="msgOperacao" class="msg"></div>
-      </form>
-    </section>
-
-    <!-- PAINEL RECEBIMENTO -->
-    <section id="panelRecebimento" class="glass-card hidden">
-      <div class="step-title-row">
-        <div>
-          <span class="step-badge">Etapa 2A</span>
-          <h2>Recebimento</h2>
-        </div>
-      </div>
-
-      <form id="formRecebimento" class="step-card-inner">
-        <div class="grid grid-2">
-          <div class="field field-full">
-            <label>Tipo de entrega <span>*</span></label>
-            <div class="choice-grid choice-grid-3">
-              <button type="button" class="choice-card" data-delivery="domiciliar">
-                <strong>Domiciliar</strong>
-                <span>coleta em residência</span>
-              </button>
-              <button type="button" class="choice-card" data-delivery="ponto">
-                <strong>Ponto de entrega</strong>
-                <span>entrega no ponto</span>
-              </button>
-              <button type="button" class="choice-card" data-delivery="institucional">
-                <strong>Institucional</strong>
-                <span>empresa / organização</span>
-              </button>
+          <article class="panel-card">
+            <div class="panel-head">
+              <div>
+                <span class="section-kicker">Operação</span>
+                <h2>Participantes em operação</h2>
+              </div>
+              <span class="panel-count" id="activeCountLabel">0 itens</span>
             </div>
-            <input type="hidden" id="deliveryType">
-          </div>
-
-          <div class="field">
-            <label for="familyCode">Código da família <span>*</span></label>
-            <input type="text" id="familyCode" placeholder="Ex.: 1234 ou RB-ABC123">
-          </div>
-
-          <div class="field">
-            <label for="pesoResiduoSecoKg">Peso do resíduo seco (kg) <span>*</span></label>
-            <input type="number" step="0.01" id="pesoResiduoSecoKg" placeholder="Ex.: 12.50">
-          </div>
-
-          <div class="field field-full">
-            <label>Qualidade do material <span>*</span></label>
-            <div class="choice-grid choice-grid-5">
-              <button type="button" class="quality-btn choice-card" data-quality="1">
-                <strong>1</strong>
-                <span>muito baixa</span>
-              </button>
-              <button type="button" class="quality-btn choice-card" data-quality="2">
-                <strong>2</strong>
-                <span>baixa</span>
-              </button>
-              <button type="button" class="quality-btn choice-card" data-quality="3">
-                <strong>3</strong>
-                <span>regular</span>
-              </button>
-              <button type="button" class="quality-btn choice-card" data-quality="4">
-                <strong>4</strong>
-                <span>boa</span>
-              </button>
-              <button type="button" class="quality-btn choice-card" data-quality="5">
-                <strong>5</strong>
-                <span>excelente</span>
-              </button>
-            </div>
-            <input type="hidden" id="qualidadeNota">
-          </div>
-
-          <div class="field">
-            <label for="pesoRejeitoKg">Peso de rejeito (kg) <span>*</span></label>
-            <input type="number" step="0.01" id="pesoRejeitoKg" placeholder="Ex.: 1.20">
-          </div>
-
-          <div class="field">
-            <label for="pesoNaoComercializadoKg">Peso não comercializado (kg) <span>*</span></label>
-            <input type="number" step="0.01" id="pesoNaoComercializadoKg" placeholder="Ex.: 0.80">
-          </div>
-
-          <div class="field field-full">
-            <label for="fotoResiduo">Fotos do resíduo <span>*</span></label>
-            <input type="file" id="fotoResiduo" accept="image/*" multiple>
-            <small>Campo obrigatório.</small>
-          </div>
-
-          <div class="field field-full">
-            <label for="fotoNaoComercializado">Fotos do material não comercializado</label>
-            <input type="file" id="fotoNaoComercializado" accept="image/*" multiple>
-          </div>
-
-          <div class="field field-full">
-            <label for="recebimentoObs">Observações do recebimento</label>
-            <textarea id="recebimentoObs" rows="4" placeholder="Descreva observações relevantes do recebimento..."></textarea>
-          </div>
+            <div class="panel-list" id="activeList"></div>
+          </article>
         </div>
 
-        <div class="step-actions">
-          <button type="button" class="btn-secondary" id="btnVoltarRecebimento">Voltar</button>
-          <button type="submit" class="btn-primary">Salvar coleta de recebimento</button>
-        </div>
+        <div class="right-column">
+          <article class="panel-card">
+            <div class="panel-head">
+              <div>
+                <span class="section-kicker">Mapa operacional</span>
+                <h2>Pontos de coleta e rota</h2>
+              </div>
 
-        <div id="msgRecebimento" class="msg"></div>
-      </form>
-    </section>
-
-    <!-- PAINEL FINAL DO TURNO -->
-    <section id="panelFinalTurno" class="glass-card hidden">
-      <div class="step-title-row">
-        <div>
-          <span class="step-badge">Etapa 2B</span>
-          <h2>Registro final de turno</h2>
-        </div>
-      </div>
-
-      <form id="formFinalTurno" class="step-card-inner">
-        <div class="grid grid-2">
-          <div class="field field-full">
-            <label>Tipo de entrega <span>*</span></label>
-            <div class="choice-grid choice-grid-3">
-              <button type="button" class="choice-card" data-delivery="domiciliar">
-                <strong>Domiciliar</strong>
-                <span>coleta em residência</span>
-              </button>
-              <button type="button" class="choice-card" data-delivery="ponto">
-                <strong>Ponto de entrega</strong>
-                <span>entrega no ponto</span>
-              </button>
-              <button type="button" class="choice-card" data-delivery="institucional">
-                <strong>Institucional</strong>
-                <span>empresa / organização</span>
-              </button>
-            </div>
-            <input type="hidden" id="deliveryType">
-          </div>
-
-          <div class="field hidden" id="condCodeWrap">
-            <label for="condCode">Código do condomínio <span>*</span></label>
-            <input type="text" id="condCode" placeholder="Ex.: COND-ABC123">
-          </div>
-
-          <div class="field">
-            <label for="pesoRejeitoGeralKg">Peso geral de rejeito (kg) <span>*</span></label>
-            <input type="number" step="0.01" id="pesoRejeitoGeralKg" placeholder="Ex.: 12.00">
-          </div>
-
-          <div class="field">
-            <label for="plasticoKg">Plástico (kg)</label>
-            <input type="number" step="0.01" id="plasticoKg" placeholder="0.00">
-          </div>
-
-          <div class="field">
-            <label for="papelMistoKg">Papel misto (kg)</label>
-            <input type="number" step="0.01" id="papelMistoKg" placeholder="0.00">
-          </div>
-
-          <div class="field">
-            <label for="papelaoKg">Papelão (kg)</label>
-            <input type="number" step="0.01" id="papelaoKg" placeholder="0.00">
-          </div>
-
-          <div class="field">
-            <label for="aluminioMetalKg">Alumínio / metal (kg)</label>
-            <input type="number" step="0.01" id="aluminioMetalKg" placeholder="0.00">
-          </div>
-
-          <div class="field">
-            <label for="vidroKg">Vidro (kg)</label>
-            <input type="number" step="0.01" id="vidroKg" placeholder="0.00">
-          </div>
-
-          <div class="field">
-            <label for="sacariaKg">Sacaria (kg)</label>
-            <input type="number" step="0.01" id="sacariaKg" placeholder="0.00">
-          </div>
-
-          <div class="field">
-            <label for="isoporKg">Isopor (kg)</label>
-            <input type="number" step="0.01" id="isoporKg" placeholder="0.00">
-          </div>
-
-          <div class="field">
-            <label for="oleoKg">Óleo (kg)</label>
-            <input type="number" step="0.01" id="oleoKg" placeholder="0.00">
-          </div>
-
-          <div class="field field-full">
-            <label>Materiais extras</label>
-            <div id="extrasWrap" class="extras-wrap">
-              <div class="extra-row">
-                <input type="text" class="extra-name" placeholder="Nome do material">
-                <input type="number" step="0.01" class="extra-weight" placeholder="kg">
-                <button type="button" class="remove-extra">Remover</button>
+              <div class="panel-actions">
+                <button class="btn btn-ghost" id="btnCenterBase" type="button">Centralizar base</button>
+                <button class="btn btn-dark" id="btnBuildRoute" type="button">Montar rota</button>
               </div>
             </div>
-            <button type="button" class="btn-secondary" id="btnAddExtra">Adicionar material</button>
-          </div>
 
-          <div class="field field-full">
-            <label for="fotoFinalTurno">Fotos do fechamento</label>
-            <input type="file" id="fotoFinalTurno" accept="image/*" multiple>
-            <div id="previewFinalTurno" class="preview-grid"></div>
-          </div>
+            <div class="info-pills">
+              <span class="info-pill" id="baseInfo">Base da cooperativa: carregando...</span>
+              <span class="info-pill" id="routeInfo">Rota: aguardando dados...</span>
+            </div>
+
+            <div id="usersMap"></div>
+
+            <div class="map-stats">
+              <div class="map-stat">
+                <strong id="mapPointsCount">0</strong>
+                <span>Pontos no mapa</span>
+              </div>
+
+              <div class="map-stat">
+                <strong id="routeDistance">0 km</strong>
+                <span>Distância estimada</span>
+              </div>
+
+              <div class="map-stat">
+                <strong id="routeDuration">0 min</strong>
+                <span>Tempo estimado</span>
+              </div>
+            </div>
+
+            <div class="route-status" id="routeStatus">
+              Aguardando pontos suficientes para montar a rota.
+            </div>
+          </article>
         </div>
+      </section>
 
-        <div class="step-actions">
-          <button type="button" class="btn-secondary" id="btnVoltarFinalTurno">Voltar</button>
-          <button type="submit" class="btn-primary">Salvar registro final do turno</button>
-        </div>
-
-        <div id="msgFinalTurno" class="msg"></div>
-      </form>
-    </section>
-  </main>
-
-  <!-- MODAL ETIQUETA -->
-  <div id="labelModal" class="success-modal hidden" aria-hidden="true">
-    <div id="labelModalBackdrop" class="success-modal-backdrop"></div>
-
-    <div class="success-modal-card label-modal-card" role="dialog" aria-modal="true" aria-labelledby="labelModalTitle">
-      <div class="success-modal-icon">🏷️</div>
-      <h3 id="labelModalTitle">Etiqueta gerada com sucesso</h3>
-
-      <div class="label-card-print">
-        <div class="label-header">
-          <img src="/img/NSRU - Logo-Preto.png" alt="NSRU" class="label-logo">
+      <section class="panel-card">
+        <div class="panel-head">
           <div>
-            <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-            <p>Cartão de identificação da coleta</p>
+            <span class="section-kicker">Base geral</span>
+            <h2>Todos os usuários cadastrados</h2>
+          </div>
+          <span class="panel-count" id="tableCountLabel">0 registros</span>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Participante</th>
+                <th>Status</th>
+                <th>Operação</th>
+                <th>Território</th>
+                <th>Endereço</th>
+                <th>Coordenadas</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="7">Carregando participantes...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal hidden" id="userModal" aria-hidden="true">
+    <div class="modal-backdrop" id="userModalBackdrop"></div>
+
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="userModalTitle">
+      <div class="modal-head">
+        <div>
+          <h3 id="userModalTitle">Detalhes do participante</h3>
+          <p id="userModalSubtitle">Visualização, aprovação e edição operacional</p>
+        </div>
+
+        <button class="modal-close" id="closeUserModal" type="button" aria-label="Fechar">✕</button>
+      </div>
+
+      <form id="userModalForm">
+        <div class="modal-body">
+          <div class="status-note" id="userModalStatusNote">
+            Carregando dados do participante.
+          </div>
+
+          <input type="hidden" id="modalUserId" />
+          <input type="hidden" id="modalApprovalRequestId" />
+
+          <div class="modal-grid">
+            <div class="field">
+              <label for="modalUserName">Nome</label>
+              <input id="modalUserName" type="text" />
+            </div>
+
+            <div class="field">
+              <label for="modalUserCode">Código</label>
+              <input id="modalUserCode" type="text" />
+            </div>
+
+            <div class="field">
+              <label for="modalUserPhone">Telefone</label>
+              <input id="modalUserPhone" type="text" />
+            </div>
+
+            <div class="field">
+              <label for="modalUserStatus">Status</label>
+              <select id="modalUserStatus">
+                <option value="pendente">Pendente</option>
+                <option value="aprovado">Aprovado</option>
+                <option value="inativo">Inativo</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="modal-grid">
+            <div class="field">
+              <label for="modalOperation">Operação</label>
+              <select id="modalOperation">
+                <option value="nao">Fora da operação</option>
+                <option value="sim">Em operação</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="modalTerritoryLabel">Território</label>
+              <input id="modalTerritoryLabel" type="text" />
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="modalAddress">Endereço</label>
+            <textarea id="modalAddress"></textarea>
+          </div>
+
+          <div class="modal-grid-3">
+            <div class="field">
+              <label for="modalLat">Latitude</label>
+              <input id="modalLat" type="number" step="any" />
+            </div>
+
+            <div class="field">
+              <label for="modalLng">Longitude</label>
+              <input id="modalLng" type="number" step="any" />
+            </div>
+
+            <div class="field">
+              <label for="modalInOperationHint">Rota</label>
+              <input id="modalInOperationHint" type="text" disabled />
+            </div>
+          </div>
+
+          <div class="info-box">
+            <strong>Solicitação</strong>
+            <div id="modalRequestInfo">Sem solicitação vinculada.</div>
           </div>
         </div>
 
-        <div class="label-main">
-          <div class="label-info">
-            <div class="label-line">
-              <span>Código</span>
-              <strong id="labelFamilyCode">—</strong>
-            </div>
-            <div class="label-line">
-              <span>Data</span>
-              <strong id="labelDate">—</strong>
-            </div>
+        <div class="modal-actions">
+          <div class="modal-actions-left">
+            <button class="btn btn-ghost" type="button" id="modalFocusMap">Ver no mapa</button>
+            <button class="btn btn-ghost" type="button" id="modalCloseBtn">Fechar</button>
           </div>
 
-          <div class="label-qr">
-            <div id="qrcode"></div>
+          <div class="modal-actions-right">
+            <button class="btn btn-danger" type="button" id="modalRejectBtn">Rejeitar</button>
+            <button class="btn btn-success" type="button" id="modalApproveBtn">Aprovar</button>
+            <button class="btn btn-primary" type="submit" id="modalSaveBtn">Salvar</button>
           </div>
         </div>
-      </div>
-
-      <div class="success-modal-actions">
-        <button type="button" class="btn-secondary" id="btnPrintLabel">Imprimir</button>
-        <button type="button" class="btn-primary" id="btnCloseLabelModal">Fechar</button>
-      </div>
-
-      <div class="success-modal-actions">
-        <button type="button" class="btn-secondary" id="btnCloseLabelModalFooter">Voltar</button>
-      </div>
+      </form>
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-  <script type="module" src="cadastro-coletas.js"></script>
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script type="module" src="/usuarios.js"></script>
 </body>
 </html>
