@@ -112,11 +112,9 @@ function isValidCoord(lat, lng) {
 
 function normalizeStatus(value) {
   const raw = String(value || "").toLowerCase().trim();
-
   if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) return "pendente";
   if (["approved", "aprovado", "active", "ativo"].includes(raw)) return "aprovado";
   if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) return "inativo";
-
   return "pendente";
 }
 
