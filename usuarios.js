@@ -198,7 +198,32 @@ function filterVisibleUsers(items) {
   const myTerritoryId = getMyTerritoryId();
   if (!myTerritoryId) return items;
 
-  return items.filter((item) => sameTerritory(item.territoryId, myTerritoryId));
+  return items.filter((item) => {
+    const territory =
+      item.territoryId ||
+      item.raw?.territoryId ||
+      item.raw?.applicantSnapshot?.territoryId ||
+      null;
+
+    return sameTerritory(territory, myTerritoryId);
+  });
+}
+
+function filterVisibleApprovalRequests(items) {
+  if (canViewAllTerritories()) return items;
+
+  const myTerritoryId = getMyTerritoryId();
+  if (!myTerritoryId) return items;
+
+  return items.filter((item) => {
+    const reqTerritoryId =
+      item.territoryId ||
+      item.raw?.territoryId ||
+      item.raw?.applicantSnapshot?.territoryId ||
+      null;
+
+    return sameTerritory(reqTerritoryId, myTerritoryId);
+  });
 }
 
 function ensureToast() {
@@ -354,7 +379,7 @@ function mergeUsers() {
   });
 
   const mergedFromRequests = STATE.approvalRequests
-    .filter((req) => String(req.status || "").toLowerCase() !== "rejected")
+    .filter((req) => !["rejected", "approved"].includes(String(req.status || "").toLowerCase()))
     .map((req) => {
       const snapshot = req.raw?.applicantSnapshot || {};
       const snapshotAddress = snapshot.address || {};
@@ -367,12 +392,6 @@ function mergeUsers() {
         participantByPhone.get(onlyDigits(req.raw?.phone || snapshot.phone || "")) ||
         null;
 
-      const requestStatus = String(req.status || "pending").toLowerCase();
-
-      let status = "pendente";
-      if (requestStatus === "approved") status = "aprovado";
-      if (requestStatus === "rejected") status = "inativo";
-
       return {
         id: participant?.id || req.participantId || `approval_${req.id}`,
         linkedApprovalRequestId: req.id,
@@ -384,10 +403,10 @@ function mergeUsers() {
         cpf: participant?.cpf || snapshot.cpf || "",
         territoryId: participant?.territoryId || req.territoryId || snapshot.territoryId || null,
         territoryLabel: participant?.territoryLabel || req.territoryLabel || snapshot.territoryLabel || "",
-        status,
-        rawStatus: participant?.rawStatus || status,
-        approvalStatus: participant?.approvalStatus || requestStatus,
-        inOperation: status === "aprovado" ? (participant?.inOperation || "sim") : "nao",
+        status: "pendente",
+        rawStatus: participant?.rawStatus || "pendente",
+        approvalStatus: participant?.approvalStatus || "pending",
+        inOperation: "nao",
         inTerritory: participant?.inTerritory || (req.territoryId || snapshot.territoryId ? "sim" : "nao"),
         address:
           participant?.address ||
@@ -402,12 +421,16 @@ function mergeUsers() {
       };
     });
 
-  const requestIds = new Set(STATE.approvalRequests.map((req) => req.id));
+  const pendingRequestIds = new Set(
+    STATE.approvalRequests
+      .filter((req) => !["rejected", "approved"].includes(String(req.status || "").toLowerCase()))
+      .map((req) => req.id)
+  );
 
   const standaloneParticipants = STATE.participants
     .filter((participant) => {
       if (participant.status === "inativo") return false;
-      if (participant.approvalRequestId && requestIds.has(participant.approvalRequestId)) return false;
+      if (participant.approvalRequestId && pendingRequestIds.has(participant.approvalRequestId)) return false;
       return true;
     })
     .map((participant) => ({
@@ -867,6 +890,9 @@ async function approveUser(userId) {
 
     closeUserModal();
     showToast("Participante aprovado com sucesso.");
+
+    await loadApprovalsInitial();
+    await loadParticipantsInitial();
   } catch (error) {
     console.error("Erro ao aprovar usuário:", error);
     alert(
@@ -915,6 +941,9 @@ async function rejectUser(userId) {
     await batch.commit();
     closeUserModal();
     showToast("Solicitação rejeitada.");
+
+    await loadApprovalsInitial();
+    await loadParticipantsInitial();
   } catch (error) {
     console.error("Erro ao rejeitar usuário:", error);
     alert(
@@ -1035,6 +1064,9 @@ async function saveModalUserChanges() {
 
     closeUserModal();
     showToast("Alterações salvas.");
+
+    await loadApprovalsInitial();
+    await loadParticipantsInitial();
   } catch (error) {
     console.error("Erro ao salvar alterações:", error);
     alert("Não foi possível salvar as alterações do participante.");
@@ -1051,15 +1083,19 @@ async function loadParticipantsInitial() {
       const myTerritoryId = getMyTerritoryId();
 
       if (myTerritoryId) {
-        snap = await getDocs(
-          query(collection(db, "participants"), where("territoryId", "==", myTerritoryId))
-        );
+        try {
+          snap = await getDocs(
+            query(collection(db, "participants"), where("territoryId", "==", myTerritoryId))
+          );
+        } catch (_err) {
+          snap = await getDocs(collection(db, "participants"));
+        }
       } else {
         snap = await getDocs(collection(db, "participants"));
       }
     }
 
-    STATE.participants = snap.docs.map(mapParticipantDoc);
+    STATE.participants = filterVisibleUsers(snap.docs.map(mapParticipantDoc));
     mergeUsers();
   } catch (error) {
     console.error("Erro ao carregar participants:", error);
@@ -1068,23 +1104,29 @@ async function loadParticipantsInitial() {
 
 async function loadApprovalsInitial() {
   try {
-    let snap;
+    let snap = null;
+    const myTerritoryId = getMyTerritoryId();
 
     if (canViewAllTerritories()) {
       snap = await getDocs(collection(db, "approvalRequests"));
-    } else {
-      const myTerritoryId = getMyTerritoryId();
-
-      if (myTerritoryId) {
+    } else if (myTerritoryId) {
+      try {
         snap = await getDocs(
           query(collection(db, "approvalRequests"), where("territoryId", "==", myTerritoryId))
         );
-      } else {
+      } catch (err) {
+        console.warn("Query filtrada de approvalRequests falhou, usando fallback:", err);
+      }
+
+      if (!snap || snap.empty) {
         snap = await getDocs(collection(db, "approvalRequests"));
       }
+    } else {
+      snap = await getDocs(collection(db, "approvalRequests"));
     }
 
-    STATE.approvalRequests = snap.docs.map(mapApprovalRequestDoc);
+    const allApprovals = snap.docs.map(mapApprovalRequestDoc);
+    STATE.approvalRequests = filterVisibleApprovalRequests(allApprovals);
     mergeUsers();
   } catch (error) {
     console.error("Erro ao carregar approvalRequests:", error);
@@ -1105,8 +1147,23 @@ function startParticipantsListener() {
 
     STATE.unsubParticipants = onSnapshot(
       ref,
-      (snapshot) => {
-        STATE.participants = snapshot.docs.map(mapParticipantDoc);
+      async (snapshot) => {
+        let items = snapshot.docs.map(mapParticipantDoc);
+
+        if (!canViewAllTerritories()) {
+          items = filterVisibleUsers(items);
+
+          if (!items.length && myTerritoryId) {
+            try {
+              const fallbackSnap = await getDocs(collection(db, "participants"));
+              items = filterVisibleUsers(fallbackSnap.docs.map(mapParticipantDoc));
+            } catch (err) {
+              console.warn("Fallback de participants falhou:", err);
+            }
+          }
+        }
+
+        STATE.participants = items;
         mergeUsers();
       },
       async (_error) => {
@@ -1124,21 +1181,48 @@ function startApprovalsListener() {
 
   try {
     const myTerritoryId = getMyTerritoryId();
-    const ref = canViewAllTerritories() || !myTerritoryId
-      ? collection(db, "approvalRequests")
-      : query(collection(db, "approvalRequests"), where("territoryId", "==", myTerritoryId));
+    let ref = null;
+
+    if (canViewAllTerritories()) {
+      ref = collection(db, "approvalRequests");
+    } else if (myTerritoryId) {
+      ref = query(collection(db, "approvalRequests"), where("territoryId", "==", myTerritoryId));
+    } else {
+      ref = collection(db, "approvalRequests");
+    }
 
     STATE.unsubApprovals = onSnapshot(
       ref,
-      (snapshot) => {
-        STATE.approvalRequests = snapshot.docs.map(mapApprovalRequestDoc);
+      async (snapshot) => {
+        let items = snapshot.docs.map(mapApprovalRequestDoc);
+
+        if (!canViewAllTerritories()) {
+          items = filterVisibleApprovalRequests(items);
+
+          if (!items.length) {
+            try {
+              const fallbackSnap = await getDocs(collection(db, "approvalRequests"));
+              const fallbackItems = fallbackSnap.docs.map(mapApprovalRequestDoc);
+              STATE.approvalRequests = filterVisibleApprovalRequests(fallbackItems);
+              mergeUsers();
+              return;
+            } catch (err) {
+              console.warn("Fallback de approvalRequests falhou:", err);
+            }
+          }
+        }
+
+        STATE.approvalRequests = items;
         mergeUsers();
       },
-      async (_error) => {
+      async (error) => {
+        console.warn("Listener approvalRequests falhou, usando carga inicial:", error);
         await loadApprovalsInitial();
       }
     );
-  } catch (_error) {}
+  } catch (error) {
+    console.warn("Erro ao iniciar listener de approvalRequests:", error);
+  }
 }
 
 async function loadCurrentUser(uid) {
