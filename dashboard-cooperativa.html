@@ -49,10 +49,19 @@
           </h3>
 
           <div class="field">
-            <div class="label">Território</div>
-            <select id="fTerritorio">
-              <option value="__all__">Todos</option>
-            </select>
+            <div class="label">Código do participante</div>
+            <input id="fParticipantCode" type="text" placeholder="Ex.: RB-ABC123 ou COND-ABC123" />
+          </div>
+
+          <div class="quick-participant-preview hidden" id="quickParticipantPreview">
+            <div class="quick-participant-title">Cadastro localizado</div>
+            <div class="quick-participant-grid">
+              <div><strong>Nome:</strong> <span id="quickParticipantName">—</span></div>
+              <div><strong>Código:</strong> <span id="quickParticipantCode">—</span></div>
+              <div><strong>Tipo:</strong> <span id="quickParticipantType">—</span></div>
+              <div><strong>Status:</strong> <span id="quickParticipantStatus">—</span></div>
+              <div class="full"><strong>Endereço:</strong> <span id="quickParticipantAddress">—</span></div>
+            </div>
           </div>
 
           <div class="field">
@@ -90,14 +99,13 @@
               <option value="code">Código</option>
               <option value="creator">Criado por</option>
               <option value="obs">Observação</option>
-              <option value="territory">Território</option>
               <option value="delivery">Entrega</option>
               <option value="flow">Fluxo</option>
             </select>
           </div>
 
           <div class="field">
-            <div class="label">Busca rápida</div>
+            <div class="label">Busca complementar</div>
             <input id="fBusca" type="text" placeholder="digite para localizar registros..." />
           </div>
 
@@ -368,11 +376,7 @@
               <div class="reject-kg" id="k_naoComercializadoKg">0 kg</div>
             </div>
 
-            <div class="other-card">
-              <div class="other-title">Outro</div>
-              <div class="other-value" id="k_outroKg">0 kg</div>
-              <div class="other-label">Óleo de cozinha</div>
-            </div>
+          
           </div>
         </div>
       </section>
@@ -466,48 +470,162 @@
       </section>
 
       <!-- SEÇÃO 6 -->
-      <section class="panel">
-        <div class="panel-inner">
-          <div class="panel-head">
-            <div class="hgroup">
-              <h2>Seção 6 • Tabela de coletas</h2>
-              <p>Lista completa dos registros recebidos do formulário de coletas.</p>
-            </div>
-          </div>
+     <section class="panel">
+  <div class="panel-inner">
+    <div class="panel-head">
+      <div class="hgroup">
+        <h2>Seção 6 • Tabela de coletas</h2>
+        <p>
+          Visualização detalhada dos registros com filtros rápidos, leitura operacional
+          e geração de etiqueta da coleta.
+        </p>
+      </div>
+    </div>
 
-          <div class="table-toolbar">
-            <div class="table-toolbar-info">
-              <span class="toolbar-badge">📋 Lista operacional</span>
-              <span class="toolbar-badge">✏️ Edição ativa</span>
-              <span class="toolbar-badge">🛑 Cancelamento controlado</span>
-            </div>
-          </div>
-
-          <div class="table-wrap">
-            <table id="tbl">
-              <thead>
-                <tr>
-                  <th>Data</th>
-                  <th>Território</th>
-                  <th>Participante</th>
-                  <th>Código</th>
-                  <th>Fluxo</th>
-                  <th>Entrega</th>
-                  <th>Criado por</th>
-                  <th>Resíduo seco</th>
-                  <th>Não comerc.</th>
-                  <th>Rejeito</th>
-                  <th>Qualidade</th>
-                  <th>Foto</th>
-                  <th>Status</th>
-                  <th>Ações</th>
-                </tr>
-              </thead>
-              <tbody id="tableColetasBody"></tbody>
-            </table>
-          </div>
+    <div class="table-section-pro">
+      <div class="table-summary-cards">
+        <div class="mini-summary-card">
+          <span class="mini-summary-label">Registros visíveis</span>
+          <strong id="tableVisibleCount">0</strong>
         </div>
-      </section>
+        <div class="mini-summary-card">
+          <span class="mini-summary-label">Filtrados na tabela</span>
+          <strong id="tableFilteredCount">0</strong>
+        </div>
+        <div class="mini-summary-card">
+          <span class="mini-summary-label">Última atualização</span>
+          <strong id="tableLastUpdate">—</strong>
+        </div>
+      </div>
+
+      <div class="table-filters-pro">
+        <div class="table-filter-field search">
+          <label for="tSearch">Busca na tabela</label>
+          <input
+            id="tSearch"
+            type="text"
+            placeholder="participante, código, observação, material..."
+          />
+        </div>
+
+        <div class="table-filter-field">
+          <label for="tFluxo">Fluxo</label>
+          <select id="tFluxo">
+            <option value="__all__">Todos</option>
+            <option value="recebimento">Recebimento</option>
+            <option value="final_turno">Final do turno</option>
+          </select>
+        </div>
+
+        <div class="table-filter-field">
+          <label for="tEntrega">Entrega</label>
+          <select id="tEntrega">
+            <option value="__all__">Todas</option>
+          </select>
+        </div>
+
+        <div class="table-filter-field">
+          <label for="tStatus">Status</label>
+          <select id="tStatus">
+            <option value="__all__">Todos</option>
+            <option value="ativo">Ativo</option>
+            <option value="editado">Editado</option>
+            <option value="cancelado">Cancelado</option>
+          </select>
+        </div>
+
+        <div class="table-filter-field">
+          <label for="tTipoCadastro">Tipo cadastro</label>
+          <select id="tTipoCadastro">
+            <option value="__all__">Todos</option>
+            <option value="participante">Participante</option>
+            <option value="condominio">Condomínio</option>
+            <option value="comercio">Comércio</option>
+            <option value="outro">Outro</option>
+          </select>
+        </div>
+
+        <div class="table-filter-actions">
+          <button type="button" class="btn btn-primary" id="btnApplyTableFilters">Filtrar tabela</button>
+          <button type="button" class="btn btn-ghost" id="btnClearTableFilters">Limpar tabela</button>
+        </div>
+      </div>
+
+      <div class="table-with-label-layout">
+        <div class="table-wrap table-wrap-pro">
+          <table id="tbl" class="table-pro">
+            
+       <thead>
+  <tr>
+    <th>Data</th>
+    <th>Participante</th>
+    <th>Código</th>
+    <th>Tipo de recebimento</th>
+    <th>Status</th>
+    <th>Detalhes</th>
+    <th>Ações</th>
+  </tr>
+</thead>
+            
+            <tbody id="tableColetasBody"></tbody>
+          </table>
+        </div>
+
+        <aside class="label-generator-card">
+          <div class="label-generator-head">
+            <h3>Etiqueta da coleta</h3>
+            <p>Selecione um registro da tabela para gerar a etiqueta.</p>
+          </div>
+
+          <div class="label-preview-card" id="collectionLabelPreview">
+            <div class="label-preview-brand">
+              <img src="img/NSRU - Logo-Preto.png" alt="NSRU">
+              <div>
+                <strong>NSRU</strong>
+                <span>Etiqueta operacional</span>
+              </div>
+            </div>
+
+            <div class="label-preview-body">
+              <div class="label-preview-line">
+                <span>Participante</span>
+                <strong id="labelParticipantName">—</strong>
+              </div>
+
+              <div class="label-preview-line">
+                <span>Código</span>
+                <strong id="labelParticipantCode">—</strong>
+              </div>
+
+              <div class="label-preview-line">
+                <span>Data</span>
+                <strong id="labelCollectionDate">—</strong>
+              </div>
+
+              <div class="label-preview-line">
+                <span>Fluxo</span>
+                <strong id="labelCollectionFlow">—</strong>
+              </div>
+
+              <div class="label-qr-wrap">
+                <div id="collectionLabelQr"></div>
+              </div>
+
+              <div class="label-preview-note">
+                QR Code com acesso rápido ao dashboard filtrado pelo código do participante.
+              </div>
+            </div>
+          </div>
+
+          <div class="label-generator-actions">
+            <button type="button" class="btn btn-primary" id="btnGenerateCollectionLabel">Gerar etiqueta</button>
+            <button type="button" class="btn btn-orange" id="btnPrintCollectionLabel">Imprimir etiqueta</button>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</section>
 
       <div class="foot">© <span id="year"></span> • NSRU • Dashboard de Coletas</div>
     </main>
