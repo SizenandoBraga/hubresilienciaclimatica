@@ -17,6 +17,14 @@ const CONFIG = {
   nominatimBase: "https://nominatim.openstreetmap.org/search"
 };
 
+function getCanonicalTerritoryId() {
+  return CONFIG.territoryId;
+}
+
+function getCanonicalTerritoryLabel() {
+  return CONFIG.territoryLabel;
+}
+
 /* =========================
    STATE
 ========================= */
@@ -27,6 +35,8 @@ const STATE = {
   localType: "casa",
   registerType: "participante",
   generatedCode: "",
+  isSubmitting: false,
+  geoRequestId: 0,
   geo: {
     lat: null,
     lng: null,
@@ -117,7 +127,9 @@ function setLoading(button, isLoading, loadingText = "Salvando...") {
   if (!button) return;
 
   if (isLoading) {
-    button.dataset.originalText = button.textContent;
+    if (!button.dataset.originalText) {
+      button.dataset.originalText = button.textContent;
+    }
     button.disabled = true;
     button.textContent = loadingText;
   } else {
@@ -145,10 +157,7 @@ function formatPhone(value = "") {
 
   if (digits.length <= 2) return digits;
   if (digits.length <= 7) return `(${digits.slice(0, 2)}) ${digits.slice(2)}`;
-  if (digits.length <= 11) {
-    return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
-  }
-  return digits;
+  return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
 function formatCPF(value = "") {
@@ -209,8 +218,7 @@ function generateCondominiumCode() {
 }
 
 function getRegisterTypeByLocalType(localType) {
-  if (localType === "condominio") return "condominio";
-  return "participante";
+  return localType === "condominio" ? "condominio" : "participante";
 }
 
 function updateGeoPreview() {
@@ -225,6 +233,15 @@ function updateGeoPreview() {
       els.latLngPreview.textContent = "ainda não calculado";
     }
   }
+}
+
+function resetGeo() {
+  STATE.geo = {
+    lat: null,
+    lng: null,
+    addressLabel: ""
+  };
+  updateGeoPreview();
 }
 
 function setRegisterType(registerType, regenerate = true) {
@@ -426,16 +443,11 @@ function validateStep4() {
 
 function validateCurrentStep() {
   switch (STATE.currentStep) {
-    case 1:
-      return validateStep1();
-    case 2:
-      return validateStep2();
-    case 3:
-      return validateStep3();
-    case 4:
-      return validateStep4();
-    default:
-      return true;
+    case 1: return validateStep1();
+    case 2: return validateStep2();
+    case 3: return validateStep3();
+    case 4: return validateStep4();
+    default: return true;
   }
 }
 
@@ -445,18 +457,18 @@ function validateCurrentStep() {
 
 async function fetchCEP(cep) {
   const cleanCep = onlyDigits(cep);
-  if (cleanCep.length !== 8) {
-    throw new Error("CEP inválido.");
-  }
+  if (cleanCep.length !== 8) throw new Error("CEP inválido.");
 
   const url = `${CONFIG.viacepBase}/${cleanCep}/json/`;
   const response = await fetch(url);
-  const data = await response.json();
 
-  if (data.erro) {
-    throw new Error("CEP não encontrado.");
+  if (!response.ok) {
+    throw new Error("Falha ao consultar o CEP.");
   }
 
+  const data = await response.json();
+
+  if (data.erro) throw new Error("CEP não encontrado.");
   return data;
 }
 
@@ -468,16 +480,14 @@ async function geocodeAddress() {
   const state = String(els.state?.value || "").trim();
   const cep = onlyDigits(els.cep?.value);
 
-  if (!street || !number || !city || !state) {
-    return null;
-  }
+  if (!street || !number || !city || !state) return null;
 
-  const query = `${street}, ${number}, ${neighborhood}, ${city}, ${state}, Brasil, ${cep}`;
+  const queryText = `${street}, ${number}, ${neighborhood}, ${city}, ${state}, Brasil, ${cep}`;
   const url = new URL(CONFIG.nominatimBase);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "1");
   url.searchParams.set("countrycodes", "br");
-  url.searchParams.set("q", query);
+  url.searchParams.set("q", queryText);
 
   const response = await fetch(url.toString(), {
     headers: {
@@ -485,18 +495,19 @@ async function geocodeAddress() {
     }
   });
 
-  const results = await response.json();
-
-  if (!Array.isArray(results) || !results.length) {
-    return null;
+  if (!response.ok) {
+    throw new Error("Falha ao geocodificar endereço.");
   }
+
+  const results = await response.json();
+  if (!Array.isArray(results) || !results.length) return null;
 
   const result = results[0];
 
   return {
     lat: Number(result.lat),
     lng: Number(result.lon),
-    addressLabel: result.display_name || query
+    addressLabel: result.display_name || queryText
   };
 }
 
@@ -512,43 +523,37 @@ async function handleBuscarCep() {
     if (els.state) els.state.value = data.uf || "";
 
     showMessage("CEP encontrado com sucesso.", "success");
-
-    if (String(els.number?.value || "").trim()) {
-      const geo = await geocodeAddress();
-      if (geo) {
-        STATE.geo = geo;
-      } else {
-        STATE.geo = { lat: null, lng: null, addressLabel: "" };
-      }
-      updateGeoPreview();
-    }
+    await tryGeocodeWhenReady(true);
   } catch (error) {
-    STATE.geo = { lat: null, lng: null, addressLabel: "" };
-    updateGeoPreview();
+    resetGeo();
     showMessage(error.message || "Não foi possível buscar o CEP.", "error");
   }
 }
 
-async function tryGeocodeWhenReady() {
+async function tryGeocodeWhenReady(force = false) {
   const requiredReady =
     String(els.street?.value || "").trim() &&
     String(els.number?.value || "").trim() &&
     String(els.city?.value || "").trim() &&
     String(els.state?.value || "").trim();
 
-  if (!requiredReady) return;
+  if (!requiredReady) {
+    if (force) resetGeo();
+    return;
+  }
+
+  const requestId = ++STATE.geoRequestId;
 
   try {
     const geo = await geocodeAddress();
-    if (geo) {
-      STATE.geo = geo;
-    } else {
-      STATE.geo = { lat: null, lng: null, addressLabel: "" };
-    }
+
+    if (requestId !== STATE.geoRequestId) return;
+
+    STATE.geo = geo || { lat: null, lng: null, addressLabel: "" };
     updateGeoPreview();
   } catch {
-    STATE.geo = { lat: null, lng: null, addressLabel: "" };
-    updateGeoPreview();
+    if (requestId !== STATE.geoRequestId) return;
+    resetGeo();
   }
 }
 
@@ -556,7 +561,14 @@ async function tryGeocodeWhenReady() {
    DATA BUILDERS
 ========================= */
 
+function getSelectedDifficulty() {
+  return els.difficultyGroup?.querySelector(".choice-card.selected")?.dataset?.difficulty || "sim";
+}
+
 function buildParticipantPayload() {
+  const territoryId = "vila-pinto";
+  const territoryLabel = "Centro de Triagem Vila Pinto";
+
   const fullName = capitalizeWords(normalizeName(els.fullName?.value || ""));
   const phoneDigits = onlyDigits(els.phone?.value || "");
   const email = String(els.email?.value || "").trim().toLowerCase();
@@ -570,17 +582,12 @@ function buildParticipantPayload() {
   const state = String(els.state?.value || "").trim().toUpperCase();
   const referencePoint = String(els.referencePoint?.value || "").trim();
 
-  const difficulty =
-    els.difficultyGroup?.querySelector(".choice-card.selected")?.dataset?.difficulty || "sim";
-
+  const difficulty = getSelectedDifficulty();
   const difficultyDetail = String(els.difficultyDetail?.value || "").trim();
   const projectSource = String(els.projectSource?.value || "").trim();
 
   const enderecoCompleto =
     `${street}, ${number} - ${neighborhood}, ${city}, ${state} - CEP ${formatCEP(cepDigits)} - Brasil`;
-
-  const participantCode = STATE.generatedCode;
-  const status = "pending_approval";
 
   return {
     name: fullName,
@@ -591,7 +598,7 @@ function buildParticipantPayload() {
 
     localType: STATE.localType,
     registerType: STATE.registerType,
-    participantCode,
+    participantCode: STATE.generatedCode,
 
     cep: cepDigits,
     rua: street,
@@ -606,8 +613,8 @@ function buildParticipantPayload() {
     referencePoint,
     enderecoCompleto,
 
-    territoryId: CONFIG.territoryId,
-    territoryLabel: CONFIG.territoryLabel,
+    territoryId,
+    territoryLabel,
 
     lat: STATE.geo.lat ?? null,
     lng: STATE.geo.lng ?? null,
@@ -621,7 +628,7 @@ function buildParticipantPayload() {
     difficultyDetail,
     projectSource,
 
-    status,
+    status: "pending_approval",
     approvalStatus: "pending",
     origin: "public_form",
 
@@ -631,13 +638,16 @@ function buildParticipantPayload() {
 }
 
 function buildApprovalRequestPayload(participantId, participantData) {
+  const territoryId = "vila-pinto";
+  const territoryLabel = "Centro de Triagem Vila Pinto";
+
   return {
     type: "participant_registration",
     targetCollection: "participants",
     targetId: participantId,
 
-    territoryId: participantData.territoryId,
-    territoryLabel: participantData.territoryLabel,
+    territoryId,
+    territoryLabel,
 
     participantCode: participantData.participantCode,
     participantName: participantData.name,
@@ -666,9 +676,11 @@ function buildApprovalRequestPayload(participantId, participantData) {
       participantCode: participantData.participantCode,
       registerType: participantData.registerType,
       localType: participantData.localType,
-      territoryId: participantData.territoryId,
-      territoryLabel: participantData.territoryLabel,
-      enderecoCompleto: participantData.enderecoCompleto
+      territoryId: "vila-pinto",
+      territoryLabel: "Centro de Triagem Vila Pinto",
+      enderecoCompleto: participantData.enderecoCompleto,
+      lat: participantData.lat ?? null,
+      lng: participantData.lng ?? null
     },
 
     createdAt: serverTimestamp(),
@@ -694,6 +706,7 @@ async function saveRegistration() {
 
   return {
     participantId: participantRef.id,
+    approvalRequestId: null,
     participantCode: participantPayload.participantCode
   };
 }
@@ -714,7 +727,6 @@ function closeSuccessModal() {
   els.successModal.classList.add("hidden");
   els.successModal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
-
   window.location.href = CONFIG.redirectAfterSuccess;
 }
 
@@ -730,7 +742,7 @@ function bindStepNavigation() {
       if (!validateCurrentStep()) return;
 
       if (STATE.currentStep === 3) {
-        await tryGeocodeWhenReady();
+        await tryGeocodeWhenReady(true);
       }
 
       goToStep(STATE.currentStep + 1);
@@ -797,11 +809,11 @@ function bindGeoEvents() {
     if (!el) return;
 
     el.addEventListener("change", async () => {
-      await tryGeocodeWhenReady();
+      await tryGeocodeWhenReady(false);
     });
 
     el.addEventListener("blur", async () => {
-      await tryGeocodeWhenReady();
+      await tryGeocodeWhenReady(false);
     });
   });
 }
@@ -814,7 +826,6 @@ function bindMenu() {
 
 function bindSuccessModal() {
   els.closeSuccessModal?.addEventListener("click", closeSuccessModal);
-
   els.successModal?.querySelector(".success-modal-backdrop")?.addEventListener("click", closeSuccessModal);
 }
 
@@ -823,15 +834,18 @@ function bindSubmit() {
     event.preventDefault();
     clearMessage();
 
+    if (STATE.isSubmitting) return;
+
     if (!validateStep1()) return;
     if (!validateStep2()) return;
     if (!validateStep3()) return;
     if (!validateStep4()) return;
 
+    STATE.isSubmitting = true;
     setLoading(els.btnSubmitParticipant, true, "Enviando cadastro...");
 
     try {
-      await tryGeocodeWhenReady();
+      await tryGeocodeWhenReady(true);
       const result = await saveRegistration();
 
       showMessage(
@@ -847,6 +861,7 @@ function bindSubmit() {
         "error"
       );
     } finally {
+      STATE.isSubmitting = false;
       setLoading(els.btnSubmitParticipant, false);
     }
   });
@@ -858,7 +873,7 @@ function bindSubmit() {
 
 function initStaticTexts() {
   if (els.territoryLabelView) {
-    els.territoryLabelView.textContent = CONFIG.territoryLabel;
+    els.territoryLabelView.textContent = getCanonicalTerritoryLabel();
   }
 
   if (els.userNameView) {
