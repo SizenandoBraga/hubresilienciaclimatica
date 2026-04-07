@@ -59,7 +59,7 @@ function formatDateBR(dateStr) {
 function formatFlow(value) {
   const map = {
     recebimento: "Recebimento",
-    final_turno: "Final do turno"
+    final_turno: "Registro final de turno"
   };
   return map[value] || value || "-";
 }
@@ -76,9 +76,35 @@ function gerarCodigoEtiqueta() {
   return `ETQ-${y}${m}${d}-${h}${min}${s}`;
 }
 
+function normalizeCode(value = "") {
+  return String(value).trim().toUpperCase();
+}
+
+function isCondominioCode(code = "") {
+  return normalizeCode(code).startsWith("COND-");
+}
+
 function togglePanels(flowType) {
   $("panelRecebimento")?.classList.toggle("hidden", flowType !== "recebimento");
   $("panelFinalTurno")?.classList.toggle("hidden", flowType !== "final_turno");
+}
+
+function toggleCondCode() {
+  const flowType = $("flowType")?.value || "";
+  const participantCode = $("participantCode")?.value || "";
+  const condWrap = $("condCodeWrap");
+  const condInput = $("condCode");
+
+  if (!condWrap || !condInput) return;
+
+  const shouldShow = flowType === "final_turno" && isCondominioCode(participantCode);
+
+  condWrap.classList.toggle("hidden", !shouldShow);
+  condInput.required = shouldShow;
+
+  if (!shouldShow) {
+    condInput.value = "";
+  }
 }
 
 function ensureTerritory() {
@@ -87,6 +113,27 @@ function ensureTerritory() {
       "Usuário sem territoryId definido. Verifique o documento em users/{uid} no Firebase."
     );
   }
+}
+
+function getFormDeliveryType(formId) {
+  return $(formId)?.querySelector('input[type="hidden"][id="deliveryType"]')?.value || null;
+}
+
+function setFormDeliveryType(formId, value) {
+  const hidden = $(formId)?.querySelector('input[type="hidden"][id="deliveryType"]');
+  if (hidden) hidden.value = value;
+}
+
+function clearFormDeliverySelection(formId) {
+  const form = $(formId);
+  if (!form) return;
+
+  form.querySelectorAll("[data-delivery]").forEach((btn) => {
+    btn.classList.remove("active");
+    btn.setAttribute("aria-pressed", "false");
+  });
+
+  setFormDeliveryType(formId, "");
 }
 
 /* =========================
@@ -134,42 +181,67 @@ async function bootstrap(user) {
    CHOICES / SELEÇÕES
 ========================= */
 
-function activateGroup(selector, activeBtn, hiddenInputId, value) {
-  document.querySelectorAll(selector).forEach((el) => {
-    el.classList.remove("active");
-    el.setAttribute("aria-pressed", "false");
-  });
-
-  activeBtn.classList.add("active");
-  activeBtn.setAttribute("aria-pressed", "true");
-
-  const hidden = $(hiddenInputId);
-  if (hidden) hidden.value = value;
-}
-
 function wireChoices() {
-  document.querySelectorAll("[data-delivery]").forEach((btn) => {
-    btn.setAttribute("aria-pressed", "false");
-
-    btn.onclick = () => {
-      activateGroup("[data-delivery]", btn, "deliveryType", btn.dataset.delivery);
-    };
-  });
-
   document.querySelectorAll("[data-flow]").forEach((btn) => {
     btn.setAttribute("aria-pressed", "false");
 
-    btn.onclick = () => {
-      activateGroup("[data-flow]", btn, "flowType", btn.dataset.flow);
+    btn.addEventListener("click", () => {
+      document.querySelectorAll("[data-flow]").forEach((el) => {
+        el.classList.remove("active");
+        el.setAttribute("aria-pressed", "false");
+      });
+
+      btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
+
+      if ($("flowType")) $("flowType").value = btn.dataset.flow;
+
       setText("flowStatus", formatFlow(btn.dataset.flow));
       togglePanels(btn.dataset.flow);
-    };
+      toggleCondCode();
+    });
+  });
+
+  document.querySelectorAll("#formRecebimento [data-delivery]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", "false");
+
+    btn.addEventListener("click", () => {
+      const form = $("formRecebimento");
+      if (!form) return;
+
+      form.querySelectorAll("[data-delivery]").forEach((el) => {
+        el.classList.remove("active");
+        el.setAttribute("aria-pressed", "false");
+      });
+
+      btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
+      setFormDeliveryType("formRecebimento", btn.dataset.delivery);
+    });
+  });
+
+  document.querySelectorAll("#formFinalTurno [data-delivery]").forEach((btn) => {
+    btn.setAttribute("aria-pressed", "false");
+
+    btn.addEventListener("click", () => {
+      const form = $("formFinalTurno");
+      if (!form) return;
+
+      form.querySelectorAll("[data-delivery]").forEach((el) => {
+        el.classList.remove("active");
+        el.setAttribute("aria-pressed", "false");
+      });
+
+      btn.classList.add("active");
+      btn.setAttribute("aria-pressed", "true");
+      setFormDeliveryType("formFinalTurno", btn.dataset.delivery);
+    });
   });
 
   document.querySelectorAll(".quality-btn").forEach((btn) => {
     btn.setAttribute("aria-pressed", "false");
 
-    btn.onclick = () => {
+    btn.addEventListener("click", () => {
       document.querySelectorAll(".quality-btn").forEach((el) => {
         el.classList.remove("active");
         el.setAttribute("aria-pressed", "false");
@@ -177,18 +249,25 @@ function wireChoices() {
 
       btn.classList.add("active");
       btn.setAttribute("aria-pressed", "true");
-      $("qualidadeNota").value = btn.dataset.quality;
-    };
+
+      if ($("qualidadeNota")) {
+        $("qualidadeNota").value = btn.dataset.quality;
+      }
+    });
+  });
+
+  $("participantCode")?.addEventListener("input", () => {
+    toggleCondCode();
   });
 
   $("btnPreviewOperacao")?.addEventListener("click", () => {
-    const delivery = $("deliveryType")?.value || "não definido";
+    const participantCode = $("participantCode")?.value?.trim() || "não definido";
     const flow = $("flowType")?.value || "não definido";
 
     setMsg(
       $("msgOperacao"),
       "ok",
-      `Prévia pronta: entrega ${delivery} / fluxo ${formatFlow(flow)}.`
+      `Prévia pronta: participante ${participantCode} / fluxo ${formatFlow(flow)}.`
     );
   });
 }
@@ -298,27 +377,32 @@ function renderPreviewFinalTurno() {
 
 function saveOperacaoBase() {
   const opDate = $("opDate")?.value;
-  const deliveryType = $("deliveryType")?.value;
+  const participantCode = normalizeCode($("participantCode")?.value || "");
   const flowType = $("flowType")?.value;
   const opNotes = $("opNotes")?.value.trim() || null;
 
-  if (!opDate || !deliveryType || !flowType) {
+  if (!opDate || !participantCode || !flowType) {
     setMsg(
       $("msgOperacao"),
       "bad",
-      "Preencha a data, o tipo de entrega e o fluxo da operação."
+      "Preencha a data, o código do participante e o fluxo da operação."
     );
     return false;
   }
 
+  if ($("participantCode")) {
+    $("participantCode").value = participantCode;
+  }
+
   STATE.operacao = {
     opDate,
-    deliveryType,
+    participantCode,
     flowType,
     opNotes
   };
 
   togglePanels(flowType);
+  toggleCondCode();
 
   setMsg(
     $("msgOperacao"),
@@ -347,8 +431,8 @@ function gerarQrCode(valor) {
 
   new QRCode(qrContainer, {
     text: valor,
-    width: 200,
-    height: 200,
+    width: 180,
+    height: 180,
     correctLevel: QRCode.CorrectLevel.H
   });
 }
@@ -360,10 +444,12 @@ function preencherEtiquetaSimples(registro) {
     registro.familyCode ||
     registro.condCode ||
     registro.codigoFamilia ||
+    registro.participantCode ||
     "SEM-CODIGO";
 
   const qrPayload = JSON.stringify({
     codigoFamilia: familyCode,
+    participantCode: registro.participantCode || null,
     territoryId: STATE.territoryId || null,
     flowType: registro.flowType || null,
     opDate: registro.opDate || null,
@@ -421,16 +507,23 @@ async function salvarRecebimento() {
   const recebimentoObs = $("recebimentoObs")?.value.trim() || null;
   const pesoRejeitoKg = parseNum($("pesoRejeitoKg")?.value);
   const pesoNaoComercializadoKg = parseNum($("pesoNaoComercializadoKg")?.value);
+  const deliveryType = getFormDeliveryType("formRecebimento");
+  const fotosResiduoQtd = $("fotoResiduo")?.files?.length || 0;
 
   if (
     !STATE.operacao ||
     !familyCode ||
+    !deliveryType ||
     pesoResiduoSecoKg === null ||
     qualidadeNota === null ||
     pesoRejeitoKg === null ||
     pesoNaoComercializadoKg === null
   ) {
-    throw new Error("Preencha o código da família e todos os campos obrigatórios do recebimento.");
+    throw new Error("Preencha o código da família, o tipo de entrega e todos os campos obrigatórios do recebimento.");
+  }
+
+  if (fotosResiduoQtd === 0) {
+    throw new Error("As fotos do resíduo são obrigatórias.");
   }
 
   const codigoEtiqueta = gerarCodigoEtiqueta();
@@ -444,7 +537,8 @@ async function salvarRecebimento() {
     createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
 
     opDate: STATE.operacao.opDate,
-    deliveryType: STATE.operacao.deliveryType,
+    participantCode: STATE.operacao.participantCode,
+    deliveryType,
     flowType: "recebimento",
     observacao: STATE.operacao.opNotes || null,
     codigoEtiqueta,
@@ -457,7 +551,7 @@ async function salvarRecebimento() {
       observacao: recebimentoObs,
       pesoRejeitoKg,
       pesoNaoComercializadoKg,
-      fotosResiduoQtd: $("fotoResiduo")?.files?.length || 0,
+      fotosResiduoQtd,
       fotosNaoComercializadoQtd: $("fotoNaoComercializado")?.files?.length || 0
     }
   };
@@ -469,6 +563,7 @@ async function salvarRecebimento() {
     id: docRef.id,
     createdAtLabel: new Date().toISOString(),
     familyCode,
+    participantCode: STATE.operacao.participantCode,
     opDate: STATE.operacao.opDate,
     flowType: "recebimento"
   };
@@ -477,11 +572,18 @@ async function salvarRecebimento() {
 async function salvarFinalTurno() {
   ensureTerritory();
 
+  const participantCode = STATE.operacao?.participantCode || "";
   const condCode = $("condCode")?.value.trim() || null;
   const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
+  const deliveryType = getFormDeliveryType("formFinalTurno");
+  const precisaCondCode = isCondominioCode(participantCode);
 
-  if (!STATE.operacao || !condCode || pesoRejeitoGeralKg === null) {
-    throw new Error("Preencha o código do condomínio/família e os campos obrigatórios do fechamento do turno.");
+  if (!STATE.operacao || !deliveryType || pesoRejeitoGeralKg === null) {
+    throw new Error("Preencha o tipo de entrega e os campos obrigatórios do fechamento do turno.");
+  }
+
+  if (precisaCondCode && !condCode) {
+    throw new Error("Informe o código do condomínio.");
   }
 
   const extras = getExtras();
@@ -496,12 +598,13 @@ async function salvarFinalTurno() {
     createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
 
     opDate: STATE.operacao.opDate,
-    deliveryType: STATE.operacao.deliveryType,
+    participantCode,
+    deliveryType,
     flowType: "final_turno",
     observacao: STATE.operacao.opNotes || null,
     codigoEtiqueta,
 
-    condCode,
+    condCode: precisaCondCode ? condCode : null,
 
     finalTurno: {
       pesoRejeitoGeralKg,
@@ -524,7 +627,8 @@ async function salvarFinalTurno() {
     ...payload,
     id: docRef.id,
     createdAtLabel: new Date().toISOString(),
-    condCode,
+    condCode: payload.condCode,
+    participantCode,
     opDate: STATE.operacao.opDate,
     flowType: "final_turno"
   };
@@ -536,12 +640,15 @@ async function salvarFinalTurno() {
 
 function resetRecebimentoForm() {
   $("formRecebimento")?.reset();
+
   if ($("qualidadeNota")) $("qualidadeNota").value = "";
 
   document.querySelectorAll(".quality-btn").forEach((btn) => {
     btn.classList.remove("active");
     btn.setAttribute("aria-pressed", "false");
   });
+
+  clearFormDeliverySelection("formRecebimento");
 }
 
 function resetFinalTurnoForm() {
@@ -555,6 +662,9 @@ function resetFinalTurnoForm() {
     wrap.innerHTML = "";
     wrap.appendChild(buildExtraRow());
   }
+
+  clearFormDeliverySelection("formFinalTurno");
+  toggleCondCode();
 }
 
 function wireForms() {
@@ -673,6 +783,8 @@ function init() {
   if ($("opDate")) {
     $("opDate").value = toISODate(new Date());
   }
+
+  toggleCondCode();
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
