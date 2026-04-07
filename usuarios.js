@@ -113,15 +113,10 @@ function isValidCoord(lat, lng) {
 function normalizeStatus(value) {
   const raw = String(value || "").toLowerCase().trim();
 
-  if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) {
-    return "pendente";
-  }
-  if (["approved", "aprovado", "active", "ativo"].includes(raw)) {
-    return "aprovado";
-  }
-  if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) {
-    return "inativo";
-  }
+  if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) return "pendente";
+  if (["approved", "aprovado", "active", "ativo"].includes(raw)) return "aprovado";
+  if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) return "inativo";
+
   return "pendente";
 }
 
@@ -196,65 +191,22 @@ function getMyTerritoryLabel() {
   return STATE.userDoc?.territoryLabel || null;
 }
 
-function filterVisibleUsers(items) {
-  if (canViewAllTerritories()) return items;
-
-  const myTerritoryId = getMyTerritoryId();
-  const myTerritoryLabel = getMyTerritoryLabel();
-
-  if (!myTerritoryId && !myTerritoryLabel) return items;
-
-  return items.filter((item) => {
-    const territoryId =
-      item.territoryId ||
-      item.raw?.territoryId ||
-      item.raw?.applicantSnapshot?.territoryId ||
-      null;
-
-    const territoryLabel =
-      item.territoryLabel ||
-      item.raw?.territoryLabel ||
-      item.raw?.applicantSnapshot?.territoryLabel ||
-      null;
-
-    if (myTerritoryId && territoryId && sameTerritory(territoryId, myTerritoryId)) return true;
-    if (myTerritoryLabel && territoryLabel && sameTerritory(territoryLabel, myTerritoryLabel)) return true;
-
-    return false;
-  });
+function getTerritoryIdFromAny(data) {
+  return (
+    data?.territoryId ||
+    data?.payloadSnapshot?.territoryId ||
+    data?.applicantSnapshot?.territoryId ||
+    null
+  );
 }
 
-function filterVisibleApprovalRequests(items) {
-  if (canViewAllTerritories()) return items;
-
-  const myTerritoryId = getMyTerritoryId();
-  const myTerritoryLabel = getMyTerritoryLabel();
-
-  if (!myTerritoryId && !myTerritoryLabel) return items;
-
-  return items.filter((item) => {
-    const reqTerritoryId =
-      item.territoryId ||
-      item.raw?.territoryId ||
-      item.raw?.applicantSnapshot?.territoryId ||
-      null;
-
-    const reqTerritoryLabel =
-      item.territoryLabel ||
-      item.raw?.territoryLabel ||
-      item.raw?.applicantSnapshot?.territoryLabel ||
-      null;
-
-    if (myTerritoryId && reqTerritoryId && sameTerritory(reqTerritoryId, myTerritoryId)) {
-      return true;
-    }
-
-    if (myTerritoryLabel && reqTerritoryLabel && sameTerritory(reqTerritoryLabel, myTerritoryLabel)) {
-      return true;
-    }
-
-    return false;
-  });
+function getTerritoryLabelFromAny(data) {
+  return (
+    data?.territoryLabel ||
+    data?.payloadSnapshot?.territoryLabel ||
+    data?.applicantSnapshot?.territoryLabel ||
+    null
+  );
 }
 
 function ensureToast() {
@@ -303,9 +255,7 @@ async function maybeRequestNotificationPermission() {
   if (Notification.permission === "default") {
     try {
       await Notification.requestPermission();
-    } catch (_err) {
-      // ignore
-    }
+    } catch (_err) {}
   }
 }
 
@@ -317,9 +267,7 @@ function notifyNewRequest(user) {
       new Notification("Nova solicitação de participação", {
         body: `${safeText(user.name)} • ${safeText(user.territoryLabel || user.territoryId)}`
       });
-    } catch (_err) {
-      // ignore
-    }
+    } catch (_err) {}
   }
 }
 
@@ -335,6 +283,44 @@ function patchTopbarLabels() {
   if (pills[1]) pills[1].textContent = "🏢 Cooperativa";
   if (pills[2]) pills[2].textContent = canManageApprovals() ? "🔐 Pode aprovar" : "🔐 Somente leitura";
   if (pills[3]) pills[3].textContent = `👤 ${role}`;
+}
+
+function filterVisibleUsers(items) {
+  if (canViewAllTerritories()) return items;
+
+  const myTerritoryId = getMyTerritoryId();
+  const myTerritoryLabel = getMyTerritoryLabel();
+
+  if (!myTerritoryId && !myTerritoryLabel) return items;
+
+  return items.filter((item) => {
+    const territoryId = getTerritoryIdFromAny(item.raw || item);
+    const territoryLabel = getTerritoryLabelFromAny(item.raw || item);
+
+    if (myTerritoryId && territoryId && sameTerritory(territoryId, myTerritoryId)) return true;
+    if (myTerritoryLabel && territoryLabel && sameTerritory(territoryLabel, myTerritoryLabel)) return true;
+
+    return false;
+  });
+}
+
+function filterVisibleApprovalRequests(items) {
+  if (canViewAllTerritories()) return items;
+
+  const myTerritoryId = getMyTerritoryId();
+  const myTerritoryLabel = getMyTerritoryLabel();
+
+  if (!myTerritoryId && !myTerritoryLabel) return items;
+
+  return items.filter((item) => {
+    const reqTerritoryId = getTerritoryIdFromAny(item.raw || item);
+    const reqTerritoryLabel = getTerritoryLabelFromAny(item.raw || item);
+
+    if (myTerritoryId && reqTerritoryId && sameTerritory(reqTerritoryId, myTerritoryId)) return true;
+    if (myTerritoryLabel && reqTerritoryLabel && sameTerritory(reqTerritoryLabel, myTerritoryLabel)) return true;
+
+    return false;
+  });
 }
 
 function mapParticipantDoc(docSnap) {
@@ -366,14 +352,15 @@ function mapParticipantDoc(docSnap) {
 
 function mapApprovalRequestDoc(docSnap) {
   const data = docSnap.data() || {};
+  const snapshot = data.payloadSnapshot || data.applicantSnapshot || {};
 
   return {
     id: docSnap.id,
-    participantId: data.participantId || null,
-    participantName: data.participantName || data.name || data.applicantSnapshot?.name || "",
-    participantCode: data.participantCode || data.applicantSnapshot?.participantCode || "",
-    territoryId: data.territoryId || data.applicantSnapshot?.territoryId || null,
-    territoryLabel: data.territoryLabel || data.applicantSnapshot?.territoryLabel || "",
+    participantId: data.participantId || snapshot.participantId || data.targetId || null,
+    participantName: data.participantName || data.name || snapshot.name || "Solicitação pendente",
+    participantCode: data.participantCode || snapshot.participantCode || "—",
+    territoryId: data.territoryId || snapshot.territoryId || null,
+    territoryLabel: data.territoryLabel || snapshot.territoryLabel || "",
     status: String(data.status || data.approvalStatus || "pending").toLowerCase().trim(),
     raw: data
   };
@@ -398,19 +385,10 @@ function mergeUsers() {
 
   STATE.participants.forEach((participant) => {
     participantById.set(participant.id, participant);
-
-    if (participant.approvalRequestId) {
-      participantByApprovalRequestId.set(participant.approvalRequestId, participant);
-    }
-    if (participant.code && participant.code !== "—") {
-      participantByCode.set(String(participant.code).toLowerCase(), participant);
-    }
-    if (participant.cpf) {
-      participantByCpf.set(String(participant.cpf).replace(/\D/g, ""), participant);
-    }
-    if (participant.phone) {
-      participantByPhone.set(onlyDigits(participant.phone), participant);
-    }
+    if (participant.approvalRequestId) participantByApprovalRequestId.set(participant.approvalRequestId, participant);
+    if (participant.code && participant.code !== "—") participantByCode.set(String(participant.code).toLowerCase(), participant);
+    if (participant.cpf) participantByCpf.set(String(participant.cpf).replace(/\D/g, ""), participant);
+    if (participant.phone) participantByPhone.set(onlyDigits(participant.phone), participant);
   });
 
   const mergedFromRequests = STATE.approvalRequests
@@ -419,15 +397,14 @@ function mergeUsers() {
       return !["approved", "rejected"].includes(status);
     })
     .map((req) => {
-      const snapshot = req.raw?.applicantSnapshot || {};
-      const snapshotAddress = snapshot.address || {};
-
+      const raw = req.raw || {};
+      const snapshot = raw.payloadSnapshot || raw.applicantSnapshot || {};
       const participant =
         participantById.get(req.participantId) ||
         participantByApprovalRequestId.get(req.id) ||
         participantByCode.get(String(req.participantCode || snapshot.participantCode || "").toLowerCase()) ||
-        participantByCpf.get(String(req.raw?.cpf || snapshot.cpf || "").replace(/\D/g, "")) ||
-        participantByPhone.get(onlyDigits(req.raw?.phone || snapshot.phone || "")) ||
+        participantByCpf.get(String(raw.participantCpf || snapshot.cpf || "").replace(/\D/g, "")) ||
+        participantByPhone.get(onlyDigits(raw.participantPhone || snapshot.phone || "")) ||
         null;
 
       return {
@@ -436,26 +413,22 @@ function mergeUsers() {
         approvalRequestId: req.id,
         name: participant?.name || req.participantName || snapshot.name || "Solicitação pendente",
         code: participant?.code || req.participantCode || snapshot.participantCode || "—",
-        phone: participant?.phone || snapshot.phone || "",
-        email: participant?.email || snapshot.email || "",
-        cpf: participant?.cpf || snapshot.cpf || "",
+        phone: participant?.phone || raw.participantPhone || snapshot.phone || "",
+        email: participant?.email || raw.participantEmail || snapshot.email || "",
+        cpf: participant?.cpf || raw.participantCpf || snapshot.cpf || "",
         territoryId: participant?.territoryId || req.territoryId || snapshot.territoryId || null,
         territoryLabel: participant?.territoryLabel || req.territoryLabel || snapshot.territoryLabel || "",
         status: "pendente",
         rawStatus: participant?.rawStatus || "pendente",
         approvalStatus: participant?.approvalStatus || "pending",
         inOperation: "nao",
-        inTerritory: participant?.inTerritory || (req.territoryId || snapshot.territoryId ? "sim" : "nao"),
-        address:
-          participant?.address ||
-          buildAddress(snapshot) ||
-          buildAddress({ address: snapshotAddress }) ||
-          "—",
-        lat: participant?.lat ?? toNumberOrNull(snapshot.lat) ?? toNumberOrNull(snapshotAddress.lat),
-        lng: participant?.lng ?? toNumberOrNull(snapshot.lng) ?? toNumberOrNull(snapshotAddress.lng),
+        inTerritory: participant?.inTerritory || ((req.territoryId || snapshot.territoryId) ? "sim" : "nao"),
+        address: participant?.address || buildAddress(snapshot) || "—",
+        lat: participant?.lat ?? toNumberOrNull(snapshot.lat),
+        lng: participant?.lng ?? toNumberOrNull(snapshot.lng),
         schedule: participant?.schedule || "A definir",
         wasteKg: Number(participant?.wasteKg || 0),
-        raw: participant?.raw || req.raw
+        raw
       };
     });
 
@@ -585,7 +558,6 @@ function renderPendingList() {
         <span>Telefone: ${safeText(user.phone)}</span>
         <span>${safeText(user.address)}</span>
       </div>
-
       <div class="user-actions">
         <span class="${badgeClass(user.status)}">Pendente</span>
         ${canManageApprovals() ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
@@ -613,7 +585,6 @@ function renderActiveList() {
         <span>${safeText(user.address)}</span>
         <span>Telefone: ${safeText(user.phone)}</span>
       </div>
-
       <div class="user-actions">
         <span class="${badgeClass(user.status)}">Aprovado</span>
         <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
@@ -687,7 +658,6 @@ function clearMap() {
 function getMapUsers() {
   const mode = String(els.routeMode?.value || "approved");
   const source = STATE.filteredUsers.filter((u) => u.status !== "inativo" && isValidCoord(u.lat, u.lng));
-
   if (mode === "allgeo") return source;
   return source.filter((u) => u.status === "aprovado");
 }
@@ -866,17 +836,19 @@ async function upsertParticipantFromApprovedRequest(user) {
       ? user.id
       : (user.code ? user.code.replace(/[^a-zA-Z0-9_-]/g, "_") : `participant_${user.linkedApprovalRequestId}`);
 
+  const snapshot = user.raw?.payloadSnapshot || user.raw?.applicantSnapshot || {};
+
   const payload = {
-    name: user.name || "Sem nome",
-    nameLower: String(user.name || "").toLowerCase(),
-    participantCode: user.code || "—",
-    participantType: user.raw?.applicantSnapshot?.participantType || "participante",
-    localType: user.raw?.applicantSnapshot?.localType || "casa",
-    phone: user.phone || null,
-    email: user.email || null,
-    cpf: user.cpf || null,
-    territoryId: user.territoryId || null,
-    territoryLabel: user.territoryLabel || "",
+    name: user.name || snapshot.name || "Sem nome",
+    nameLower: String(user.name || snapshot.name || "").toLowerCase(),
+    participantCode: user.code || snapshot.participantCode || "—",
+    participantType: snapshot.participantType || "participante",
+    localType: snapshot.localType || user.raw?.localType || "casa",
+    phone: user.phone || snapshot.phone || null,
+    email: user.email || snapshot.email || null,
+    cpf: user.cpf || snapshot.cpf || null,
+    territoryId: user.territoryId || snapshot.territoryId || null,
+    territoryLabel: user.territoryLabel || snapshot.territoryLabel || "",
     inTerritory: "sim",
     inOperation: user.inOperation || "sim",
     schedule: user.schedule || "A definir",
@@ -885,10 +857,10 @@ async function upsertParticipantFromApprovedRequest(user) {
     active: true,
     approvalRequestId: user.linkedApprovalRequestId || null,
     source: user.raw?.source || "approval_request",
-    address: user.raw?.applicantSnapshot?.address || null,
-    enderecoCompleto: user.address || null,
-    lat: isValidCoord(user.lat, user.lng) ? user.lat : null,
-    lng: isValidCoord(user.lat, user.lng) ? user.lng : null,
+    address: snapshot.address || null,
+    enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
+    lat: isValidCoord(user.lat, user.lng) ? user.lat : (toNumberOrNull(snapshot.lat) ?? null),
+    lng: isValidCoord(user.lat, user.lng) ? user.lng : (toNumberOrNull(snapshot.lng) ?? null),
     updatedAt: serverTimestamp(),
     updatedBy: STATE.authUser?.uid || null
   };
@@ -913,11 +885,10 @@ async function approveUser(userId) {
     if (approvalRequestId) {
       batch.update(doc(db, "approvalRequests", approvalRequestId), {
         status: "approved",
-        active: false,
-        resolvedAt: serverTimestamp(),
-        resolvedBy: STATE.authUser?.uid || null,
-        resolvedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null,
-        updatedAt: serverTimestamp()
+        decision: "approved",
+        reviewedAt: serverTimestamp(),
+        reviewedBy: STATE.authUser?.uid || null,
+        reviewedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null
       });
     }
 
@@ -936,9 +907,7 @@ async function approveUser(userId) {
     await loadParticipantsInitial();
   } catch (error) {
     console.error("Erro ao aprovar usuário:", error);
-    alert(
-      `Não foi possível aprovar este usuário.\n${error?.message || "Verifique as regras do Firestore para update em approvalRequests e escrita em participants."}`
-    );
+    alert(`Não foi possível aprovar este usuário.\n${error?.message || "Verifique as regras do Firestore."}`);
   }
 }
 
@@ -971,11 +940,10 @@ async function rejectUser(userId) {
     if (approvalRequestId) {
       batch.update(doc(db, "approvalRequests", approvalRequestId), {
         status: "rejected",
-        active: false,
-        resolvedAt: serverTimestamp(),
-        resolvedBy: STATE.authUser?.uid || null,
-        resolvedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null,
-        updatedAt: serverTimestamp()
+        decision: "rejected",
+        reviewedAt: serverTimestamp(),
+        reviewedBy: STATE.authUser?.uid || null,
+        reviewedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null
       });
     }
 
@@ -987,9 +955,7 @@ async function rejectUser(userId) {
     await loadParticipantsInitial();
   } catch (error) {
     console.error("Erro ao rejeitar usuário:", error);
-    alert(
-      `Não foi possível rejeitar este usuário.\n${error?.message || "Verifique as regras do Firestore."}`
-    );
+    alert(`Não foi possível rejeitar este usuário.\n${error?.message || "Verifique as regras do Firestore."}`);
   }
 }
 
@@ -1023,6 +989,7 @@ function openUserModal(userId) {
   if (els.modalLat) els.modalLat.value = user.lat ?? "";
   if (els.modalLng) els.modalLng.value = user.lng ?? "";
   if (els.modalInOperationHint) els.modalInOperationHint.value = user.inOperation === "sim" ? "Na rota operacional" : "Fora da rota";
+
   if (els.modalRequestInfo) {
     els.modalRequestInfo.textContent = user.linkedApprovalRequestId
       ? `Solicitação vinculada: ${user.linkedApprovalRequestId}`
@@ -1038,12 +1005,8 @@ function openUserModal(userId) {
           : "Este participante está inativo ou rejeitado.";
   }
 
-  if (els.modalApproveBtn) {
-    els.modalApproveBtn.style.display = canManageApprovals() ? "" : "none";
-  }
-  if (els.modalRejectBtn) {
-    els.modalRejectBtn.style.display = canManageApprovals() ? "" : "none";
-  }
+  if (els.modalApproveBtn) els.modalApproveBtn.style.display = canManageApprovals() ? "" : "none";
+  if (els.modalRejectBtn) els.modalRejectBtn.style.display = canManageApprovals() ? "" : "none";
 
   els.userModal.classList.remove("hidden");
   els.userModal.setAttribute("aria-hidden", "false");
@@ -1077,13 +1040,7 @@ async function saveModalUserChanges() {
     if (approvalRequestId && canManageApprovals()) {
       const batch = writeBatch(db);
       batch.update(doc(db, "approvalRequests", approvalRequestId), {
-        status:
-          chosenStatus === "aprovado"
-            ? "approved"
-            : chosenStatus === "inativo"
-              ? "rejected"
-              : "pending",
-        updatedAt: serverTimestamp()
+        status: chosenStatus === "aprovado" ? "approved" : chosenStatus === "inativo" ? "rejected" : "pending"
       });
       await batch.commit();
     }
@@ -1125,9 +1082,7 @@ async function loadParticipantsInitial() {
 
       if (myTerritoryId) {
         try {
-          snap = await getDocs(
-            query(collection(db, "participants"), where("territoryId", "==", myTerritoryId))
-          );
+          snap = await getDocs(query(collection(db, "participants"), where("territoryId", "==", myTerritoryId)));
         } catch (_err) {
           snap = await getDocs(collection(db, "participants"));
         }
@@ -1145,27 +1100,7 @@ async function loadParticipantsInitial() {
 
 async function loadApprovalsInitial() {
   try {
-    let snap = null;
-    const myTerritoryId = getMyTerritoryId();
-
-    if (canViewAllTerritories()) {
-      snap = await getDocs(collection(db, "approvalRequests"));
-    } else if (myTerritoryId) {
-      try {
-        snap = await getDocs(
-          query(collection(db, "approvalRequests"), where("territoryId", "==", myTerritoryId))
-        );
-      } catch (err) {
-        console.warn("Query filtrada de approvalRequests falhou, usando fallback:", err);
-      }
-
-      if (!snap || snap.empty) {
-        snap = await getDocs(collection(db, "approvalRequests"));
-      }
-    } else {
-      snap = await getDocs(collection(db, "approvalRequests"));
-    }
-
+    const snap = await getDocs(collection(db, "approvalRequests"));
     const allApprovals = snap.docs.map(mapApprovalRequestDoc);
 
     STATE.approvalRequests = filterVisibleApprovalRequests(allApprovals).filter((req) => {
@@ -1212,13 +1147,11 @@ function startParticipantsListener() {
         STATE.participants = items;
         mergeUsers();
       },
-      async (_error) => {
+      async () => {
         await loadParticipantsInitial();
       }
     );
-  } catch (_error) {
-    // ignore
-  }
+  } catch (_error) {}
 }
 
 function startApprovalsListener() {
@@ -1228,44 +1161,19 @@ function startApprovalsListener() {
   }
 
   try {
-    const myTerritoryId = getMyTerritoryId();
-    let ref = null;
-
-    if (canViewAllTerritories()) {
-      ref = collection(db, "approvalRequests");
-    } else if (myTerritoryId) {
-      ref = query(collection(db, "approvalRequests"), where("territoryId", "==", myTerritoryId));
-    } else {
-      ref = collection(db, "approvalRequests");
-    }
-
     STATE.unsubApprovals = onSnapshot(
-      ref,
-      async (snapshot) => {
-        let items = snapshot.docs.map(mapApprovalRequestDoc);
+      collection(db, "approvalRequests"),
+      (snapshot) => {
+        const allItems = snapshot.docs.map(mapApprovalRequestDoc);
 
-        if (!canViewAllTerritories()) {
-          items = filterVisibleApprovalRequests(items);
-
-          if (!items.length) {
-            try {
-              const fallbackSnap = await getDocs(collection(db, "approvalRequests"));
-              items = filterVisibleApprovalRequests(fallbackSnap.docs.map(mapApprovalRequestDoc));
-            } catch (err) {
-              console.warn("Fallback de approvalRequests falhou:", err);
-            }
-          }
-        }
-
-        STATE.approvalRequests = items.filter((req) => {
+        STATE.approvalRequests = filterVisibleApprovalRequests(allItems).filter((req) => {
           const status = String(req.status || "").toLowerCase().trim();
           return !["approved", "rejected"].includes(status);
         });
 
         mergeUsers();
       },
-      async (error) => {
-        console.warn("Listener approvalRequests falhou, usando carga inicial:", error);
+      async () => {
         await loadApprovalsInitial();
       }
     );
