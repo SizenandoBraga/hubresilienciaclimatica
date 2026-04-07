@@ -18,12 +18,12 @@ import {
 const MATERIAL_META = [
   { key: "plasticoKg", label: "Plástico", price: 1.92, icon: "🧴" },
   { key: "vidroKg", label: "Vidro", price: 0.08, icon: "🍾" },
-  { key: "metalKg", label: "Metal", price: 2.9, icon: "🥫" },
+  { key: "aluminioMetalKg", label: "Metal", price: 2.9, icon: "🥫" },
   { key: "sacariaKg", label: "Sacaria", price: 0.12, icon: "🧵" },
   { key: "papelMistoKg", label: "Papel misto", price: 0.66, icon: "📄" },
   { key: "papelaoKg", label: "Papelão", price: 0.52, icon: "📦" },
   { key: "isoporKg", label: "Isopor", price: 0.4, icon: "🧊" },
-  { key: "oleoCozinhaKg", label: "Óleo de cozinha", price: 1.5, icon: "🛢️" }
+  { key: "oleoKg", label: "Óleo de cozinha", price: 1.5, icon: "🛢️" }
 ];
 
 const CHART_COLORS = {
