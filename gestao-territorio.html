@@ -6,7 +6,7 @@
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>NSRU • Gestão do Usuário</title>
+  <title>NSRU • Gestão do Território</title>
   <meta name="theme-color" content="#77B33A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,7 +18,7 @@
 
   <link rel="stylesheet" href="./governanca.css" />
 </head>
-<body data-page="usuarios">
+<body data-page="territorios">
   <div class="gov-shell">
     <aside class="gov-sidebar">
       <div class="gov-logo-wrap">
@@ -30,8 +30,8 @@
 
         <nav class="gov-nav">
           <a class="gov-nav-btn" href="./governanca.html">Painel Inicial</a>
-          <a class="gov-nav-btn is-active" href="./gestao-usuarios.html">Gestão do Usuário</a>
-          <a class="gov-nav-btn" href="./gestao-territorio.html">Gestão do Território</a>
+          <a class="gov-nav-btn" href="./gestao-usuarios.html">Gestão do Usuário</a>
+          <a class="gov-nav-btn is-active" href="./gestao-territorio.html">Gestão do Território</a>
           <a class="gov-nav-btn" href="./gestao-conteudos.html">Gestão de conteúdos</a>
         </nav>
       </div>
@@ -46,13 +46,13 @@
 
           <div class="gov-brand-text">
             <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-            <span>Gestão do Usuário</span>
+            <span>Gestão do Território</span>
           </div>
         </div>
 
         <div class="gov-top-tags">
           <span class="gov-tag tag-green">🟢 Todos os territórios</span>
-          <span class="gov-tag tag-lightgreen">👥 Todos os usuários</span>
+          <span class="gov-tag tag-lightgreen">📊 Todas as cooperativas</span>
           <span class="gov-tag tag-lilac">👤 Admin Governança</span>
         </div>
       </header>
@@ -60,23 +60,23 @@
       <section class="gov-content">
         <div class="gov-kpi-row">
           <div class="gov-mini-card">
-            <span>Total de usuários</span>
-            <strong id="usersTotal">0</strong>
+            <span>Total de territórios</span>
+            <strong id="territoriosTotal">0</strong>
           </div>
 
           <div class="gov-mini-card">
-            <span>Usuários ativos</span>
-            <strong id="usersAtivos">0</strong>
+            <span>Territórios ativos</span>
+            <strong id="territoriosAtivos">0</strong>
           </div>
 
           <div class="gov-mini-card">
-            <span>Admins</span>
-            <strong id="usersAdmins">0</strong>
+            <span>Participantes</span>
+            <strong id="territoriosParticipantes">0</strong>
           </div>
 
           <div class="gov-mini-card">
-            <span>Governança</span>
-            <strong id="usersGovernanca">0</strong>
+            <span>Coletas</span>
+            <strong id="territoriosColetas">0</strong>
           </div>
         </div>
 
@@ -84,23 +84,23 @@
           <table class="gov-users-table">
             <thead>
               <tr>
-                <th>Hora de Cadastro</th>
-                <th>Nome do usuário</th>
-                <th>E-mail</th>
                 <th>Território</th>
-                <th>Quantidade de acesso</th>
-                <th>Última vez que entrou</th>
-                <th>Permissões</th>
+                <th>Código</th>
                 <th>Status</th>
+                <th>Usuários</th>
+                <th>Participantes</th>
+                <th>Coletas</th>
+                <th>Resíduo seco (kg)</th>
+                <th>Rejeito (kg)</th>
               </tr>
             </thead>
-            <tbody id="usersTableBody"></tbody>
+            <tbody id="territoriosTableBody"></tbody>
           </table>
         </div>
       </section>
     </main>
   </div>
 
-  <script type="module" src="./gestao-usuarios.js"></script>
+  <script type="module" src="./gestao-territorio.js"></script>
 </body>
 </html>

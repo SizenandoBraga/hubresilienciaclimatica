@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>NSRU • Gestão de Conteúdos</title>
+  <meta name="theme-color" content="#77B33A" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="./governanca.css" />
+</head>
+<body data-page="conteudos">
+  <div class="gov-shell">
+    <aside class="gov-sidebar">
+      <div class="gov-logo-wrap">
+        <img src="./img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" class="gov-logo" />
+      </div>
+
+      <div class="gov-menu-block">
+        <span class="gov-menu-label">MENU</span>
+
+        <nav class="gov-nav">
+          <a class="gov-nav-btn" href="./governanca.html">Painel Inicial</a>
+          <a class="gov-nav-btn" href="./gestao-usuarios.html">Gestão do Usuário</a>
+          <a class="gov-nav-btn" href="./gestao-territorio.html">Gestão do Território</a>
+          <a class="gov-nav-btn is-active" href="./gestao-conteudos.html">Gestão de conteúdos</a>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="gov-main">
+      <header class="gov-topbar">
+        <div class="gov-brand">
+          <div class="gov-brand-mark">
+            <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" />
+          </div>
+
+          <div class="gov-brand-text">
+            <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+            <span>Gestão de conteúdos</span>
+          </div>
+        </div>
+
+        <div class="gov-top-tags">
+          <span class="gov-tag tag-green">🟢 Visão geral do sistema</span>
+          <span class="gov-tag tag-lightgreen">🧩 Conteúdo institucional</span>
+          <span class="gov-tag tag-lilac">👤 Admin Governança</span>
+        </div>
+      </header>
+
+      <section class="gov-content">
+        <div class="gov-kpi-row">
+          <div class="gov-mini-card">
+            <span>Usuários</span>
+            <strong id="contentUsuarios">0</strong>
+          </div>
+
+          <div class="gov-mini-card">
+            <span>Territórios</span>
+            <strong id="contentTerritorios">0</strong>
+          </div>
+
+          <div class="gov-mini-card">
+            <span>Participantes</span>
+            <strong id="contentParticipantes">0</strong>
+          </div>
+
+          <div class="gov-mini-card">
+            <span>Coletas</span>
+            <strong id="contentColetas">0</strong>
+          </div>
+        </div>
+
+        <section class="gov-panel-block">
+          <div class="gov-block-head">
+            <h2>Resumo operacional</h2>
+          </div>
+
+          <div class="gov-summary-grid">
+            <div class="gov-summary-box">
+              <span>Pendências de aprovação</span>
+              <strong id="contentApprovalPending">0</strong>
+            </div>
+
+            <div class="gov-summary-box">
+              <span>Usuários ativos</span>
+              <strong id="contentUsuariosAtivos">0</strong>
+            </div>
+
+            <div class="gov-summary-box">
+              <span>Residuo seco total</span>
+              <strong id="contentResiduoSeco">0</strong>
+            </div>
+
+            <div class="gov-summary-box">
+              <span>Rejeito total</span>
+              <strong id="contentRejeito">0</strong>
+            </div>
+          </div>
+        </section>
+
+        <section class="gov-panel-block">
+          <div class="gov-block-head">
+            <h2>Visão desta página</h2>
+          </div>
+          <div class="gov-placeholder">
+            <p>
+              Esta página está conectada ao Firebase e mostra um resumo geral dos dados já cadastrados.
+              Quando você criar uma coleção específica de conteúdos, banners ou avisos, eu adapto esse painel
+              para listar esses documentos também.
+            </p>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./gestao-conteudos.js"></script>
+</body>
+</html>
