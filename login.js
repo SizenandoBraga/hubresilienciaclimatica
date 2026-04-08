@@ -62,6 +62,7 @@ const ACCESS_RULES = {
 };
 
 const COOPERATIVAS_PAGE = "./cooperativas.html";
+const GOVERNANCA_PAGE = "./governanca.html";
 
 /* =============================
    UI REFS
@@ -153,14 +154,26 @@ function getAccessData(email) {
   return ACCESS_RULES[normalizeEmail(email)] || null;
 }
 
-function goToCooperativas() {
-  window.location.href = COOPERATIVAS_PAGE;
+function getRedirectPage(access) {
+  if (!access) return "./login.html";
+  if (access.perfil === "governanca" || access.scope === "global") {
+    return GOVERNANCA_PAGE;
+  }
+  return COOPERATIVAS_PAGE;
+}
+
+function redirectByAccess(access) {
+  window.location.href = getRedirectPage(access);
 }
 
 function describeAccess(access) {
   if (!access) return "sem acesso";
-  if (access.perfil === "governanca") return "Governança • acesso a todas as cooperativas";
-  if (access.perfil === "admin") return `Administrador local • acesso total da cooperativa ${access.cooperativaNome}`;
+  if (access.perfil === "governanca") {
+    return "Governança • acesso a todas as cooperativas";
+  }
+  if (access.perfil === "admin") {
+    return `Administrador local • acesso total da cooperativa ${access.cooperativaNome}`;
+  }
   return `Usuário local • acesso à cooperativa ${access.cooperativaNome}`;
 }
 
@@ -206,7 +219,11 @@ onAuthStateChanged(auth, async (user) => {
     return;
   }
 
-  showMsg(msgBox, "success", `Você já está conectado como ${email}. Perfil: ${describeAccess(access)}.`);
+  showMsg(
+    msgBox,
+    "success",
+    `Você já está conectado como ${email}. Perfil: ${describeAccess(access)}.`
+  );
 
   if (!authedActions) return;
   authedActions.innerHTML = "";
@@ -215,8 +232,12 @@ onAuthStateChanged(auth, async (user) => {
   const continueBtn = document.createElement("button");
   continueBtn.type = "button";
   continueBtn.className = "btn btn-primary btn-block";
-  continueBtn.textContent = "Continuar";
-  continueBtn.addEventListener("click", goToCooperativas);
+  continueBtn.textContent =
+    access.perfil === "governanca"
+      ? "Ir para Governança"
+      : "Ir para Cooperativas";
+
+  continueBtn.addEventListener("click", () => redirectByAccess(access));
 
   const logoutBtn = document.createElement("button");
   logoutBtn.type = "button";
@@ -266,7 +287,7 @@ loginForm?.addEventListener("submit", async (e) => {
       return;
     }
 
-    goToCooperativas();
+    redirectByAccess(access);
   } catch (err) {
     console.error("LOGIN ERROR =>", err);
 
