@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `
     }
-       padre-cacique: {
+       padrecacique: {
       name: "Padre Cacique",
       lat: -30.140122365657504,
       lng:  -51.1268772051727,
