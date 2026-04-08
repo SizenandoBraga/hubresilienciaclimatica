@@ -1,10 +1,27 @@
 document.addEventListener("DOMContentLoaded", () => {
-  // ==========================================
-  // CONFIGURAÇÕES GERAIS
-  // ==========================================
-  const LOGIN_URL = "login.html";
+  "use strict";
 
-  // Pontos que serão exibidos no mapa
+  /* =========================================================
+   * CONFIGURAÇÕES GERAIS
+   * ========================================================= */
+  const LOGIN_URL = "login.html";
+  const MOBILE_BREAKPOINT = 860;
+  const HEADER_SCROLL_OFFSET = 96;
+  const MAP_SCROLL_OFFSET = 110;
+  const INITIAL_MAP_VIEW = {
+    lat: -30.02,
+    lng: -51.18,
+    zoom: 11
+  };
+
+  /**
+   * Pontos CRGR exibidos no mapa.
+   * Cada item contém:
+   * - name: nome legível
+   * - lat/lng: coordenadas
+   * - zoom: zoom ao focar no ponto
+   * - popup: conteúdo HTML do popup
+   */
   const CRGR_POINTS = {
     cooadesc: {
       name: "COOADESC",
@@ -19,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `
     },
+
     vilapinto: {
       name: "Vila Pinto",
       lat: -30.048729170292532,
@@ -31,95 +49,166 @@ document.addEventListener("DOMContentLoaded", () => {
           Porto Alegre/RS
         </div>
       `
-    }
-       padrecacique: {
+    },
+
+    padrecacique: {
       name: "Padre Cacique",
       lat: -30.140122365657504,
-      lng:  -51.1268772051727,
+      lng: -51.1268772051727,
       zoom: 16,
       popup: `
         <div style="font-family:'Archivo Condensed',sans-serif;">
-          <strong>Vila Pinto</strong><br>
-          Região da Belém Novo<br>
+          <strong>Padre Cacique</strong><br>
+          Região de Belém Novo<br>
           Porto Alegre/RS
         </div>
       `
     }
   };
 
-  // Funções utilitárias para buscar elementos
+  /* =========================================================
+   * HELPERS DE DOM
+   * ========================================================= */
+
+  /**
+   * Retorna o primeiro elemento que casar com o seletor.
+   * @param {string} selector
+   * @param {ParentNode} [scope=document]
+   * @returns {Element|null}
+   */
   const $ = (selector, scope = document) => scope.querySelector(selector);
+
+  /**
+   * Retorna todos os elementos do seletor como array.
+   * @param {string} selector
+   * @param {ParentNode} [scope=document]
+   * @returns {Element[]}
+   */
   const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
-  // Scroll suave com compensação para header fixo
-  function safeScrollTo(target, offset = 96) {
-    if (!target) return;
-    const top = target.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: "smooth" });
-  }
-
-  // Detecta se o usuário prefere menos animações
+  /**
+   * Verifica se o usuário prefere reduzir animações.
+   * @returns {boolean}
+   */
   function isReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
-  // Atualiza ano automaticamente no rodapé
-  const yearEl = $("#year");
-  if (yearEl) yearEl.textContent = String(new Date().getFullYear());
+  /**
+   * Faz scroll suave até um elemento com compensação para cabeçalho fixo.
+   * @param {Element|null} target
+   * @param {number} [offset=HEADER_SCROLL_OFFSET]
+   */
+  function safeScrollTo(target, offset = HEADER_SCROLL_OFFSET) {
+    if (!target) return;
 
-  // ==========================================
-  // BOTÕES DE ENTRADA / LOGIN
-  // ==========================================
+    const top = target.getBoundingClientRect().top + window.scrollY - offset;
+    window.scrollTo({
+      top,
+      behavior: "smooth"
+    });
+  }
+
+  /**
+   * Atualiza o texto de um elemento se ele existir.
+   * @param {Element|null} element
+   * @param {string} text
+   */
+  function setTextIfExists(element, text) {
+    if (element) {
+      element.textContent = text;
+    }
+  }
+
+  /* =========================================================
+   * ANO AUTOMÁTICO NO RODAPÉ
+   * ========================================================= */
+  const yearEl = $("#year");
+  setTextIfExists(yearEl, String(new Date().getFullYear()));
+
+  /* =========================================================
+   * BOTÕES DE ENTRADA / LOGIN
+   * ========================================================= */
+
+  /**
+   * Redireciona para a página de login.
+   */
+  function goToLogin() {
+    window.location.href = LOGIN_URL;
+  }
+
   const btnEntrar = $("#btnEntrar");
   const btnEntrarHero = $("#btnEntrarHero");
 
-  [btnEntrar, btnEntrarHero].forEach((btn) => {
-    if (!btn) return;
-    btn.addEventListener("click", () => {
-      window.location.href = LOGIN_URL;
-    });
+  [btnEntrar, btnEntrarHero].forEach((button) => {
+    if (!button) return;
+
+    button.addEventListener("click", goToLogin);
   });
 
-  // ==========================================
-  // MENU MOBILE
-  // ==========================================
+  /* =========================================================
+   * MENU MOBILE
+   * ========================================================= */
   const menuBtn = $("#menuBtn");
   const mainNav = $("#mainNav");
 
+  /**
+   * Fecha o menu mobile.
+   */
   function closeMobileMenu() {
     if (!menuBtn || !mainNav) return;
+
     menuBtn.setAttribute("aria-expanded", "false");
     mainNav.classList.remove("open");
   }
 
+  /**
+   * Abre o menu mobile.
+   */
   function openMobileMenu() {
     if (!menuBtn || !mainNav) return;
+
     menuBtn.setAttribute("aria-expanded", "true");
     mainNav.classList.add("open");
   }
 
-  if (menuBtn && mainNav) {
-    menuBtn.addEventListener("click", () => {
-      const expanded = menuBtn.getAttribute("aria-expanded") === "true";
-      expanded ? closeMobileMenu() : openMobileMenu();
-    });
+  /**
+   * Alterna o estado do menu mobile.
+   */
+  function toggleMobileMenu() {
+    if (!menuBtn) return;
 
-    // Fecha menu ao clicar em um link no mobile
+    const isExpanded = menuBtn.getAttribute("aria-expanded") === "true";
+    if (isExpanded) {
+      closeMobileMenu();
+    } else {
+      openMobileMenu();
+    }
+  }
+
+  if (menuBtn && mainNav) {
+    menuBtn.addEventListener("click", toggleMobileMenu);
+
+    /* Fecha o menu ao clicar em qualquer link no mobile */
     $$("a", mainNav).forEach((link) => {
       link.addEventListener("click", () => {
-        if (window.innerWidth <= 860) closeMobileMenu();
+        if (window.innerWidth <= MOBILE_BREAKPOINT) {
+          closeMobileMenu();
+        }
       });
     });
 
-    // Se voltar para desktop, fecha o menu mobile
+    /* Garante que, ao voltar para desktop, o menu mobile feche */
     window.addEventListener("resize", () => {
-      if (window.innerWidth > 860) closeMobileMenu();
+      if (window.innerWidth > MOBILE_BREAKPOINT) {
+        closeMobileMenu();
+      }
     });
   }
 
-  // ==========================================
-  // EFEITO DE GLOW DO CURSOR
-  // ==========================================
+  /* =========================================================
+   * GLOW DO CURSOR
+   * ========================================================= */
   const cursorGlow = $("#cursorGlow");
 
   if (cursorGlow && !isReducedMotion()) {
@@ -127,18 +216,23 @@ document.addEventListener("DOMContentLoaded", () => {
     let mouseX = -9999;
     let mouseY = -9999;
 
-    const updateGlow = () => {
-      cursorGlow.style.setProperty("--mx", mouseX);
-      cursorGlow.style.setProperty("--my", mouseY);
+    /**
+     * Atualiza as variáveis CSS do glow.
+     */
+    function updateGlowPosition() {
+      cursorGlow.style.setProperty("--mx", String(mouseX));
+      cursorGlow.style.setProperty("--my", String(mouseY));
       rafId = null;
-    };
+    }
 
     window.addEventListener("mousemove", (event) => {
       mouseX = event.clientX;
       mouseY = event.clientY;
       cursorGlow.style.opacity = "1";
 
-      if (!rafId) rafId = requestAnimationFrame(updateGlow);
+      if (!rafId) {
+        rafId = requestAnimationFrame(updateGlowPosition);
+      }
     });
 
     window.addEventListener("mouseleave", () => {
@@ -150,9 +244,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ==========================================
-  // REVEAL DAS SEÇÕES AO ENTRAR NA TELA
-  // ==========================================
+  /* =========================================================
+   * REVEAL DE ELEMENTOS
+   * ========================================================= */
   const revealEls = $$("[data-reveal]");
 
   if (revealEls.length) {
@@ -161,6 +255,7 @@ document.addEventListener("DOMContentLoaded", () => {
         (entries, observer) => {
           entries.forEach((entry) => {
             if (!entry.isIntersecting) return;
+
             entry.target.classList.add("in");
             observer.unobserve(entry.target);
           });
@@ -171,28 +266,32 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       );
 
-      revealEls.forEach((el) => revealObserver.observe(el));
+      revealEls.forEach((element) => revealObserver.observe(element));
     } else {
-      revealEls.forEach((el) => el.classList.add("in"));
+      revealEls.forEach((element) => element.classList.add("in"));
     }
   }
 
-  // ==========================================
-  // CONTADOR ANIMADO DOS INDICADORES
-  // ==========================================
+  /* =========================================================
+   * CONTADOR ANIMADO
+   * ========================================================= */
   const countEls = $$(".kcount");
 
-  function animateCount(el) {
-    const target = Number(el.dataset.count || 0);
+  /**
+   * Anima um contador numérico até o valor definido em data-count.
+   * @param {Element} element
+   */
+  function animateCount(element) {
+    const target = Number(element.dataset.count || 0);
     const duration = 1400;
 
     if (!Number.isFinite(target)) {
-      el.textContent = "0";
+      element.textContent = "0";
       return;
     }
 
     if (isReducedMotion()) {
-      el.textContent = target.toLocaleString("pt-BR");
+      element.textContent = target.toLocaleString("pt-BR");
       return;
     }
 
@@ -202,12 +301,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const progress = Math.min((now - start) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
       const current = Math.round(target * eased);
-      el.textContent = current.toLocaleString("pt-BR");
+
+      element.textContent = current.toLocaleString("pt-BR");
 
       if (progress < 1) {
         requestAnimationFrame(frame);
       } else {
-        el.textContent = target.toLocaleString("pt-BR");
+        element.textContent = target.toLocaleString("pt-BR");
       }
     }
 
@@ -220,37 +320,46 @@ document.addEventListener("DOMContentLoaded", () => {
         (entries, observer) => {
           entries.forEach((entry) => {
             if (!entry.isIntersecting) return;
+
             animateCount(entry.target);
             observer.unobserve(entry.target);
           });
         },
-        { threshold: 0.45 }
+        {
+          threshold: 0.45
+        }
       );
 
-      countEls.forEach((el) => countObserver.observe(el));
+      countEls.forEach((element) => countObserver.observe(element));
     } else {
-      countEls.forEach((el) => animateCount(el));
+      countEls.forEach((element) => animateCount(element));
     }
   }
 
-  // ==========================================
-  // FAQ - APENAS UM ITEM ABERTO POR VEZ
-  // ==========================================
-  $$("details.faq-item, details").forEach((detail) => {
+  /* =========================================================
+   * FAQ - MANTÉM APENAS UM ITEM ABERTO
+   * ========================================================= */
+  const faqDetails = $$("details.faq-item, details");
+
+  faqDetails.forEach((detail) => {
     detail.addEventListener("toggle", () => {
       if (!detail.open) return;
-      $$("details.faq-item, details").forEach((other) => {
-        if (other !== detail) other.open = false;
+
+      faqDetails.forEach((other) => {
+        if (other !== detail) {
+          other.open = false;
+        }
       });
     });
   });
 
-  // ==========================================
-  // LINKS INTERNOS COM SCROLL SUAVE
-  // ==========================================
+  /* =========================================================
+   * LINKS INTERNOS COM SCROLL SUAVE
+   * ========================================================= */
   $$('a[href^="#"]').forEach((anchor) => {
     anchor.addEventListener("click", (event) => {
       const href = anchor.getAttribute("href");
+
       if (!href || href === "#") return;
 
       const target = document.querySelector(href);
@@ -262,20 +371,26 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // ==========================================
-  // MAPA LEAFLET
-  // ==========================================
+  /* =========================================================
+   * MAPA LEAFLET
+   * ========================================================= */
   const mapEl = $("#map");
   let map = null;
   const markers = {};
 
+  /**
+   * Inicializa o mapa Leaflet uma única vez.
+   * @returns {any|null}
+   */
   function initMap() {
-    if (!mapEl || map || typeof L === "undefined") return map;
+    if (!mapEl || map || typeof L === "undefined") {
+      return map;
+    }
 
     map = L.map(mapEl, {
       zoomControl: true,
       scrollWheelZoom: false
-    }).setView([-30.02, -51.18], 11);
+    }).setView([INITIAL_MAP_VIEW.lat, INITIAL_MAP_VIEW.lng], INITIAL_MAP_VIEW.zoom);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap"
@@ -294,6 +409,10 @@ document.addEventListener("DOMContentLoaded", () => {
     return map;
   }
 
+  /**
+   * Foca um ponto do mapa pelo identificador.
+   * @param {string} pointKey
+   */
   function focusPoint(pointKey) {
     const point = CRGR_POINTS[pointKey];
     if (!point || !mapEl) return;
@@ -301,7 +420,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const mapInstance = initMap();
     if (!mapInstance) return;
 
-    safeScrollTo(mapEl, 110);
+    safeScrollTo(mapEl, MAP_SCROLL_OFFSET);
 
     setTimeout(() => {
       mapInstance.invalidateSize();
@@ -318,9 +437,9 @@ document.addEventListener("DOMContentLoaded", () => {
   if (mapEl) {
     initMap();
 
-    $$("[data-focus-point]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const pointKey = btn.getAttribute("data-focus-point");
+    $$("[data-focus-point]").forEach((button) => {
+      button.addEventListener("click", () => {
+        const pointKey = button.getAttribute("data-focus-point");
         focusPoint(pointKey);
       });
     });
@@ -328,21 +447,27 @@ document.addEventListener("DOMContentLoaded", () => {
     const openMapBtn = $("[data-open-map]");
     if (openMapBtn) {
       openMapBtn.addEventListener("click", () => {
-        safeScrollTo(mapEl, 110);
+        safeScrollTo(mapEl, MAP_SCROLL_OFFSET);
+
         setTimeout(() => {
-          if (map) map.invalidateSize();
+          if (map) {
+            map.invalidateSize();
+          }
         }, 260);
       });
     }
   }
 
-  // ==========================================
-  // AO ENTRAR COM HASH NA URL, POSICIONA A PÁGINA
-  // ==========================================
+  /* =========================================================
+   * POSICIONAMENTO INICIAL POR HASH
+   * ========================================================= */
   if (window.location.hash) {
     const target = document.querySelector(window.location.hash);
+
     if (target) {
-      setTimeout(() => safeScrollTo(target), 120);
+      setTimeout(() => {
+        safeScrollTo(target);
+      }, 120);
     }
   }
 });

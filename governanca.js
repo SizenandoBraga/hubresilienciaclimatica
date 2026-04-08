@@ -37,7 +37,8 @@ function showSection(sectionName) {
   });
 
   if (pageSubtitle) {
-    pageSubtitle.textContent = SECTION_TITLES[sectionName] || "Plataforma • Cooperativas";
+    pageSubtitle.textContent =
+      SECTION_TITLES[sectionName] || "Plataforma • Cooperativas";
   }
 }
 
@@ -78,6 +79,7 @@ function normalizeRole(data = {}) {
 
 function isGovernancaUser(userData = {}) {
   const role = normalizeRole(userData);
+
   return lower(userData.status) === "active" && (
     role === "governanca" ||
     role === "gestor" ||
@@ -88,13 +90,19 @@ function isGovernancaUser(userData = {}) {
 function formatDateTime(value) {
   try {
     if (!value) return "";
+
     let dateObj = null;
 
-    if (typeof value?.toDate === "function") dateObj = value.toDate();
-    else if (value instanceof Date) dateObj = value;
-    else dateObj = new Date(value);
+    if (typeof value?.toDate === "function") {
+      dateObj = value.toDate();
+    } else if (value instanceof Date) {
+      dateObj = value;
+    } else {
+      dateObj = new Date(value);
+    }
 
     if (!dateObj || Number.isNaN(dateObj.getTime())) return "";
+
     return dateObj.toLocaleString("pt-BR", {
       dateStyle: "short",
       timeStyle: "short"
@@ -107,13 +115,19 @@ function formatDateTime(value) {
 function formatHour(value) {
   try {
     if (!value) return "";
+
     let dateObj = null;
 
-    if (typeof value?.toDate === "function") dateObj = value.toDate();
-    else if (value instanceof Date) dateObj = value;
-    else dateObj = new Date(value);
+    if (typeof value?.toDate === "function") {
+      dateObj = value.toDate();
+    } else if (value instanceof Date) {
+      dateObj = value;
+    } else {
+      dateObj = new Date(value);
+    }
 
     if (!dateObj || Number.isNaN(dateObj.getTime())) return "";
+
     return dateObj.toLocaleTimeString("pt-BR", {
       hour: "2-digit",
       minute: "2-digit"
@@ -151,6 +165,7 @@ function territoryName(data = {}) {
 
 function formatPermission(data = {}) {
   const role = normalizeRole(data);
+
   if (role === "governanca" || role === "gestor") return "Governança";
   if (role === "admin") return "Admin cooperativa";
   if (role === "brigadista") return "Brigadista";
@@ -169,26 +184,33 @@ function sumNumericFromItem(item) {
 
 function sumObjectNumericValues(obj) {
   if (!obj || typeof obj !== "object") return 0;
+
   let total = 0;
+
   for (const key of Object.keys(obj)) {
     total += sumNumericFromItem(obj[key]);
   }
+
   return total;
 }
 
 function sumResiduoSecoKg(coletas = []) {
   let total = 0;
+
   for (const coleta of coletas) {
     if (typeof coleta.totalKg === "number") total += coleta.totalKg;
+
     if (coleta.recebimento && typeof coleta.recebimento === "object") {
       total += sumObjectNumericValues(coleta.recebimento);
     }
   }
+
   return Math.round(total);
 }
 
 function sumRejeitoKg(coletas = []) {
   let total = 0;
+
   for (const coleta of coletas) {
     if (!coleta?.recebimento || typeof coleta.recebimento !== "object") continue;
 
@@ -197,21 +219,29 @@ function sumRejeitoKg(coletas = []) {
       total += sumNumericFromItem(coleta.recebimento[key]);
     }
   }
+
   return Math.round(total);
 }
 
 function sumResiduoSecoFromColeta(coleta) {
   if (!coleta) return 0;
+
   let total = 0;
-  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
+
+  if (typeof coleta.totalKg === "number") {
+    total += coleta.totalKg;
+  }
+
   if (coleta.recebimento && typeof coleta.recebimento === "object") {
     total += sumObjectNumericValues(coleta.recebimento);
   }
+
   return total;
 }
 
 function sumRejeitoFromColeta(coleta) {
   if (!coleta?.recebimento || typeof coleta.recebimento !== "object") return 0;
+
   let total = 0;
 
   for (const key of Object.keys(coleta.recebimento)) {
@@ -240,7 +270,8 @@ async function loadCollectionSafe(name) {
     try {
       const snap = await getDocs(collection(db, name));
       return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    } catch {
+    } catch (error) {
+      console.warn(`Nao foi possivel ler a colecao ${name}:`, error);
       return [];
     }
   }
@@ -256,13 +287,57 @@ async function loadCRGRCollections() {
   const merged = [...territories, ...cooperativas, ...crgrs];
 
   if (merged.length) return merged;
-
   return [];
 }
 
+async function loadAllData() {
+  const [users, participants, coletas, approvalRequests, rawCRGRs] = await Promise.all([
+    loadCollectionSafe("users"),
+    loadCollectionSafe("participants"),
+    loadCollectionSafe("coletas"),
+    loadCollectionSafe("approvalRequests"),
+    loadCRGRCollections()
+  ]);
+
+  let crgrs = normalizeCRGRDocs(rawCRGRs);
+
+  if (!crgrs.length) {
+    crgrs = buildCRGRsFromData(users, participants, coletas);
+  }
+
+  return { users, participants, coletas, approvalRequests, crgrs };
+}
+
 /* =========================
-   CRIAR CRGRS A PARTIR DOS DADOS
+   NORMALIZAÇÃO CRGR
 ========================= */
+
+function normalizeCRGRDocs(rawCRGRs = []) {
+  return rawCRGRs
+    .map((item) => ({
+      id: item.id || item.code || item.territoryId,
+      code: item.code || item.id || item.territoryId,
+      territoryId: item.territoryId || item.code || item.id,
+      name:
+        item.name ||
+        item.title ||
+        item.label ||
+        item.territoryLabel ||
+        item.cooperativaNome ||
+        item.code ||
+        item.id,
+      territoryLabel:
+        item.territoryLabel ||
+        item.name ||
+        item.title ||
+        item.label ||
+        item.cooperativaNome ||
+        item.code ||
+        item.id,
+      active: item.active !== false
+    }))
+    .filter((item) => item.id);
+}
 
 function buildCRGRsFromData(users = [], participants = [], coletas = []) {
   const map = new Map();
@@ -283,6 +358,7 @@ function buildCRGRsFromData(users = [], participants = [], coletas = []) {
       });
     } else {
       const current = map.get(id);
+
       if (!current.name || current.name === current.id) {
         current.name = normalizeText(territoryLabel) || current.name;
         current.territoryLabel = normalizeText(territoryLabel) || current.territoryLabel;
@@ -307,38 +383,13 @@ function buildCRGRsFromData(users = [], participants = [], coletas = []) {
   );
 }
 
-function normalizeCRGRDocs(rawCRGRs = []) {
-  return rawCRGRs.map((item) => ({
-    id: item.id || item.code || item.territoryId,
-    code: item.code || item.id || item.territoryId,
-    territoryId: item.territoryId || item.code || item.id,
-    name:
-      item.name ||
-      item.title ||
-      item.label ||
-      item.territoryLabel ||
-      item.cooperativaNome ||
-      item.code ||
-      item.id,
-    territoryLabel:
-      item.territoryLabel ||
-      item.name ||
-      item.title ||
-      item.label ||
-      item.cooperativaNome ||
-      item.code ||
-      item.id,
-    active: item.active !== false
-  })).filter((item) => item.id);
-}
-
 /* =========================
    RENDER PAINEL
 ========================= */
 
 function renderPainel({ crgrs, users, participants, coletas, approvalRequests }) {
+  const totalCadastros = users.length + participants.length;
   const crgrAtivos = crgrs.filter((t) => t.active !== false).length;
-  const usuarios = users.length;
   const residencias = participants.length;
   const brigadistas = users.filter((u) => normalizeRole(u) === "brigadista").length;
 
@@ -356,7 +407,7 @@ function renderPainel({ crgrs, users, participants, coletas, approvalRequests })
   const territoriosInativos = crgrs.filter((t) => t.active === false).length;
 
   setMetric("metricCrgrAtivos", crgrAtivos);
-  setMetric("metricUsuarios", usuarios);
+  setMetric("metricUsuarios", totalCadastros);
   setMetric("metricResidencias", residencias);
   setMetric("metricBrigadistas", brigadistas);
   setMetric("metricAcoesAndamento", acoesAndamento);
@@ -380,17 +431,27 @@ function renderPainel({ crgrs, users, participants, coletas, approvalRequests })
 ========================= */
 
 function buildUnifiedUsers(users = [], participants = []) {
-  const finalUsers = [];
+  const unified = [];
 
   users.forEach((user) => {
-    finalUsers.push({
+    unified.push({
+      id: user.id,
       sourceCollection: "users",
-      ...user
+      name: user.name || user.fullName || user.displayName || user.email || "Sem nome",
+      email: user.email || "-",
+      territoryId: user.territoryId || "",
+      territoryLabel: user.territoryLabel || user.cooperativaNome || "",
+      createdAt: user.createdAt || user.createdAtClient || user.createdAtISO || null,
+      lastAccessAt: user.lastLoginAt || user.lastAccessAt || user.updatedAt || null,
+      accessCount: user.accessCount || user.loginCount || user.qtdAcessos || user.quantidadeAcessos || 0,
+      role: user.role || "",
+      roles: user.roles || {},
+      status: user.status || "inactive"
     });
   });
 
   participants.forEach((participant) => {
-    finalUsers.push({
+    unified.push({
       id: `participant-${participant.id || participant.participantCode || Math.random().toString(36).slice(2)}`,
       sourceCollection: "participants",
       name: participant.name || participant.fullName || "Participante",
@@ -398,16 +459,17 @@ function buildUnifiedUsers(users = [], participants = []) {
       territoryId: participant.territoryId || "",
       territoryLabel: participant.territoryLabel || "",
       createdAt: participant.createdAt || participant.createdAtISO || null,
-      updatedAt: participant.updatedAt || null,
-      status: participant.status || participant.approvalStatus || "pending",
+      lastAccessAt: participant.updatedAt || null,
       accessCount: 0,
-      role: participant.participantType || "participante"
+      role: participant.participantType || "participante",
+      roles: {},
+      status: participant.status || participant.approvalStatus || "pending"
     });
   });
 
-  finalUsers.sort((a, b) => {
-    const da = getCreatedAt(a);
-    const db = getCreatedAt(b);
+  unified.sort((a, b) => {
+    const da = a.createdAt;
+    const db = b.createdAt;
 
     const ta =
       typeof da?.toDate === "function"
@@ -422,38 +484,45 @@ function buildUnifiedUsers(users = [], participants = []) {
     return tb - ta;
   });
 
-  return finalUsers;
+  return unified;
 }
 
-function formatUserStatus(data = {}) {
-  const status = lower(data.status);
+function formatUnifiedPermission(item = {}) {
+  if (item.sourceCollection === "participants") return "Participante";
+
+  const role = normalizeRole(item);
+
+  if (role === "governanca" || role === "gestor") return "Governança";
+  if (role === "admin") return "Admin cooperativa";
+  if (role === "brigadista") return "Brigadista";
+  return "Usuário local";
+}
+
+function formatUnifiedStatus(item = {}) {
+  const status = lower(item.status);
 
   if (status === "active") return { label: "Ativo", inactive: false };
-  if (status === "pending" || status === "pending_approval") return { label: "Pendente", inactive: true };
   if (status === "approved") return { label: "Aprovado", inactive: false };
-  return { label: data.status || "Inativo", inactive: true };
-}
+  if (status === "pending" || status === "pending_approval") {
+    return { label: "Pendente", inactive: true };
+  }
 
-function formatSourceLabel(data = {}) {
-  if (data.sourceCollection === "participants") return "Participante";
-  return formatPermission(data);
+  return { label: item.status || "Inativo", inactive: true };
 }
 
 function renderUsuarios(users = [], participants = []) {
   const unifiedUsers = buildUnifiedUsers(users, participants);
 
-  const total = unifiedUsers.length;
-  const ativos = users.filter((u) => lower(u.status) === "active").length;
-  const admins = users.filter((u) => normalizeRole(u) === "admin").length;
-  const governanca = users.filter((u) => {
-    const role = normalizeRole(u);
-    return role === "governanca" || role === "gestor";
-  }).length;
-
-  setMetric("usersTotal", total);
-  setMetric("usersAtivos", ativos);
-  setMetric("usersAdmins", admins);
-  setMetric("usersGovernanca", governanca);
+  setMetric("usersTotal", unifiedUsers.length);
+  setMetric("usersAtivos", users.filter((u) => lower(u.status) === "active").length);
+  setMetric("usersAdmins", users.filter((u) => normalizeRole(u) === "admin").length);
+  setMetric(
+    "usersGovernanca",
+    users.filter((u) => {
+      const role = normalizeRole(u);
+      return role === "governanca" || role === "gestor";
+    }).length
+  );
 
   const tbody = byId("usersTableBody");
   if (!tbody) return;
@@ -462,24 +531,24 @@ function renderUsuarios(users = [], participants = []) {
 
   if (!unifiedUsers.length) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="9">Nenhum usuário encontrado.</td>`;
+    tr.innerHTML = `<td colspan="9">Nenhum registro encontrado.</td>`;
     tbody.appendChild(tr);
     return;
   }
 
-  unifiedUsers.forEach((user) => {
+  unifiedUsers.forEach((item) => {
     const tr = document.createElement("tr");
-    const statusInfo = formatUserStatus(user);
+    const statusInfo = formatUnifiedStatus(item);
 
     tr.innerHTML = `
-      <td>${formatHour(getCreatedAt(user)) || "-"}</td>
-      <td>${getUserDisplayName(user)}</td>
-      <td>${user.email || "-"}</td>
-      <td>${territoryName(user)}</td>
-      <td>${estimateAccessCount(user)}</td>
-      <td>${formatDateTime(getLastLogin(user)) || "-"}</td>
-      <td>${formatSourceLabel(user)}</td>
-      <td>${user.sourceCollection === "participants" ? "participants" : "users"}</td>
+      <td>${formatHour(item.createdAt) || "-"}</td>
+      <td>${item.name || "-"}</td>
+      <td>${item.email || "-"}</td>
+      <td>${item.territoryLabel || item.territoryId || "Sem território"}</td>
+      <td>${item.accessCount ?? 0}</td>
+      <td>${formatDateTime(item.lastAccessAt) || "-"}</td>
+      <td>${formatUnifiedPermission(item)}</td>
+      <td>${item.sourceCollection}</td>
       <td><span class="status-pill ${statusInfo.inactive ? "inactive" : ""}">${statusInfo.label}</span></td>
     `;
 
@@ -642,19 +711,7 @@ function renderConteudos({ users, crgrs, participants, coletas, approvalRequests
 ========================= */
 
 async function loadGovernanca() {
-  const [users, participants, coletas, approvalRequests, rawCRGRs] = await Promise.all([
-    loadCollectionSafe("users"),
-    loadCollectionSafe("participants"),
-    loadCollectionSafe("coletas"),
-    loadCollectionSafe("approvalRequests"),
-    loadCRGRCollections()
-  ]);
-
-  let crgrs = normalizeCRGRDocs(rawCRGRs);
-
-  if (!crgrs.length) {
-    crgrs = buildCRGRsFromData(users, participants, coletas);
-  }
+  const { users, participants, coletas, approvalRequests, crgrs } = await loadAllData();
 
   renderPainel({ crgrs, users, participants, coletas, approvalRequests });
   renderUsuarios(users, participants);
@@ -663,6 +720,12 @@ async function loadGovernanca() {
   renderTerritorios(territorySummary);
 
   renderConteudos({ users, crgrs, participants, coletas, approvalRequests });
+
+  console.log("users:", users.length);
+  console.log("participants:", participants.length);
+  console.log("coletas:", coletas.length);
+  console.log("approvalRequests:", approvalRequests.length);
+  console.log("crgrs:", crgrs.length);
 }
 
 /* =========================
