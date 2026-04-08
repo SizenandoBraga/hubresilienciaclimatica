@@ -33,19 +33,19 @@
         <span class="gov-menu-label">MENU</span>
 
         <nav class="gov-nav">
-          <button class="gov-nav-btn is-active" data-section="painel">
+          <button class="gov-nav-btn is-active" data-section="painel" type="button">
             Painel Inicial
           </button>
 
-          <button class="gov-nav-btn" data-section="usuarios">
+          <button class="gov-nav-btn" data-section="usuarios" type="button">
             Gestão do Usuário
           </button>
 
-          <button class="gov-nav-btn" data-section="territorios">
+          <button class="gov-nav-btn" data-section="territorios" type="button">
             Gestão do Território
           </button>
 
-          <button class="gov-nav-btn" data-section="conteudos">
+          <button class="gov-nav-btn" data-section="conteudos" type="button">
             Gestão de conteúdos
           </button>
         </nav>
@@ -61,98 +61,260 @@
 
           <div class="gov-brand-text">
             <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-            <span>Plataforma • Cooperativas</span>
+            <span id="pageSubtitle">Plataforma • Cooperativas</span>
           </div>
         </div>
 
-        <div class="gov-top-tags">
-          <span class="gov-tag tag-green">🟢 Todos os territórios</span>
-          <span class="gov-tag tag-lightgreen">📊 Todas as cooperativas</span>
-          <span class="gov-tag tag-beige">🔒 Administrador</span>
-          <span class="gov-tag tag-lilac">👤 Admin Governança</span>
+        <div class="gov-top-actions">
+          <div class="gov-top-tags">
+            <span class="gov-tag tag-green">🟢 Todos os territórios</span>
+            <span class="gov-tag tag-lightgreen">📊 Todas as cooperativas</span>
+            <span class="gov-tag tag-beige">🔒 Administrador</span>
+            <span class="gov-tag tag-lilac">👤 Admin Governança</span>
+          </div>
+
+          <div class="gov-session-box" id="govSessionBox">
+            <div class="gov-session-info">
+              <span class="gov-session-label">Logado como</span>
+              <strong id="loggedUserName">Carregando...</strong>
+              <small id="loggedUserMeta">Perfil: Governança</small>
+            </div>
+
+            <button type="button" class="gov-btn" id="logoutBtn">
+              Sair
+            </button>
+          </div>
         </div>
       </header>
 
       <section class="gov-content" id="govContent">
-        <!-- PÁGINA 1 -->
+        <!-- PAINEL -->
         <section class="gov-section is-visible" id="section-painel">
           <div class="gov-dashboard">
             <article class="gov-card">
               <h3>CRGR ATIVOS</h3>
-              <strong id="metricCrgrAtivos">3</strong>
+              <strong id="metricCrgrAtivos">0</strong>
             </article>
 
             <article class="gov-card">
               <h3>USUÁRIOS CADASTRADOS</h3>
-              <strong id="metricUsuarios">43</strong>
+              <strong id="metricUsuarios">0</strong>
             </article>
 
             <article class="gov-card">
               <h3>RESIDÊNCIAS CADASTRADAS</h3>
-              <strong id="metricResidencias">23</strong>
+              <strong id="metricResidencias">0</strong>
             </article>
 
             <article class="gov-card">
               <h3>BRIGADISTAS CADASTRADOS</h3>
-              <strong id="metricBrigadistas">6</strong>
+              <strong id="metricBrigadistas">0</strong>
             </article>
 
             <article class="gov-card">
               <h3>AÇÕES EM ANDAMENTO</h3>
-              <strong id="metricAcoesAndamento">7</strong>
+              <strong id="metricAcoesAndamento">0</strong>
             </article>
 
             <article class="gov-card">
-              <h3>AÇÕES CRITICAS</h3>
-              <strong id="metricAcoesCriticas">3</strong>
+              <h3>AÇÕES CRÍTICAS</h3>
+              <strong id="metricAcoesCriticas">0</strong>
             </article>
 
             <article class="gov-card">
               <h3>RESÍDUO SECO TOTAL (KG)</h3>
-              <strong id="metricResiduoSeco">234</strong>
+              <strong id="metricResiduoSeco">0</strong>
             </article>
 
             <article class="gov-card">
               <h3>REJEITO TOTAL (KG)</h3>
-              <strong id="metricRejeito">23</strong>
+              <strong id="metricRejeito">0</strong>
             </article>
           </div>
+
+          <section class="gov-panel-block">
+            <div class="gov-block-head">
+              <h2>Resumo geral</h2>
+              <span id="updatedAtLabel">Carregando dados...</span>
+            </div>
+
+            <div class="gov-summary-grid">
+              <div class="gov-summary-box">
+                <span>Pedidos de aprovação</span>
+                <strong id="metricApprovalRequests">0</strong>
+              </div>
+
+              <div class="gov-summary-box">
+                <span>Coletas totais</span>
+                <strong id="metricColetas">0</strong>
+              </div>
+
+              <div class="gov-summary-box">
+                <span>Territórios inativos</span>
+                <strong id="metricTerritoriosInativos">0</strong>
+              </div>
+
+              <div class="gov-summary-box">
+                <span>Usuários ativos</span>
+                <strong id="metricUsuariosAtivos">0</strong>
+              </div>
+            </div>
+          </section>
         </section>
 
-        <!-- PÁGINA 2 -->
-        <div class="gov-table-wrap gov-table-wrap-wide">
-  <table class="gov-users-table gov-users-table-users">
-    <thead>
-      <tr>
-        <th>Hora de Cadastro</th>
-        <th>Nome</th>
-        <th>E-mail</th>
-        <th>Território</th>
-        <th>Acessos</th>
-        <th>Último acesso</th>
-        <th>Permissão</th>
-        <th>Coleção</th>
-        <th>Status</th>
-      </tr>
-    </thead>
-    <tbody id="usersTableBody"></tbody>
-  </table>
-</div>
+        <!-- USUÁRIOS -->
+        <section class="gov-section" id="section-usuarios">
+          <div class="gov-kpi-row">
+            <div class="gov-mini-card">
+              <span>Total de registros</span>
+              <strong id="usersTotal">0</strong>
+            </div>
 
-        <!-- PÁGINA 3 -->
+            <div class="gov-mini-card">
+              <span>Usuários ativos</span>
+              <strong id="usersAtivos">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Admins</span>
+              <strong id="usersAdmins">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Governança</span>
+              <strong id="usersGovernanca">0</strong>
+            </div>
+          </div>
+
+          <div class="gov-table-wrap gov-table-wrap-wide">
+            <table class="gov-users-table gov-users-table-users">
+              <thead>
+                <tr>
+                  <th>Hora de Cadastro</th>
+                  <th>Nome</th>
+                  <th>E-mail</th>
+                  <th>Território</th>
+                  <th>Acessos</th>
+                  <th>Último acesso</th>
+                  <th>Permissão</th>
+                  <th>Coleção</th>
+                  <th>Status</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
+          </div>
+        </section>
+
+        <!-- TERRITÓRIOS -->
         <section class="gov-section" id="section-territorios">
-          <div class="gov-placeholder">
-            <h2>Gestão do Território</h2>
-            <p>Área pronta para cooperativas, territórios e indicadores por unidade.</p>
+          <div class="gov-kpi-row">
+            <div class="gov-mini-card">
+              <span>Total de territórios</span>
+              <strong id="territoriosTotal">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Territórios ativos</span>
+              <strong id="territoriosAtivos">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Participantes</span>
+              <strong id="territoriosParticipantes">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Coletas</span>
+              <strong id="territoriosColetas">0</strong>
+            </div>
+          </div>
+
+          <div class="gov-table-wrap gov-table-wrap-wide">
+            <table class="gov-users-table">
+              <thead>
+                <tr>
+                  <th>Território</th>
+                  <th>Código</th>
+                  <th>Status</th>
+                  <th>Usuários</th>
+                  <th>Participantes</th>
+                  <th>Coletas</th>
+                  <th>Resíduo seco (kg)</th>
+                  <th>Rejeito (kg)</th>
+                  <th>Ações</th>
+                </tr>
+              </thead>
+              <tbody id="territoriosTableBody"></tbody>
+            </table>
           </div>
         </section>
 
-        <!-- PÁGINA 4 -->
+        <!-- CONTEÚDOS -->
         <section class="gov-section" id="section-conteudos">
-          <div class="gov-placeholder">
-            <h2>Gestão de conteúdos</h2>
-            <p>Área pronta para banners, materiais institucionais e avisos da plataforma.</p>
+          <div class="gov-kpi-row">
+            <div class="gov-mini-card">
+              <span>Usuários</span>
+              <strong id="contentUsuarios">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Territórios</span>
+              <strong id="contentTerritorios">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Participantes</span>
+              <strong id="contentParticipantes">0</strong>
+            </div>
+
+            <div class="gov-mini-card">
+              <span>Coletas</span>
+              <strong id="contentColetas">0</strong>
+            </div>
           </div>
+
+          <section class="gov-panel-block">
+            <div class="gov-block-head">
+              <h2>Resumo operacional</h2>
+            </div>
+
+            <div class="gov-summary-grid">
+              <div class="gov-summary-box">
+                <span>Pendências de aprovação</span>
+                <strong id="contentApprovalPending">0</strong>
+              </div>
+
+              <div class="gov-summary-box">
+                <span>Usuários ativos</span>
+                <strong id="contentUsuariosAtivos">0</strong>
+              </div>
+
+              <div class="gov-summary-box">
+                <span>Resíduo seco total</span>
+                <strong id="contentResiduoSeco">0</strong>
+              </div>
+
+              <div class="gov-summary-box">
+                <span>Rejeito total</span>
+                <strong id="contentRejeito">0</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="gov-panel-block">
+            <div class="gov-block-head">
+              <h2>Visão desta página</h2>
+            </div>
+            <div class="gov-placeholder">
+              <p>
+                Esta seção mostra um resumo geral dos dados cadastrados no Firebase.
+                Quando você criar uma coleção específica para banners, avisos e conteúdos
+                institucionais, esta área pode listar esses registros também.
+              </p>
+            </div>
+          </section>
         </section>
       </section>
     </main>

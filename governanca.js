@@ -12,13 +12,13 @@ import {
 const LOGIN_PAGE = "./login.html";
 const COOPERATIVAS_PAGE = "./cooperativas.html";
 
-/* =========================
-   UI / MENU
-========================= */
-
 const navButtons = document.querySelectorAll(".gov-nav-btn");
 const sections = document.querySelectorAll(".gov-section");
 const pageSubtitle = document.getElementById("pageSubtitle");
+
+const logoutBtn = document.getElementById("logoutBtn");
+const loggedUserName = document.getElementById("loggedUserName");
+const loggedUserMeta = document.getElementById("loggedUserMeta");
 
 const SECTION_TITLES = {
   painel: "Plataforma • Cooperativas",
@@ -43,14 +43,8 @@ function showSection(sectionName) {
 }
 
 navButtons.forEach((btn) => {
-  btn.addEventListener("click", () => {
-    showSection(btn.dataset.section);
-  });
+  btn.addEventListener("click", () => showSection(btn.dataset.section));
 });
-
-/* =========================
-   HELPERS
-========================= */
 
 function byId(id) {
   return document.getElementById(id);
@@ -93,13 +87,9 @@ function formatDateTime(value) {
 
     let dateObj = null;
 
-    if (typeof value?.toDate === "function") {
-      dateObj = value.toDate();
-    } else if (value instanceof Date) {
-      dateObj = value;
-    } else {
-      dateObj = new Date(value);
-    }
+    if (typeof value?.toDate === "function") dateObj = value.toDate();
+    else if (value instanceof Date) dateObj = value;
+    else dateObj = new Date(value);
 
     if (!dateObj || Number.isNaN(dateObj.getTime())) return "";
 
@@ -118,13 +108,9 @@ function formatHour(value) {
 
     let dateObj = null;
 
-    if (typeof value?.toDate === "function") {
-      dateObj = value.toDate();
-    } else if (value instanceof Date) {
-      dateObj = value;
-    } else {
-      dateObj = new Date(value);
-    }
+    if (typeof value?.toDate === "function") dateObj = value.toDate();
+    else if (value instanceof Date) dateObj = value;
+    else dateObj = new Date(value);
 
     if (!dateObj || Number.isNaN(dateObj.getTime())) return "";
 
@@ -137,39 +123,12 @@ function formatHour(value) {
   }
 }
 
-function getCreatedAt(data = {}) {
-  return data.createdAt || data.createdAtClient || data.createdAtISO || null;
-}
-
-function getLastLogin(data = {}) {
-  return data.lastLoginAt || data.lastAccessAt || data.ultimoLogin || data.updatedAt || null;
-}
-
 function getUserDisplayName(data = {}) {
   return data.name || data.fullName || data.displayName || data.email || "Sem nome";
 }
 
 function estimateAccessCount(data = {}) {
-  return (
-    data.accessCount ||
-    data.loginCount ||
-    data.qtdAcessos ||
-    data.quantidadeAcessos ||
-    0
-  );
-}
-
-function territoryName(data = {}) {
-  return data.territoryLabel || data.cooperativaNome || data.territoryId || "Sem território";
-}
-
-function formatPermission(data = {}) {
-  const role = normalizeRole(data);
-
-  if (role === "governanca" || role === "gestor") return "Governança";
-  if (role === "admin") return "Admin cooperativa";
-  if (role === "brigadista") return "Brigadista";
-  return "Usuário local";
+  return data.accessCount || data.loginCount || data.qtdAcessos || data.quantidadeAcessos || 0;
 }
 
 function sumNumericFromItem(item) {
@@ -184,7 +143,6 @@ function sumNumericFromItem(item) {
 
 function sumObjectNumericValues(obj) {
   if (!obj || typeof obj !== "object") return 0;
-
   let total = 0;
 
   for (const key of Object.keys(obj)) {
@@ -199,7 +157,6 @@ function sumResiduoSecoKg(coletas = []) {
 
   for (const coleta of coletas) {
     if (typeof coleta.totalKg === "number") total += coleta.totalKg;
-
     if (coleta.recebimento && typeof coleta.recebimento === "object") {
       total += sumObjectNumericValues(coleta.recebimento);
     }
@@ -225,13 +182,9 @@ function sumRejeitoKg(coletas = []) {
 
 function sumResiduoSecoFromColeta(coleta) {
   if (!coleta) return 0;
-
   let total = 0;
 
-  if (typeof coleta.totalKg === "number") {
-    total += coleta.totalKg;
-  }
-
+  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
   if (coleta.recebimento && typeof coleta.recebimento === "object") {
     total += sumObjectNumericValues(coleta.recebimento);
   }
@@ -241,7 +194,6 @@ function sumResiduoSecoFromColeta(coleta) {
 
 function sumRejeitoFromColeta(coleta) {
   if (!coleta?.recebimento || typeof coleta.recebimento !== "object") return 0;
-
   let total = 0;
 
   for (const key of Object.keys(coleta.recebimento)) {
@@ -252,9 +204,48 @@ function sumRejeitoFromColeta(coleta) {
   return total;
 }
 
-/* =========================
-   FIREBASE
-========================= */
+function getLoggedUserRoleLabel(profile = {}) {
+  const role = normalizeRole(profile);
+  if (role === "governanca" || role === "gestor") return "Governança";
+  if (role === "admin") return "Admin cooperativa";
+  if (role === "brigadista") return "Brigadista";
+  return "Usuário";
+}
+
+function renderLoggedUser(profile = {}, authUser = {}) {
+  if (loggedUserName) {
+    loggedUserName.textContent =
+      profile.name ||
+      profile.fullName ||
+      profile.displayName ||
+      authUser.displayName ||
+      profile.email ||
+      authUser.email ||
+      "Usuário";
+  }
+
+  if (loggedUserMeta) {
+    const roleLabel = getLoggedUserRoleLabel(profile);
+    const email = profile.email || authUser.email || "";
+    loggedUserMeta.textContent = email
+      ? `${roleLabel} • ${email}`
+      : `Perfil: ${roleLabel}`;
+  }
+}
+
+function bindLogout() {
+  if (!logoutBtn) return;
+
+  logoutBtn.onclick = async () => {
+    try {
+      await signOut(auth);
+      window.location.href = LOGIN_PAGE;
+    } catch (error) {
+      console.error("Erro ao sair da conta:", error);
+      alert("Não foi possível sair. Tente novamente.");
+    }
+  };
+}
 
 async function loadUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
@@ -285,32 +276,8 @@ async function loadCRGRCollections() {
   ]);
 
   const merged = [...territories, ...cooperativas, ...crgrs];
-
-  if (merged.length) return merged;
-  return [];
+  return merged.length ? merged : [];
 }
-
-async function loadAllData() {
-  const [users, participants, coletas, approvalRequests, rawCRGRs] = await Promise.all([
-    loadCollectionSafe("users"),
-    loadCollectionSafe("participants"),
-    loadCollectionSafe("coletas"),
-    loadCollectionSafe("approvalRequests"),
-    loadCRGRCollections()
-  ]);
-
-  let crgrs = normalizeCRGRDocs(rawCRGRs);
-
-  if (!crgrs.length) {
-    crgrs = buildCRGRsFromData(users, participants, coletas);
-  }
-
-  return { users, participants, coletas, approvalRequests, crgrs };
-}
-
-/* =========================
-   NORMALIZAÇÃO CRGR
-========================= */
 
 function normalizeCRGRDocs(rawCRGRs = []) {
   return rawCRGRs
@@ -358,7 +325,6 @@ function buildCRGRsFromData(users = [], participants = [], coletas = []) {
       });
     } else {
       const current = map.get(id);
-
       if (!current.name || current.name === current.id) {
         current.name = normalizeText(territoryLabel) || current.name;
         current.territoryLabel = normalizeText(territoryLabel) || current.territoryLabel;
@@ -383,9 +349,22 @@ function buildCRGRsFromData(users = [], participants = [], coletas = []) {
   );
 }
 
-/* =========================
-   RENDER PAINEL
-========================= */
+async function loadAllData() {
+  const [users, participants, coletas, approvalRequests, rawCRGRs] = await Promise.all([
+    loadCollectionSafe("users"),
+    loadCollectionSafe("participants"),
+    loadCollectionSafe("coletas"),
+    loadCollectionSafe("approvalRequests"),
+    loadCRGRCollections()
+  ]);
+
+  let crgrs = normalizeCRGRDocs(rawCRGRs);
+  if (!crgrs.length) {
+    crgrs = buildCRGRsFromData(users, participants, coletas);
+  }
+
+  return { users, participants, coletas, approvalRequests, crgrs };
+}
 
 function renderPainel({ crgrs, users, participants, coletas, approvalRequests }) {
   const totalCadastros = users.length + participants.length;
@@ -425,10 +404,6 @@ function renderPainel({ crgrs, users, participants, coletas, approvalRequests })
     updated.textContent = `Atualizado em ${new Date().toLocaleString("pt-BR")}`;
   }
 }
-
-/* =========================
-   RENDER USUÁRIOS
-========================= */
 
 function buildUnifiedUsers(users = [], participants = []) {
   const unified = [];
@@ -491,7 +466,6 @@ function formatUnifiedPermission(item = {}) {
   if (item.sourceCollection === "participants") return "Participante";
 
   const role = normalizeRole(item);
-
   if (role === "governanca" || role === "gestor") return "Governança";
   if (role === "admin") return "Admin cooperativa";
   if (role === "brigadista") return "Brigadista";
@@ -508,6 +482,60 @@ function formatUnifiedStatus(item = {}) {
   }
 
   return { label: item.status || "Inativo", inactive: true };
+}
+
+function handleEditUser(item) {
+  console.log("Editar usuario:", item);
+  alert(`Editar: ${item.name || item.email || item.id}`);
+}
+
+function handleDeleteUser(item) {
+  const confirmed = window.confirm(
+    `Deseja excluir este registro?\n\n${item.name || item.email || item.id}`
+  );
+
+  if (!confirmed) return;
+
+  console.log("Excluir usuario:", item);
+  alert(`Exclusão preparada para: ${item.name || item.email || item.id}`);
+}
+
+function handleEditTerritory(item) {
+  console.log("Editar territorio:", item);
+  alert(`Editar território: ${item.nome}`);
+}
+
+function handleDeleteTerritory(item) {
+  const confirmed = window.confirm(
+    `Deseja excluir este território?\n\n${item.nome}`
+  );
+
+  if (!confirmed) return;
+
+  console.log("Excluir território:", item);
+  alert(`Exclusão preparada para: ${item.nome}`);
+}
+
+function createActionButtons({ onEdit, onDelete }) {
+  const wrapper = document.createElement("div");
+  wrapper.className = "gov-actions";
+
+  const editBtn = document.createElement("button");
+  editBtn.type = "button";
+  editBtn.className = "gov-btn-table gov-btn-edit";
+  editBtn.textContent = "Editar";
+  editBtn.addEventListener("click", onEdit);
+
+  const deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "gov-btn-table gov-btn-delete";
+  deleteBtn.textContent = "Excluir";
+  deleteBtn.addEventListener("click", onDelete);
+
+  wrapper.appendChild(editBtn);
+  wrapper.appendChild(deleteBtn);
+
+  return wrapper;
 }
 
 function renderUsuarios(users = [], participants = []) {
@@ -531,7 +559,7 @@ function renderUsuarios(users = [], participants = []) {
 
   if (!unifiedUsers.length) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="9">Nenhum registro encontrado.</td>`;
+    tr.innerHTML = `<td colspan="10">Nenhum registro encontrado.</td>`;
     tbody.appendChild(tr);
     return;
   }
@@ -550,15 +578,20 @@ function renderUsuarios(users = [], participants = []) {
       <td>${formatUnifiedPermission(item)}</td>
       <td>${item.sourceCollection}</td>
       <td><span class="status-pill ${statusInfo.inactive ? "inactive" : ""}">${statusInfo.label}</span></td>
+      <td></td>
     `;
+
+    const actionsCell = tr.lastElementChild;
+    actionsCell.appendChild(
+      createActionButtons({
+        onEdit: () => handleEditUser(item),
+        onDelete: () => handleDeleteUser(item)
+      })
+    );
 
     tbody.appendChild(tr);
   });
 }
-
-/* =========================
-   RENDER TERRITÓRIOS / CRGRs
-========================= */
 
 function buildTerritorySummary(crgrs = [], users = [], participants = [], coletas = []) {
   const map = new Map();
@@ -666,13 +699,14 @@ function renderTerritorios(summary = []) {
 
   if (!summary.length) {
     const tr = document.createElement("tr");
-    tr.innerHTML = `<td colspan="8">Nenhuma CRGR encontrada.</td>`;
+    tr.innerHTML = `<td colspan="9">Nenhuma CRGR encontrada.</td>`;
     tbody.appendChild(tr);
     return;
   }
 
   summary.forEach((item) => {
     const tr = document.createElement("tr");
+
     tr.innerHTML = `
       <td>${item.nome}</td>
       <td>${item.codigo}</td>
@@ -682,14 +716,20 @@ function renderTerritorios(summary = []) {
       <td>${item.coletas}</td>
       <td>${Math.round(item.residuoSeco)}</td>
       <td>${Math.round(item.rejeito)}</td>
+      <td></td>
     `;
+
+    const actionsCell = tr.lastElementChild;
+    actionsCell.appendChild(
+      createActionButtons({
+        onEdit: () => handleEditTerritory(item),
+        onDelete: () => handleDeleteTerritory(item)
+      })
+    );
+
     tbody.appendChild(tr);
   });
 }
-
-/* =========================
-   RENDER CONTEÚDOS
-========================= */
 
 function renderConteudos({ users, crgrs, participants, coletas, approvalRequests }) {
   const usuariosAtivos = users.filter((u) => lower(u.status) === "active").length;
@@ -705,10 +745,6 @@ function renderConteudos({ users, crgrs, participants, coletas, approvalRequests
   setMetric("contentResiduoSeco", sumResiduoSecoKg(coletas));
   setMetric("contentRejeito", sumRejeitoKg(coletas));
 }
-
-/* =========================
-   LOAD GERAL
-========================= */
 
 async function loadGovernanca() {
   const { users, participants, coletas, approvalRequests, crgrs } = await loadAllData();
@@ -727,10 +763,6 @@ async function loadGovernanca() {
   console.log("approvalRequests:", approvalRequests.length);
   console.log("crgrs:", crgrs.length);
 }
-
-/* =========================
-   AUTH
-========================= */
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -751,6 +783,9 @@ onAuthStateChanged(auth, async (user) => {
       window.location.href = COOPERATIVAS_PAGE;
       return;
     }
+
+    renderLoggedUser(profile, user);
+    bindLogout();
 
     await loadGovernanca();
   } catch (error) {

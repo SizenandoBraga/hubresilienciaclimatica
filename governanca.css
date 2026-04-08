@@ -34,10 +34,6 @@
   --sidebar-width: 280px;
 }
 
-/* =========================
-   RESET
-========================= */
-
 * {
   box-sizing: border-box;
 }
@@ -68,10 +64,6 @@ textarea {
   font: inherit;
 }
 
-/* =========================
-   LAYOUT GERAL
-========================= */
-
 .gov-shell {
   max-width: 1440px;
   margin: 0 auto;
@@ -89,10 +81,6 @@ textarea {
   min-width: 0;
   background: var(--bg-main);
 }
-
-/* =========================
-   SIDEBAR
-========================= */
 
 .gov-sidebar {
   background: linear-gradient(180deg, #8fc63c 0%, var(--green) 42%, #6ea321 100%);
@@ -167,10 +155,6 @@ textarea {
   box-shadow: 0 10px 20px rgba(239, 107, 34, 0.30);
 }
 
-/* =========================
-   TOPO
-========================= */
-
 .gov-topbar {
   background: #ffffff;
   padding: 20px 24px 16px;
@@ -220,6 +204,13 @@ textarea {
   color: var(--text-soft);
 }
 
+.gov-top-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
 .gov-top-tags {
   display: flex;
   flex-wrap: wrap;
@@ -265,17 +256,47 @@ textarea {
   border-color: var(--border-blue);
 }
 
-/* =========================
-   CONTEÚDO
-========================= */
+.gov-session-box {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #ffffff;
+  border: 1px solid var(--border-soft);
+  border-radius: 18px;
+  padding: 10px 12px 10px 14px;
+  box-shadow: var(--shadow-card);
+}
+
+.gov-session-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  min-width: 190px;
+}
+
+.gov-session-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.gov-session-info strong {
+  font-size: 16px;
+  line-height: 1.1;
+  color: var(--black);
+}
+
+.gov-session-info small {
+  font-size: 13px;
+  color: var(--blue);
+  font-weight: 700;
+}
 
 .gov-content {
   padding: 30px;
 }
-
-/* =========================
-   SEÇÕES
-========================= */
 
 .gov-section {
   display: none;
@@ -284,10 +305,6 @@ textarea {
 .gov-section.is-visible {
   display: block;
 }
-
-/* =========================
-   DASHBOARD PRINCIPAL
-========================= */
 
 .gov-dashboard {
   background: linear-gradient(135deg, var(--green) 0%, #92cb3d 100%);
@@ -329,10 +346,6 @@ textarea {
   font-weight: 800;
   color: var(--black);
 }
-
-/* =========================
-   KPI ROW
-========================= */
 
 .gov-kpi-row {
   display: grid;
@@ -386,10 +399,6 @@ textarea {
   font-weight: 800;
   color: var(--black);
 }
-
-/* =========================
-   BLOCOS
-========================= */
 
 .gov-panel-block {
   margin-top: 24px;
@@ -472,10 +481,6 @@ textarea {
   color: var(--black);
 }
 
-/* =========================
-   TABELAS
-========================= */
-
 .gov-table-wrap {
   overflow-x: auto;
   background: #ffffff;
@@ -499,7 +504,7 @@ textarea {
 }
 
 .gov-users-table-users {
-  min-width: 1320px;
+  min-width: 1420px;
 }
 
 .gov-users-table th,
@@ -538,10 +543,6 @@ textarea {
   background: #c3de90;
 }
 
-/* =========================
-   STATUS
-========================= */
-
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -562,10 +563,6 @@ textarea {
   border-color: var(--border-orange);
 }
 
-/* =========================
-   PLACEHOLDER / TEXTO
-========================= */
-
 .gov-placeholder {
   background: linear-gradient(180deg, #ffffff 0%, #fbfaf9 100%);
   border-radius: var(--radius-xl);
@@ -580,10 +577,6 @@ textarea {
   line-height: 1.45;
   color: var(--text-soft);
 }
-
-/* =========================
-   BOTÕES GERAIS
-========================= */
 
 .gov-btn,
 button.gov-btn {
@@ -610,21 +603,38 @@ button.gov-btn:hover {
   opacity: 0.95;
 }
 
-.gov-btn.is-secondary,
-button.gov-btn.is-secondary {
+.gov-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gov-btn-table {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 800;
+  cursor: pointer;
+  transition: transform 0.18s ease, opacity 0.18s ease;
+}
+
+.gov-btn-table:hover {
+  transform: translateY(-1px);
+  opacity: 0.95;
+}
+
+.gov-btn-edit {
   background: var(--blue);
-  box-shadow: 0 8px 16px rgba(83, 172, 222, 0.22);
+  color: #fff;
 }
 
-.gov-btn.is-dark,
-button.gov-btn.is-dark {
-  background: var(--black);
-  box-shadow: 0 8px 16px rgba(60, 58, 57, 0.18);
+.gov-btn-delete {
+  background: var(--orange);
+  color: #fff;
 }
-
-/* =========================
-   SCROLLBAR
-========================= */
 
 .gov-table-wrap::-webkit-scrollbar {
   height: 10px;
@@ -643,10 +653,6 @@ button.gov-btn.is-dark {
 .gov-table-wrap::-webkit-scrollbar-thumb:hover {
   background: #b7afa8;
 }
-
-/* =========================
-   RESPONSIVO
-========================= */
 
 @media (max-width: 1200px) {
   .gov-dashboard,
@@ -672,8 +678,23 @@ button.gov-btn.is-dark {
     align-items: flex-start;
   }
 
+  .gov-top-actions {
+    width: 100%;
+    align-items: flex-start;
+  }
+
   .gov-top-tags {
     justify-content: flex-start;
+  }
+
+  .gov-session-box {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .gov-session-info {
+    align-items: flex-start;
+    min-width: 0;
   }
 
   .gov-content {
@@ -706,6 +727,16 @@ button.gov-btn.is-dark {
 
   .gov-brand-text strong {
     font-size: 19px;
+  }
+
+  .gov-session-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .gov-btn,
+  button.gov-btn {
+    width: 100%;
   }
 
   .gov-content {
