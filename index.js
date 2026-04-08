@@ -32,6 +32,19 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `
     }
+       padre-cacique: {
+      name: "Padre Cacique",
+      lat: -30.140122365657504,
+      lng:  -51.1268772051727,
+      zoom: 16,
+      popup: `
+        <div style="font-family:'Archivo Condensed',sans-serif;">
+          <strong>Vila Pinto</strong><br>
+          Região da Belém Novo<br>
+          Porto Alegre/RS
+        </div>
+      `
+    }
   };
 
   // Funções utilitárias para buscar elementos
