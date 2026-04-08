@@ -63,6 +63,7 @@ const ACCESS_RULES = {
 
 const COOPERATIVAS_PAGE = "./cooperativas.html";
 const GOVERNANCA_PAGE = "./governanca.html";
+const LOGIN_PAGE = "./login.html";
 
 /* =============================
    UI REFS
@@ -154,26 +155,35 @@ function getAccessData(email) {
   return ACCESS_RULES[normalizeEmail(email)] || null;
 }
 
+function isGovernancaAccess(access) {
+  return !!access && (
+    access.perfil === "governanca" ||
+    access.scope === "global"
+  );
+}
+
 function getRedirectPage(access) {
-  if (!access) return "./login.html";
-  if (access.perfil === "governanca" || access.scope === "global") {
-    return GOVERNANCA_PAGE;
-  }
+  if (!access) return LOGIN_PAGE;
+  if (isGovernancaAccess(access)) return GOVERNANCA_PAGE;
   return COOPERATIVAS_PAGE;
 }
 
 function redirectByAccess(access) {
-  window.location.href = getRedirectPage(access);
+  const target = getRedirectPage(access);
+  window.location.href = target;
 }
 
 function describeAccess(access) {
   if (!access) return "sem acesso";
-  if (access.perfil === "governanca") {
-    return "Governança • acesso a todas as cooperativas";
+
+  if (isGovernancaAccess(access)) {
+    return "Governança • acesso apenas à página de governança";
   }
+
   if (access.perfil === "admin") {
-    return `Administrador local • acesso total da cooperativa ${access.cooperativaNome}`;
+    return `Administrador local • acesso à cooperativa ${access.cooperativaNome}`;
   }
+
   return `Usuário local • acesso à cooperativa ${access.cooperativaNome}`;
 }
 
@@ -232,12 +242,13 @@ onAuthStateChanged(auth, async (user) => {
   const continueBtn = document.createElement("button");
   continueBtn.type = "button";
   continueBtn.className = "btn btn-primary btn-block";
-  continueBtn.textContent =
-    access.perfil === "governanca"
-      ? "Ir para Governança"
-      : "Ir para Cooperativas";
+  continueBtn.textContent = isGovernancaAccess(access)
+    ? "Ir para Governança"
+    : "Ir para Cooperativas";
 
-  continueBtn.addEventListener("click", () => redirectByAccess(access));
+  continueBtn.addEventListener("click", () => {
+    redirectByAccess(access);
+  });
 
   const logoutBtn = document.createElement("button");
   logoutBtn.type = "button";
@@ -294,15 +305,25 @@ loginForm?.addEventListener("submit", async (e) => {
     const code = err?.code || "";
     let text = "Não foi possível entrar. Verifique seus dados.";
 
-    if (code.includes("auth/invalid-credential")) text = "E-mail ou senha inválidos.";
-    else if (code.includes("auth/user-not-found")) text = "Usuário não encontrado.";
-    else if (code.includes("auth/wrong-password")) text = "Senha incorreta.";
-    else if (code.includes("auth/too-many-requests")) text = "Muitas tentativas. Tente novamente mais tarde.";
-    else if (code.includes("auth/operation-not-allowed")) text = "Ative Email/Senha em Authentication > Sign-in method.";
-    else if (code.includes("auth/network-request-failed")) text = "Falha de rede. Verifique sua internet.";
-    else if (code.includes("auth/invalid-api-key")) text = "API Key inválida no firebaseConfig.";
-    else if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
-    else text = "Erro no login: " + niceError(err);
+    if (code.includes("auth/invalid-credential")) {
+      text = "E-mail ou senha inválidos.";
+    } else if (code.includes("auth/user-not-found")) {
+      text = "Usuário não encontrado.";
+    } else if (code.includes("auth/wrong-password")) {
+      text = "Senha incorreta.";
+    } else if (code.includes("auth/too-many-requests")) {
+      text = "Muitas tentativas. Tente novamente mais tarde.";
+    } else if (code.includes("auth/operation-not-allowed")) {
+      text = "Ative Email/Senha em Authentication > Sign-in method.";
+    } else if (code.includes("auth/network-request-failed")) {
+      text = "Falha de rede. Verifique sua internet.";
+    } else if (code.includes("auth/invalid-api-key")) {
+      text = "API Key inválida no firebaseConfig.";
+    } else if (code.includes("auth/invalid-email")) {
+      text = "E-mail inválido.";
+    } else {
+      text = "Erro no login: " + niceError(err);
+    }
 
     showMsg(msgBox, "error", text);
   } finally {
@@ -332,8 +353,11 @@ resetPwdLink?.addEventListener("click", async (e) => {
     const code = err?.code || "";
     let text = "Não foi possível enviar o e-mail de recuperação.";
 
-    if (code.includes("auth/user-not-found")) text = "Não encontramos usuário com esse e-mail.";
-    else if (code.includes("auth/invalid-email")) text = "E-mail inválido.";
+    if (code.includes("auth/user-not-found")) {
+      text = "Não encontramos usuário com esse e-mail.";
+    } else if (code.includes("auth/invalid-email")) {
+      text = "E-mail inválido.";
+    }
 
     showMsg(msgBox, "error", text);
   }
