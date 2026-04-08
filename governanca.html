@@ -6,7 +6,7 @@
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>NSRU • Gestão do Usuário</title>
+  <title>NSRU • Governança</title>
   <meta name="theme-color" content="#77B33A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,21 +18,36 @@
 
   <link rel="stylesheet" href="./governanca.css" />
 </head>
-<body data-page="usuarios">
+<body>
   <div class="gov-shell">
     <aside class="gov-sidebar">
       <div class="gov-logo-wrap">
-        <img src="./img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" class="gov-logo" />
+        <img
+          src="./img/logo-nsru.png"
+          alt="Núcleo de Soluções para Resíduos Urbanos"
+          class="gov-logo"
+        />
       </div>
 
       <div class="gov-menu-block">
         <span class="gov-menu-label">MENU</span>
 
         <nav class="gov-nav">
-          <a class="gov-nav-btn" href="./governanca.html">Painel Inicial</a>
-          <a class="gov-nav-btn is-active" href="./gestao-usuarios.html">Gestão do Usuário</a>
-          <a class="gov-nav-btn" href="./gestao-territorio.html">Gestão do Território</a>
-          <a class="gov-nav-btn" href="./gestao-conteudos.html">Gestão de conteúdos</a>
+          <button class="gov-nav-btn is-active" data-section="painel">
+            Painel Inicial
+          </button>
+
+          <button class="gov-nav-btn" data-section="usuarios">
+            Gestão do Usuário
+          </button>
+
+          <button class="gov-nav-btn" data-section="territorios">
+            Gestão do Território
+          </button>
+
+          <button class="gov-nav-btn" data-section="conteudos">
+            Gestão de conteúdos
+          </button>
         </nav>
       </div>
     </aside>
@@ -41,7 +56,7 @@
       <header class="gov-topbar">
         <div class="gov-brand">
           <div class="gov-brand-mark">
-            <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" />
+            <img src="./img/logo-solucoes-mini.png" alt="NSRU" />
           </div>
 
           <div class="gov-brand-text">
@@ -59,7 +74,53 @@
       </header>
 
       <section class="gov-content" id="govContent">
-        <section class="gov-section is-visible">
+        <!-- PÁGINA 1 -->
+        <section class="gov-section is-visible" id="section-painel">
+          <div class="gov-dashboard">
+            <article class="gov-card">
+              <h3>CRGR ATIVOS</h3>
+              <strong id="metricCrgrAtivos">3</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>USUÁRIOS CADASTRADOS</h3>
+              <strong id="metricUsuarios">43</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>RESIDÊNCIAS CADASTRADAS</h3>
+              <strong id="metricResidencias">23</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>BRIGADISTAS CADASTRADOS</h3>
+              <strong id="metricBrigadistas">6</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>AÇÕES EM ANDAMENTO</h3>
+              <strong id="metricAcoesAndamento">7</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>AÇÕES CRITICAS</h3>
+              <strong id="metricAcoesCriticas">3</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>RESÍDUO SECO TOTAL (KG)</h3>
+              <strong id="metricResiduoSeco">234</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>REJEITO TOTAL (KG)</h3>
+              <strong id="metricRejeito">23</strong>
+            </article>
+          </div>
+        </section>
+
+        <!-- PÁGINA 2 -->
+        <section class="gov-section" id="section-usuarios">
           <div class="gov-users-wrap">
             <div class="gov-table-wrap">
               <table class="gov-users-table">
@@ -72,9 +133,47 @@
                     <th>Permissões</th>
                   </tr>
                 </thead>
-                <tbody id="usersTableBody"></tbody>
+                <tbody id="usersTableBody">
+                  <tr>
+                    <td>09:20</td>
+                    <td>Admin Governança</td>
+                    <td>58</td>
+                    <td>Hoje, 08:55</td>
+                    <td>Governança</td>
+                  </tr>
+                  <tr>
+                    <td>10:42</td>
+                    <td>Admin Vila Pinto</td>
+                    <td>21</td>
+                    <td>Hoje, 07:31</td>
+                    <td>Admin cooperativa</td>
+                  </tr>
+                  <tr>
+                    <td>14:08</td>
+                    <td>Usuário Cooadesc</td>
+                    <td>12</td>
+                    <td>Ontem, 18:10</td>
+                    <td>Usuário local</td>
+                  </tr>
+                </tbody>
               </table>
             </div>
+          </div>
+        </section>
+
+        <!-- PÁGINA 3 -->
+        <section class="gov-section" id="section-territorios">
+          <div class="gov-placeholder">
+            <h2>Gestão do Território</h2>
+            <p>Área pronta para cooperativas, territórios e indicadores por unidade.</p>
+          </div>
+        </section>
+
+        <!-- PÁGINA 4 -->
+        <section class="gov-section" id="section-conteudos">
+          <div class="gov-placeholder">
+            <h2>Gestão de conteúdos</h2>
+            <p>Área pronta para banners, materiais institucionais e avisos da plataforma.</p>
           </div>
         </section>
       </section>

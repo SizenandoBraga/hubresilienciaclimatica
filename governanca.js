@@ -12,6 +12,45 @@ import {
 const LOGIN_PAGE = "./login.html";
 const COOPERATIVAS_PAGE = "./cooperativas.html";
 
+/* =========================
+   UI / MENU
+========================= */
+
+const navButtons = document.querySelectorAll(".gov-nav-btn");
+const sections = document.querySelectorAll(".gov-section");
+const pageSubtitle = document.getElementById("pageSubtitle");
+
+const SECTION_TITLES = {
+  painel: "Plataforma • Cooperativas",
+  usuarios: "Gestão do Usuário",
+  territorios: "Gestão do Território",
+  conteudos: "Gestão de conteúdos"
+};
+
+function showSection(sectionName) {
+  navButtons.forEach((btn) => {
+    btn.classList.toggle("is-active", btn.dataset.section === sectionName);
+  });
+
+  sections.forEach((section) => {
+    section.classList.toggle("is-visible", section.id === `section-${sectionName}`);
+  });
+
+  if (pageSubtitle) {
+    pageSubtitle.textContent = SECTION_TITLES[sectionName] || "Plataforma • Cooperativas";
+  }
+}
+
+navButtons.forEach((btn) => {
+  btn.addEventListener("click", () => {
+    showSection(btn.dataset.section);
+  });
+});
+
+/* =========================
+   HELPERS
+========================= */
+
 function byId(id) {
   return document.getElementById(id);
 }
@@ -38,8 +77,60 @@ function isGovernancaUser(userData = {}) {
   );
 }
 
-function numberOrZero(value) {
-  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+function formatDateTime(value) {
+  try {
+    if (!value) return "";
+    let dateObj = null;
+    if (typeof value?.toDate === "function") dateObj = value.toDate();
+    else if (value instanceof Date) dateObj = value;
+    else dateObj = new Date(value);
+    if (!dateObj || Number.isNaN(dateObj.getTime())) return "";
+    return dateObj.toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
+  } catch {
+    return "";
+  }
+}
+
+function formatHour(value) {
+  try {
+    if (!value) return "";
+    let dateObj = null;
+    if (typeof value?.toDate === "function") dateObj = value.toDate();
+    else if (value instanceof Date) dateObj = value;
+    else dateObj = new Date(value);
+    if (!dateObj || Number.isNaN(dateObj.getTime())) return "";
+    return dateObj.toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" });
+  } catch {
+    return "";
+  }
+}
+
+function getCreatedAt(data = {}) {
+  return data.createdAt || data.createdAtClient || data.createdAtISO || null;
+}
+
+function getLastLogin(data = {}) {
+  return data.lastLoginAt || data.lastAccessAt || data.ultimoLogin || data.updatedAt || null;
+}
+
+function getUserDisplayName(data = {}) {
+  return data.name || data.fullName || data.displayName || data.email || "Sem nome";
+}
+
+function estimateAccessCount(data = {}) {
+  return data.accessCount || data.loginCount || data.qtdAcessos || data.quantidadeAcessos || 0;
+}
+
+function territoryName(data = {}) {
+  return data.territoryLabel || data.cooperativaNome || data.territoryId || "Global";
+}
+
+function formatPermission(data = {}) {
+  const role = normalizeRole(data);
+  if (role === "governanca" || role === "gestor") return "Governança";
+  if (role === "admin") return "Admin cooperativa";
+  if (role === "brigadista") return "Brigadista";
+  return "Usuário local";
 }
 
 function sumNumericFromItem(item) {
@@ -82,6 +173,30 @@ function sumRejeitoKg(coletas = []) {
   return Math.round(total);
 }
 
+function sumResiduoSecoFromColeta(coleta) {
+  if (!coleta) return 0;
+  let total = 0;
+  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
+  if (coleta.recebimento && typeof coleta.recebimento === "object") {
+    total += sumObjectNumericValues(coleta.recebimento);
+  }
+  return total;
+}
+
+function sumRejeitoFromColeta(coleta) {
+  if (!coleta?.recebimento || typeof coleta.recebimento !== "object") return 0;
+  let total = 0;
+  for (const key of Object.keys(coleta.recebimento)) {
+    if (!String(key).toLowerCase().includes("rejeito")) continue;
+    total += sumNumericFromItem(coleta.recebimento[key]);
+  }
+  return total;
+}
+
+/* =========================
+   FIREBASE
+========================= */
+
 async function loadUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) return null;
@@ -98,7 +213,11 @@ async function loadCollectionSafe(name) {
   }
 }
 
-function renderMetrics({ territories, users, participants, coletas, approvalRequests }) {
+/* =========================
+   RENDER PAINEL
+========================= */
+
+function renderPainel({ territories, users, participants, coletas, approvalRequests }) {
   const crgrAtivos = territories.filter((t) => t.active !== false).length;
   const usuarios = users.length;
   const residencias = participants.length;
@@ -137,7 +256,202 @@ function renderMetrics({ territories, users, participants, coletas, approvalRequ
   }
 }
 
-async function loadDashboard() {
+/* =========================
+   RENDER USUÁRIOS
+========================= */
+
+function renderUsuarios(users = []) {
+  const total = users.length;
+  const ativos = users.filter((u) => String(u.status || "").toLowerCase() === "active").length;
+  const admins = users.filter((u) => normalizeRole(u) === "admin").length;
+  const governanca = users.filter((u) => {
+    const role = normalizeRole(u);
+    return role === "governanca" || role === "gestor";
+  }).length;
+
+  setMetric("usersTotal", total);
+  setMetric("usersAtivos", ativos);
+  setMetric("usersAdmins", admins);
+  setMetric("usersGovernanca", governanca);
+
+  const tbody = byId("usersTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (!users.length) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="8">Nenhum usuário encontrado.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  users.forEach((user) => {
+    const tr = document.createElement("tr");
+    const isActive = String(user.status || "").toLowerCase() === "active";
+
+    tr.innerHTML = `
+      <td>${formatHour(getCreatedAt(user)) || "-"}</td>
+      <td>${getUserDisplayName(user)}</td>
+      <td>${user.email || "-"}</td>
+      <td>${territoryName(user)}</td>
+      <td>${estimateAccessCount(user)}</td>
+      <td>${formatDateTime(getLastLogin(user)) || "-"}</td>
+      <td>${formatPermission(user)}</td>
+      <td><span class="status-pill ${isActive ? "" : "inactive"}">${isActive ? "Ativo" : "Inativo"}</span></td>
+    `;
+
+    tbody.appendChild(tr);
+  });
+}
+
+/* =========================
+   RENDER TERRITÓRIOS
+========================= */
+
+function buildTerritorySummary(territories = [], users = [], participants = [], coletas = []) {
+  const map = new Map();
+
+  territories.forEach((territory) => {
+    const code = territory.code || territory.id || territory.territoryId;
+    if (!code) return;
+
+    map.set(code, {
+      nome: territory.name || territory.title || territory.label || territory.territoryLabel || code,
+      codigo: code,
+      active: territory.active !== false,
+      usuarios: 0,
+      participantes: 0,
+      coletas: 0,
+      residuoSeco: 0,
+      rejeito: 0
+    });
+  });
+
+  users.forEach((user) => {
+    const code = user.territoryId;
+    if (!code) return;
+
+    if (!map.has(code)) {
+      map.set(code, {
+        nome: user.territoryLabel || code,
+        codigo: code,
+        active: true,
+        usuarios: 0,
+        participantes: 0,
+        coletas: 0,
+        residuoSeco: 0,
+        rejeito: 0
+      });
+    }
+
+    map.get(code).usuarios += 1;
+  });
+
+  participants.forEach((participant) => {
+    const code = participant.territoryId;
+    if (!code) return;
+
+    if (!map.has(code)) {
+      map.set(code, {
+        nome: participant.territoryLabel || code,
+        codigo: code,
+        active: true,
+        usuarios: 0,
+        participantes: 0,
+        coletas: 0,
+        residuoSeco: 0,
+        rejeito: 0
+      });
+    }
+
+    map.get(code).participantes += 1;
+  });
+
+  coletas.forEach((coleta) => {
+    const code = coleta.territoryId;
+    if (!code) return;
+
+    if (!map.has(code)) {
+      map.set(code, {
+        nome: coleta.territoryLabel || code,
+        codigo: code,
+        active: true,
+        usuarios: 0,
+        participantes: 0,
+        coletas: 0,
+        residuoSeco: 0,
+        rejeito: 0
+      });
+    }
+
+    const item = map.get(code);
+    item.coletas += 1;
+    item.residuoSeco += sumResiduoSecoFromColeta(coleta);
+    item.rejeito += sumRejeitoFromColeta(coleta);
+  });
+
+  return Array.from(map.values()).sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+}
+
+function renderTerritorios(summary = []) {
+  setMetric("territoriosTotal", summary.length);
+  setMetric("territoriosAtivos", summary.filter((t) => t.active).length);
+  setMetric("territoriosParticipantes", summary.reduce((acc, item) => acc + item.participantes, 0));
+  setMetric("territoriosColetas", summary.reduce((acc, item) => acc + item.coletas, 0));
+
+  const tbody = byId("territoriosTableBody");
+  if (!tbody) return;
+
+  tbody.innerHTML = "";
+
+  if (!summary.length) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td colspan="8">Nenhum território encontrado.</td>`;
+    tbody.appendChild(tr);
+    return;
+  }
+
+  summary.forEach((item) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${item.nome}</td>
+      <td>${item.codigo}</td>
+      <td><span class="status-pill ${item.active ? "" : "inactive"}">${item.active ? "Ativo" : "Inativo"}</span></td>
+      <td>${item.usuarios}</td>
+      <td>${item.participantes}</td>
+      <td>${item.coletas}</td>
+      <td>${Math.round(item.residuoSeco)}</td>
+      <td>${Math.round(item.rejeito)}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+/* =========================
+   RENDER CONTEÚDOS
+========================= */
+
+function renderConteudos({ users, territories, participants, coletas, approvalRequests }) {
+  const usuariosAtivos = users.filter((u) => String(u.status || "").toLowerCase() === "active").length;
+  const approvalPending = approvalRequests.filter((r) => String(r.status || "").toLowerCase() === "pending").length;
+
+  setMetric("contentUsuarios", users.length);
+  setMetric("contentTerritorios", territories.length);
+  setMetric("contentParticipantes", participants.length);
+  setMetric("contentColetas", coletas.length);
+
+  setMetric("contentApprovalPending", approvalPending);
+  setMetric("contentUsuariosAtivos", usuariosAtivos);
+  setMetric("contentResiduoSeco", sumResiduoSecoKg(coletas));
+  setMetric("contentRejeito", sumRejeitoKg(coletas));
+}
+
+/* =========================
+   LOAD GERAL
+========================= */
+
+async function loadGovernanca() {
   const [territories, users, participants, coletas, approvalRequests] = await Promise.all([
     loadCollectionSafe("territories"),
     loadCollectionSafe("users"),
@@ -146,8 +460,18 @@ async function loadDashboard() {
     loadCollectionSafe("approvalRequests")
   ]);
 
-  renderMetrics({ territories, users, participants, coletas, approvalRequests });
+  renderPainel({ territories, users, participants, coletas, approvalRequests });
+  renderUsuarios(users);
+
+  const territorySummary = buildTerritorySummary(territories, users, participants, coletas);
+  renderTerritorios(territorySummary);
+
+  renderConteudos({ users, territories, participants, coletas, approvalRequests });
 }
+
+/* =========================
+   AUTH
+========================= */
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
@@ -169,7 +493,7 @@ onAuthStateChanged(auth, async (user) => {
       return;
     }
 
-    await loadDashboard();
+    await loadGovernanca();
   } catch (error) {
     console.error(error);
     window.location.href = LOGIN_PAGE;
