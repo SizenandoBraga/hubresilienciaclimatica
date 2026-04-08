@@ -6,7 +6,7 @@
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>NSRU • Governança</title>
+  <title>NSRU • Gestão do Usuário</title>
   <meta name="theme-color" content="#77B33A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,9 +18,8 @@
 
   <link rel="stylesheet" href="./governanca.css" />
 </head>
-<body>
+<body data-page="usuarios">
   <div class="gov-shell">
-    <!-- SIDEBAR -->
     <aside class="gov-sidebar">
       <div class="gov-logo-wrap">
         <img src="./img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" class="gov-logo" />
@@ -30,28 +29,15 @@
         <span class="gov-menu-label">MENU</span>
 
         <nav class="gov-nav">
-          <button class="gov-nav-btn is-active" data-section="painel">
-            Painel Inicial
-          </button>
-
-          <button class="gov-nav-btn" data-section="usuarios">
-            Gestão do Usuário
-          </button>
-
-          <button class="gov-nav-btn" data-section="territorios">
-            Gestão do Território
-          </button>
-
-          <button class="gov-nav-btn" data-section="conteudos">
-            Gestão de conteúdos
-          </button>
+          <a class="gov-nav-btn" href="./governanca.html">Painel Inicial</a>
+          <a class="gov-nav-btn is-active" href="./gestao-usuarios.html">Gestão do Usuário</a>
+          <a class="gov-nav-btn" href="./gestao-territorio.html">Gestão do Território</a>
+          <a class="gov-nav-btn" href="./gestao-conteudos.html">Gestão de conteúdos</a>
         </nav>
       </div>
     </aside>
 
-    <!-- MAIN -->
     <main class="gov-main">
-      <!-- TOPO -->
       <header class="gov-topbar">
         <div class="gov-brand">
           <div class="gov-brand-mark">
@@ -72,80 +58,29 @@
         </div>
       </header>
 
-      <!-- CONTEÚDO -->
       <section class="gov-content" id="govContent">
-        <!-- PAINEL -->
-        <section class="gov-section is-visible" id="section-painel">
-          <div class="gov-dashboard">
-            <article class="gov-card">
-              <h3>CRGR ATIVOS</h3>
-              <strong id="metricCrgrAtivos">3</strong>
-            </article>
-
-            <article class="gov-card">
-              <h3>USUÁRIOS CADASTRADOS</h3>
-              <strong id="metricUsuarios">43</strong>
-            </article>
-
-            <article class="gov-card">
-              <h3>RESIDÊNCIAS CADASTRADAS</h3>
-              <strong id="metricResidencias">23</strong>
-            </article>
-
-            <article class="gov-card">
-              <h3>BRIGADISTAS CADASTRADOS</h3>
-              <strong id="metricBrigadistas">6</strong>
-            </article>
-
-            <article class="gov-card">
-              <h3>AÇÕES EM ANDAMENTO</h3>
-              <strong id="metricAcoesAndamento">7</strong>
-            </article>
-
-            <article class="gov-card">
-              <h3>AÇÕES CRITICAS</h3>
-              <strong id="metricAcoesCriticas">3</strong>
-            </article>
-
-            <article class="gov-card">
-              <h3>RESÍDUO SECO TOTAL (KG)</h3>
-              <strong id="metricResiduoSeco">234</strong>
-            </article>
-
-            <article class="gov-card">
-              <h3>REJEITO TOTAL (KG)</h3>
-              <strong id="metricRejeito">23</strong>
-            </article>
-          </div>
-        </section>
-
-        <!-- USUÁRIOS -->
-        <section class="gov-section" id="section-usuarios">
-          <div class="gov-placeholder">
-            <h2>Gestão do Usuário</h2>
-            <p>Área pronta para listar, criar, editar e bloquear usuários do sistema.</p>
-          </div>
-        </section>
-
-        <!-- TERRITÓRIOS -->
-        <section class="gov-section" id="section-territorios">
-          <div class="gov-placeholder">
-            <h2>Gestão do Território</h2>
-            <p>Área pronta para visualizar cooperativas, territórios, status e indicadores por unidade.</p>
-          </div>
-        </section>
-
-        <!-- CONTEÚDOS -->
-        <section class="gov-section" id="section-conteudos">
-          <div class="gov-placeholder">
-            <h2>Gestão de conteúdos</h2>
-            <p>Área pronta para banners, avisos, materiais institucionais e conteúdos da plataforma.</p>
+        <section class="gov-section is-visible">
+          <div class="gov-users-wrap">
+            <div class="gov-table-wrap">
+              <table class="gov-users-table">
+                <thead>
+                  <tr>
+                    <th>Hora de Cadastro</th>
+                    <th>Nome do usuário</th>
+                    <th>Quantidade de acesso</th>
+                    <th>Última vez que entrou</th>
+                    <th>Permissões</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody"></tbody>
+              </table>
+            </div>
           </div>
         </section>
       </section>
     </main>
   </div>
 
-  <script type="module" src="./governanca.js"></script>
+  <script type="module" src="./gestao-usuarios.js"></script>
 </body>
 </html>
