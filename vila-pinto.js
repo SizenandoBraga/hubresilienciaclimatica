@@ -1,242 +1,213 @@
-document.addEventListener("DOMContentLoaded", () => {
-  const $ = (selector, scope = document) => scope.querySelector(selector);
-  const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
+/**
+ * =========================================================
+ * VILA PINTO - SCRIPT COMPLETO (FINAL)
+ * =========================================================
+ * - Usa firebase-config.js
+ * - Busca participants e coletas por territoryID
+ * - Atualiza indicadores reais
+ * - Renderiza mapa com participantes
+ * =========================================================
+ */
 
-  const TERRITORY_DATA = {
-    title: "Vila Pinto",
-    lead:
-      "Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território.",
-    label: "Centro de Triagem Vila Pinto",
-    region: "Porto Alegre / RS",
-    profile: "Operação comunitária e cooperativa",
-    focus: "Coleta seletiva, triagem e fortalecimento territorial",
-    coopName: "UT Vila Pinto",
-    coopDescription:
-      "Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.",
-    stats: {
-      cooperados: 24,
-      coletas: 148,
-      volume: 18.7,
-      pontos: 12
-    },
-    map: {
-      center: [-30.036111, -51.158333],
-      zoom: 14,
-      marker: {
-        lat: -30.036111,
-        lng: -51.158333,
-        popup: `
-          <div style="font-family:'Archivo Condensed',sans-serif;">
-            <strong>Vila Pinto</strong><br>
-            Centro de Triagem Vila Pinto<br>
-            Bom Jesus / Jardim Carvalho<br>
-            Porto Alegre • RS
-          </div>
-        `
-      }
-    }
+/* =========================================================
+   IMPORTS
+ * ========================================================= */
+import { db } from "./firebase-config.js";
+import {
+  collection,
+  query,
+  where,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* =========================================================
+   DADOS DO TERRITÓRIO
+ * ========================================================= */
+const territoryData = {
+  id: "vila-pinto",
+  map: {
+    center: [-30.0463, -51.1194],
+    zoom: 14
+  }
+};
+
+/* =========================================================
+   ESTADO
+ * ========================================================= */
+const state = {
+  map: null,
+  markersLayer: null,
+  participants: [],
+  stats: {
+    cooperados: 0,
+    coletas: 0,
+    pontos: 0,
+    emOperacao: 0
+  }
+};
+
+/* =========================================================
+   HELPERS
+ * ========================================================= */
+function $(selector) {
+  return document.querySelector(selector);
+}
+
+function formatNumber(value) {
+  return new Intl.NumberFormat("pt-BR").format(value || 0);
+}
+
+function animate(el, value) {
+  if (!el) return;
+  el.textContent = formatNumber(value);
+}
+
+/* =========================================================
+   FIREBASE QUERIES
+ * ========================================================= */
+async function getParticipants() {
+  const q = query(
+    collection(db, "participants"),
+    where("territoryID", "==", territoryData.id)
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+
+async function getColetas() {
+  const q = query(
+    collection(db, "coletas"),
+    where("territoryID", "==", territoryData.id)
+  );
+
+  const snapshot = await getDocs(q);
+
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
+}
+
+/* =========================================================
+   MAPEAMENTO
+ * ========================================================= */
+function normalizeParticipants(data) {
+  return data.map(p => {
+    const coords =
+      p.coordinates ||
+      p.coordenadas ||
+      p.location ||
+      null;
+
+    const lat =
+      coords?.lat ??
+      coords?.latitude ??
+      p.lat ??
+      null;
+
+    const lng =
+      coords?.lng ??
+      coords?.longitude ??
+      p.lng ??
+      null;
+
+    return {
+      id: p.id,
+      name: p.name || p.nome || "Sem nome",
+      phone: p.phone || p.telefone || "—",
+      address: p.address || p.endereco || "—",
+      inOperation: p.inOperation || p.emOperacao || false,
+      hasCoordinates: lat !== null && lng !== null,
+      lat,
+      lng
+    };
+  });
+}
+
+/* =========================================================
+   INDICADORES
+ * ========================================================= */
+function calculateStats(participants, coletas) {
+  return {
+    cooperados: participants.length,
+    coletas: coletas.length,
+    pontos: participants.filter(p => p.hasCoordinates).length,
+    emOperacao: participants.filter(p => p.inOperation).length
   };
+}
 
-  function formatNumber(value) {
-    return Number(value).toLocaleString("pt-BR");
+function renderStats() {
+  animate($("#cooperadosValue"), state.stats.cooperados);
+  animate($("#coletasValue"), state.stats.coletas);
+  animate($("#pontosValue"), state.stats.pontos);
+  animate($("#operacaoValue"), state.stats.emOperacao);
+}
+
+/* =========================================================
+   MAPA
+ * ========================================================= */
+function initMap() {
+  if (!window.L) return;
+
+  state.map = L.map("map").setView(
+    territoryData.map.center,
+    territoryData.map.zoom
+  );
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png")
+    .addTo(state.map);
+
+  state.markersLayer = L.layerGroup().addTo(state.map);
+}
+
+function renderMap() {
+  if (!state.map) return;
+
+  state.markersLayer.clearLayers();
+
+  const valid = state.participants.filter(p => p.hasCoordinates);
+
+  valid.forEach(p => {
+    L.marker([p.lat, p.lng])
+      .bindPopup(`<strong>${p.name}</strong>`)
+      .addTo(state.markersLayer);
+  });
+}
+
+/* =========================================================
+   CARREGAMENTO PRINCIPAL
+ * ========================================================= */
+async function loadData() {
+  try {
+    const [participantsRaw, coletasRaw] = await Promise.all([
+      getParticipants(),
+      getColetas()
+    ]);
+
+    const participants = normalizeParticipants(participantsRaw);
+
+    state.participants = participants;
+    state.stats = calculateStats(participants, coletasRaw);
+
+    renderStats();
+    renderMap();
+
+  } catch (error) {
+    console.error("Erro ao carregar dados:", error);
   }
+}
 
-  function formatTon(value) {
-    return `${Number(value).toLocaleString("pt-BR", {
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1
-    })} t`;
-  }
-
-  function isReducedMotion() {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
-
-  function fillStaticContent() {
-    const mapText = {
-      territoryHeroTitle: TERRITORY_DATA.title,
-      territoryHeroLead: TERRITORY_DATA.lead,
-      territoryLabelText: TERRITORY_DATA.label,
-      territoryRegionText: TERRITORY_DATA.region,
-      territoryProfileText: TERRITORY_DATA.profile,
-      territoryFocusText: TERRITORY_DATA.focus,
-      coopNameText: TERRITORY_DATA.coopName,
-      coopDescriptionText: TERRITORY_DATA.coopDescription
-    };
-
-    Object.entries(mapText).forEach(([id, value]) => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    });
-  }
-
-  function animateValue(el, finalValue, formatter = (v) => String(v), duration = 1200) {
-    if (!el) return;
-
-    if (isReducedMotion()) {
-      el.textContent = formatter(finalValue);
-      return;
-    }
-
-    const start = performance.now();
-
-    function frame(now) {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = finalValue * eased;
-      el.textContent = formatter(current);
-
-      if (progress < 1) {
-        requestAnimationFrame(frame);
-      } else {
-        el.textContent = formatter(finalValue);
-      }
-    }
-
-    requestAnimationFrame(frame);
-  }
-
-  function initStats() {
-    const cooperadosEl = $("#cooperadosValue");
-    const coletasEl = $("#coletasValue");
-    const volumeEl = $("#volumeValue");
-    const pontosEl = $("#pontosValue");
-
-    const startAnimation = () => {
-      animateValue(cooperadosEl, TERRITORY_DATA.stats.cooperados, (v) => formatNumber(Math.round(v)));
-      animateValue(coletasEl, TERRITORY_DATA.stats.coletas, (v) => formatNumber(Math.round(v)));
-      animateValue(volumeEl, TERRITORY_DATA.stats.volume, (v) => formatTon(v));
-      animateValue(pontosEl, TERRITORY_DATA.stats.pontos, (v) => formatNumber(Math.round(v)));
-    };
-
-    if ("IntersectionObserver" in window) {
-      const statsSection = $(".stats-section");
-      if (!statsSection) return startAnimation();
-
-      const observer = new IntersectionObserver(
-        (entries, obs) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            startAnimation();
-            obs.disconnect();
-          });
-        },
-        { threshold: 0.35 }
-      );
-
-      observer.observe(statsSection);
-    } else {
-      startAnimation();
-    }
-  }
-
-  function initReveal() {
-    const revealEls = $$("[data-reveal]");
-    if (!revealEls.length) return;
-
-    if ("IntersectionObserver" in window && !isReducedMotion()) {
-      const observer = new IntersectionObserver(
-        (entries, obs) => {
-          entries.forEach((entry) => {
-            if (!entry.isIntersecting) return;
-            entry.target.classList.add("is-visible");
-            obs.unobserve(entry.target);
-          });
-        },
-        {
-          threshold: 0.15,
-          rootMargin: "0px 0px -8% 0px"
-        }
-      );
-
-      revealEls.forEach((el) => observer.observe(el));
-    } else {
-      revealEls.forEach((el) => el.classList.add("is-visible"));
-    }
-  }
-
-  function initMobileMenu() {
-    const menuToggle = $("#menuToggle");
-    const mobileMenu = $("#mobileMenu");
-
-    if (!menuToggle || !mobileMenu) return;
-
-    const closeMenu = () => {
-      mobileMenu.classList.remove("show");
-      menuToggle.setAttribute("aria-expanded", "false");
-    };
-
-    const openMenu = () => {
-      mobileMenu.classList.add("show");
-      menuToggle.setAttribute("aria-expanded", "true");
-    };
-
-    menuToggle.addEventListener("click", () => {
-      const isOpen = mobileMenu.classList.contains("show");
-      isOpen ? closeMenu() : openMenu();
-    });
-
-    $$("a", mobileMenu).forEach((link) => {
-      link.addEventListener("click", closeMenu);
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth > 820) closeMenu();
-    });
-  }
-
-  function initMap() {
-    const mapEl = $("#map");
-    if (!mapEl || typeof L === "undefined") return;
-
-    const map = L.map(mapEl, {
-      zoomControl: true,
-      scrollWheelZoom: false
-    }).setView(TERRITORY_DATA.map.center, TERRITORY_DATA.map.zoom);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap"
-    }).addTo(map);
-
-    const marker = L.marker([
-      TERRITORY_DATA.map.marker.lat,
-      TERRITORY_DATA.map.marker.lng
-    ]).addTo(map);
-
-    marker.bindPopup(TERRITORY_DATA.map.marker.popup);
-
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
-  }
-
-  function initCursorGlow() {
-    const orb1 = $(".orb-1");
-    const orb2 = $(".orb-2");
-    if (isReducedMotion() || !orb1 || !orb2) return;
-
-    let raf = null;
-    let x = window.innerWidth / 2;
-    let y = window.innerHeight / 2;
-
-    function render() {
-      orb1.style.transform = `translate(${x * 0.02}px, ${y * 0.015}px)`;
-      orb2.style.transform = `translate(${x * -0.015}px, ${y * -0.012}px)`;
-      raf = null;
-    }
-
-    window.addEventListener("mousemove", (event) => {
-      x = event.clientX;
-      y = event.clientY;
-
-      if (!raf) raf = requestAnimationFrame(render);
-    });
-  }
-
-  fillStaticContent();
-  initStats();
-  initReveal();
-  initMobileMenu();
+/* =========================================================
+   INIT
+ * ========================================================= */
+async function init() {
   initMap();
-  initCursorGlow();
-});
+  await loadData();
+}
+
+document.addEventListener("DOMContentLoaded", init);
