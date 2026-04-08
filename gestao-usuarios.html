@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>NSRU • Governança</title>
+  <meta name="theme-color" content="#77B33A" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
+
+  <link rel="stylesheet" href="./governanca.css" />
+</head>
+<body>
+  <div class="gov-shell">
+    <aside class="gov-sidebar">
+      <div class="gov-logo-wrap">
+        <img
+          src="./img/logo-nsru.png"
+          alt="Núcleo de Soluções para Resíduos Urbanos"
+          class="gov-logo"
+        />
+      </div>
+
+      <div class="gov-menu-block">
+        <span class="gov-menu-label">MENU</span>
+
+        <nav class="gov-nav">
+          <button class="gov-nav-btn is-active" data-section="painel">
+            Painel Inicial
+          </button>
+
+          <button class="gov-nav-btn" data-section="usuarios">
+            Gestão do Usuário
+          </button>
+
+          <button class="gov-nav-btn" data-section="territorios">
+            Gestão do Território
+          </button>
+
+          <button class="gov-nav-btn" data-section="conteudos">
+            Gestão de conteúdos
+          </button>
+        </nav>
+      </div>
+    </aside>
+
+    <main class="gov-main">
+      <header class="gov-topbar">
+        <div class="gov-brand">
+          <div class="gov-brand-mark">
+            <img src="./img/logo-solucoes-mini.png" alt="NSRU" />
+          </div>
+
+          <div class="gov-brand-text">
+            <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+            <span>Plataforma • Cooperativas</span>
+          </div>
+        </div>
+
+        <div class="gov-top-tags">
+          <span class="gov-tag tag-green">🟢 Todos os territórios</span>
+          <span class="gov-tag tag-lightgreen">📊 Todas as cooperativas</span>
+          <span class="gov-tag tag-beige">🔒 Administrador</span>
+          <span class="gov-tag tag-lilac">👤 Admin Governança</span>
+        </div>
+      </header>
+
+      <section class="gov-content" id="govContent">
+        <!-- PÁGINA 1 -->
+        <section class="gov-section is-visible" id="section-painel">
+          <div class="gov-dashboard">
+            <article class="gov-card">
+              <h3>CRGR ATIVOS</h3>
+              <strong id="metricCrgrAtivos">3</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>USUÁRIOS CADASTRADOS</h3>
+              <strong id="metricUsuarios">43</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>RESIDÊNCIAS CADASTRADAS</h3>
+              <strong id="metricResidencias">23</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>BRIGADISTAS CADASTRADOS</h3>
+              <strong id="metricBrigadistas">6</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>AÇÕES EM ANDAMENTO</h3>
+              <strong id="metricAcoesAndamento">7</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>AÇÕES CRITICAS</h3>
+              <strong id="metricAcoesCriticas">3</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>RESÍDUO SECO TOTAL (KG)</h3>
+              <strong id="metricResiduoSeco">234</strong>
+            </article>
+
+            <article class="gov-card">
+              <h3>REJEITO TOTAL (KG)</h3>
+              <strong id="metricRejeito">23</strong>
+            </article>
+          </div>
+        </section>
+
+        <!-- PÁGINA 2 -->
+        <section class="gov-section" id="section-usuarios">
+          <div class="gov-users-wrap">
+            <div class="gov-table-wrap">
+              <table class="gov-users-table">
+                <thead>
+                  <tr>
+                    <th>Hora de Cadastro</th>
+                    <th>Nome do usuário</th>
+                    <th>Quantidade de acesso</th>
+                    <th>Última vez que entrou</th>
+                    <th>Permissões</th>
+                  </tr>
+                </thead>
+                <tbody id="usersTableBody">
+                  <tr>
+                    <td>09:20</td>
+                    <td>Admin Governança</td>
+                    <td>58</td>
+                    <td>Hoje, 08:55</td>
+                    <td>Governança</td>
+                  </tr>
+                  <tr>
+                    <td>10:42</td>
+                    <td>Admin Vila Pinto</td>
+                    <td>21</td>
+                    <td>Hoje, 07:31</td>
+                    <td>Admin cooperativa</td>
+                  </tr>
+                  <tr>
+                    <td>14:08</td>
+                    <td>Usuário Cooadesc</td>
+                    <td>12</td>
+                    <td>Ontem, 18:10</td>
+                    <td>Usuário local</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        <!-- PÁGINA 3 -->
+        <section class="gov-section" id="section-territorios">
+          <div class="gov-placeholder">
+            <h2>Gestão do Território</h2>
+            <p>Área pronta para cooperativas, territórios e indicadores por unidade.</p>
+          </div>
+        </section>
+
+        <!-- PÁGINA 4 -->
+        <section class="gov-section" id="section-conteudos">
+          <div class="gov-placeholder">
+            <h2>Gestão de conteúdos</h2>
+            <p>Área pronta para banners, materiais institucionais e avisos da plataforma.</p>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <script type="module" src="./governanca.js"></script>
+</body>
+</html>
