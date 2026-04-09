@@ -19,6 +19,7 @@ const pageSubtitle = document.getElementById("pageSubtitle");
 const logoutBtn = document.getElementById("logoutBtn");
 const loggedUserName = document.getElementById("loggedUserName");
 const loggedUserMeta = document.getElementById("loggedUserMeta");
+const loggedUserAvatar = document.getElementById("loggedUserAvatar");
 
 const SECTION_TITLES = {
   painel: "Plataforma • Cooperativas",
@@ -123,14 +124,6 @@ function formatHour(value) {
   }
 }
 
-function getUserDisplayName(data = {}) {
-  return data.name || data.fullName || data.displayName || data.email || "Sem nome";
-}
-
-function estimateAccessCount(data = {}) {
-  return data.accessCount || data.loginCount || data.qtdAcessos || data.quantidadeAcessos || 0;
-}
-
 function sumNumericFromItem(item) {
   if (typeof item === "number") return item;
   if (!item || typeof item !== "object") return 0;
@@ -212,16 +205,24 @@ function getLoggedUserRoleLabel(profile = {}) {
   return "Usuário";
 }
 
+function getUserInitial(nameOrEmail = "") {
+  const text = String(nameOrEmail || "").trim();
+  if (!text) return "U";
+  return text.charAt(0).toUpperCase();
+}
+
 function renderLoggedUser(profile = {}, authUser = {}) {
+  const displayName =
+    profile.name ||
+    profile.fullName ||
+    profile.displayName ||
+    authUser.displayName ||
+    profile.email ||
+    authUser.email ||
+    "Usuário";
+
   if (loggedUserName) {
-    loggedUserName.textContent =
-      profile.name ||
-      profile.fullName ||
-      profile.displayName ||
-      authUser.displayName ||
-      profile.email ||
-      authUser.email ||
-      "Usuário";
+    loggedUserName.textContent = displayName;
   }
 
   if (loggedUserMeta) {
@@ -230,6 +231,10 @@ function renderLoggedUser(profile = {}, authUser = {}) {
     loggedUserMeta.textContent = email
       ? `${roleLabel} • ${email}`
       : `Perfil: ${roleLabel}`;
+  }
+
+  if (loggedUserAvatar) {
+    loggedUserAvatar.textContent = getUserInitial(displayName);
   }
 }
 
