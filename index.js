@@ -77,6 +77,11 @@ document.addEventListener("DOMContentLoaded", () => {
     return Number.isFinite(n) ? n : null;
   }
 
+  function toNumber(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   function isReducedMotion() {
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
@@ -302,7 +307,7 @@ document.addEventListener("DOMContentLoaded", () => {
           item.endereco ||
           "",
         page: item.page || item.link || item.slug || "",
-        active: item.active ?? (item.status === "active")
+        active: item.active ?? (String(item.status || "").toLowerCase() === "active")
       }))
       .filter((item) => item.id);
   }
@@ -464,6 +469,68 @@ document.addEventListener("DOMContentLoaded", () => {
     return items.filter((item) => item.active !== false).length;
   }
 
+  function sumField(items = [], fieldNames = []) {
+    return items.reduce((total, item) => {
+      let value = 0;
+
+      for (const field of fieldNames) {
+        const raw = item?.[field];
+        const num = Number(raw);
+        if (Number.isFinite(num)) {
+          value = num;
+          break;
+        }
+      }
+
+      return total + value;
+    }, 0);
+  }
+
+  function buildMetrics({ users, coletas, approvalRequests, cooperativas, normalized, alerts }) {
+    const cooperativaUsers = sumField(cooperativas, [
+      "users",
+      "totalUsers",
+      "usuarios",
+      "totalUsuarios",
+      "qtdUsuarios",
+      "quantidadeUsuarios"
+    ]);
+
+    const cooperativaColetas = sumField(cooperativas, [
+      "coletas",
+      "totalColetas",
+      "coletasTotal",
+      "qtdColetas",
+      "quantidadeColetas"
+    ]);
+
+    const cooperativaPlans = sumField(cooperativas, [
+      "approvals",
+      "planos",
+      "totalPlanos",
+      "planosAtivos",
+      "qtdPlanos",
+      "quantidadePlanos"
+    ]);
+
+    const cooperativaAlerts = sumField(cooperativas, [
+      "alerts",
+      "totalAlerts",
+      "alertas",
+      "totalAlertas",
+      "qtdAlertas",
+      "quantidadeAlertas"
+    ]);
+
+    return {
+      users: cooperativaUsers > 0 ? cooperativaUsers : users.length,
+      coletas: cooperativaColetas > 0 ? cooperativaColetas : coletas.length,
+      approvals: cooperativaPlans > 0 ? cooperativaPlans : countActivePlans(approvalRequests),
+      crgrs: normalized.length ? countActiveCrgrs(normalized) || normalized.length : FALLBACK_CRGRS.length,
+      alerts: cooperativaAlerts > 0 ? cooperativaAlerts : countActiveAlerts(alerts)
+    };
+  }
+
   async function loadIndexPublicData() {
     try {
       const firebaseInit = await import("./firebase-init.js");
@@ -508,13 +575,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       STATE.crgrs = normalized.length ? normalized : FALLBACK_CRGRS;
 
-      STATE.metrics = {
-        users: users.length,
-        coletas: coletas.length,
-        approvals: countActivePlans(approvalRequests),
-        crgrs: normalized.length ? countActiveCrgrs(normalized) || normalized.length : FALLBACK_CRGRS.length,
-        alerts: countActiveAlerts(alerts)
-      };
+      STATE.metrics = buildMetrics({
+        users,
+        coletas,
+        approvalRequests,
+        cooperativas,
+        normalized,
+        alerts
+      });
 
       renderMetrics(STATE.metrics);
       renderCrgrList(STATE.crgrs);
