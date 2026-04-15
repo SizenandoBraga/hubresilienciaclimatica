@@ -2,224 +2,213 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR" />
-  <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>Conteúdos • Núcleo de Soluções para Resíduos Urbanos</title>
-  <meta
-    name="description"
-    content="Cursos, trilhas e materiais técnicos do Núcleo de Soluções para Resíduos Urbanos."
-  />
-  <meta name="theme-color" content="#81B92A" />
+  <title>Conteúdos • NSRU</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@400;600;700&family=Inter:wght@400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-
+  <link rel="stylesheet" href="public-base.css" />
+  <link rel="stylesheet" href="header-publico.css" />
+  <link rel="stylesheet" href="footer-publico.css" />
   <link rel="stylesheet" href="conteudos.css" />
 </head>
+
 <body>
-  <div class="page-glow glow-left" aria-hidden="true"></div>
-  <div class="page-glow glow-right" aria-hidden="true"></div>
-  <div class="page-grid" aria-hidden="true"></div>
+  <div id="site-header"></div>
 
-  <header class="site-header">
-    <div class="container header-inner">
-      <a class="brand" href="index.html" aria-label="Ir para a página inicial">
-        <img
-          src="img/NSRU - Logo-Preto.png"
-          alt="Núcleo de Soluções para Resíduos Urbanos"
-          class="brand-logo"
-        >
-      </a>
+  <main class="main-content">
 
-      <button
-        class="menu-btn"
-        id="menuBtn"
-        type="button"
-        aria-label="Abrir menu"
-        aria-expanded="false"
-        aria-controls="mainNav"
-      >
-        ☰
-      </button>
+    <!-- HERO -->
+    <section class="hero hero-premium">
+      <div class="container hero-shell">
+        <div class="hero-split">
 
-      <nav class="main-nav" id="mainNav" aria-label="Navegação principal">
-        <a href="index.html" class="nav-link">Início</a>
-        <a href="quem-somos.html" class="nav-link">Quem Somos</a>
-        <a href="conteudos.html" class="nav-link active">Conteúdos</a>
-        <a href="#dados" class="nav-link">Dados e Relatórios</a>
-        <a href="#faq" class="nav-link">FAQ</a>
-      </nav>
+          <div class="hero-copy">
+            <span class="section-badge badge-blue">Centro de conhecimento</span>
 
-      <div class="header-actions">
-        <a href="login.html" class="header-cta">
-        Acessar área Cooperativa
-        </a>
-      </div>
-    </div>
-  </header>
+            <h1 class="hero-title">
+              <span class="hero-title-line">Conteúdos, cursos e</span>
+              <span class="hero-title-highlight">trilhas de formação</span>
+            </h1>
 
-  <main>
-    <section class="hero-section">
-      <div class="container hero-grid">
-        <div class="hero-copy reveal">
-          <span class="section-tag">Centro de conhecimento</span>
-          <h1>Conteúdos, cursos e trilhas de formação</h1>
-          <p>
-            Uma área organizada para apoiar cooperativas, equipes técnicas,
-            parceiros e governança com materiais de aprendizagem, documentos e
-            trilhas formativas.
-          </p>
-
-          <div class="hero-actions">
-            <a
-              href="https://aprendizagem.maosverdes.com.br/login/index.php?wantsurl=%2Fmy%2F"
-              target="_blank"
-              rel="noopener"
-              class="btn btn-primary"
-            >
-              Acessar Moodle
-            </a>
-
-            <a href="#cardsConteudos" class="btn btn-light">
-              Explorar conteúdos
-            </a>
-          </div>
-        </div>
-
-        <aside class="hero-panel reveal delay-1" aria-label="Resumo da área de conteúdos">
-          <div class="hero-panel-card">
-            <span class="mini-kicker">Ambiente de aprendizagem</span>
-            <h2>Formação conectada à operação do projeto</h2>
-            <p>
-              Cursos, guias, documentos e materiais estruturados para apoiar a
-              reciclagem, a economia circular e a governança territorial.
+            <p class="hero-description">
+              Área dedicada à formação e apoio técnico para cooperativas,
+              equipes e territórios conectados ao NSRU.
             </p>
 
-            <div class="hero-highlights">
-              <div class="mini-stat">
-                <strong>01</strong>
-                <span>Cursos</span>
-              </div>
-              <div class="mini-stat">
-                <strong>02</strong>
-                <span>Guias</span>
-              </div>
-              <div class="mini-stat">
-                <strong>03</strong>
-                <span>Trilhas</span>
-              </div>
+            <div class="hero-actions">
+              <a
+                href="https://aprendizagem.maosverdes.com.br"
+                target="_blank"
+                class="btn btn-green"
+              >
+                Acessar Moodle
+              </a>
+
+              <a href="#conteudos" class="btn btn-outline-dark">
+                Explorar conteúdos
+              </a>
             </div>
           </div>
-        </aside>
+
+          <div class="hero-image">
+            <div class="hero-panel-card">
+              <h2>Formação conectada à prática</h2>
+              <p>
+                Cursos, materiais e trilhas pensados para fortalecer
+                a atuação das cooperativas e territórios.
+              </p>
+            </div>
+          </div>
+
+        </div>
       </div>
     </section>
 
-    <section class="content-section">
-      <div class="container">
-        <div class="section-head reveal">
+    <div class="section-gap"></div>
+
+    <!-- CONTEÚDOS -->
+    <section id="conteudos" class="section-shell section-green">
+      <div class="container section-shell-content">
+
+        <div class="section-head">
           <div>
-            <span class="section-kicker">Ambientes e materiais</span>
+            <span class="section-badge badge-light">Ambientes</span>
             <h2>Explore os conteúdos disponíveis</h2>
           </div>
 
           <p>
-            Uma página preparada para crescer com novos materiais, cursos,
-            downloads e recursos internos do NSRU.
+            Estrutura preparada para crescer com cursos, documentos e trilhas
+            de formação do NSRU.
           </p>
         </div>
 
-        <div class="cards-grid" id="cardsConteudos">
-          <article class="content-card reveal">
-            <div class="card-icon">🎓</div>
-            <span class="card-label">Cursos</span>
+        <div class="cards-grid three">
+
+          <!-- CURSOS -->
+          <article class="card card-white">
+            <div class="card-top">
+              <div class="icon-box green-box">🎓</div>
+              <span class="badge-inline badge-orange">Cursos</span>
+            </div>
+
             <h3>Plataforma de Aprendizagem</h3>
-            <p>
-              Acesse os cursos e trilhas formativas em um ambiente de ensino
-              estruturado para o projeto.
+
+            <p class="card-highlight color-green">
+              Acesse cursos e trilhas formativas.
             </p>
-            <a
-              href="https://aprendizagem.maosverdes.com.br/login/index.php?wantsurl=%2Fmy%2F"
-              target="_blank"
-              rel="noopener"
-              class="btn btn-primary card-btn"
-            >
-              Acessar Moodle
-            </a>
+
+            <p>
+              Ambiente estruturado para capacitação de cooperativas,
+              equipes técnicas e governança.
+            </p>
+
+            <div class="card-actions">
+              <a
+                href="https://aprendizagem.maosverdes.com.br"
+                target="_blank"
+                class="btn btn-green"
+              >
+                Acessar Moodle
+              </a>
+            </div>
           </article>
 
-          <article class="content-card reveal delay-1">
-            <div class="card-icon">📚</div>
-            <span class="card-label neutral">Materiais</span>
+          <!-- MATERIAIS -->
+          <article class="card card-white">
+            <div class="card-top">
+              <div class="icon-box blue-box">📚</div>
+              <span class="badge-inline badge-blue">Materiais</span>
+            </div>
+
             <h3>Guias e Documentos</h3>
-            <p>
-              Boas práticas, documentos técnicos, orientações operacionais e
-              referências de apoio para equipes e territórios.
+
+            <p class="card-highlight color-blue">
+              Referências técnicas e operacionais.
             </p>
-            <button type="button" class="btn btn-disabled card-btn" disabled>
-              Em breve
-            </button>
+
+            <p>
+              Documentos e boas práticas para apoio aos territórios.
+            </p>
+
+            <div class="card-actions">
+              <button class="btn btn-disabled" disabled>
+                Em breve
+              </button>
+            </div>
           </article>
 
-          <article class="content-card reveal delay-2">
-            <div class="card-icon">🧠</div>
-            <span class="card-label neutral">Trilhas</span>
+          <!-- TRILHAS -->
+          <article class="card card-white">
+            <div class="card-top">
+              <div class="icon-box green-box">🧠</div>
+              <span class="badge-inline badge-orange">Trilhas</span>
+            </div>
+
             <h3>Trilhas do Conhecimento</h3>
-            <p>
-              Jornadas organizadas por perfil e tema para apoiar formação
-              contínua, acompanhamento e evolução da equipe.
+
+            <p class="card-highlight color-green">
+              Formação por perfil e função.
             </p>
-            <button type="button" class="btn btn-disabled card-btn" disabled>
-              Em breve
-            </button>
+
+            <p>
+              Jornadas contínuas de aprendizagem para evolução das equipes.
+            </p>
+
+            <div class="card-actions">
+              <button class="btn btn-disabled" disabled>
+                Em breve
+              </button>
+            </div>
           </article>
+
         </div>
+
       </div>
     </section>
 
-    <section class="highlight-section">
-      <div class="container">
-        <div class="highlight-box reveal">
-          <div class="highlight-copy">
-            <span class="section-kicker light">Próxima evolução</span>
-            <h2>Base pronta para expansão da área de conteúdos</h2>
-            <p>
-              A estrutura já está preparada para receber filtros, categorias,
-              biblioteca técnica, materiais por perfil e integrações internas.
-            </p>
+    <div class="section-gap"></div>
+
+    <!-- EVOLUÇÃO -->
+    <section class="section-shell section-orange">
+      <div class="container section-shell-content">
+
+        <span class="section-badge badge-orange">Próxima evolução</span>
+
+        <h2 class="section-title">Expansão da área de conteúdos</h2>
+
+        <p class="section-sub">
+          Estrutura pronta para receber biblioteca técnica, filtros por perfil,
+          categorias e novos materiais do projeto.
+        </p>
+
+        <div class="cards-grid three">
+
+          <div class="card card-white">
+            <h3>Formação</h3>
+            <p>Cursos e capacitações.</p>
           </div>
 
-          <div class="highlight-list">
-            <div class="highlight-item">
-              <strong>Formação</strong>
-              <span>Cursos e capacitações</span>
-            </div>
-            <div class="highlight-item">
-              <strong>Documentação</strong>
-              <span>Guias e materiais de apoio</span>
-            </div>
-            <div class="highlight-item">
-              <strong>Evolução</strong>
-              <span>Trilhas por perfil e função</span>
-            </div>
+          <div class="card card-white">
+            <h3>Documentação</h3>
+            <p>Guias e materiais técnicos.</p>
           </div>
+
+          <div class="card card-white">
+            <h3>Evolução</h3>
+            <p>Trilhas e acompanhamento.</p>
+          </div>
+
         </div>
+
       </div>
     </section>
+
   </main>
 
-  <footer class="site-footer">
-    <div class="container footer-inner">
-      <span>© Núcleo de Soluções para Resíduos Urbanos</span>
-      <span>Reciclagem • Formação • Governança</span>
-    </div>
-  </footer>
+  <div id="site-footer"></div>
 
+  <script src="header-publico.js"></script>
+  <script src="footer-publico.js"></script>
   <script src="conteudos.js"></script>
 </body>
 </html>
