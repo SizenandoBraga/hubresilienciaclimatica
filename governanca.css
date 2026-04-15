@@ -472,7 +472,45 @@ textarea {
   background: var(--bg-soft-blue);
   border-color: var(--border-blue);
 }
+.gov-nav-btn-update {
+  background: #62B32F;
+  color: #fff;
+  border: 0;
+}
 
+.gov-nav-btn-update:hover {
+  filter: brightness(0.96);
+}
+
+.gov-nav-btn-update.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.gov-sync-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(119, 179, 58, 0.08);
+  border: 1px solid rgba(119, 179, 58, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.gov-sync-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #4d7e1f;
+  letter-spacing: 0.04em;
+}
+
+#syncDashboardStatus {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #5f5b56;
+}
 .gov-summary-box:nth-child(3) {
   background: var(--bg-soft-orange);
   border-color: var(--border-orange);

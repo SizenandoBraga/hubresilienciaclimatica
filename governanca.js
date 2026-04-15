@@ -6,13 +6,15 @@ import {
   collection,
   getDocs,
   query,
-  orderBy
+  orderBy,
+  setDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const LOGIN_PAGE = "./login.html";
 const COOPERATIVAS_PAGE = "./cooperativas.html";
 
-const navButtons = document.querySelectorAll(".gov-nav-btn");
+const navButtons = document.querySelectorAll(".gov-nav-btn[data-section]");
 const sections = document.querySelectorAll(".gov-section");
 const pageSubtitle = document.getElementById("pageSubtitle");
 
@@ -20,6 +22,12 @@ const logoutBtn = document.getElementById("logoutBtn");
 const loggedUserName = document.getElementById("loggedUserName");
 const loggedUserMeta = document.getElementById("loggedUserMeta");
 const loggedUserAvatar = document.getElementById("loggedUserAvatar");
+
+const syncDashboardBtn = document.getElementById("syncDashboardBtn");
+const syncDashboardStatus = document.getElementById("syncDashboardStatus");
+
+const PUBLIC_DASHBOARD_DOC = "index";
+const AUTO_SYNC_INTERVAL_MS = 12 * 60 * 60 * 1000;
 
 const SECTION_TITLES = {
   painel: "Plataforma • Cooperativas",
@@ -369,6 +377,250 @@ async function loadAllData() {
   }
 
   return { users, participants, coletas, approvalRequests, crgrs };
+}
+
+function getTerritoryId(item = {}) {
+  return normalizeText(
+    item.territoryId ||
+    item.territory ||
+    item.territoryCode ||
+    item.cooperativaId ||
+    item.crgrId ||
+    item.code
+  );
+}
+
+function isCooperativaMember(user = {}) {
+  const role = normalizeRole(user);
+  const profile = lower(user.profile);
+  const userType = lower(user.userType);
+
+  return (
+    role === "cooperativa" ||
+    role === "integrante" ||
+    role === "catador" ||
+    profile === "cooperativa" ||
+    profile === "integrante" ||
+    userType === "cooperativa" ||
+    userType === "integrante" ||
+    user.roles?.cooperativa === true ||
+    user.roles?.integrante === true
+  );
+}
+
+function getResiduosTotalFromColeta(coleta = {}) {
+  let total = 0;
+
+  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
+
+  if (coleta.recebimento && typeof coleta.recebimento === "object") {
+    total += sumObjectNumericValues(coleta.recebimento);
+  }
+
+  if (coleta.residuos && typeof coleta.residuos === "object") {
+    total += sumObjectNumericValues(coleta.residuos);
+  }
+
+  if (coleta.materiais && typeof coleta.materiais === "object") {
+    total += sumObjectNumericValues(coleta.materiais);
+  }
+
+  return Math.round(total);
+}
+
+function buildPublicDashboardSummary({ users, participants, coletas, crgrs }) {
+  const territoryMap = new Map();
+
+  crgrs.forEach((item) => {
+    const territoryId = normalizeText(item.territoryId || item.code || item.id);
+    if (!territoryId) return;
+
+    territoryMap.set(territoryId, {
+      territoryId,
+      territoryLabel: item.territoryLabel || item.name || territoryId,
+      coletasCount: 0,
+      residuosCount: 0,
+      participantsCount: 0,
+      cooperativaMembersCount: 0
+    });
+  });
+
+  participants.forEach((item) => {
+    const territoryId = getTerritoryId(item);
+    if (!territoryId) return;
+    if (!territoryMap.has(territoryId)) {
+      territoryMap.set(territoryId, {
+        territoryId,
+        territoryLabel: item.territoryLabel || territoryId,
+        coletasCount: 0,
+        residuosCount: 0,
+        participantsCount: 0,
+        cooperativaMembersCount: 0
+      });
+    }
+
+    territoryMap.get(territoryId).participantsCount += 1;
+  });
+
+  users.forEach((item) => {
+    const territoryId = getTerritoryId(item);
+    if (!territoryId) return;
+    if (!territoryMap.has(territoryId)) {
+      territoryMap.set(territoryId, {
+        territoryId,
+        territoryLabel: item.territoryLabel || item.cooperativaNome || territoryId,
+        coletasCount: 0,
+        residuosCount: 0,
+        participantsCount: 0,
+        cooperativaMembersCount: 0
+      });
+    }
+
+    if (isCooperativaMember(item)) {
+      territoryMap.get(territoryId).cooperativaMembersCount += 1;
+    }
+  });
+
+  coletas.forEach((item) => {
+    const territoryId = getTerritoryId(item);
+    if (!territoryId) return;
+    if (!territoryMap.has(territoryId)) {
+      territoryMap.set(territoryId, {
+        territoryId,
+        territoryLabel: item.territoryLabel || territoryId,
+        coletasCount: 0,
+        residuosCount: 0,
+        participantsCount: 0,
+        cooperativaMembersCount: 0
+      });
+    }
+
+    const bucket = territoryMap.get(territoryId);
+    bucket.coletasCount += 1;
+    bucket.residuosCount += getResiduosTotalFromColeta(item);
+  });
+
+  const territoryDocs = Array.from(territoryMap.values());
+
+  const summary = territoryDocs.reduce(
+    (acc, item) => {
+      acc.territoriesCount += 1;
+      acc.coletasCount += item.coletasCount;
+      acc.residuosCount += item.residuosCount;
+      acc.participantsCount += item.participantsCount;
+      acc.cooperativaMembersCount += item.cooperativaMembersCount;
+      return acc;
+    },
+    {
+      territoriesCount: 0,
+      coletasCount: 0,
+      residuosCount: 0,
+      participantsCount: 0,
+      cooperativaMembersCount: 0
+    }
+  );
+
+  return { summary, territoryDocs };
+}
+
+async function savePublicDashboardData(payload) {
+  await setDoc(
+    doc(db, "publicDashboard", PUBLIC_DASHBOARD_DOC),
+    {
+      ...payload,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+}
+
+function setSyncStatus(text) {
+  if (syncDashboardStatus) {
+    syncDashboardStatus.textContent = text;
+  }
+}
+
+function setSyncButtonLoading(isLoading) {
+  if (!syncDashboardBtn) return;
+  syncDashboardBtn.classList.toggle("is-loading", isLoading);
+  syncDashboardBtn.disabled = isLoading;
+}
+
+async function runPublicDashboardSync({ silent = false } = {}) {
+  try {
+    setSyncButtonLoading(true);
+    setSyncStatus(silent ? "Verificando atualização automática..." : "Atualizando indicadores...");
+
+    const { users, participants, coletas, crgrs } = await loadAllData();
+    const { summary, territoryDocs } = buildPublicDashboardSummary({
+      users,
+      participants,
+      coletas,
+      crgrs
+    });
+
+    await savePublicDashboardData({
+      ...summary,
+      territories: territoryDocs
+    });
+
+    const nowLabel = new Date().toLocaleString("pt-BR");
+    setSyncStatus(`Atualizado em ${nowLabel}`);
+
+    console.log("[Governança] Dashboard público sincronizado:", {
+      summary,
+      territoryDocs
+    });
+
+    return true;
+  } catch (error) {
+    console.error("[Governança] Erro ao sincronizar dashboard público:", error);
+    setSyncStatus("Erro ao atualizar indicadores públicos.");
+    return false;
+  } finally {
+    setSyncButtonLoading(false);
+  }
+}
+
+async function autoSyncPublicDashboardIfNeeded() {
+  try {
+    setSyncStatus("Verificando última atualização...");
+
+    const snap = await getDoc(doc(db, "publicDashboard", PUBLIC_DASHBOARD_DOC));
+
+    if (!snap.exists()) {
+      await runPublicDashboardSync({ silent: true });
+      return;
+    }
+
+    const data = snap.data();
+    const updatedAt = data?.updatedAt && typeof data.updatedAt.toDate === "function"
+      ? data.updatedAt.toDate().getTime()
+      : 0;
+
+    const now = Date.now();
+    const diff = now - updatedAt;
+
+    if (!updatedAt || diff >= AUTO_SYNC_INTERVAL_MS) {
+      await runPublicDashboardSync({ silent: true });
+      return;
+    }
+
+    setSyncStatus(
+      `Última atualização em ${new Date(updatedAt).toLocaleString("pt-BR")}`
+    );
+  } catch (error) {
+    console.error("[Governança] Falha na verificação automática:", error);
+    setSyncStatus("Não foi possível verificar a atualização automática.");
+  }
+}
+
+function bindDashboardSyncButton() {
+  if (!syncDashboardBtn) return;
+
+  syncDashboardBtn.addEventListener("click", async () => {
+    await runPublicDashboardSync({ silent: false });
+  });
 }
 
 function renderPainel({ crgrs, users, participants, coletas, approvalRequests }) {
@@ -791,6 +1043,8 @@ onAuthStateChanged(auth, async (user) => {
 
     renderLoggedUser(profile, user);
     bindLogout();
+    bindDashboardSyncButton();
+    await autoSyncPublicDashboardIfNeeded();
 
     await loadGovernanca();
   } catch (error) {
