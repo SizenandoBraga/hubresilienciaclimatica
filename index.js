@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", () => {
       code: "vilapinto",
       territoryId: "vila-pinto",
       name: "Vila Pinto",
-      territoryLabel: "Vila Pinto",
+      territoryLabel: "Centro de Triagem Vila Pinto",
       lat: -30.048729170292532,
       lng: -51.15652604283108,
       address: "Avenida Joaquim Porto Vilanova, 143 • Bom Jesus • Porto Alegre/RS",
