@@ -192,8 +192,10 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       dots.forEach((dot, index) => {
-        dot.classList.toggle("is-active", index === currentIndex);
-        dot.setAttribute("aria-pressed", index === currentIndex ? "true" : "false");
+        if (dot.dataset.slide !== undefined) {
+          dot.classList.toggle("is-active", index === currentIndex);
+          dot.setAttribute("aria-pressed", index === currentIndex ? "true" : "false");
+        }
       });
     }
 
@@ -236,6 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     dots.forEach((dot) => {
+      if (dot.dataset.slide === undefined) return;
       dot.addEventListener("click", () => {
         goTo(Number(dot.dataset.slide || 0));
         startAuto();
@@ -446,110 +449,112 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function countActivePlans(items = []) {
-    return items.filter((item) => {
-      const status = String(item.status || "").toLowerCase();
-      return item.active === true || status === "active" || status === "em_andamento";
-    }).length;
-  }
-
-  function countActiveCrgrs(items = []) {
-    return items.filter((item) => {
-      const status = String(item.status || "").toLowerCase();
-      return item.active === true || status === "active";
-    }).length;
-  }
-
-  function countActiveAlerts(items = []) {
-    return items.filter((item) => item.active !== false).length;
-  }
-
-  async function readCollectionStrict(db, firestore, name) {
-    const { collection, getDocs } = firestore;
-    const snap = await getDocs(collection(db, name));
-    const docs = snap.docs.map((docItem) => ({
-      id: docItem.id,
-      ...docItem.data()
-    }));
-
-    console.log(`[NSRU] coleção ${name}:`, docs.length, docs);
-    return docs;
-  }
-
-  function buildMetrics({ users, coletas, approvalRequests, alerts, normalized }) {
-    return {
-      users: users.length,
-      coletas: coletas.length,
-      approvals: countActivePlans(approvalRequests),
-      crgrs: normalized.length
-        ? countActiveCrgrs(normalized) || normalized.length
-        : FALLBACK_CRGRS.length,
-      alerts: countActiveAlerts(alerts)
-    };
-  }
-
-  async function loadIndexPublicData() {
+  async function loadCRGRCollections() {
     try {
       const firebaseInit = await import("./firebase-init.js");
       const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
       const { db } = firebaseInit;
+      const { collection, getDocs, query, orderBy } = firestore;
 
-      if (!db) {
-        throw new Error("firebase-init.js não exportou 'db'.");
+      async function loadCollectionSafe(name) {
+        try {
+          const snap = await getDocs(query(collection(db, name), orderBy("createdAt", "desc")));
+          return snap.docs.map((docItem) => ({
+            id: docItem.id,
+            ...docItem.data()
+          }));
+        } catch {
+          try {
+            const snap = await getDocs(collection(db, name));
+            return snap.docs.map((docItem) => ({
+              id: docItem.id,
+              ...docItem.data()
+            }));
+          } catch (error) {
+            console.warn(`[INDEX] Não foi possível ler ${name}:`, error);
+            return [];
+          }
+        }
       }
 
-      const [
-        users,
-        coletas,
-        approvalRequests,
-        territories,
-        cooperativas,
-        crgrsDocs,
-        alerts
-      ] = await Promise.all([
-        readCollectionStrict(db, firestore, "users"),
-        readCollectionStrict(db, firestore, "coletas"),
-        readCollectionStrict(db, firestore, "approvalRequests"),
-        readCollectionStrict(db, firestore, "territories"),
-        readCollectionStrict(db, firestore, "cooperativas"),
-        readCollectionStrict(db, firestore, "crgrs"),
-        readCollectionStrict(db, firestore, "alerts")
+      const [territories, cooperativas, crgrs] = await Promise.all([
+        loadCollectionSafe("territories"),
+        loadCollectionSafe("cooperativas"),
+        loadCollectionSafe("crgrs")
       ]);
 
-      const rawCrgrs = [...territories, ...cooperativas, ...crgrsDocs];
-      const normalized = normalizeCrgrDocs(rawCrgrs);
-
+      const normalized = normalizeCrgrDocs([...territories, ...cooperativas, ...crgrs]);
       STATE.crgrs = normalized.length ? normalized : FALLBACK_CRGRS;
-      STATE.metrics = buildMetrics({
-        users,
-        coletas,
-        approvalRequests,
-        alerts,
-        normalized: STATE.crgrs
-      });
 
-      console.log("[NSRU] metrics final:", STATE.metrics);
-      console.log("[NSRU] crgrs final:", STATE.crgrs);
-
-      renderMetrics(STATE.metrics);
       renderCrgrList(STATE.crgrs);
       renderMap(STATE.crgrs);
     } catch (error) {
-      console.error("[NSRU] Falha ao carregar dados públicos:", error);
-
+      console.error("[INDEX] Erro ao carregar CRGRs:", error);
       STATE.crgrs = FALLBACK_CRGRS;
+      renderCrgrList(STATE.crgrs);
+      renderMap(STATE.crgrs);
+    }
+  }
+
+  async function loadPublicIndicators() {
+    try {
+      const firebaseInit = await import("./firebase-init.js");
+      const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
+
+      const { db } = firebaseInit;
+      const { doc, getDoc } = firestore;
+
+      const snap = await getDoc(doc(db, "publicDashboard", "index"));
+
+      if (!snap.exists()) {
+        console.warn("[INDEX] publicDashboard/index ainda não existe.");
+        renderMetrics({
+          users: 0,
+          coletas: 0,
+          approvals: 0,
+          crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
+          alerts: 0
+        });
+        return;
+      }
+
+      const data = snap.data();
+
+      const usersCount =
+        Number(data.usersCount ?? (Number(data.participantsCount || 0) + Number(data.cooperativaMembersCount || 0)));
+
+      const coletasCount =
+        Number(data.coletasCount ?? 0);
+
+      const approvalsCount =
+        Number(data.approvalsCount ?? 0);
+
+      const crgrsCount =
+        Number(data.crgrsCount ?? data.territoriesCount ?? STATE.crgrs.length ?? FALLBACK_CRGRS.length);
+
+      const alertsCount =
+        Number(data.alertsCount ?? 0);
+
       STATE.metrics = {
-        users: 0,
-        coletas: 0,
-        approvals: 0,
-        crgrs: FALLBACK_CRGRS.length,
-        alerts: 0
+        users: usersCount,
+        coletas: coletasCount,
+        approvals: approvalsCount,
+        crgrs: crgrsCount,
+        alerts: alertsCount
       };
 
       renderMetrics(STATE.metrics);
-      renderCrgrList(STATE.crgrs);
-      renderMap(STATE.crgrs);
+      console.log("[INDEX] Indicadores públicos carregados:", data);
+    } catch (error) {
+      console.error("[INDEX] Erro ao carregar indicadores públicos:", error);
+      renderMetrics({
+        users: 0,
+        coletas: 0,
+        approvals: 0,
+        crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
+        alerts: 0
+      });
     }
   }
 
@@ -574,5 +579,10 @@ document.addEventListener("DOMContentLoaded", () => {
   renderCrgrList(FALLBACK_CRGRS);
   renderMap(FALLBACK_CRGRS);
 
-  loadIndexPublicData();
+  Promise.all([
+    loadCRGRCollections(),
+    loadPublicIndicators()
+  ]).catch((error) => {
+    console.error("[INDEX] Falha geral ao iniciar index:", error);
+  });
 });
