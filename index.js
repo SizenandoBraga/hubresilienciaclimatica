@@ -27,9 +27,9 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "vilapinto",
       code: "vilapinto",
-      territoryId: "vila-pinto",
+      territoryId: "crgr_vila_pinto",
       name: "Vila Pinto",
-      territoryLabel: "Centro de Triagem Vila Pinto",
+      territoryLabel: "Vila Pinto",
       lat: -30.048729170292532,
       lng: -51.15652604283108,
       address: "Avenida Joaquim Porto Vilanova, 143 • Bom Jesus • Porto Alegre/RS",
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "cooadesc",
       code: "cooadesc",
-      territoryId: "cooadesc",
+      territoryId: "crgr_cooadesc",
       name: "COOADESC",
       territoryLabel: "COOADESC",
       lat: -30.003,
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "padrecacique",
       code: "padrecacique",
-      territoryId: "padre_cacique",
+      territoryId: "crgr_padre_cacique",
       name: "Padre Cacique",
       territoryLabel: "Padre Cacique",
       lat: -30.140122365657504,
