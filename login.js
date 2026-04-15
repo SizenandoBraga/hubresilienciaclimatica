@@ -22,48 +22,57 @@ const ACCESS_RULES = {
   },
 
   "admin.vp@teste.com": {
-    cooperativaId: "vila-pinto",
+    cooperativaId: "crgr_vila_pinto",
     cooperativaNome: "Vila Pinto",
     perfil: "admin",
     scope: "cooperativa"
   },
   "user.vp@teste.com": {
-    cooperativaId: "vila-pinto",
+    cooperativaId: "crgr_vila_pinto",
     cooperativaNome: "Vila Pinto",
-    perfil: "user",
+    perfil: "cooperativa",
     scope: "cooperativa"
   },
 
   "admin.cooa@teste.com": {
-    cooperativaId: "cooadesc",
-    cooperativaNome: "Cooadesc",
+    cooperativaId: "crgr_coadesc",
+    cooperativaNome: "COADESC",
     perfil: "admin",
     scope: "cooperativa"
   },
   "user.cooa@teste.com": {
-    cooperativaId: "cooadesc",
-    cooperativaNome: "Cooadesc",
-    perfil: "user",
+    cooperativaId: "crgr_coadesc",
+    cooperativaNome: "COADESC",
+    perfil: "cooperativa",
     scope: "cooperativa"
   },
 
-  "admin.x@teste.com": {
-    cooperativaId: "ultima-cooperativa",
-    cooperativaNome: "Última Cooperativa",
+  "admin.pc@teste.com": {
+    cooperativaId: "crgr_padre_cacique",
+    cooperativaNome: "Padre Cacique",
     perfil: "admin",
     scope: "cooperativa"
   },
-  "user.x@teste.com": {
-    cooperativaId: "ultima-cooperativa",
-    cooperativaNome: "Última Cooperativa",
-    perfil: "user",
+  "user.pc@teste.com": {
+    cooperativaId: "crgr_padre_cacique",
+    cooperativaNome: "Padre Cacique",
+    perfil: "cooperativa",
     scope: "cooperativa"
   }
 };
 
-const COOPERATIVAS_PAGE = "./cooperativas.html";
-const GOVERNANCA_PAGE = "./governanca.html";
-const LOGIN_PAGE = "./login.html";
+/* =============================
+   ROTAS
+============================= */
+const PAGES = {
+  governanca: "./governanca.html",
+  login: "./login.html",
+  cooperativas: {
+    crgr_vila_pinto: "./cooperativa-vila-pinto.html",
+    crgr_coadesc: "./cooperativa-coadesc.html",
+    crgr_padre_cacique: "./cooperativa-padre-cacique.html"
+  }
+};
 
 /* =============================
    UI REFS
@@ -138,6 +147,7 @@ function setLoading(isLoading) {
     loginBtn.style.opacity = isLoading ? "0.86" : "1";
     loginBtn.textContent = isLoading ? "Entrando..." : "Entrar";
   }
+
   loadingbar?.classList.toggle("show", isLoading);
 }
 
@@ -162,14 +172,33 @@ function isGovernancaAccess(access) {
   );
 }
 
+function getCooperativaPage(cooperativaId) {
+  return PAGES.cooperativas[cooperativaId] || null;
+}
+
 function getRedirectPage(access) {
-  if (!access) return LOGIN_PAGE;
-  if (isGovernancaAccess(access)) return GOVERNANCA_PAGE;
-  return COOPERATIVAS_PAGE;
+  if (!access) return PAGES.login;
+
+  if (isGovernancaAccess(access)) {
+    return PAGES.governanca;
+  }
+
+  const coopPage = getCooperativaPage(access.cooperativaId);
+  return coopPage || PAGES.login;
 }
 
 function redirectByAccess(access) {
   const target = getRedirectPage(access);
+
+  if (!target || target === PAGES.login) {
+    showMsg(
+      msgBox,
+      "error",
+      "Usuário autenticado, mas sem página de cooperativa configurada."
+    );
+    return;
+  }
+
   window.location.href = target;
 }
 
@@ -177,14 +206,14 @@ function describeAccess(access) {
   if (!access) return "sem acesso";
 
   if (isGovernancaAccess(access)) {
-    return "Governança • acesso apenas à página de governança";
+    return "Governança • acesso à página de governança";
   }
 
   if (access.perfil === "admin") {
-    return `Administrador local • acesso à cooperativa ${access.cooperativaNome}`;
+    return `Administrador local • ${access.cooperativaNome}`;
   }
 
-  return `Usuário local • acesso à cooperativa ${access.cooperativaNome}`;
+  return `Usuário da cooperativa • ${access.cooperativaNome}`;
 }
 
 /* =============================
@@ -244,7 +273,7 @@ onAuthStateChanged(auth, async (user) => {
   continueBtn.className = "btn btn-primary btn-block";
   continueBtn.textContent = isGovernancaAccess(access)
     ? "Ir para Governança"
-    : "Ir para Cooperativas";
+    : `Ir para ${access.cooperativaNome}`;
 
   continueBtn.addEventListener("click", () => {
     redirectByAccess(access);

@@ -11,29 +11,28 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="/login.css">
+  <link rel="stylesheet" href="login.css">
 </head>
 
 <body>
-  <div class="bg-grid"></div>
-  <div class="noise"></div>
   <div class="cursor-glow" id="cursorGlow" aria-hidden="true"></div>
 
   <main class="page">
     <section class="hero" data-reveal>
-      <div class="hero-glow-top"></div>
       <div class="hero-logo-bg" aria-hidden="true">
         <img src="img/NSRU - Logo-Preto.png" alt="">
       </div>
 
       <div class="hero-inner">
-        <div class="brand" translate="no"></div>
+        <a href="index.html" class="hero-back-link">← Voltar ao início</a>
+
+        <span class="hero-badge">Plataforma • Cooperativas • Territórios</span>
 
         <h1 class="hero-title">
-  Faça parte do <span>NSRU</span>
-</h1>
+          Faça parte do <span>NSRU</span>
+        </h1>
 
         <p class="hero-text">
           O Núcleo é um espaço de integração entre <strong>dados, pessoas e territórios</strong>.
@@ -46,24 +45,37 @@
           Seja você parte de uma <strong>cooperativa de triagem</strong>, uma
           <strong>liderança comunitária</strong>, um <strong>gestor público</strong>,
           <strong>técnico</strong> ou <strong>agente de resposta climática</strong>,
-          sua participação ajuda a transformar informação em <span>decisão, articulação e ação coletiva</span>.
+          sua participação ajuda a transformar informação em
+          <span>decisão, articulação e ação coletiva</span>.
         </p>
+
+        <div class="hero-highlights">
+          <div class="hero-highlight-card">
+            <strong>Governança</strong>
+            <span>Acesso global aos territórios e indicadores</span>
+          </div>
+
+          <div class="hero-highlight-card">
+            <strong>Cooperativas</strong>
+            <span>Acompanhamento local de participantes, coletas e operação</span>
+          </div>
+        </div>
       </div>
     </section>
 
     <section class="panel" data-reveal>
-    <div class="card" role="region" aria-label="Autenticação" translate="no">
-  <a href="/index.html" class="back-tag">← Voltar ao início</a>
+      <div class="card" role="region" aria-label="Autenticação" translate="no">
+        <header class="card-header">
+          <div>
+            <span class="card-kicker">Acesso seguro</span>
+            <h2 id="cardTitle">Entrar</h2>
+            <div class="subtitle" id="cardSubtitle">
+              Use seu e-mail autorizado para acessar a área da sua cooperativa.
+            </div>
+          </div>
 
-  <header class="card-header">
-    <div>
-      <h2 id="cardTitle">Entrar</h2>
-      <div class="subtitle" id="cardSubtitle">
-        Use seu e-mail autorizado para acessar a área da sua cooperativa.
-      </div>
-    </div>
-    <div class="badge">Acesso seguro</div>
-  </header>
+          <div class="badge">Login</div>
+        </header>
 
         <form class="form" id="loginForm" autocomplete="on">
           <div class="field">
@@ -97,16 +109,20 @@
               <input type="checkbox" id="rememberMe" />
               <span>Manter conectado</span>
             </label>
+
             <a class="link" href="#" id="resetPwdLink">Esqueci minha senha</a>
           </div>
 
-          <button class="btn btn-primary btn-block" id="loginBtn" type="submit">Entrar</button>
+          <button class="btn btn-primary btn-block" id="loginBtn" type="submit">
+            Entrar
+          </button>
 
           <div class="loadingbar" id="loadingbar"><div></div></div>
           <div id="msgBox" class="msg" aria-live="polite"></div>
 
           <div class="footer-note">
-            O acesso é controlado por usuário autorizado. Cada perfil visualiza apenas os dados da sua cooperativa.
+            O acesso é controlado por usuário autorizado. Cada perfil visualiza apenas os dados
+            permitidos para sua área de atuação.
           </div>
 
           <div class="authed-actions" id="authedActions" style="display:none;"></div>
@@ -115,6 +131,6 @@
     </section>
   </main>
 
-  <script type="module" src="/login.js"></script>
+  <script type="module" src="login.js"></script>
 </body>
 </html>
