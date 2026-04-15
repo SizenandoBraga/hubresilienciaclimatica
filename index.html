@@ -181,68 +181,69 @@
     <div class="section-gap"></div>
 
     <section id="crgr" class="section-shell section-white" data-reveal>
-      <div class="container section-shell-content">
-        <div class="section-grid crgr-grid-enhanced">
-          <div class="section-copy">
-            <span class="section-badge badge-orange">Rede piloto</span>
-            <h2>Rede CRGR — Piloto Porto Alegre</h2>
+  <div class="container section-shell-content">
+    
+    <div class="crgr-top">
+      <span class="section-badge badge-orange">Rede piloto</span>
+      <h2>Rede CRGR — Piloto Porto Alegre</h2>
 
-            <p class="section-text">
-              Os <strong>Centros de Referência na Gestão de Resíduos (CRGRs)</strong>
-              são Unidades de Triagem conveniadas com o DMLU que, além da separação
-              e destinação de materiais recicláveis, atuam no território com serviços
-              comunitários, educação ambiental e orientação sobre boas práticas de
-              descarte antes, durante e após eventos climáticos extremos.
-            </p>
+      <p class="section-text">
+        Os <strong>Centros de Referência na Gestão de Resíduos (CRGRs)</strong>
+        são Unidades de Triagem conveniadas com o DMLU que, além da separação
+        e destinação de materiais recicláveis, atuam no território com serviços
+        comunitários, educação ambiental e orientação sobre boas práticas de
+        descarte antes, durante e após eventos climáticos extremos.
+      </p>
 
-            <p class="section-text">
-              Nesta etapa inicial, o NSRU integra <strong>três CRGRs pilotos em Porto Alegre</strong>,
-              conectando atuação local, organização territorial e acesso a informações estratégicas.
-            </p>
+      <p class="section-text">
+        Nesta etapa inicial, o NSRU integra <strong>três CRGRs pilotos em Porto Alegre</strong>,
+        conectando atuação local, organização territorial e acesso a informações estratégicas.
+      </p>
 
-            <div class="map-helper-box">
-              <strong>Clique nos pontos do mapa</strong>
-              <span>
-                Ao selecionar um ponto, o card ao lado exibirá as informações da cooperativa
-                e o botão para acessar sua página.
-              </span>
+      <div class="map-helper-box">
+        <strong>Clique nos pontos do mapa</strong>
+        <span>
+          Ao selecionar um ponto, o card ao lado exibirá as informações da cooperativa
+          e o botão para acessar sua página.
+        </span>
+      </div>
+
+      <div class="action-row">
+        <button data-open-map class="btn btn-blue" type="button">
+          Abrir mapa agora →
+        </button>
+
+        <a href="#faq" class="btn btn-outline-green">
+          Ver dúvidas frequentes ↘
+        </a>
+      </div>
+    </div>
+
+    <div class="crgr-bottom">
+      <div class="map-panel crgr-map-panel">
+        <div id="map" class="map-box" aria-label="Mapa dos CRGRs"></div>
+      </div>
+
+      <aside class="side-panel cooperative-side-panel">
+        <strong class="panel-title">Cooperativa selecionada</strong>
+
+        <div class="panel-card panel-card-soft panel-card-selected" id="selectedCrgrCard">
+          <div class="panel-card-text">
+            <div class="panel-card-title">Selecione um ponto no mapa</div>
+            <div class="panel-card-subtitle">
+              Clique em um dos CRGRs para visualizar os dados da cooperativa.
             </div>
-
-            <div class="action-row">
-              <button data-open-map class="btn btn-blue" type="button">
-                Abrir mapa agora →
-              </button>
-
-              <a href="#faq" class="btn btn-outline-green">
-                Ver dúvidas frequentes ↘
-              </a>
+            <div class="panel-card-meta">
+              As informações aparecerão aqui junto com o botão de acesso.
             </div>
           </div>
 
-          <aside class="side-panel cooperative-side-panel">
-            <strong class="panel-title">Cooperativa selecionada</strong>
-
-            <div class="panel-card panel-card-soft panel-card-selected" id="selectedCrgrCard">
-              <div class="panel-card-text">
-                <div class="panel-card-title">Selecione um ponto no mapa</div>
-                <div class="panel-card-subtitle">
-                  Clique em um dos CRGRs para visualizar os dados da cooperativa.
-                </div>
-                <div class="panel-card-meta">
-                  As informações aparecerão aqui junto com o botão de acesso.
-                </div>
-              </div>
-
-              <div class="panel-card-actions" id="selectedCrgrActions"></div>
-            </div>
-          </aside>
+          <div class="panel-card-actions" id="selectedCrgrActions"></div>
         </div>
-
-        <div class="map-panel">
-          <div id="map" class="map-box" aria-label="Mapa dos CRGRs"></div>
-        </div>
-      </div>
-    </section>
+      </aside>
+    </div>
+  </div>
+</section>
 
     <div class="section-gap"></div>
 

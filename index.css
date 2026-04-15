@@ -85,42 +85,95 @@
   min-height: 190px;
 }
 
+/* =========================
+REDE CRGR (NOVO LAYOUT)
+========================= */
+
+.crgr-top {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.crgr-top h2 {
+  margin: 0;
+  font-size: 38px;
+  line-height: 1.08;
+}
+
+.crgr-top .section-text {
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.7;
+  color: var(--text-soft);
+  font-family: "Inter", Arial, sans-serif;
+}
+
+.crgr-bottom {
+  display: grid;
+  grid-template-columns: 1.35fr 0.8fr;
+  gap: 24px;
+  align-items: start;
+}
+
 /* MAP */
 .map-panel {
-  margin-top: 24px;
+  margin-top: 0;
   padding: 16px;
 }
 
 .map-box {
-  min-height: 440px;
+  width: 100%;
+  min-height: 420px;
+  border-radius: 18px;
 }
 
-/* GRID SECTION */
-
-.section-grid {
-  display: grid;
-  grid-template-columns: 1.4fr 0.9fr;
-  gap: 32px;
-  align-items: stretch;
-}
+/* SIDE PANEL */
 .cooperative-side-panel {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
 }
+
+.panel-title {
+  font-size: 22px;
+  margin-bottom: 12px;
+}
+
 .panel-card {
   padding: 14px;
 }
-.panel-card-selected {
-  min-height: auto;
-  height: auto;
-  padding: 18px;
-} 
 
+.panel-card-selected {
+  padding: 16px;
+  border-radius: 18px;
+}
+
+/* CARD TEXTO */
+.panel-card-title {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.panel-card-subtitle {
+  font-size: 14px;
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.panel-card-meta {
+  font-size: 13px;
+}
+
+.panel-card-actions {
+  margin-top: 10px;
+}
+
+/* TEXTO GRID */
 .section-copy {
   display: flex;
   flex-direction: column;
-  gap: 18px; /* espaçamento entre blocos */
+  gap: 18px;
 }
 
 .section-copy h2 {
@@ -130,52 +183,36 @@
 }
 
 .section-copy .section-text {
-  margin: 0;
   font-size: 18px;
-  line-height: 1.7; /* MAIS IMPORTANTE */
-  color: var(--text-soft);
+  line-height: 1.7;
   max-width: 720px;
 }
 
-/* espaçamento entre parágrafos */
+/* PARÁGRAFOS */
 .section-copy p + p {
   margin-top: 8px;
 }
 
-/* destaque do texto "clique no mapa" */
+/* MAP HELPER */
 .map-helper-box {
   margin-top: 12px;
   padding: 18px 20px;
   line-height: 1.6;
 }
 
-/* botões mais separados do texto */
+/* BOTÕES */
 .action-row {
   margin-top: 16px;
   gap: 14px;
 }
-.panel-card-title {
-  font-size: 20px;
-  margin-bottom: 4px;
-}
 
-.panel-card-subtitle {
-  font-size: 14px;
-  margin-bottom: 6px;
-}
+/* =========================
+INDICADORES
+========================= */
 
-.panel-card-meta {
-  font-size: 13px;
-}
-
-.panel-card-actions {
-  margin-top: 12px;
-}
-/* INDICADORES (AJUSTADO) */
 .section-orange .section-shell-content {
   background: #ffffff;
   border-color: var(--border);
-  color: var(--black);
 }
 
 .metric-card {
@@ -192,27 +229,27 @@
 }
 
 .metric-green {
-  background: linear-gradient(135deg, #62B32F, #62B32F);
+  background: #62B32F;
   color: #fff;
 }
 
 .metric-blue {
-  background: linear-gradient(135deg, #2FA8D8, #2f93c9);
+  background: #2FA8D8;
   color: #fff;
 }
 
 .metric-orange {
-  background: linear-gradient(135deg, #ef6b22, #d85a15);
+  background: #ef6b22;
   color: #fff;
 }
 
 .metric-dark {
-  background: linear-gradient(135deg, #3c3a39, #1f1e1d);
+  background: #1f1f1f;
   color: #fff;
 }
 
 .metric-alert {
-  background: linear-gradient(135deg, #d64545, #b93333);
+  background: #d64545;
   color: #fff;
 }
 
@@ -250,6 +287,10 @@
 
   .section-shell-content {
     padding: 30px 24px;
+  }
+
+  .crgr-bottom {
+    grid-template-columns: 1fr;
   }
 }
 
