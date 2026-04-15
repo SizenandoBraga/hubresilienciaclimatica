@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "vilapinto",
       code: "vilapinto",
+      territoryId: "crgr_vila_pinto",
       name: "Vila Pinto",
       territoryLabel: "Vila Pinto",
       lat: -30.048729170292532,
@@ -38,6 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "cooadesc",
       code: "cooadesc",
+      territoryId: "crgr_cooadesc",
       name: "COOADESC",
       territoryLabel: "COOADESC",
       lat: -30.003,
@@ -49,6 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "padrecacique",
       code: "padrecacique",
+      territoryId: "crgr_padre_cacique",
       name: "Padre Cacique",
       territoryLabel: "Padre Cacique",
       lat: -30.140122365657504,
@@ -75,11 +78,6 @@ document.addEventListener("DOMContentLoaded", () => {
     if (value === null || value === undefined || value === "") return null;
     const n = Number(value);
     return Number.isFinite(n) ? n : null;
-  }
-
-  function toNumber(value) {
-    const n = Number(value);
-    return Number.isFinite(n) ? n : 0;
   }
 
   function isReducedMotion() {
@@ -469,65 +467,93 @@ document.addEventListener("DOMContentLoaded", () => {
     return items.filter((item) => item.active !== false).length;
   }
 
-  function sumField(items = [], fieldNames = []) {
-    return items.reduce((total, item) => {
-      let value = 0;
-
-      for (const field of fieldNames) {
-        const raw = item?.[field];
-        const num = Number(raw);
-        if (Number.isFinite(num)) {
-          value = num;
-          break;
-        }
-      }
-
-      return total + value;
-    }, 0);
+  function cleanKey(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/\s+/g, "_");
   }
 
-  function buildMetrics({ users, coletas, approvalRequests, cooperativas, normalized, alerts }) {
-    const cooperativaUsers = sumField(cooperativas, [
-      "users",
-      "totalUsers",
-      "usuarios",
-      "totalUsuarios",
-      "qtdUsuarios",
-      "quantidadeUsuarios"
-    ]);
+  function buildTerritoryKeySet(items = []) {
+    const set = new Set();
 
-    const cooperativaColetas = sumField(cooperativas, [
-      "coletas",
-      "totalColetas",
-      "coletasTotal",
-      "qtdColetas",
-      "quantidadeColetas"
-    ]);
+    items.forEach((item) => {
+      [
+        item.id,
+        item.code,
+        item.territoryId,
+        item.name,
+        item.territoryLabel,
+        item.label,
+        item.title,
+        item.cooperativaNome
+      ].forEach((value) => {
+        const key = cleanKey(value);
+        if (key) set.add(key);
+      });
+    });
 
-    const cooperativaPlans = sumField(cooperativas, [
-      "approvals",
-      "planos",
-      "totalPlanos",
-      "planosAtivos",
-      "qtdPlanos",
-      "quantidadePlanos"
-    ]);
+    return set;
+  }
 
-    const cooperativaAlerts = sumField(cooperativas, [
-      "alerts",
-      "totalAlerts",
-      "alertas",
-      "totalAlertas",
-      "qtdAlertas",
-      "quantidadeAlertas"
-    ]);
+  function getDocTerritoryKeys(item = {}) {
+    const values = [
+      item.territoryId,
+      item.territory,
+      item.territoryCode,
+      item.code,
+      item.crgrId,
+      item.crgrCode,
+      item.cooperativaId,
+      item.cooperativaCode,
+      item.cooperativaNome,
+      item.territoryLabel,
+      item.name,
+      item.label
+    ];
+
+    return values
+      .map(cleanKey)
+      .filter(Boolean);
+  }
+
+  function isDocFromKnownTerritory(item = {}, territoryKeySet = new Set()) {
+    const keys = getDocTerritoryKeys(item);
+    return keys.some((key) => territoryKeySet.has(key));
+  }
+
+  function filterByKnownTerritories(items = [], territoryKeySet = new Set()) {
+    return items.filter((item) => isDocFromKnownTerritory(item, territoryKeySet));
+  }
+
+  function buildMetrics({
+    users,
+    coletas,
+    approvalRequests,
+    alerts,
+    normalized
+  }) {
+    const territoryKeySet = buildTerritoryKeySet(normalized);
+
+    const filteredUsers = filterByKnownTerritories(users, territoryKeySet);
+    const filteredColetas = filterByKnownTerritories(coletas, territoryKeySet);
+    const filteredApprovals = filterByKnownTerritories(approvalRequests, territoryKeySet);
+    const filteredAlerts = filterByKnownTerritories(alerts, territoryKeySet);
 
     return {
-      users: cooperativaUsers > 0 ? cooperativaUsers : users.length,
-      coletas: cooperativaColetas > 0 ? cooperativaColetas : coletas.length,
-      approvals: cooperativaPlans > 0 ? cooperativaPlans : countActivePlans(approvalRequests),
-      crgrs: normalized.length ? countActiveCrgrs(normalized) || normalized.length : FALLBACK_CRGRS.length,
-      alerts: cooperativaAlerts > 0 ? cooperativaAlerts : countActiveAlerts(alerts)
+      users: filteredUsers.length || users.length,
+      coletas: filteredColetas.length || coletas.length,
+      approvals: filteredApprovals.length
+        ? countActivePlans(filteredApprovals)
+        : countActivePlans(approvalRequests),
+      crgrs: normalized.length
+        ? countActiveCrgrs(normalized) || normalized.length
+        : FALLBACK_CRGRS.length,
+      alerts: filteredAlerts.length
+        ? countActiveAlerts(filteredAlerts)
+        : countActiveAlerts(alerts)
     };
   }
 
@@ -579,10 +605,12 @@ document.addEventListener("DOMContentLoaded", () => {
         users,
         coletas,
         approvalRequests,
-        cooperativas,
-        normalized,
-        alerts
+        alerts,
+        normalized: STATE.crgrs
       });
+
+      console.log("NSRU metrics:", STATE.metrics);
+      console.log("NSRU crgrs:", STATE.crgrs);
 
       renderMetrics(STATE.metrics);
       renderCrgrList(STATE.crgrs);
