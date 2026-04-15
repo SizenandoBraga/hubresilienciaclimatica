@@ -192,10 +192,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       dots.forEach((dot, index) => {
-        if (dot.dataset.slide !== undefined) {
-          dot.classList.toggle("is-active", index === currentIndex);
-          dot.setAttribute("aria-pressed", index === currentIndex ? "true" : "false");
-        }
+        dot.classList.toggle("is-active", index === currentIndex);
+        dot.setAttribute("aria-pressed", index === currentIndex ? "true" : "false");
       });
     }
 
@@ -238,7 +236,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     dots.forEach((dot) => {
-      if (dot.dataset.slide === undefined) return;
       dot.addEventListener("click", () => {
         goTo(Number(dot.dataset.slide || 0));
         startAuto();
@@ -467,93 +464,27 @@ document.addEventListener("DOMContentLoaded", () => {
     return items.filter((item) => item.active !== false).length;
   }
 
-  function cleanKey(value) {
-    return String(value || "")
-      .trim()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/\s+/g, "_");
+  async function readCollectionStrict(db, firestore, name) {
+    const { collection, getDocs } = firestore;
+    const snap = await getDocs(collection(db, name));
+    const docs = snap.docs.map((docItem) => ({
+      id: docItem.id,
+      ...docItem.data()
+    }));
+
+    console.log(`[NSRU] coleção ${name}:`, docs.length, docs);
+    return docs;
   }
 
-  function buildTerritoryKeySet(items = []) {
-    const set = new Set();
-
-    items.forEach((item) => {
-      [
-        item.id,
-        item.code,
-        item.territoryId,
-        item.name,
-        item.territoryLabel,
-        item.label,
-        item.title,
-        item.cooperativaNome
-      ].forEach((value) => {
-        const key = cleanKey(value);
-        if (key) set.add(key);
-      });
-    });
-
-    return set;
-  }
-
-  function getDocTerritoryKeys(item = {}) {
-    const values = [
-      item.territoryId,
-      item.territory,
-      item.territoryCode,
-      item.code,
-      item.crgrId,
-      item.crgrCode,
-      item.cooperativaId,
-      item.cooperativaCode,
-      item.cooperativaNome,
-      item.territoryLabel,
-      item.name,
-      item.label
-    ];
-
-    return values
-      .map(cleanKey)
-      .filter(Boolean);
-  }
-
-  function isDocFromKnownTerritory(item = {}, territoryKeySet = new Set()) {
-    const keys = getDocTerritoryKeys(item);
-    return keys.some((key) => territoryKeySet.has(key));
-  }
-
-  function filterByKnownTerritories(items = [], territoryKeySet = new Set()) {
-    return items.filter((item) => isDocFromKnownTerritory(item, territoryKeySet));
-  }
-
-  function buildMetrics({
-    users,
-    coletas,
-    approvalRequests,
-    alerts,
-    normalized
-  }) {
-    const territoryKeySet = buildTerritoryKeySet(normalized);
-
-    const filteredUsers = filterByKnownTerritories(users, territoryKeySet);
-    const filteredColetas = filterByKnownTerritories(coletas, territoryKeySet);
-    const filteredApprovals = filterByKnownTerritories(approvalRequests, territoryKeySet);
-    const filteredAlerts = filterByKnownTerritories(alerts, territoryKeySet);
-
+  function buildMetrics({ users, coletas, approvalRequests, alerts, normalized }) {
     return {
-      users: filteredUsers.length || users.length,
-      coletas: filteredColetas.length || coletas.length,
-      approvals: filteredApprovals.length
-        ? countActivePlans(filteredApprovals)
-        : countActivePlans(approvalRequests),
+      users: users.length,
+      coletas: coletas.length,
+      approvals: countActivePlans(approvalRequests),
       crgrs: normalized.length
         ? countActiveCrgrs(normalized) || normalized.length
         : FALLBACK_CRGRS.length,
-      alerts: filteredAlerts.length
-        ? countActiveAlerts(filteredAlerts)
-        : countActiveAlerts(alerts)
+      alerts: countActiveAlerts(alerts)
     };
   }
 
@@ -563,19 +494,9 @@ document.addEventListener("DOMContentLoaded", () => {
       const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
       const { db } = firebaseInit;
-      const { collection, getDocs } = firestore;
 
-      async function readCollectionSafe(name) {
-        try {
-          const snap = await getDocs(collection(db, name));
-          return snap.docs.map((docItem) => ({
-            id: docItem.id,
-            ...docItem.data()
-          }));
-        } catch (error) {
-          console.warn(`Erro ao ler coleção ${name}:`, error);
-          return [];
-        }
+      if (!db) {
+        throw new Error("firebase-init.js não exportou 'db'.");
       }
 
       const [
@@ -587,20 +508,19 @@ document.addEventListener("DOMContentLoaded", () => {
         crgrsDocs,
         alerts
       ] = await Promise.all([
-        readCollectionSafe("users"),
-        readCollectionSafe("coletas"),
-        readCollectionSafe("approvalRequests"),
-        readCollectionSafe("territories"),
-        readCollectionSafe("cooperativas"),
-        readCollectionSafe("crgrs"),
-        readCollectionSafe("alerts")
+        readCollectionStrict(db, firestore, "users"),
+        readCollectionStrict(db, firestore, "coletas"),
+        readCollectionStrict(db, firestore, "approvalRequests"),
+        readCollectionStrict(db, firestore, "territories"),
+        readCollectionStrict(db, firestore, "cooperativas"),
+        readCollectionStrict(db, firestore, "crgrs"),
+        readCollectionStrict(db, firestore, "alerts")
       ]);
 
       const rawCrgrs = [...territories, ...cooperativas, ...crgrsDocs];
       const normalized = normalizeCrgrDocs(rawCrgrs);
 
       STATE.crgrs = normalized.length ? normalized : FALLBACK_CRGRS;
-
       STATE.metrics = buildMetrics({
         users,
         coletas,
@@ -609,14 +529,14 @@ document.addEventListener("DOMContentLoaded", () => {
         normalized: STATE.crgrs
       });
 
-      console.log("NSRU metrics:", STATE.metrics);
-      console.log("NSRU crgrs:", STATE.crgrs);
+      console.log("[NSRU] metrics final:", STATE.metrics);
+      console.log("[NSRU] crgrs final:", STATE.crgrs);
 
       renderMetrics(STATE.metrics);
       renderCrgrList(STATE.crgrs);
       renderMap(STATE.crgrs);
     } catch (error) {
-      console.error("Falha ao carregar dados públicos da index:", error);
+      console.error("[NSRU] Falha ao carregar dados públicos:", error);
 
       STATE.crgrs = FALLBACK_CRGRS;
       STATE.metrics = {
