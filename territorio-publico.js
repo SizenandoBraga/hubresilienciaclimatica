@@ -18,7 +18,7 @@ import {
 const bodyConfig = document.body.dataset || {};
 
 const PAGE_TERRITORY = {
-  territoryId: bodyConfig.territoryId || "crgr_vila_pinto",
+  territoryId: bodyConfig.territoryId || "vila-pinto",
   territoryLabel: bodyConfig.territoryLabel || "Território",
   cooperativeName: bodyConfig.cooperativeName || "Cooperativa"
 };
