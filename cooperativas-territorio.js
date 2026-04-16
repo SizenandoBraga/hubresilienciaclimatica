@@ -11,6 +11,7 @@ import {
   getDocs,
   limit,
   updateDoc,
+  setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -26,6 +27,8 @@ const PAGE_TERRITORY = {
   mapLng: Number(bodyConfig.mapLng || -51.2177),
   mapZoom: Number(bodyConfig.mapZoom || 15)
 };
+
+const AUTO_SYNC_INTERVAL_MS = 12 * 60 * 60 * 1000;
 
 const els = {
   sidebar: document.getElementById("sidebar"),
@@ -88,7 +91,10 @@ const els = {
 
   usersNavLink: document.querySelector('a[href="usuarios.html"]'),
   participantsSectionShell: document.querySelector(".participants-section-shell"),
-  indicatorsCard: document.querySelector(".indicators-card")
+  indicatorsCard: document.querySelector(".indicators-card"),
+
+  syncCoopDashboardBtn: document.getElementById("syncCoopDashboardBtn"),
+  syncCoopDashboardStatus: document.getElementById("syncCoopDashboardStatus")
 };
 
 const TAB_META = {
@@ -240,6 +246,18 @@ function hasValidLatLng(item) {
   const lat = Number(item?.lat ?? item?.address?.lat);
   const lng = Number(item?.lng ?? item?.address?.lng);
   return Number.isFinite(lat) && Number.isFinite(lng);
+}
+
+function setCoopSyncStatus(text) {
+  if (els.syncCoopDashboardStatus) {
+    els.syncCoopDashboardStatus.textContent = text;
+  }
+}
+
+function setCoopSyncButtonLoading(isLoading) {
+  if (!els.syncCoopDashboardBtn) return;
+  els.syncCoopDashboardBtn.classList.toggle("is-loading", isLoading);
+  els.syncCoopDashboardBtn.disabled = isLoading;
 }
 
 async function getUserProfile(uid) {
@@ -809,6 +827,9 @@ function loadApprovalRequests(profile) {
         ...docItem.data()
       }));
       renderApprovalRequests(STATE.approvalRequests);
+      if (STATE.profile) {
+        loadIndicators(STATE.profile);
+      }
     },
     (error) => {
       console.warn("Falha na consulta ordenada de solicitações. Tentando fallback...", error);
@@ -823,6 +844,9 @@ function loadApprovalRequests(profile) {
             ...docItem.data()
           }));
           renderApprovalRequests(STATE.approvalRequests);
+          if (STATE.profile) {
+            loadIndicators(STATE.profile);
+          }
         },
         (fallbackError) => {
           console.error("Erro ao carregar solicitações:", fallbackError);
@@ -884,6 +908,14 @@ async function approveParticipantRequest(requestId) {
       "review.rejectedByName": null
     });
 
+    if (STATE.profile) {
+      await runCooperativaDashboardSync({
+        territoryId: STATE.profile.territoryId || PAGE_TERRITORY.territoryId,
+        territoryLabel: STATE.profile.territoryLabel || PAGE_TERRITORY.territoryLabel,
+        silent: true
+      });
+    }
+
     alert("Solicitação aprovada com sucesso.");
   } catch (error) {
     console.error("Erro ao aprovar solicitação:", error);
@@ -929,6 +961,14 @@ async function rejectParticipantRequest(requestId) {
       "review.rejectedByName": STATE.profile?.name || STATE.profile?.displayName || "Administrador"
     });
 
+    if (STATE.profile) {
+      await runCooperativaDashboardSync({
+        territoryId: STATE.profile.territoryId || PAGE_TERRITORY.territoryId,
+        territoryLabel: STATE.profile.territoryLabel || PAGE_TERRITORY.territoryLabel,
+        silent: true
+      });
+    }
+
     alert("Solicitação rejeitada com sucesso.");
   } catch (error) {
     console.error("Erro ao rejeitar solicitação:", error);
@@ -972,15 +1012,15 @@ function getDefaultTerritoryPoints(profile) {
     return [
       {
         id: "coa-1",
-        name: "COADESC",
+        name: "COOADESC",
         type: "seletiva",
         lat: -30.003,
         lng: -51.206,
-        address: "Base da COADESC"
+        address: "Base da COOADESC"
       },
       {
         id: "coa-2",
-        name: "Ponto comunitário COADESC",
+        name: "Ponto comunitário COOADESC",
         type: "plastico",
         lat: -30.006,
         lng: -51.203,
@@ -1434,6 +1474,196 @@ async function loadCollectionCount(collectionName, profile, whereField = "territ
   }
 }
 
+async function loadCollectionSafe(name) {
+  try {
+    const snap = await getDocs(query(collection(db, name), orderBy("createdAt", "desc")));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch {
+    try {
+      const snap = await getDocs(collection(db, name));
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      console.warn(`Não foi possível ler a coleção ${name}:`, error);
+      return [];
+    }
+  }
+}
+
+function getResiduosTotalFromColeta(coleta = {}) {
+  let total = 0;
+
+  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
+  if (typeof coleta.pesoKg === "number") total += coleta.pesoKg;
+  if (typeof coleta.kg === "number") total += coleta.kg;
+
+  if (coleta.recebimento && typeof coleta.recebimento === "object") {
+    Object.values(coleta.recebimento).forEach((value) => {
+      if (typeof value === "number") total += value;
+      if (value && typeof value === "object") {
+        Object.values(value).forEach((sub) => {
+          if (typeof sub === "number") total += sub;
+        });
+      }
+    });
+  }
+
+  if (coleta.finalTurno && typeof coleta.finalTurno === "object") {
+    Object.values(coleta.finalTurno).forEach((value) => {
+      if (typeof value === "number") total += value;
+      if (Array.isArray(value)) {
+        value.forEach((item) => {
+          if (item && typeof item.pesoKg === "number") total += item.pesoKg;
+          if (item && typeof item.kg === "number") total += item.kg;
+          if (item && typeof item.quantidade === "number") total += item.quantidade;
+        });
+      }
+    });
+  }
+
+  return Number(total.toFixed(1));
+}
+
+function buildCooperativaPublicSummary({
+  users,
+  participants,
+  coletas,
+  approvalRequests,
+  territoryId,
+  territoryLabel
+}) {
+  const usersFiltered = users.filter(
+    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
+  );
+
+  const participantsFiltered = participants.filter(
+    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
+  );
+
+  const coletasFiltered = coletas.filter(
+    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
+  );
+
+  const approvalFiltered = approvalRequests.filter(
+    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
+  );
+
+  const cooperativaMembersCount = usersFiltered.filter((item) =>
+    ["cooperativa", "operador", "usuario", "user", "integrante", "catador"].includes(
+      normalizeText(item.role)
+    )
+  ).length;
+
+  const residuosCount = coletasFiltered.reduce(
+    (acc, item) => acc + getResiduosTotalFromColeta(item),
+    0
+  );
+
+  return {
+    territoryId,
+    territoryLabel,
+    usersCount: usersFiltered.length,
+    participantsCount: participantsFiltered.length,
+    cooperativaMembersCount,
+    coletasCount: coletasFiltered.length,
+    residuosCount: Number(residuosCount.toFixed(1)),
+    approvalsCount: approvalFiltered.length,
+    crgrsCount: 1,
+    pontosCount: STATE.allMapPoints?.length || 1,
+    alertsCount: 0,
+    updatedAt: serverTimestamp()
+  };
+}
+
+async function saveCooperativaPublicDashboard(payload) {
+  await setDoc(
+    doc(db, "dashboard_public_by_cooperativa", payload.territoryId),
+    payload,
+    { merge: true }
+  );
+}
+
+async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent = false }) {
+  try {
+    setCoopSyncButtonLoading(true);
+    setCoopSyncStatus(
+      silent
+        ? "Verificando atualização automática..."
+        : "Atualizando indicadores da cooperativa..."
+    );
+
+    const [users, participants, coletas, approvalRequests] = await Promise.all([
+      loadCollectionSafe("users"),
+      loadCollectionSafe("participants"),
+      loadCollectionSafe("coletas"),
+      loadCollectionSafe("approvalRequests")
+    ]);
+
+    const summary = buildCooperativaPublicSummary({
+      users,
+      participants,
+      coletas,
+      approvalRequests,
+      territoryId,
+      territoryLabel
+    });
+
+    await saveCooperativaPublicDashboard(summary);
+
+    console.log("[SYNC COOP] Documento salvo:", summary);
+    setCoopSyncStatus(`Atualizado em ${new Date().toLocaleString("pt-BR")}`);
+    return true;
+  } catch (error) {
+    console.error("[SYNC COOP] Erro:", error);
+    setCoopSyncStatus("Erro ao atualizar indicadores da cooperativa.");
+    return false;
+  } finally {
+    setCoopSyncButtonLoading(false);
+  }
+}
+
+async function autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabel }) {
+  try {
+    const snap = await getDoc(doc(db, "dashboard_public_by_cooperativa", territoryId));
+
+    if (!snap.exists()) {
+      await runCooperativaDashboardSync({ territoryId, territoryLabel, silent: true });
+      return;
+    }
+
+    const data = snap.data();
+    const updatedAt =
+      data?.updatedAt && typeof data.updatedAt.toDate === "function"
+        ? data.updatedAt.toDate().getTime()
+        : 0;
+
+    const diff = Date.now() - updatedAt;
+
+    if (!updatedAt || diff >= AUTO_SYNC_INTERVAL_MS) {
+      await runCooperativaDashboardSync({ territoryId, territoryLabel, silent: true });
+      return;
+    }
+
+    setCoopSyncStatus(
+      `Última atualização em ${new Date(updatedAt).toLocaleString("pt-BR")}`
+    );
+  } catch (error) {
+    console.error("[AUTO SYNC COOP] Erro:", error);
+    setCoopSyncStatus("Não foi possível verificar a atualização automática.");
+  }
+}
+
+function bindCooperativaSyncButton({ territoryId, territoryLabel }) {
+  if (!els.syncCoopDashboardBtn) return;
+
+  els.syncCoopDashboardBtn.addEventListener("click", async () => {
+    await runCooperativaDashboardSync({
+      territoryId,
+      territoryLabel,
+      silent: false
+    });
+  });
+}
+
 async function loadIndicators(profile) {
   const isAdmin = isAdminUser(profile.role);
 
@@ -1540,6 +1770,12 @@ function boot() {
       loadParticipants(profile);
       loadApprovalRequests(profile);
       initTerritoryMap(profile);
+
+      const territoryId = profile.territoryId || PAGE_TERRITORY.territoryId;
+      const territoryLabel = profile.territoryLabel || PAGE_TERRITORY.territoryLabel;
+
+      bindCooperativaSyncButton({ territoryId, territoryLabel });
+      await autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabel });
 
       setTimeout(() => {
         loadIndicators(profile);
