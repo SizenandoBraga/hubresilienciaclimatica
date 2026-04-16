@@ -16,10 +16,11 @@
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="/territorio-publico.css">
-   <link rel="stylesheet" href="header-publico.css" />
+  <link rel="stylesheet" href="header-publico.css" />
   <link rel="stylesheet" href="footer-publico.css" />
 </head>
 <body
+  data-territory-id="crgr_vila_pinto"
   data-title="Vila Pinto"
   data-lead="Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território."
   data-label="Centro de Triagem Vila Pinto"
@@ -30,7 +31,7 @@
   data-coop-description="Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem."
   data-participant-url="cadastro-participantes-vila-pinto.html"
   data-dashboard-url="dashboard-cooperativa.html"
-  data-coop-url="cooperativa.html"
+  data-coop-url="cooperativa-vila-pinto.html"
   data-users-url="usuarios.html"
   data-cooperados="24"
   data-coletas="148"
@@ -48,7 +49,7 @@
   <div class="bg-orb orb-2"></div>
   <div class="noise"></div>
 
-<div id="site-header"></div>
+  <div id="site-header"></div>
 
   <main>
     <section class="hero-territory">
@@ -194,15 +195,17 @@
           <span class="section-kicker">Conectado ao Firebase</span>
           <h3>Dados reais por território</h3>
           <p>
-            Os indicadores, participantes, coletas e pontos de coleta podem ser carregados automaticamente conforme o território do usuário logado.
+            Os indicadores, participantes, coletas e pontos de coleta podem ser carregados automaticamente conforme o território configurado nesta página.
           </p>
         </article>
       </div>
     </section>
   </main>
 
+  <div id="site-footer"></div>
+
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-   <script src="header-publico.js"></script>
+  <script src="header-publico.js"></script>
   <script src="footer-publico.js"></script>
   <script type="module" src="/territorio-publico.js"></script>
 </body>
