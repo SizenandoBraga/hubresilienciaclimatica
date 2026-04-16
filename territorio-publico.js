@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const bodyData = document.body.dataset || {};
 
   const TERRITORY_DATA = {
-    territoryId: bodyData.territoryId || "crgr_vila_pinto",
+    territoryId: bodyData.territoryId || "vila-pinto",
     title: bodyData.title || "Território",
     lead:
       bodyData.lead ||
