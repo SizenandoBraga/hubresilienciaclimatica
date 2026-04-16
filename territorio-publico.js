@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const bodyData = document.body.dataset || {};
 
   const TERRITORY_DATA = {
-    territoryId: bodyData.territoryId || "crgr_vila_pinto",
+    territoryId: bodyData.territoryId || "vila-pinto",
     title: bodyData.title || "Território",
     lead:
       bodyData.lead ||
@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.",
     participantUrl: bodyData.participantUrl || "cadastro-participantes-vila-pinto.html",
     dashboardUrl: bodyData.dashboardUrl || "dashboard-cooperativa.html",
-    coopUrl: bodyData.coopUrl || "cooperativa.html",
+    coopUrl: bodyData.coopUrl || "cooperativa-vila-pinto.html",
     usersUrl: bodyData.usersUrl || "usuarios.html",
     stats: {
       cooperados: Number(bodyData.cooperados || 0),
@@ -32,13 +32,13 @@ document.addEventListener("DOMContentLoaded", () => {
     },
     map: {
       center: [
-        Number(bodyData.mapCenterLat || -30.03),
-        Number(bodyData.mapCenterLng || -51.18)
+        Number(bodyData.mapCenterLat || -30.048729170292532),
+        Number(bodyData.mapCenterLng || -51.15652604283108)
       ],
-      zoom: Number(bodyData.mapZoom || 14),
+      zoom: Number(bodyData.mapZoom || 15),
       marker: {
-        lat: Number(bodyData.markerLat || -30.03),
-        lng: Number(bodyData.markerLng || -51.18),
+        lat: Number(bodyData.markerLat || -30.048729170292532),
+        lng: Number(bodyData.markerLng || -51.15652604283108),
         popup:
           bodyData.markerPopup ||
           `
@@ -132,10 +132,31 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = snap.data();
       console.log("[TERRITÓRIO] doc carregado:", data);
 
-      const cooperados = Number(data.cooperativaMembersCount ?? data.usersCount ?? TERRITORY_DATA.stats.cooperados ?? 0);
-      const coletas = Number(data.coletasCount ?? TERRITORY_DATA.stats.coletas ?? 0);
-      const volume = Number(data.residuosCount ?? TERRITORY_DATA.stats.volume ?? 0);
-      const pontos = Number(data.pontosCount ?? data.crgrsCount ?? TERRITORY_DATA.stats.pontos ?? 0);
+      const cooperados = Number(
+        data.cooperativaMembersCount ??
+        data.usersCount ??
+        TERRITORY_DATA.stats.cooperados ??
+        0
+      );
+
+      const coletas = Number(
+        data.coletasCount ??
+        TERRITORY_DATA.stats.coletas ??
+        0
+      );
+
+      const volume = Number(
+        data.residuosCount ??
+        TERRITORY_DATA.stats.volume ??
+        0
+      );
+
+      const pontos = Number(
+        data.pontosCount ??
+        data.crgrsCount ??
+        TERRITORY_DATA.stats.pontos ??
+        0
+      );
 
       renderStats({
         cooperados,
