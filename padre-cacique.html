@@ -15,7 +15,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+ 
   <link rel="stylesheet" href="/territorio-publico.css">
+   <link rel="stylesheet" href="header-publico.css" />
+  <link rel="stylesheet" href="footer-publico.css" />
+   
 </head>
 <body
   data-title="Padre Cacique"
@@ -46,36 +50,7 @@
   <div class="bg-orb orb-2"></div>
   <div class="noise"></div>
 
-  <header class="site-header">
-    <div class="container header-wrap">
-      <a href="index.html" class="brand" aria-label="Ir para a página inicial">
-        <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" class="brand-logo">
-      </a>
-
-      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobileMenu">☰</button>
-
-      <nav class="main-nav" aria-label="Navegação principal">
-        <a href="index.html">Início</a>
-        <a href="quem-somos.html">Quem Somos</a>
-        <a href="conteudos.html">Conteúdos</a>
-        <a href="index.html#dados">Dados e Relatórios</a>
-        <a href="index.html#faq">FAQ</a>
-      </nav>
-
-      <div class="header-actions">
-        <a href="login.html" class="btn-login">Cadastrar / Login</a>
-      </div>
-    </div>
-
-    <div class="mobile-menu" id="mobileMenu">
-      <a href="index.html">Início</a>
-      <a href="quem-somos.html">Quem Somos</a>
-      <a href="conteudos.html">Conteúdos</a>
-      <a href="index.html#dados">Dados e Relatórios</a>
-      <a href="index.html#faq">FAQ</a>
-      <a href="login.html">Cadastrar / Login</a>
-    </div>
-  </header>
+  <div id="site-header"></div>
 
   <main>
     <section class="hero-territory">
@@ -229,6 +204,9 @@
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+   <link rel="stylesheet" href="header-publico.js" />
+  <link rel="stylesheet" href="footer-publico.js" />
   <script type="module" src="/territorio-publico.js"></script>
+  
 </body>
 </html>
