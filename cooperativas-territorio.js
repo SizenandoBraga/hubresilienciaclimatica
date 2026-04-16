@@ -18,7 +18,7 @@ import {
 const bodyConfig = document.body.dataset || {};
 
 const PAGE_TERRITORY = {
-  territoryId: bodyConfig.territoryId || "crgr_vila_pinto",
+  territoryId: bodyConfig.territoryId || "vila-pinto",
   territoryLabel: bodyConfig.territoryLabel || "Território",
   cooperativeName: bodyConfig.cooperativeName || "Cooperativa",
   participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
@@ -937,7 +937,7 @@ async function rejectParticipantRequest(requestId) {
 function getDefaultTerritoryPoints(profile) {
   const territoryId = profile?.territoryId || PAGE_TERRITORY.territoryId;
 
-  if (territoryId === "crgr_vila_pinto") {
+  if (territoryId === "vila-pinto") {
     return [
       {
         id: "vp-main",
