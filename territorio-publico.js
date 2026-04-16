@@ -9,45 +9,35 @@ document.addEventListener("DOMContentLoaded", () => {
   const TERRITORY_DATA = {
     territoryId: bodyData.territoryId || "vila-pinto",
     title: bodyData.title || "Território",
-    lead:
-      bodyData.lead ||
-      "Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território.",
+    lead: bodyData.lead || "",
     label: bodyData.label || "Território",
     region: bodyData.region || "Porto Alegre / RS",
-    profile: bodyData.profile || "Operação comunitária e cooperativa",
-    focus: bodyData.focus || "Coleta seletiva, triagem e fortalecimento territorial",
+    profile: bodyData.profile || "",
+    focus: bodyData.focus || "",
     coopName: bodyData.coopName || "Cooperativa",
-    coopDescription:
-      bodyData.coopDescription ||
-      "Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.",
-    participantUrl: bodyData.participantUrl || "cadastro-participantes-vila-pinto.html",
-    dashboardUrl: bodyData.dashboardUrl || "dashboard-cooperativa.html",
-    coopUrl: bodyData.coopUrl || "cooperativa-vila-pinto.html",
-    usersUrl: bodyData.usersUrl || "usuarios.html",
+    coopDescription: bodyData.coopDescription || "",
+    participantUrl: bodyData.participantUrl || "#",
+    dashboardUrl: bodyData.dashboardUrl || "#",
+    coopUrl: bodyData.coopUrl || "#",
+    usersUrl: bodyData.usersUrl || "#",
+
     stats: {
       cooperados: Number(bodyData.cooperados || 0),
       coletas: Number(bodyData.coletas || 0),
       volume: Number(bodyData.volume || 0),
       pontos: Number(bodyData.pontos || 0)
     },
+
     map: {
       center: [
-        Number(bodyData.mapCenterLat || -30.048729170292532),
-        Number(bodyData.mapCenterLng || -51.15652604283108)
+        Number(bodyData.mapCenterLat || -30.0487),
+        Number(bodyData.mapCenterLng || -51.1565)
       ],
       zoom: Number(bodyData.mapZoom || 15),
       marker: {
-        lat: Number(bodyData.markerLat || -30.048729170292532),
-        lng: Number(bodyData.markerLng || -51.15652604283108),
-        popup:
-          bodyData.markerPopup ||
-          `
-            <div style="font-family:'Archivo Condensed',sans-serif;">
-              <strong>${bodyData.title || "Território"}</strong><br>
-              ${bodyData.label || "Território"}<br>
-              Porto Alegre • RS
-            </div>
-          `
+        lat: Number(bodyData.markerLat || -30.0487),
+        lng: Number(bodyData.markerLng || -51.1565),
+        popup: bodyData.markerPopup || "Território"
       }
     }
   };
@@ -86,19 +76,19 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     document.querySelectorAll("[data-participant-link]").forEach((el) => {
-      el.setAttribute("href", TERRITORY_DATA.participantUrl);
+      el.href = TERRITORY_DATA.participantUrl;
     });
 
     document.querySelectorAll("[data-dashboard-link]").forEach((el) => {
-      el.setAttribute("href", TERRITORY_DATA.dashboardUrl);
+      el.href = TERRITORY_DATA.dashboardUrl;
     });
 
     document.querySelectorAll("[data-coop-link]").forEach((el) => {
-      el.setAttribute("href", TERRITORY_DATA.coopUrl);
+      el.href = TERRITORY_DATA.coopUrl;
     });
 
     document.querySelectorAll("[data-users-link]").forEach((el) => {
-      el.setAttribute("href", TERRITORY_DATA.usersUrl);
+      el.href = TERRITORY_DATA.usersUrl;
     });
   }
 
@@ -124,7 +114,7 @@ document.addEventListener("DOMContentLoaded", () => {
       );
 
       if (!snap.exists()) {
-        console.warn("[TERRITÓRIO] doc não existe, usando fallback do HTML");
+        console.warn("[TERRITÓRIO] doc não existe, usando fallback");
         renderStats(TERRITORY_DATA.stats);
         return;
       }
@@ -132,10 +122,12 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = snap.data();
       console.log("[TERRITÓRIO] doc carregado:", data);
 
+      // 🔥 CORREÇÃO PRINCIPAL AQUI
       const cooperados = Number(
-        data.cooperativaMembersCount ??
-        data.usersCount ??
-        TERRITORY_DATA.stats.cooperados ??
+        data.totalPublicoPessoas ||
+        (Number(data.cooperativaMembersCount || 0) + Number(data.participantsCount || 0)) ||
+        data.usersCount ||
+        TERRITORY_DATA.stats.cooperados ||
         0
       );
 
@@ -164,59 +156,22 @@ document.addEventListener("DOMContentLoaded", () => {
         volume,
         pontos
       });
+
     } catch (error) {
-      console.error("[TERRITÓRIO] erro ao carregar firestore:", error);
+      console.error("[TERRITÓRIO] erro:", error);
       renderStats(TERRITORY_DATA.stats);
     }
-  }
-
-  function initMobileMenu() {
-    const menuToggle = $("#menuToggle");
-    const mobileMenu = $("#mobileMenu");
-
-    if (!menuToggle || !mobileMenu) return;
-
-    const closeMenu = () => {
-      mobileMenu.classList.remove("show");
-      menuToggle.setAttribute("aria-expanded", "false");
-    };
-
-    const openMenu = () => {
-      mobileMenu.classList.add("show");
-      menuToggle.setAttribute("aria-expanded", "true");
-    };
-
-    menuToggle.addEventListener("click", () => {
-      const isOpen = mobileMenu.classList.contains("show");
-      isOpen ? closeMenu() : openMenu();
-    });
-
-    $$("a", mobileMenu).forEach((link) => {
-      link.addEventListener("click", closeMenu);
-    });
-
-    window.addEventListener("resize", () => {
-      if (window.innerWidth > 820) closeMenu();
-    });
   }
 
   function initMap() {
     const mapEl = document.getElementById("map");
 
-    if (!mapEl) {
-      console.warn("Elemento #map não encontrado.");
-      return;
-    }
+    if (!mapEl || typeof window.L === "undefined") return;
 
-    if (typeof window.L === "undefined") {
-      console.error("Leaflet não foi carregado.");
-      return;
-    }
-
-    const map = window.L.map(mapEl, {
-      zoomControl: true,
-      scrollWheelZoom: false
-    }).setView(TERRITORY_DATA.map.center, TERRITORY_DATA.map.zoom);
+    const map = window.L.map(mapEl).setView(
+      TERRITORY_DATA.map.center,
+      TERRITORY_DATA.map.zoom
+    );
 
     window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: "&copy; OpenStreetMap"
@@ -229,18 +184,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
     marker.bindPopup(TERRITORY_DATA.map.marker.popup);
 
-    setTimeout(() => {
-      map.invalidateSize();
-    }, 250);
-
-    window.addEventListener("resize", () => {
-      setTimeout(() => map.invalidateSize(), 150);
-    });
+    setTimeout(() => map.invalidateSize(), 200);
   }
 
-  fillStaticContent();
-  renderStats(TERRITORY_DATA.stats);
-  loadPublicTerritoryStats();
-  initMobileMenu();
-  initMap();
+  function init() {
+    fillStaticContent();
+    renderStats(TERRITORY_DATA.stats);
+    loadPublicTerritoryStats();
+    initMap();
+  }
+
+  init();
 });
