@@ -7,7 +7,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const bodyData = document.body.dataset || {};
 
   const TERRITORY_DATA = {
-    territoryId: bodyData.territoryId || "vila-pinto",
+    territoryId: bodyData.territoryId || "crgr_vila_pinto",
     title: bodyData.title || "Território",
     lead:
       bodyData.lead ||
@@ -63,8 +63,9 @@ document.addEventListener("DOMContentLoaded", () => {
     })} t`;
   }
 
-  function isReducedMotion() {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
   }
 
   function fillStaticContent() {
@@ -101,42 +102,11 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  function animateValue(el, finalValue, formatter = (v) => String(v), duration = 1200) {
-    if (!el) return;
-
-    if (isReducedMotion()) {
-      el.textContent = formatter(finalValue);
-      return;
-    }
-
-    const start = performance.now();
-
-    function frame(now) {
-      const progress = Math.min((now - start) / duration, 1);
-      const eased = 1 - Math.pow(1 - progress, 3);
-      const current = finalValue * eased;
-      el.textContent = formatter(current);
-
-      if (progress < 1) {
-        requestAnimationFrame(frame);
-      } else {
-        el.textContent = formatter(finalValue);
-      }
-    }
-
-    requestAnimationFrame(frame);
-  }
-
   function renderStats(stats) {
-    const cooperadosEl = $("#cooperadosValue");
-    const coletasEl = $("#coletasValue");
-    const volumeEl = $("#volumeValue");
-    const pontosEl = $("#pontosValue");
-
-    animateValue(cooperadosEl, stats.cooperados, (v) => formatNumber(Math.round(v)));
-    animateValue(coletasEl, stats.coletas, (v) => formatNumber(Math.round(v)));
-    animateValue(volumeEl, stats.volume, (v) => formatTon(v));
-    animateValue(pontosEl, stats.pontos, (v) => formatNumber(Math.round(v)));
+    setText("cooperadosValue", formatNumber(stats.cooperados));
+    setText("coletasValue", formatNumber(stats.coletas));
+    setText("volumeValue", formatTon(stats.volume));
+    setText("pontosValue", formatNumber(stats.pontos));
   }
 
   async function loadPublicTerritoryStats() {
@@ -147,51 +117,34 @@ document.addEventListener("DOMContentLoaded", () => {
       const { db } = firebaseInit;
       const { doc, getDoc } = firestore;
 
+      console.log("[TERRITÓRIO] lendo doc:", TERRITORY_DATA.territoryId);
+
       const snap = await getDoc(
         doc(db, "dashboard_public_by_cooperativa", TERRITORY_DATA.territoryId)
       );
 
       if (!snap.exists()) {
-        console.warn(
-          `[TERRITÓRIO] dashboard_public_by_cooperativa/${TERRITORY_DATA.territoryId} não existe.`
-        );
-
+        console.warn("[TERRITÓRIO] doc não existe, usando fallback do HTML");
         renderStats(TERRITORY_DATA.stats);
         return;
       }
 
       const data = snap.data();
+      console.log("[TERRITÓRIO] doc carregado:", data);
 
-      console.log("[TERRITÓRIO] Dados públicos carregados:", data);
+      const cooperados = Number(data.cooperativaMembersCount ?? data.usersCount ?? TERRITORY_DATA.stats.cooperados ?? 0);
+      const coletas = Number(data.coletasCount ?? TERRITORY_DATA.stats.coletas ?? 0);
+      const volume = Number(data.residuosCount ?? TERRITORY_DATA.stats.volume ?? 0);
+      const pontos = Number(data.pontosCount ?? data.crgrsCount ?? TERRITORY_DATA.stats.pontos ?? 0);
 
-      const stats = {
-        cooperados: Number(
-          data.cooperativaMembersCount ??
-          data.usersCount ??
-          TERRITORY_DATA.stats.cooperados ??
-          0
-        ),
-        coletas: Number(
-          data.coletasCount ??
-          TERRITORY_DATA.stats.coletas ??
-          0
-        ),
-        volume: Number(
-          data.residuosCount ??
-          TERRITORY_DATA.stats.volume ??
-          0
-        ),
-        pontos: Number(
-          data.pontosCount ??
-          data.crgrsCount ??
-          TERRITORY_DATA.stats.pontos ??
-          0
-        )
-      };
-
-      renderStats(stats);
+      renderStats({
+        cooperados,
+        coletas,
+        volume,
+        pontos
+      });
     } catch (error) {
-      console.error("[TERRITÓRIO] Erro ao carregar dados públicos:", error);
+      console.error("[TERRITÓRIO] erro ao carregar firestore:", error);
       renderStats(TERRITORY_DATA.stats);
     }
   }
@@ -265,6 +218,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   fillStaticContent();
+  renderStats(TERRITORY_DATA.stats);
   loadPublicTerritoryStats();
   initMobileMenu();
   initMap();
