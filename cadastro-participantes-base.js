@@ -6,13 +6,16 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-   CONFIG
+   CONFIG DINAMICA
 ========================= */
 
+const BODY = document.body;
+
 const CONFIG = {
-  territoryId: "vila-pinto",
-  territoryLabel: "Centro de Triagem Vila Pinto",
-  redirectAfterSuccess: "/vila-pinto.html",
+  territoryId: String(BODY.dataset.territoryId || "").trim(),
+  territoryLabel: String(BODY.dataset.territoryLabel || "").trim(),
+  territorySlug: String(BODY.dataset.territorySlug || "").trim(),
+  redirectAfterSuccess: String(BODY.dataset.redirectUrl || "index.html").trim(),
   viacepBase: "https://viacep.com.br/ws",
   nominatimBase: "https://nominatim.openstreetmap.org/search"
 };
@@ -23,6 +26,14 @@ function getCanonicalTerritoryId() {
 
 function getCanonicalTerritoryLabel() {
   return CONFIG.territoryLabel;
+}
+
+function assertRuntimeConfig() {
+  if (!CONFIG.territoryId || !CONFIG.territoryLabel) {
+    throw new Error(
+      "Configuração do território ausente. Verifique os atributos data-territory-id e data-territory-label no body."
+    );
+  }
 }
 
 /* =========================
@@ -103,6 +114,15 @@ function onlyDigits(value = "") {
   return String(value).replace(/\D/g, "");
 }
 
+function slugify(value = "") {
+  return String(value)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-");
+}
+
 function showMessage(message, type = "info") {
   if (!els.formMessage) return;
 
@@ -110,10 +130,7 @@ function showMessage(message, type = "info") {
   els.formMessage.classList.add(type);
   els.formMessage.textContent = message;
 
-  window.scrollTo({
-    top: 0,
-    behavior: "smooth"
-  });
+  window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 function clearMessage() {
@@ -203,9 +220,11 @@ function isValidCPF(cpf = "") {
 function randomAlphaNum(length = 6) {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
   let out = "";
+
   for (let i = 0; i < length; i++) {
     out += chars.charAt(Math.floor(Math.random() * chars.length));
   }
+
   return out;
 }
 
@@ -244,13 +263,25 @@ function resetGeo() {
   updateGeoPreview();
 }
 
+function syncRegisterTypeUI() {
+  const buttons = els.registerTypeGroup?.querySelectorAll("[data-register-type]") || [];
+
+  buttons.forEach((btn) => {
+    const registerType = btn.dataset.registerType;
+    const isSelected = registerType === STATE.registerType;
+    const shouldBeDisabled =
+      STATE.localType === "condominio"
+        ? registerType !== "condominio"
+        : registerType === "condominio";
+
+    btn.classList.toggle("selected", isSelected);
+    btn.classList.toggle("is-disabled", shouldBeDisabled);
+    btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+  });
+}
+
 function setRegisterType(registerType, regenerate = true) {
   STATE.registerType = registerType;
-
-  const buttons = els.registerTypeGroup?.querySelectorAll("[data-register-type]") || [];
-  buttons.forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.registerType === registerType);
-  });
 
   if (regenerate || !STATE.generatedCode) {
     STATE.generatedCode =
@@ -262,6 +293,8 @@ function setRegisterType(registerType, regenerate = true) {
   if (els.generatedCode) {
     els.generatedCode.value = STATE.generatedCode;
   }
+
+  syncRegisterTypeUI();
 }
 
 function setLocalType(localType) {
@@ -269,7 +302,9 @@ function setLocalType(localType) {
 
   const buttons = els.localTypeGroup?.querySelectorAll("[data-local-type]") || [];
   buttons.forEach((btn) => {
-    btn.classList.toggle("selected", btn.dataset.localType === localType);
+    const selected = btn.dataset.localType === localType;
+    btn.classList.toggle("selected", selected);
+    btn.setAttribute("aria-pressed", selected ? "true" : "false");
   });
 
   const autoRegisterType = getRegisterTypeByLocalType(localType);
@@ -311,9 +346,7 @@ function goToStep(step) {
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/* =========================
-   VALIDATION
-========================= */
+/* VALIDACAO */
 
 function validateStep1() {
   if (!els.consentLgpd?.checked || !els.consentWhatsapp?.checked || !els.consentImage?.checked) {
@@ -341,42 +374,20 @@ function validateStep2() {
     return false;
   }
 
-  if (!email) {
-    showMessage("O e-mail é obrigatório.", "error");
-    els.email?.focus();
-    return false;
-  }
-
-  if (!isValidEmail(email)) {
+  if (!email || !isValidEmail(email)) {
     showMessage("Informe um e-mail válido.", "error");
     els.email?.focus();
     return false;
   }
 
-  if (!cpf) {
-    showMessage("O CPF é obrigatório.", "error");
-    els.cpf?.focus();
-    return false;
-  }
-
-  if (!isValidCPF(cpf)) {
+  if (!cpf || !isValidCPF(cpf)) {
     showMessage("Informe um CPF válido.", "error");
     els.cpf?.focus();
     return false;
   }
 
-  if (!STATE.localType) {
-    showMessage("Selecione o local para coleta.", "error");
-    return false;
-  }
-
-  if (!STATE.registerType) {
-    showMessage("Selecione o tipo de cadastro.", "error");
-    return false;
-  }
-
   if (!STATE.generatedCode) {
-    showMessage("Não foi possível gerar o código do cadastro. Tente novamente.", "error");
+    showMessage("Não foi possível gerar o código do cadastro.", "error");
     return false;
   }
 
@@ -398,39 +409,8 @@ function validateStep3() {
     return false;
   }
 
-  if (!number) {
-    showMessage("Informe o número do endereço.", "error");
-    els.number?.focus();
-    return false;
-  }
-
-  if (!street) {
-    showMessage("Informe a rua.", "error");
-    els.street?.focus();
-    return false;
-  }
-
-  if (!neighborhood) {
-    showMessage("Informe o bairro.", "error");
-    els.neighborhood?.focus();
-    return false;
-  }
-
-  if (!city) {
-    showMessage("Informe a cidade.", "error");
-    els.city?.focus();
-    return false;
-  }
-
-  if (!state) {
-    showMessage("Informe a UF.", "error");
-    els.state?.focus();
-    return false;
-  }
-
-  if (!referencePoint) {
-    showMessage("Informe um ponto de referência.", "error");
-    els.referencePoint?.focus();
+  if (!number || !street || !neighborhood || !city || !state || !referencePoint) {
+    showMessage("Preencha todos os campos obrigatórios da página 3.", "error");
     return false;
   }
 
@@ -451,9 +431,7 @@ function validateCurrentStep() {
   }
 }
 
-/* =========================
-   CEP + GEO
-========================= */
+/* CEP + GEO */
 
 async function fetchCEP(cep) {
   const cleanCep = onlyDigits(cep);
@@ -462,13 +440,11 @@ async function fetchCEP(cep) {
   const url = `${CONFIG.viacepBase}/${cleanCep}/json/`;
   const response = await fetch(url);
 
-  if (!response.ok) {
-    throw new Error("Falha ao consultar o CEP.");
-  }
+  if (!response.ok) throw new Error("Falha ao consultar o CEP.");
 
   const data = await response.json();
-
   if (data.erro) throw new Error("CEP não encontrado.");
+
   return data;
 }
 
@@ -495,9 +471,7 @@ async function geocodeAddress() {
     }
   });
 
-  if (!response.ok) {
-    throw new Error("Falha ao geocodificar endereço.");
-  }
+  if (!response.ok) throw new Error("Falha ao geocodificar endereço.");
 
   const results = await response.json();
   if (!Array.isArray(results) || !results.length) return null;
@@ -546,7 +520,6 @@ async function tryGeocodeWhenReady(force = false) {
 
   try {
     const geo = await geocodeAddress();
-
     if (requestId !== STATE.geoRequestId) return;
 
     STATE.geo = geo || { lat: null, lng: null, addressLabel: "" };
@@ -557,17 +530,15 @@ async function tryGeocodeWhenReady(force = false) {
   }
 }
 
-/* =========================
-   DATA BUILDERS
-========================= */
+/* PAYLOAD */
 
 function getSelectedDifficulty() {
   return els.difficultyGroup?.querySelector(".choice-card.selected")?.dataset?.difficulty || "sim";
 }
 
 function buildParticipantPayload() {
-  const territoryId = "vila-pinto";
-  const territoryLabel = "Centro de Triagem Vila Pinto";
+  const territoryId = getCanonicalTerritoryId();
+  const territoryLabel = getCanonicalTerritoryLabel();
 
   const fullName = capitalizeWords(normalizeName(els.fullName?.value || ""));
   const phoneDigits = onlyDigits(els.phone?.value || "");
@@ -592,12 +563,15 @@ function buildParticipantPayload() {
   return {
     name: fullName,
     fullName,
+    nameLower: slugify(fullName),
+
     phone: phoneDigits,
     email,
     cpf: cpfDigits,
 
     localType: STATE.localType,
     registerType: STATE.registerType,
+    participantType: STATE.registerType,
     participantCode: STATE.generatedCode,
 
     cep: cepDigits,
@@ -612,6 +586,7 @@ function buildParticipantPayload() {
     state,
     referencePoint,
     enderecoCompleto,
+    address: enderecoCompleto,
 
     territoryId,
     territoryLabel,
@@ -631,6 +606,11 @@ function buildParticipantPayload() {
     status: "pending_approval",
     approvalStatus: "pending",
     origin: "public_form",
+    source: "cadastro-publico",
+
+    inTerritory: true,
+    inOperation: false,
+    active: false,
 
     createdAt: serverTimestamp(),
     createdAtISO: new Date().toISOString()
@@ -638,8 +618,8 @@ function buildParticipantPayload() {
 }
 
 function buildApprovalRequestPayload(participantId, participantData) {
-  const territoryId = "vila-pinto";
-  const territoryLabel = "Centro de Triagem Vila Pinto";
+  const territoryId = getCanonicalTerritoryId();
+  const territoryLabel = getCanonicalTerritoryLabel();
 
   return {
     type: "participant_registration",
@@ -676,8 +656,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
       participantCode: participantData.participantCode,
       registerType: participantData.registerType,
       localType: participantData.localType,
-      territoryId: "vila-pinto",
-      territoryLabel: "Centro de Triagem Vila Pinto",
+      territoryId,
+      territoryLabel,
       enderecoCompleto: participantData.enderecoCompleto,
       lat: participantData.lat ?? null,
       lng: participantData.lng ?? null
@@ -688,13 +668,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
   };
 }
 
-/* =========================
-   FIRESTORE SAVE
-========================= */
-
 async function saveRegistration() {
   const participantPayload = buildParticipantPayload();
-
   const participantRef = await addDoc(collection(db, "participants"), participantPayload);
 
   const approvalRequestPayload = buildApprovalRequestPayload(
@@ -702,18 +677,16 @@ async function saveRegistration() {
     participantPayload
   );
 
-  await addDoc(collection(db, "approvalRequests"), approvalRequestPayload);
+  const approvalRef = await addDoc(collection(db, "approvalRequests"), approvalRequestPayload);
 
   return {
     participantId: participantRef.id,
-    approvalRequestId: null,
+    approvalRequestId: approvalRef.id,
     participantCode: participantPayload.participantCode
   };
 }
 
-/* =========================
-   SUCCESS MODAL
-========================= */
+/* MODAL */
 
 function openSuccessModal() {
   if (!els.successModal) return;
@@ -730,9 +703,7 @@ function closeSuccessModal() {
   window.location.href = CONFIG.redirectAfterSuccess;
 }
 
-/* =========================
-   EVENTS
-========================= */
+/* EVENTS */
 
 function bindStepNavigation() {
   document.querySelectorAll("[data-next-step]").forEach((button) => {
@@ -771,6 +742,7 @@ function bindRegisterTypeButtons() {
   const buttons = els.registerTypeGroup?.querySelectorAll("[data-register-type]") || [];
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
+      if (button.classList.contains("is-disabled")) return;
       setRegisterType(button.dataset.registerType, true);
       clearMessage();
     });
@@ -857,7 +829,7 @@ function bindSubmit() {
     } catch (error) {
       console.error("Erro ao salvar cadastro:", error);
       showMessage(
-        "Não foi possível enviar o cadastro. Verifique se as regras do Firestore permitem criar documentos em participants e approvalRequests.",
+        "Não foi possível enviar o cadastro. Verifique as regras do Firestore para participants e approvalRequests.",
         "error"
       );
     } finally {
@@ -867,9 +839,7 @@ function bindSubmit() {
   });
 }
 
-/* =========================
-   INIT
-========================= */
+/* INIT */
 
 function initStaticTexts() {
   if (els.territoryLabelView) {
@@ -888,6 +858,7 @@ function initDefaults() {
 }
 
 function init() {
+  assertRuntimeConfig();
   initStaticTexts();
   initDefaults();
 

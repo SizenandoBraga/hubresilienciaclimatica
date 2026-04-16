@@ -14,19 +14,19 @@
   <link rel="stylesheet" href="cadastro-participantes.css">
 </head>
 <body
-  data-territory-id="crgr_vila_pinto"
-  data-territory-label="Centro de Triagem Vila Pinto"
-  data-territory-slug="vila-pinto"
-  data-redirect-url="vila-pinto.html"
+  data-territory-id="crgr_cooadesc"
+  data-territory-label="COOADESC"
+  data-territory-slug="cooadesc"
+  data-redirect-url="/cooadesc.html"
 >
   <div class="page-bg"></div>
   <div class="page-noise"></div>
 
   <header class="site-header">
     <div class="site-header-inner">
-      <a class="site-brand" href="index.html" aria-label="Ir para o início">
+      <a class="site-brand" href="/index.html" aria-label="Ir para o início">
         <div class="site-brand-mark">
-          <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos">
+          <img src="/img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos">
         </div>
         <div class="site-brand-copy">
           <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
@@ -35,15 +35,15 @@
       </a>
 
       <div class="site-header-actions">
-        <a class="site-login-btn" href="vila-pinto.html">Voltar ao território →</a>
+        <a class="site-login-btn" href="/cooadesc.html">Voltar ao território →</a>
       </div>
 
       <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
     </div>
 
     <div class="site-mobile-menu" id="mobileMenu">
-      <a href="index.html">Início</a>
-      <a href="vila-pinto.html">Voltar ao território</a>
+      <a href="/index.html">Início</a>
+      <a href="/vila-pinto.html">Voltar ao território</a>
     </div>
   </header>
 
@@ -82,6 +82,7 @@
     <div id="formMessage" class="form-message hidden"></div>
 
     <form id="participantWizardForm" class="wizard-shell">
+      <!-- página 1 -->
       <section class="step-card glass-card is-active" data-step="1">
         <div class="step-title-row">
           <div>
@@ -121,6 +122,7 @@
         </div>
       </section>
 
+      <!-- página 2 -->
       <section class="step-card glass-card hidden" data-step="2">
         <div class="step-title-row">
           <div>
@@ -201,6 +203,7 @@
         </div>
       </section>
 
+      <!-- página 3 -->
       <section class="step-card glass-card hidden" data-step="3">
         <div class="step-title-row">
           <div>
@@ -265,6 +268,7 @@
         </div>
       </section>
 
+      <!-- página 4 -->
       <section class="step-card glass-card hidden" data-step="4">
         <div class="step-title-row">
           <div>
@@ -331,6 +335,6 @@
     </div>
   </div>
 
-  <script type="module" src="cadastro-participantes-base.js"></script>
+  <script type="module" src="/cadastro-participantes-base.js"></script>
 </body>
 </html>
