@@ -185,14 +185,12 @@ function isAdminUser(role) {
 
 function participantIcon(type) {
   const key = normalizeText(type);
-
   if (key === "condominio") return "🏢";
   if (key === "comercio") return "🏪";
   if (key === "familia") return "👨‍👩‍👧";
   if (key === "morador") return "👤";
   if (key === "lideranca") return "📣";
   if (key === "participante") return "🧩";
-
   return "👤";
 }
 
@@ -319,10 +317,12 @@ function fillHeader(profile) {
   const territory =
     profile.territoryLabel ||
     (isAdmin ? "Todos os territórios" : PAGE_TERRITORY.territoryLabel);
+
   const coop =
     profile.cooperativeName ||
     profile.cooperativeLabel ||
     (isAdmin ? "Todas as cooperativas" : PAGE_TERRITORY.cooperativeName);
+
   const name = profile.displayName || profile.name || "Usuário";
 
   if (els.territoryNameTop) els.territoryNameTop.textContent = territory;
@@ -357,21 +357,16 @@ function fillHeader(profile) {
     if (isAdmin) {
       els.participantsSectionText.textContent =
         "Visualização geral de participantes cadastrados no sistema.";
-    } else if (isCommonUser) {
-      els.participantsSectionText.textContent =
-        "Participantes vinculados à cooperativa.";
     } else {
       els.participantsSectionText.textContent =
-        "Participantes vinculados à sua cooperativa e ao seu território.";
+        "Participantes vinculados à cooperativa.";
     }
   }
 }
 
 function renderInfoList(container, items) {
   if (!container) return;
-  container.innerHTML = items
-    .map(
-      (item) => `
+  container.innerHTML = items.map((item) => `
     <article class="info-item">
       <div class="info-copy">
         <strong>${escapeHtml(item.title)}</strong>
@@ -379,16 +374,12 @@ function renderInfoList(container, items) {
       </div>
       ${item.meta ? `<span class="info-meta">${escapeHtml(item.meta)}</span>` : ""}
     </article>
-  `
-    )
-    .join("");
+  `).join("");
 }
 
 function renderTrailList(container, items) {
   if (!container) return;
-  container.innerHTML = items
-    .map(
-      (item) => `
+  container.innerHTML = items.map((item) => `
     <article class="trail-item">
       <div class="trail-copy">
         <strong>${escapeHtml(item.title)}</strong>
@@ -396,9 +387,7 @@ function renderTrailList(container, items) {
       </div>
       ${item.level ? `<span class="trail-level">${escapeHtml(item.level)}</span>` : ""}
     </article>
-  `
-    )
-    .join("");
+  `).join("");
 }
 
 function fillStaticPanels() {
@@ -526,8 +515,7 @@ function computeParticipantsKpis(items) {
   ).length;
 
   const condoCount = items.filter(
-    (item) =>
-      normalizeText(item.participantType || item.tipoParticipante || item.tipo) === "condominio"
+    (item) => normalizeText(item.participantType || item.tipoParticipante || item.tipo) === "condominio"
   ).length;
 
   if (els.participantsTotalCount) els.participantsTotalCount.textContent = String(total);
@@ -548,11 +536,11 @@ function renderParticipants(items) {
     return;
   }
 
-  els.participantsList.innerHTML = items
-    .map((item) => {
-      const participantType = item.participantType || item.tipoParticipante || item.tipo;
-      const address = buildFullAddress(item) || "Endereço não informado";
-      return `
+  els.participantsList.innerHTML = items.map((item) => {
+    const participantType = item.participantType || item.tipoParticipante || item.tipo;
+    const address = buildFullAddress(item) || "Endereço não informado";
+
+    return `
       <article class="participant-row">
         <div class="participant-main">
           <div class="participant-avatar">${participantIcon(participantType)}</div>
@@ -567,16 +555,15 @@ function renderParticipants(items) {
           <span class="participant-tag">${escapeHtml(formatParticipantType(participantType))}</span>
           <span class="participant-subtag">${escapeHtml(
             item.localType ||
-              item.address?.neighborhood ||
-              item.bairro ||
-              item.territoryLabel ||
-              "Território"
+            item.address?.neighborhood ||
+            item.bairro ||
+            item.territoryLabel ||
+            "Território"
           )}</span>
         </div>
       </article>
     `;
-    })
-    .join("");
+  }).join("");
 }
 
 function filterParticipants() {
@@ -605,9 +592,7 @@ function filterParticipants() {
       item.bairro,
       item.cidade,
       item.enderecoCompleto
-    ]
-      .map(normalizeText)
-      .join(" ");
+    ].map(normalizeText).join(" ");
 
     return haystack.includes(term);
   });
@@ -638,10 +623,7 @@ function buildParticipantsQuery(profile, useOrdered = true) {
 
 function applyParticipantsSnapshot(snapshot) {
   STATE.allParticipants = snapshot.docs
-    .map((docItem) => ({
-      id: docItem.id,
-      ...docItem.data()
-    }))
+    .map((docItem) => ({ id: docItem.id, ...docItem.data() }))
     .filter((item) => item.approvalStatus !== "rejected");
 
   computeParticipantsKpis(STATE.allParticipants);
@@ -656,9 +638,7 @@ function applyParticipantsSnapshot(snapshot) {
 
 function loadParticipants(profile) {
   if (typeof STATE.participantsUnsubscribe === "function") {
-    try {
-      STATE.participantsUnsubscribe();
-    } catch (_) {}
+    try { STATE.participantsUnsubscribe(); } catch (_) {}
     STATE.participantsUnsubscribe = null;
   }
 
@@ -670,10 +650,7 @@ function loadParticipants(profile) {
       applyParticipantsSnapshot(snapshot);
     },
     (error) => {
-      console.warn(
-        "Falha na consulta ordenada de participantes. Tentando fallback sem orderBy...",
-        error
-      );
+      console.warn("Falha na consulta ordenada de participantes. Tentando fallback sem orderBy...", error);
 
       const fallbackQuery = buildParticipantsQuery(profile, false);
 
@@ -750,48 +727,43 @@ function renderApprovalRequests(items) {
     return;
   }
 
-  els.approvalRequestsList.innerHTML = items
-    .map((item) => {
-      const snapshot = item.applicantSnapshot || {};
-      const address = snapshot.address?.addressLine
-        || [
-          snapshot.address?.street,
-          snapshot.address?.number,
-          snapshot.address?.neighborhood,
-          snapshot.address?.city,
-          snapshot.address?.state
-        ]
-          .filter(Boolean)
-          .join(", ");
+  els.approvalRequestsList.innerHTML = items.map((item) => {
+    const snapshot = item.applicantSnapshot || {};
+    const address = snapshot.address?.addressLine || [
+      snapshot.address?.street,
+      snapshot.address?.number,
+      snapshot.address?.neighborhood,
+      snapshot.address?.city,
+      snapshot.address?.state
+    ].filter(Boolean).join(", ");
 
-      return `
-        <article class="participant-row">
-          <div class="participant-main">
-            <div class="participant-avatar">${participantIcon(item.participantType)}</div>
-            <div class="participant-copy">
-              <strong>${escapeHtml(item.participantName || "Sem nome")}</strong>
-              <span>${escapeHtml(item.participantCode || "-")}</span>
-              <span>${escapeHtml(address || "Endereço não informado")}</span>
-              <span>${escapeHtml(snapshot.phone || "Telefone não informado")}</span>
-            </div>
+    return `
+      <article class="participant-row">
+        <div class="participant-main">
+          <div class="participant-avatar">${participantIcon(item.participantType)}</div>
+          <div class="participant-copy">
+            <strong>${escapeHtml(item.participantName || "Sem nome")}</strong>
+            <span>${escapeHtml(item.participantCode || "-")}</span>
+            <span>${escapeHtml(address || "Endereço não informado")}</span>
+            <span>${escapeHtml(snapshot.phone || "Telefone não informado")}</span>
           </div>
+        </div>
 
-          <div class="participant-meta">
-            <span class="participant-tag">${escapeHtml(formatParticipantType(item.participantType))}</span>
-            <span class="participant-subtag">${escapeHtml(item.territoryLabel || "Território")}</span>
-            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-              <button type="button" class="map-mini-btn green" data-approve-request="${escapeHtml(item.id)}">
-                Aprovar
-              </button>
-              <button type="button" class="map-mini-btn orange" data-reject-request="${escapeHtml(item.id)}">
-                Rejeitar
-              </button>
-            </div>
+        <div class="participant-meta">
+          <span class="participant-tag">${escapeHtml(formatParticipantType(item.participantType))}</span>
+          <span class="participant-subtag">${escapeHtml(item.territoryLabel || "Território")}</span>
+          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+            <button type="button" class="map-mini-btn green" data-approve-request="${escapeHtml(item.id)}">
+              Aprovar
+            </button>
+            <button type="button" class="map-mini-btn orange" data-reject-request="${escapeHtml(item.id)}">
+              Rejeitar
+            </button>
           </div>
-        </article>
-      `;
-    })
-    .join("");
+        </div>
+      </article>
+    `;
+  }).join("");
 
   els.approvalRequestsList.querySelectorAll("[data-approve-request]").forEach((btn) => {
     btn.addEventListener("click", () => approveParticipantRequest(btn.dataset.approveRequest));
@@ -806,9 +778,7 @@ function loadApprovalRequests(profile) {
   if (!els.approvalRequestsList) return;
 
   if (typeof STATE.approvalRequestsUnsubscribe === "function") {
-    try {
-      STATE.approvalRequestsUnsubscribe();
-    } catch (_) {}
+    try { STATE.approvalRequestsUnsubscribe(); } catch (_) {}
     STATE.approvalRequestsUnsubscribe = null;
   }
 
@@ -827,9 +797,7 @@ function loadApprovalRequests(profile) {
         ...docItem.data()
       }));
       renderApprovalRequests(STATE.approvalRequests);
-      if (STATE.profile) {
-        loadIndicators(STATE.profile);
-      }
+      if (STATE.profile) loadIndicators(STATE.profile);
     },
     (error) => {
       console.warn("Falha na consulta ordenada de solicitações. Tentando fallback...", error);
@@ -844,9 +812,7 @@ function loadApprovalRequests(profile) {
             ...docItem.data()
           }));
           renderApprovalRequests(STATE.approvalRequests);
-          if (STATE.profile) {
-            loadIndicators(STATE.profile);
-          }
+          if (STATE.profile) loadIndicators(STATE.profile);
         },
         (fallbackError) => {
           console.error("Erro ao carregar solicitações:", fallbackError);
@@ -868,14 +834,10 @@ async function approveParticipantRequest(requestId) {
     const requestRef = doc(db, "approvalRequests", requestId);
     const requestSnap = await getDoc(requestRef);
 
-    if (!requestSnap.exists()) {
-      throw new Error("Solicitação não encontrada.");
-    }
+    if (!requestSnap.exists()) throw new Error("Solicitação não encontrada.");
 
     const requestData = requestSnap.data();
-    if (!requestData.participantId) {
-      throw new Error("Solicitação sem participantId.");
-    }
+    if (!requestData.participantId) throw new Error("Solicitação sem participantId.");
 
     const participantRef = doc(db, "participants", requestData.participantId);
     const now = serverTimestamp();
@@ -928,14 +890,10 @@ async function rejectParticipantRequest(requestId) {
     const requestRef = doc(db, "approvalRequests", requestId);
     const requestSnap = await getDoc(requestRef);
 
-    if (!requestSnap.exists()) {
-      throw new Error("Solicitação não encontrada.");
-    }
+    if (!requestSnap.exists()) throw new Error("Solicitação não encontrada.");
 
     const requestData = requestSnap.data();
-    if (!requestData.participantId) {
-      throw new Error("Solicitação sem participantId.");
-    }
+    if (!requestData.participantId) throw new Error("Solicitação sem participantId.");
 
     const participantRef = doc(db, "participants", requestData.participantId);
     const now = serverTimestamp();
@@ -1154,9 +1112,7 @@ function renderMapPointsList(points) {
     return;
   }
 
-  els.mapPointsList.innerHTML = points
-    .map(
-      (point) => `
+  els.mapPointsList.innerHTML = points.map((point) => `
     <article class="map-point-card">
       <strong>${escapeHtml(point.name)}</strong>
       <span>${escapeHtml(point.address || "Endereço não informado")}</span>
@@ -1167,9 +1123,7 @@ function renderMapPointsList(points) {
         <button class="map-mini-btn orange" type="button" data-focus-point="${escapeHtml(point.id)}">Ver no mapa</button>
       </div>
     </article>
-  `
-    )
-    .join("");
+  `).join("");
 
   els.mapPointsList.querySelectorAll("[data-edit-point]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1246,22 +1200,15 @@ function renderTerritoryMap(points) {
     STATE.territoryMap.fitBounds(bounds, { padding: [30, 30] });
   }
 
-  if (els.mapPointsCount) {
-    els.mapPointsCount.textContent = String(points.length);
-  }
-
-  if (els.summaryPoints) {
-    els.summaryPoints.textContent = String(points.length);
-  }
+  if (els.mapPointsCount) els.mapPointsCount.textContent = String(points.length);
+  if (els.summaryPoints) els.summaryPoints.textContent = String(points.length);
 
   renderMapPointsList(points);
 }
 
 function getCurrentMapFilteredPoints() {
   const filter = els.mapTypeFilter?.value || "all";
-
   if (filter === "all") return STATE.allMapPoints;
-
   return STATE.allMapPoints.filter((point) => normalizeText(point.type) === normalizeText(filter));
 }
 
@@ -1330,9 +1277,7 @@ function setupMapActions() {
         userMarker.bindPopup("Sua localização atual").openPopup();
 
         setTimeout(() => {
-          try {
-            STATE.territoryMap.removeLayer(userMarker);
-          } catch (_) {}
+          try { STATE.territoryMap.removeLayer(userMarker); } catch (_) {}
         }, 12000);
       },
       () => {
@@ -1417,9 +1362,7 @@ async function loadParticipantAddressPoints() {
   const points = [];
 
   for (const participant of STATE.allParticipants) {
-    if (participant.approvalStatus && participant.approvalStatus !== "approved") {
-      continue;
-    }
+    if (participant.approvalStatus && participant.approvalStatus !== "approved") continue;
 
     if (hasValidLatLng(participant)) {
       const pointCoords = {
@@ -1435,9 +1378,7 @@ async function loadParticipantAddressPoints() {
 
     try {
       const coords = await geocodeAddress(address);
-      if (coords) {
-        points.push(buildParticipantPoint(participant, coords));
-      }
+      if (coords) points.push(buildParticipantPoint(participant, coords));
     } catch (error) {
       console.warn("Endereço não geocodificado:", address, error);
     }
@@ -1471,21 +1412,6 @@ async function loadCollectionCount(collectionName, profile, whereField = "territ
   } catch (error) {
     console.warn(`Erro ao contar coleção ${collectionName}:`, error);
     return 0;
-  }
-}
-
-async function loadCollectionSafe(name) {
-  try {
-    const snap = await getDocs(query(collection(db, name), orderBy("createdAt", "desc")));
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-  } catch {
-    try {
-      const snap = await getDocs(collection(db, name));
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    } catch (error) {
-      console.warn(`Não foi possível ler a coleção ${name}:`, error);
-      return [];
-    }
   }
 }
 
@@ -1523,40 +1449,32 @@ function getResiduosTotalFromColeta(coleta = {}) {
   return Number(total.toFixed(1));
 }
 
-function buildCooperativaPublicSummary({
-  users,
-  participants,
-  coletas,
-  approvalRequests,
-  territoryId,
-  territoryLabel
-}) {
-  const usersFiltered = users.filter(
-    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
-  );
+async function loadCollectionSafe(name) {
+  try {
+    const snap = await getDocs(query(collection(db, name), orderBy("createdAt", "desc")));
+    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+  } catch {
+    try {
+      const snap = await getDocs(collection(db, name));
+      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    } catch (error) {
+      console.warn(`Não foi possível ler a coleção ${name}:`, error);
+      return [];
+    }
+  }
+}
 
-  const participantsFiltered = participants.filter(
-    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
-  );
-
-  const coletasFiltered = coletas.filter(
-    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
-  );
-
-  const approvalFiltered = approvalRequests.filter(
-    (item) => normalizeText(item.territoryId) === normalizeText(territoryId)
-  );
+function buildCooperativaPublicSummary({ users, participants, coletas, approvalRequests, territoryId, territoryLabel }) {
+  const usersFiltered = users.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
+  const participantsFiltered = participants.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
+  const coletasFiltered = coletas.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
+  const approvalFiltered = approvalRequests.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
 
   const cooperativaMembersCount = usersFiltered.filter((item) =>
-    ["cooperativa", "operador", "usuario", "user", "integrante", "catador"].includes(
-      normalizeText(item.role)
-    )
+    ["cooperativa", "operador", "usuario", "user", "integrante", "catador"].includes(normalizeText(item.role))
   ).length;
 
-  const residuosCount = coletasFiltered.reduce(
-    (acc, item) => acc + getResiduosTotalFromColeta(item),
-    0
-  );
+  const residuosCount = coletasFiltered.reduce((acc, item) => acc + getResiduosTotalFromColeta(item), 0);
 
   return {
     territoryId,
@@ -1643,9 +1561,7 @@ async function autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabe
       return;
     }
 
-    setCoopSyncStatus(
-      `Última atualização em ${new Date(updatedAt).toLocaleString("pt-BR")}`
-    );
+    setCoopSyncStatus(`Última atualização em ${new Date(updatedAt).toLocaleString("pt-BR")}`);
   } catch (error) {
     console.error("[AUTO SYNC COOP] Erro:", error);
     setCoopSyncStatus("Não foi possível verificar a atualização automática.");
@@ -1673,21 +1589,10 @@ async function loadIndicators(profile) {
     (item) => item.approvalStatus === "approved" || item.status === "active"
   ).length;
 
-  if (els.indicatorColetas) {
-    els.indicatorColetas.textContent = String(coletas);
-  }
-
-  if (els.indicatorParticipants) {
-    els.indicatorParticipants.textContent = String(participantsCount);
-  }
-
-  if (els.indicatorDocs) {
-    els.indicatorDocs.textContent = isAdmin ? String(usersCount) : "—";
-  }
-
-  if (els.indicatorActions) {
-    els.indicatorActions.textContent = isAdmin ? String(STATE.approvalRequests.length) : "—";
-  }
+  if (els.indicatorColetas) els.indicatorColetas.textContent = String(coletas);
+  if (els.indicatorParticipants) els.indicatorParticipants.textContent = String(participantsCount);
+  if (els.indicatorDocs) els.indicatorDocs.textContent = isAdmin ? String(usersCount) : "—";
+  if (els.indicatorActions) els.indicatorActions.textContent = isAdmin ? String(STATE.approvalRequests.length) : "—";
 }
 
 function updateParticipantIndicator() {
@@ -1708,40 +1613,23 @@ function applyRoleVisibility(profile) {
   const isAdmin = isAdminUser(profile.role);
   const isCommonUser = isCommonCoopUser(profile.role);
 
-  if (els.usersNavLink) {
-    els.usersNavLink.style.display = isAdmin ? "" : "none";
-  }
-
-  if (els.newParticipantBtn) {
-    els.newParticipantBtn.style.display = isAdmin ? "" : "none";
-  }
-
-  if (els.participantsSectionShell) {
-    els.participantsSectionShell.style.display = "";
-  }
+  if (els.usersNavLink) els.usersNavLink.style.display = isAdmin ? "" : "none";
+  if (els.newParticipantBtn) els.newParticipantBtn.style.display = isAdmin ? "" : "none";
+  if (els.participantsSectionShell) els.participantsSectionShell.style.display = "";
 
   if (els.indicatorDocs) {
     const labelEl = els.indicatorDocs.parentElement?.querySelector("span");
-    if (labelEl) {
-      labelEl.textContent = "Usuários";
-    }
+    if (labelEl) labelEl.textContent = "Usuários";
   }
 
   if (!isAdmin) {
-    if (els.indicatorDocs) {
-      els.indicatorDocs.textContent = "—";
-    }
-  }
-
-  if (!isAdmin) {
+    if (els.indicatorDocs) els.indicatorDocs.textContent = "—";
     document.querySelectorAll(".admin-only").forEach((el) => {
       el.style.display = "none";
     });
   }
 
-  if (isCommonUser) {
-    clearPointEditor();
-  }
+  if (isCommonUser) clearPointEditor();
 }
 
 function boot() {
