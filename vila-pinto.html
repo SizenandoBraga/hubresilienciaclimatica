@@ -7,317 +7,228 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>Território Vila Pinto • Núcleo de Soluções para Resíduos Urbanos</title>
-
-  <meta
-    name="description"
-    content="Território Vila Pinto no Núcleo de Soluções para Resíduos Urbanos: indicadores, cooperativa, mapa territorial e acessos operacionais."
-  />
-  <meta name="theme-color" content="#84BD23" />
+  <meta name="description" content="Território Vila Pinto no Núcleo de Soluções para Resíduos Urbanos: indicadores, cooperativa, mapa territorial e acessos operacionais." />
+  <meta name="theme-color" content="#81B92A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  >
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-
-  <link rel="stylesheet" href="vila-pinto.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="/territorio-publico.css">
 </head>
-<body>
-  <div class="app-shell">
-    <!-- MENU LATERAL -->
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-brand">
-        <a href="index.html" aria-label="Ir para a página inicial">
-          <img
-            src="img/NSRU - Logo-Preto.png"
-            alt="Núcleo de Soluções para Resíduos Urbanos"
-            class="sidebar-logo"
-          >
-        </a>
-      </div>
+<body
+  data-title="Vila Pinto"
+  data-lead="Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território."
+  data-label="Centro de Triagem Vila Pinto"
+  data-region="Porto Alegre / RS"
+  data-profile="Operação comunitária e cooperativa"
+  data-focus="Coleta seletiva, triagem e fortalecimento territorial"
+  data-coop-name="UT Vila Pinto"
+  data-coop-description="Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem."
+  data-participant-url="cadastro-participantes-vila-pinto.html"
+  data-dashboard-url="dashboard-cooperativa.html"
+  data-coop-url="cooperativa.html"
+  data-users-url="usuarios.html"
+  data-cooperados="24"
+  data-coletas="148"
+  data-volume="18.7"
+  data-pontos="12"
+  data-map-center-lat="-30.036111"
+  data-map-center-lng="-51.158333"
+  data-map-zoom="14"
+  data-marker-lat="-30.036111"
+  data-marker-lng="-51.158333"
+  data-marker-popup="<div style='font-family:Archivo Condensed,sans-serif;'><strong>Vila Pinto</strong><br>Centro de Triagem Vila Pinto<br>Bom Jesus / Jardim Carvalho<br>Porto Alegre • RS</div>"
+>
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="noise"></div>
 
-      <div class="sidebar-title">Menu</div>
+  <header class="site-header">
+    <div class="container header-wrap">
+      <a href="index.html" class="brand" aria-label="Ir para a página inicial">
+        <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" class="brand-logo">
+      </a>
 
-      <nav class="sidebar-nav" aria-label="Menu lateral">
-        <a href="index.html" class="sidebar-link is-active">
-          <span class="sidebar-icon">🏠</span>
-          <span>Painel inicial</span>
-        </a>
+      <button class="menu-toggle" id="menuToggle" aria-label="Abrir menu" aria-expanded="false" aria-controls="mobileMenu">☰</button>
 
-        <a href="quem-somos.html" class="sidebar-link">
-          <span class="sidebar-icon">ℹ️</span>
-          <span>Quem somos</span>
-        </a>
-
-        <a href="conteudos.html" class="sidebar-link">
-          <span class="sidebar-icon">📚</span>
-          <span>Conteúdos</span>
-        </a>
-
-        <a href="dashboard-cooperativa.html" class="sidebar-link">
-          <span class="sidebar-icon">📊</span>
-          <span>Dashboard da cooperativa</span>
-        </a>
+      <nav class="main-nav" aria-label="Navegação principal">
+        <a href="index.html">Início</a>
+        <a href="quem-somos.html">Quem Somos</a>
+        <a href="conteudos.html">Conteúdos</a>
+        <a href="index.html#dados">Dados e Relatórios</a>
+        <a href="index.html#faq">FAQ</a>
       </nav>
-    </aside>
 
-    <!-- CONTEÚDO -->
-    <div class="main-shell">
-      <header class="mobile-topbar">
-        <button
-          id="sidebarToggle"
-          class="mobile-menu-btn"
-          type="button"
-          aria-label="Abrir menu lateral"
-          aria-expanded="false"
-          aria-controls="sidebar"
-        >
-          ☰
-        </button>
+      <div class="header-actions">
+        <a href="login.html" class="btn-login">Cadastrar / Login</a>
+      </div>
+    </div>
 
-        <div class="mobile-topbar-title">Território Vila Pinto</div>
-      </header>
+    <div class="mobile-menu" id="mobileMenu">
+      <a href="index.html">Início</a>
+      <a href="quem-somos.html">Quem Somos</a>
+      <a href="conteudos.html">Conteúdos</a>
+      <a href="index.html#dados">Dados e Relatórios</a>
+      <a href="index.html#faq">FAQ</a>
+      <a href="login.html">Cadastrar / Login</a>
+    </div>
+  </header>
 
-      <main class="main-content">
-        <!-- PILLS SUPERIORES -->
-        <section class="context-bar">
-          <div class="context-pills">
-            <span class="context-pill pill-green">🟢 vila-pinto</span>
-            <span class="context-pill pill-neutral">🏢 Cooperativa</span>
-            <span class="context-pill pill-warning">📍 Território ativo</span>
-            <span class="context-pill pill-purple">👤 admin</span>
+  <main>
+    <section class="hero-territory">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="eyebrow">CRGR • Território prioritário</span>
+
+          <h1 id="territoryHeroTitle">Vila Pinto</h1>
+
+          <p class="hero-lead" id="territoryHeroLead">
+            Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território.
+          </p>
+
+          <div class="hero-tags">
+            <span class="tag">Gestão Territorial</span>
+            <span class="tag">Reciclagem</span>
+            <span class="tag">Economia Circular</span>
           </div>
+
+          <div class="hero-actions">
+            <a href="#" class="btn btn-primary" data-participant-link>Cadastrar participante</a>
+            <a href="#" class="btn btn-secondary" data-dashboard-link>Ver dashboard</a>
+          </div>
+        </div>
+
+        <aside class="hero-panel">
+          <div class="hero-panel-card">
+            <div class="mini-top">
+              <span class="mini-badge">Território ativo</span>
+              <span class="mini-status"></span>
+            </div>
+
+            <h2>Resumo do território</h2>
+
+            <ul class="territory-meta">
+              <li>
+                <strong>Nome:</strong>
+                <span id="territoryLabelText">Centro de Triagem Vila Pinto</span>
+              </li>
+              <li>
+                <strong>Região:</strong>
+                <span id="territoryRegionText">Porto Alegre / RS</span>
+              </li>
+              <li>
+                <strong>Perfil:</strong>
+                <span id="territoryProfileText">Operação comunitária e cooperativa</span>
+              </li>
+              <li>
+                <strong>Foco:</strong>
+                <span id="territoryFocusText">Coleta seletiva, triagem e fortalecimento territorial</span>
+              </li>
+            </ul>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="stats-section">
+      <div class="container">
+        <div class="stats-grid">
+          <article class="stat-card">
+            <span class="stat-label">Cooperados</span>
+            <strong class="stat-value" id="cooperadosValue">0</strong>
+            <p class="stat-note">Equipe vinculada ao território</p>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Coletas no território</span>
+            <strong class="stat-value" id="coletasValue">0</strong>
+            <p class="stat-note">Registros operacionais do território</p>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Volume reciclado</span>
+            <strong class="stat-value" id="volumeValue">0,0 t</strong>
+            <p class="stat-note">Soma das quantidades registradas</p>
+          </article>
+
+          <article class="stat-card">
+            <span class="stat-label">Pontos de coleta</span>
+            <strong class="stat-value" id="pontosValue">0</strong>
+            <p class="stat-note">Pontos vinculados ao território</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <div class="container territory-layout">
+        <section class="panel panel-main">
+          <div class="panel-head">
+            <div>
+              <span class="section-kicker">Mapa territorial</span>
+              <h2>Localização e presença no território</h2>
+            </div>
+          </div>
+
+          <div id="map" class="territory-map" aria-label="Mapa do território Vila Pinto"></div>
         </section>
 
-        <!-- AVISO -->
-    
-
-        <!-- HERO COM O CONTEÚDO ORIGINAL -->
-       <section class="hero-panel card">
-  <div class="hero-split">
-    <!-- COLUNA DE TEXTO -->
-    <div class="hero-content">
-      <span class="section-badge">Território 1 • Vila Pinto</span>
-
-      <h1 id="territoryHeroTitle">
-        Cooperativa de Triagem (CTVP) e Centro de Educação Ambiental (CEA) da Vila Pinto
-      </h1>
-
-      <p class="hero-lead">
-        Localizada no bairro Bom Jesus, em Porto Alegre, a cooperativa e o centro de educação ambiental na Vila Pinto integram o território da Bonja, uma região marcada pela organização comunitária, pela resistência histórica e pelo protagonismo de seus moradores. Ao longo das décadas, a comunidade construiu soluções coletivas para enfrentar desafios urbanos, consolidando um forte tecido social e uma identidade territorial ativa.
-      </p>
-
-      <p class="hero-lead">
-        Nesse contexto, a Cooperativa Vila Pinto se destaca como um potencial centro de referência em gestão de resíduos. Mais do que um espaço de triagem, a cooperativa atua como um elo entre sustentabilidade ambiental, inclusão produtiva e desenvolvimento local, gerando trabalho, renda e impacto social direto no território.
-      </p>
-
-       <p class="hero-lead">
-      A atuação da cooperativa está profundamente conectada à realidade da Bonja, um território com alta densidade, diversidade social e desafios estruturais, mas também com grande capacidade de mobilização e inovação comunitária. Essa proximidade permite soluções mais eficientes, baseadas no conhecimento local e na articulação entre diferentes atores.
-      </p>
-
-<p class="hero-lead">A Vila Pinto representa, assim, um modelo concreto de como cooperativas podem operar como infraestruturas essenciais da economia circular, fortalecendo cadeias de reciclagem ao mesmo tempo em que promovem cidadania e transformação social.</p>
-      <p class="hero-lead hero-lead-strong">
-        Mais do que gerir resíduos, a Vila Pinto ajuda a construir futuros possíveis a partir do território.
-      </p>
-
-      <div class="hero-tags">
-        <span class="tag">Gestão Territorial</span>
-        <span class="tag">Reciclagem</span>
-        <span class="tag">Economia Circular</span>
-      </div>
-
-      <div class="hero-actions">
-        <a href="cadastro-participantes-vila-pinto.html" class="btn btn-primary">
-          Cadastrar participante
-        </a>
-        <a href="dashboard-cooperativa.html" class="btn btn-dark">
-          Ver dashboard
-        </a>
-      </div>
-    </div>
-
-    <!-- COLUNA DE IMAGEM -->
-    <div class="hero-media">
-      <div class="hero-image-wrap">
-        <img
-          src="img/LogoVP.png"
-          alt="Cooperativa e território da Vila Pinto"
-          class="hero-image"
-        >
-      </div>
-    </div>
-  </div>
-</section>
-
-        <!-- INDICADORES -->
-        <section class="stats-grid">
-  <!-- Cooperados -->
-  <article class="metric-card card">
-    <span class="metric-label">Cooperados</span>
-    <strong class="metric-value" id="cooperadosValue">0</strong>
-    <p class="metric-note">Participantes vinculados ao território</p>
-  </article>
-
-  <!-- Coletas -->
-  <article class="metric-card card">
-    <span class="metric-label">Coletas no território</span>
-    <strong class="metric-value" id="coletasValue">0</strong>
-    <p class="metric-note">Registros operacionais realizados</p>
-  </article>
-
-  <!-- Pontos -->
-  <article class="metric-card card">
-    <span class="metric-label">Pontos de coleta</span>
-    <strong class="metric-value" id="pontosValue">0</strong>
-    <p class="metric-note">Participantes com localização definida</p>
-  </article>
-
-  <!-- Em operação (novo indicador institucional) -->
-  <article class="metric-card card">
-    <span class="metric-label">Em operação</span>
-    <strong class="metric-value" id="operacaoValue">0</strong>
-    <p class="metric-note">Participantes ativos na coleta</p>
-  </article>
-</section>
-
-        <!-- GRID PRINCIPAL -->
-        <section class="content-grid">
-          <!-- ESQUERDA -->
-          <div class="stack-left">
-            <section class="panel card">
-              <div class="panel-head">
-                <div>
-                  <span class="panel-kicker">Resumo do território</span>
-                  <h2>Informações principais</h2>
-                </div>
-              </div>
-
-              <ul class="territory-meta">
-                <li>
-                  <strong>Nome:</strong>
-                  <span id="territoryLabelText">Centro de Triagem Vila Pinto</span>
-                </li>
-                <li>
-                  <strong>Região:</strong>
-                  <span id="territoryRegionText">Porto Alegre / RS</span>
-                </li>
-                <li>
-                  <strong>Perfil:</strong>
-                  <span id="territoryProfileText">Operação comunitária e cooperativa</span>
-                </li>
-                <li>
-                  <strong>Foco:</strong>
-                  <span id="territoryFocusText">Coleta seletiva, triagem e fortalecimento territorial</span>
-                </li>
-              </ul>
-            </section>
-
-            <section class="panel card">
-              <div class="panel-head">
-                <div>
-                  <span class="panel-kicker">Cooperativa</span>
-                  <h2 id="coopNameText">UT Vila Pinto</h2>
-                </div>
-              </div>
-
-              <p class="panel-text" id="coopDescriptionText">
-                Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.
-              </p>
-
-              <a href="cooperativa.html" class="inline-link">Acessar página da cooperativa</a>
-            </section>
-
-            <section class="panel card">
-              <div class="panel-head">
-                <div>
-                  <span class="panel-kicker">Ações rápidas</span>
-                  <h2>Atalhos do território</h2>
-                </div>
-              </div>
-
-              <div class="quick-actions">
-                <a href="cadastro-participantes-vila-pinto.html" class="quick-btn">Cadastro de participante</a>
-                <a href="dashboard-cooperativa.html" class="quick-btn">Indicadores</a>
-                <a href="conteudos.html" class="quick-btn">Conteúdos</a>
-                <a href="usuarios.html" class="quick-btn">Usuários</a>
-              </div>
-            </section>
+        <aside class="panel side-stack">
+          <div class="mini-panel">
+            <span class="section-kicker">Cooperativa</span>
+            <h3 id="coopNameText">UT Vila Pinto</h3>
+            <p id="coopDescriptionText">
+              Núcleo territorial com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.
+            </p>
+            <a href="#" class="inline-link" data-coop-link>Acessar página da cooperativa</a>
           </div>
 
-          <!-- DIREITA -->
-          <div class="stack-right">
-            <section class="panel card">
-              <div class="panel-head panel-head-actions">
-                <div>
-                  <span class="panel-kicker">Mapa territorial</span>
-                  <h2>Localização e presença no território</h2>
-                </div>
-
-                <div class="panel-actions">
-                  <button type="button" class="btn btn-light" id="centerBaseButton">
-                    Centralizar mapa
-                  </button>
-                </div>
-              </div>
-
-              <div class="info-chips">
-                <span class="info-chip" id="baseInfoText">
-                  Base do território: Vila Pinto
-                </span>
-              </div>
-
-              <div id="map" class="territory-map" aria-label="Mapa do território Vila Pinto"></div>
-            </section>
-
-            <section class="panel card">
-              <div class="panel-head">
-                <div>
-                  <span class="panel-kicker">Sobre o território</span>
-                  <h2>Território estratégico de atuação</h2>
-                </div>
-              </div>
-
-              <p class="panel-text">
-                A página da Vila Pinto centraliza informações essenciais para leitura rápida da operação local, permitindo acompanhar volume, registros, acessos e articulações vinculadas ao CRGR.
-              </p>
-            </section>
-
-            <section class="panel card">
-              <div class="panel-head">
-                <div>
-                  <span class="panel-kicker">Objetivo</span>
-                  <h2>Gestão integrada e acompanhamento contínuo</h2>
-                </div>
-              </div>
-
-              <p class="panel-text">
-                Este ambiente foi pensado para apoiar coordenação, governança, cooperados e equipes técnicas com uma visão mais clara e organizada do território.
-              </p>
-            </section>
-
-            
+          <div class="mini-panel">
+            <span class="section-kicker">Ações rápidas</span>
+            <div class="quick-actions">
+              <a href="#" class="quick-btn" data-participant-link>Cadastro de participante</a>
+              <a href="#" class="quick-btn" data-dashboard-link>Indicadores</a>
+              <a href="conteudos.html" class="quick-btn">Conteúdos</a>
+              <a href="#" class="quick-btn" data-users-link>Usuários</a>
+            </div>
           </div>
-        </section>
-      </main>
-    </div>
-  </div>
+        </aside>
+      </div>
+    </section>
 
-  <div class="sidebar-overlay" id="sidebarOverlay" hidden></div>
+    <section class="details-section">
+      <div class="container details-grid">
+        <article class="panel detail-card">
+          <span class="section-kicker">Sobre o território</span>
+          <h3>Território estratégico de atuação</h3>
+          <p>
+            A página territorial centraliza informações essenciais para leitura rápida da operação local, permitindo acompanhar volume, registros, acessos e articulações vinculadas ao CRGR.
+          </p>
+        </article>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+        <article class="panel detail-card">
+          <span class="section-kicker">Objetivo</span>
+          <h3>Gestão integrada e acompanhamento contínuo</h3>
+          <p>
+            Este ambiente foi pensado para apoiar coordenação, governança, cooperados e equipes técnicas com uma visão mais clara e organizada do território.
+          </p>
+        </article>
 
-  <script src="vila-pinto.js"></script>
+        <article class="panel detail-card">
+          <span class="section-kicker">Conectado ao Firebase</span>
+          <h3>Dados reais por território</h3>
+          <p>
+            Os indicadores, participantes, coletas e pontos de coleta podem ser carregados automaticamente conforme o território do usuário logado.
+          </p>
+        </article>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="/territorio-publico.js"></script>
 </body>
 </html>
