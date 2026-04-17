@@ -46,7 +46,6 @@ const els = {
   sidebarHelpText: document.getElementById("sidebarHelpText"),
 
   noticesList: document.getElementById("noticesList"),
-  featuredTrails: document.getElementById("featuredTrails"),
 
   territoryPanelTitle: document.getElementById("territoryPanelTitle"),
   territoryPanelSubtitle: document.getElementById("territoryPanelSubtitle"),
@@ -115,8 +114,8 @@ const TAB_META = {
     subtitle: "Compromissos, reuniões e atividades previstas."
   },
   treinamentos: {
-    title: "Treinamentos e formações",
-    subtitle: "Trilhas e capacitações da cooperativa."
+    title: "Capacitações",
+    subtitle: "Formações e conteúdos da cooperativa."
   },
   coleta: {
     title: "Coleta especial",
@@ -165,7 +164,7 @@ function normalizeText(value) {
 
 function roleLabel(role) {
   const map = {
-    admin: "Administrador",
+    admin: "Administrador da cooperativa",
     cooperativa: "Cooperativa",
     governanca: "Governança",
     gestor: "Gestor",
@@ -181,6 +180,14 @@ function isCommonCoopUser(role) {
 
 function isAdminUser(role) {
   return role === "admin";
+}
+
+function isGovernancaUser(role) {
+  return role === "governanca" || role === "gestor";
+}
+
+function isScopedTerritoryUser(role) {
+  return ["admin", "cooperativa", "user", "usuario"].includes(role);
 }
 
 function participantIcon(type) {
@@ -271,18 +278,9 @@ function getResiduosTotalFromColeta(coleta = {}) {
   let total = 0;
 
   if (typeof coleta.totalKg === "number") total += coleta.totalKg;
-
-  if (coleta.recebimento && typeof coleta.recebimento === "object") {
-    total += sumObjectNumericValues(coleta.recebimento);
-  }
-
-  if (coleta.residuos && typeof coleta.residuos === "object") {
-    total += sumObjectNumericValues(coleta.residuos);
-  }
-
-  if (coleta.materiais && typeof coleta.materiais === "object") {
-    total += sumObjectNumericValues(coleta.materiais);
-  }
+  if (coleta.recebimento && typeof coleta.recebimento === "object") total += sumObjectNumericValues(coleta.recebimento);
+  if (coleta.residuos && typeof coleta.residuos === "object") total += sumObjectNumericValues(coleta.residuos);
+  if (coleta.materiais && typeof coleta.materiais === "object") total += sumObjectNumericValues(coleta.materiais);
 
   return Math.round(total);
 }
@@ -309,12 +307,12 @@ function validateProfile(profile) {
   if (!profile) throw new Error("Perfil de usuário inválido.");
   if (profile.status !== "active") throw new Error("Usuário sem acesso ativo.");
 
-  const acceptedRoles = ["admin", "cooperativa", "user", "usuario"];
+  const acceptedRoles = ["admin", "cooperativa", "user", "usuario", "governanca", "gestor"];
   if (!acceptedRoles.includes(profile.role)) {
-    throw new Error("Acesso permitido apenas para administrador ou usuário da cooperativa.");
+    throw new Error("Acesso permitido apenas para perfis autorizados.");
   }
 
-  if (profile.role !== "admin" && !profile.territoryId) {
+  if (!isGovernancaUser(profile.role) && !profile.territoryId) {
     throw new Error("Usuário sem território vinculado.");
   }
 }
@@ -352,16 +350,18 @@ function setupLogout() {
 }
 
 function fillHeader(profile) {
+  const isGovernanca = isGovernancaUser(profile.role);
   const isAdmin = isAdminUser(profile.role);
-  const isCommonUser = isCommonCoopUser(profile.role);
 
   const territory =
     profile.territoryLabel ||
-    (isAdmin ? "Todos os territórios" : PAGE_TERRITORY.territoryLabel);
+    (isGovernanca ? "Todos os territórios" : PAGE_TERRITORY.territoryLabel);
+
   const coop =
     profile.cooperativeName ||
     profile.cooperativeLabel ||
-    (isAdmin ? "Todas as cooperativas" : PAGE_TERRITORY.cooperativeName);
+    (isGovernanca ? "Todas as cooperativas" : PAGE_TERRITORY.cooperativeName);
+
   const name = profile.displayName || profile.name || "Usuário";
 
   if (els.territoryNameTop) els.territoryNameTop.textContent = territory;
@@ -370,18 +370,27 @@ function fillHeader(profile) {
   if (els.userNameTop) els.userNameTop.textContent = name;
 
   if (els.accessBanner) {
-    els.accessBanner.className = `access-banner show ${isAdmin ? "admin" : "cooperativa"}`;
-    els.accessBanner.innerHTML = isAdmin
-      ? `<strong>Acesso administrativo ativo.</strong> Você pode visualizar e editar dados de todas as cooperativas cadastradas no sistema.`
-      : `<strong>Acesso da cooperativa ativo.</strong> Você visualiza e insere dados apenas da sua cooperativa e do seu território vinculado.`;
+    if (isGovernanca) {
+      els.accessBanner.className = "access-banner show admin";
+      els.accessBanner.innerHTML =
+        `<strong>Acesso de governança ativo.</strong> Você pode visualizar e editar dados de todas as cooperativas cadastradas no sistema.`;
+    } else if (isAdmin) {
+      els.accessBanner.className = "access-banner show cooperativa";
+      els.accessBanner.innerHTML =
+        `<strong>Acesso administrativo da cooperativa ativo.</strong> Você pode visualizar e editar apenas os dados da sua cooperativa e do seu território vinculado.`;
+    } else {
+      els.accessBanner.className = "access-banner show cooperativa";
+      els.accessBanner.innerHTML =
+        `<strong>Acesso da cooperativa ativo.</strong> Você visualiza e insere dados apenas da sua cooperativa e do seu território vinculado.`;
+    }
   }
 
   document.querySelectorAll(".admin-only").forEach((el) => {
-    el.classList.toggle("hidden", !isAdmin);
+    el.classList.toggle("hidden", !(isAdmin || isGovernanca));
   });
 
   if (els.usersNavLink) {
-    els.usersNavLink.style.display = isAdmin ? "" : "none";
+    els.usersNavLink.style.display = isAdmin || isGovernanca ? "" : "none";
   }
 
   if (els.newParticipantBtn) {
@@ -393,12 +402,9 @@ function fillHeader(profile) {
   });
 
   if (els.participantsSectionText) {
-    if (isAdmin) {
+    if (isGovernanca) {
       els.participantsSectionText.textContent =
         "Visualização geral de participantes cadastrados no sistema.";
-    } else if (isCommonUser) {
-      els.participantsSectionText.textContent =
-        "Participantes vinculados à cooperativa.";
     } else {
       els.participantsSectionText.textContent =
         "Participantes vinculados à sua cooperativa e ao seu território.";
@@ -423,47 +429,17 @@ function renderInfoList(container, items) {
     .join("");
 }
 
-function renderTrailList(container, items) {
-  if (!container) return;
-  container.innerHTML = items
-    .map(
-      (item) => `
-    <article class="trail-item">
-      <div class="trail-copy">
-        <strong>${escapeHtml(item.title)}</strong>
-        <span>${escapeHtml(item.status)}</span>
-      </div>
-      ${item.level ? `<span class="trail-level">${escapeHtml(item.level)}</span>` : ""}
-    </article>
-  `
-    )
-    .join("");
-}
-
 function fillStaticPanels() {
   renderInfoList(els.noticesList, [
     {
       title: "Comunicado do Núcleo",
-      description: "Atualização de conteúdos, trilhas e materiais operacionais nesta semana.",
+      description: "Atualização de conteúdos, materiais operacionais e documentos nesta semana.",
       meta: "Hoje"
     },
     {
       title: "Campanha ativa no território",
       description: "Mutirão de educação ambiental com mobilização local.",
       meta: "Esta semana"
-    }
-  ]);
-
-  renderTrailList(els.featuredTrails, [
-    {
-      title: "Trilha 1 • Introdução",
-      status: "Status: não iniciada",
-      level: "Básico"
-    },
-    {
-      title: "Trilha 2 • Gestão de Resíduos",
-      status: "Status: em andamento",
-      level: "Essencial"
     }
   ]);
 
@@ -505,13 +481,13 @@ function fillStaticPanels() {
     {
       title: "Oficina ambiental",
       description: "Sexta-feira • 9h • escola do território",
-      meta: "Formação"
+      meta: "Capacitação"
     }
   ]);
 
   renderInfoList(els.territoryTrainings, [
     {
-      title: "Formação inicial",
+      title: "Capacitação inicial",
       description: "Introdução à separação correta dos resíduos."
     },
     {
@@ -658,7 +634,7 @@ function bindParticipantsSearch() {
 }
 
 function buildParticipantsQuery(profile, useOrdered = true) {
-  if (profile.role === "admin") {
+  if (isGovernancaUser(profile.role)) {
     return useOrdered
       ? query(collection(db, "participants"), orderBy("createdAtISO", "desc"))
       : query(collection(db, "participants"));
@@ -735,7 +711,7 @@ function loadParticipants(profile) {
 }
 
 function buildApprovalRequestsQuery(profile, useOrdered = true) {
-  if (profile.role === "admin") {
+  if (isGovernancaUser(profile.role)) {
     return useOrdered
       ? query(
           collection(db, "approvalRequests"),
@@ -769,7 +745,7 @@ function buildApprovalRequestsQuery(profile, useOrdered = true) {
 function renderApprovalRequests(items) {
   if (!els.approvalRequestsList) return;
 
-  if (!STATE.isAdmin) {
+  if (!(STATE.isAdmin || STATE.canEditAll)) {
     els.approvalRequestsList.innerHTML = `
       <div class="participants-empty">
         Área disponível apenas para administradores.
@@ -849,7 +825,7 @@ function loadApprovalRequests(profile) {
     STATE.approvalRequestsUnsubscribe = null;
   }
 
-  if (!STATE.isAdmin) {
+  if (!(STATE.isAdmin || STATE.canEditAll)) {
     renderApprovalRequests([]);
     return;
   }
@@ -1079,7 +1055,7 @@ function getDefaultTerritoryPoints(profile) {
     ];
   }
 
-  if (profile.role === "admin") {
+  if (isGovernancaUser(profile.role)) {
     return [
       {
         id: "admin-default",
@@ -1485,7 +1461,7 @@ async function loadCollectionCount(collectionName, profile, whereField = "territ
   try {
     let q;
 
-    if (profile.role === "admin") {
+    if (isGovernancaUser(profile.role)) {
       q = query(collection(db, collectionName), limit(500));
     } else {
       q = query(
@@ -1513,10 +1489,10 @@ function updateParticipantIndicator() {
 }
 
 async function loadIndicators(profile) {
-  const isAdmin = isAdminUser(profile.role);
+  const isGovernanca = isGovernancaUser(profile.role);
 
   const coletas = await loadCollectionCount("coletas", profile, "territoryId");
-  const usersCount = isAdmin ? await loadCollectionCount("users", profile, "territoryId") : null;
+  const usersCount = isGovernanca ? await loadCollectionCount("users", profile, "territoryId") : null;
   const participantsCount = STATE.allParticipants.filter(
     (item) => item.approvalStatus === "approved" || item.status === "active"
   ).length;
@@ -1530,11 +1506,13 @@ async function loadIndicators(profile) {
   }
 
   if (els.indicatorDocs) {
-    els.indicatorDocs.textContent = isAdmin ? String(usersCount) : "—";
+    els.indicatorDocs.textContent = isGovernanca ? String(usersCount) : "—";
   }
 
   if (els.indicatorActions) {
-    els.indicatorActions.textContent = isAdmin ? String(STATE.approvalRequests.length) : "—";
+    els.indicatorActions.textContent = (STATE.isAdmin || STATE.canEditAll)
+      ? String(STATE.approvalRequests.length)
+      : "—";
   }
 }
 
@@ -1560,7 +1538,7 @@ function buildCooperativaPublicSummary({ users, participants, coletas, approvalR
   const approvalFiltered = approvalRequests.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
 
   const cooperativaMembersCount = usersFiltered.filter((item) =>
-    ["cooperativa", "integrante", "catador", "user", "usuario"].includes(normalizeText(item.role))
+    ["cooperativa", "integrante", "catador", "user", "usuario", "admin"].includes(normalizeText(item.role))
   ).length;
 
   const residuosCount = coletasFiltered.reduce((acc, item) => acc + getResiduosTotalFromColeta(item), 0);
@@ -1680,20 +1658,21 @@ function bindCooperativaSyncButton({ territoryId, territoryLabel }) {
 }
 
 function applyPermissionRules(profile) {
-  STATE.isAdmin = profile.role === "admin";
-  STATE.canEditAll = STATE.isAdmin || ["cooperativa", "user", "usuario"].includes(profile.role);
+  STATE.isAdmin = isAdminUser(profile.role);
+  STATE.canEditAll = isGovernancaUser(profile.role);
 }
 
 function applyRoleVisibility(profile) {
   const isAdmin = isAdminUser(profile.role);
-  const isCommonUser = isCommonCoopUser(profile.role);
+  const isGovernanca = isGovernancaUser(profile.role);
+  const canManageUsers = isAdmin || isGovernanca;
 
   if (els.usersNavLink) {
-    els.usersNavLink.style.display = isAdmin ? "" : "none";
+    els.usersNavLink.style.display = canManageUsers ? "" : "none";
   }
 
   if (els.newParticipantBtn) {
-    els.newParticipantBtn.style.display = isAdmin ? "" : "none";
+    els.newParticipantBtn.style.display = canManageUsers ? "" : "none";
   }
 
   if (els.participantsSectionShell) {
@@ -1707,19 +1686,19 @@ function applyRoleVisibility(profile) {
     }
   }
 
-  if (!isAdmin) {
+  if (!isGovernanca) {
     if (els.indicatorDocs) {
       els.indicatorDocs.textContent = "—";
     }
   }
 
-  if (!isAdmin) {
+  if (!canManageUsers) {
     document.querySelectorAll(".admin-only").forEach((el) => {
       el.style.display = "none";
     });
   }
 
-  if (isCommonUser) {
+  if (isCommonCoopUser(profile.role) || isAdmin) {
     clearPointEditor();
   }
 }
