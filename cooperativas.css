@@ -76,18 +76,17 @@ textarea {
 .content-area {
   min-width: 0;
 }
-
 /* =========================
-   SIDEBAR
+   SIDEBAR (ATUALIZADA)
 ========================= */
 
 .sidebar {
   background: var(--green);
   color: #fff;
-  padding: 20px 18px;
+  padding: 28px 18px;
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  justify-content: space-between;
   border-right: 1px solid rgba(255,255,255,0.12);
   position: sticky;
   top: 0;
@@ -95,103 +94,129 @@ textarea {
   overflow-y: auto;
 }
 
+/* =========================
+   TOPO (LOGO DESTACADO)
+========================= */
+
 .sidebar-top {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 20px;
+  padding-bottom: 14px;
 }
 
-.brand {
-  display: inline-flex;
-  align-items: center;
-}
-
+/* BLOCO DO LOGO (ESTILO APP) */
 .brand-mark {
-  max-width: 160px;
+  width: 170px;
+  height: 170px;
+  border-radius: 32px;
+
+  /* fundo branco sólido (igual app) */
+  background: #ffffff;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  /* sombra forte */
+  box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
+
+/* IMAGEM DO LOGO */
+.brand-mark img {
   width: 100%;
   height: auto;
   object-fit: contain;
 }
 
-.brand-mark img {
-  width: 58px;
-  height: auto;
+/* TEXTO MENU */
+.sidebar-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.12em;
+  text-align: center;
 }
 
-.sidebar-close {
-  display: none;
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,0.16);
-  color: #fff;
-  cursor: pointer;
-  font-size: 24px;
-  line-height: 1;
-}
+/* =========================
+   MENU (BOTÕES ESTILO CARD)
+========================= */
 
 .sidebar-nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.nav-label {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.78);
-  font-weight: 700;
-  padding: 10px 10px 4px;
-}
-
-.nav-label-space {
+  gap: 14px;
   margin-top: 10px;
 }
 
+/* LINKS */
 .nav-link {
   display: flex;
   align-items: center;
   gap: 12px;
-  min-height: 48px;
-  padding: 0 14px;
-  border-radius: 16px;
-  color: #fff;
-  transition: 0.18s ease;
-}
 
-.nav-link:hover {
+  padding: 16px 18px;
+  border-radius: 18px;
+
+  font-size: 16px;
+  font-weight: 600;
+  color: #ffffff;
+
   background: rgba(255,255,255,0.12);
+
+  transition: 0.2s;
 }
 
+/* hover */
+.nav-link:hover {
+  background: rgba(255,255,255,0.22);
+}
+
+/* ativo */
 .nav-link.active {
-  background: rgba(255,255,255,0.18);
-  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.12);
+  background: rgba(255,255,255,0.22);
 }
 
+/* destaque laranja */
+.nav-link.admin-only {
+  background: var(--orange);
+  color: #fff;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+/* icone */
 .nav-ico {
   font-size: 18px;
   width: 22px;
   text-align: center;
-  flex-shrink: 0;
 }
+
+/* =========================
+   RODAPÉ
+========================= */
 
 .sidebar-help {
   margin-top: auto;
-  background: rgba(255,255,255,0.12);
+  background: rgba(0,0,0,0.15);
   border-radius: 18px;
   padding: 16px;
   font-size: 15px;
-  line-height: 1.4;
-  color: rgba(255,255,255,0.94);
+  color: #fff;
 }
 
-.hidden {
-  display: none !important;
-}
+/* =========================
+   RESPONSIVO
+========================= */
 
+@media (max-width: 1180px) {
+  .brand-mark {
+    width: 130px;
+    height: 130px;
+  }
+}
 /* =========================
    MOBILE OVERLAY
 ========================= */
