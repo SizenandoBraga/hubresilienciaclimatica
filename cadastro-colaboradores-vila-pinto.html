@@ -1,0 +1,43 @@
+<div class="page-shell">
+
+  <div class="glass-card">
+    <h2>Cadastro de usuários</h2>
+
+    <div class="grid grid-2">
+      <div class="field">
+        <label>Nome</label>
+        <input type="text" id="userName">
+      </div>
+
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="userEmail">
+      </div>
+
+      <div class="field">
+        <label>Senha</label>
+        <input type="password" id="userPassword">
+      </div>
+
+      <div class="field">
+        <label>Permissão</label>
+        <select id="userRole">
+          <option value="cooperativa">Cooperativa</option>
+          <option value="admin">Administrador</option>
+          <option value="gestor">Gestor</option>
+        </select>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btnCreateUser">
+      Criar usuário
+    </button>
+  </div>
+
+  <div class="glass-card">
+    <h2>Usuários cadastrados</h2>
+
+    <div id="usersList"></div>
+  </div>
+
+</div>
