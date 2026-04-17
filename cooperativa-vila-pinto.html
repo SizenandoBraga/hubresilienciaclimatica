@@ -56,7 +56,7 @@
 
         <a class="nav-link admin-only" href="usuarios.html">
           <span class="nav-ico">👥</span>
-          <span>Usuários cadastrados</span>
+          <span>Gestão de Usuários</span>
         </a>
 
         <a class="nav-link" href="cadastro-coletas-vila-pinto.html">
@@ -74,15 +74,19 @@
           <span>Conteúdos</span>
         </a>
 
-        <a class="nav-link" href="trilhas.html">
-          <span class="nav-ico">🎓</span>
-          <span>Trilhas formativas</span>
-        </a>
-
         <a class="nav-link" href="documentos.html">
           <span class="nav-ico">📄</span>
           <span>Documentos</span>
         </a>
+
+        <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
+          Atualizar indicadores da cooperativa
+        </button>
+
+        <div class="coop-sync-box">
+          <span class="coop-sync-label">Indicadores públicos da cooperativa</span>
+          <small id="syncCoopDashboardStatus">Aguardando verificação...</small>
+        </div>
 
         <div class="nav-label nav-label-space">Sessão</div>
 
@@ -90,14 +94,6 @@
           <span class="nav-ico">↩</span>
           <span>Sair</span>
         </a>
-        <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
-  Atualizar indicadores da cooperativa
-</button>
-
-<div class="coop-sync-box">
-  <span class="coop-sync-label">Indicadores públicos da cooperativa</span>
-  <small id="syncCoopDashboardStatus">Aguardando verificação...</small>
-</div>
       </nav>
 
       <div class="sidebar-help">
@@ -162,14 +158,14 @@
           <div class="section-head">
             <div>
               <span class="section-tag">Painel da cooperativa</span>
-              <h2>Acessos, materiais e trilhas</h2>
+              <h2>Acessos e materiais da cooperativa</h2>
             </div>
             <p>
-              Espaço para conteúdos, trilhas, documentos, avisos importantes e acesso rápido ao registro de coletas.
+              Espaço para conteúdos, documentos, avisos importantes e acesso rápido ao registro de coletas.
             </p>
           </div>
 
-          <div class="quick-grid">
+          <div class="quick-grid quick-grid-three">
             <article class="quick-card">
               <div class="quick-card-top">
                 <span class="mini-badge">Acesso rápido</span>
@@ -178,16 +174,6 @@
               <h3>Conteúdos</h3>
               <p>Cartilhas, vídeos, materiais operacionais e referências por tema.</p>
               <a href="conteudos.html">Acessar conteúdos →</a>
-            </article>
-
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">🎓</span>
-              </div>
-              <h3>Trilhas formativas</h3>
-              <p>Aprendizagem em etapas com acompanhamento e evolução.</p>
-              <a href="trilhas.html">Acessar trilhas →</a>
             </article>
 
             <article class="quick-card">
@@ -211,20 +197,12 @@
             </article>
           </div>
 
-          <div class="panel-grid two-cols">
+          <div class="panel-grid">
             <article class="panel-card">
               <div class="panel-card-head">
                 <h3>📢 Avisos importantes</h3>
               </div>
               <div class="info-list" id="noticesList"></div>
-            </article>
-
-            <article class="panel-card">
-              <div class="panel-card-head">
-                <h3>🧭 Trilhas em destaque</h3>
-              </div>
-              <div class="trail-list" id="featuredTrails"></div>
-              <a class="panel-link" href="trilhas.html">Ver todas as trilhas →</a>
             </article>
           </div>
         </section>
@@ -283,7 +261,7 @@
               <button class="territory-tab" data-tab="servicos">🛠 Serviços</button>
               <button class="territory-tab" data-tab="mapa">🗺 Mapa</button>
               <button class="territory-tab" data-tab="calendario">🗓 Calendário</button>
-              <button class="territory-tab" data-tab="treinamentos">🎓 Treinamentos</button>
+              <button class="territory-tab" data-tab="treinamentos">🎓 Capacitações</button>
               <button class="territory-tab territory-tab-special" data-tab="coleta">🚚 Coleta especial</button>
               <button class="territory-tab" data-tab="ouvidoria">🗣 Ouvidoria</button>
             </div>
@@ -439,7 +417,6 @@
               <div class="side-card small-grid">
                 <a href="calendario.html" class="summary-btn">Calendário</a>
                 <a href="ouvidoria.html" class="summary-btn">Ouvidoria</a>
-                <a href="trilhas.html" class="summary-btn full">Treinamentos</a>
               </div>
 
               <div class="side-card indicators-card">

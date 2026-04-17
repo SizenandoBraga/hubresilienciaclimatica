@@ -475,6 +475,10 @@ textarea {
   gap: 16px;
 }
 
+.quick-grid.quick-grid-three {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 .quick-card {
   background: #fff;
   border: 1px solid var(--line);
@@ -575,14 +579,12 @@ textarea {
 }
 
 .info-list,
-.trail-list,
 .territory-list {
   display: grid;
   gap: 12px;
 }
 
-.info-item,
-.trail-item {
+.info-item {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -593,27 +595,23 @@ textarea {
   padding: 14px;
 }
 
-.info-copy,
-.trail-copy {
+.info-copy {
   display: flex;
   flex-direction: column;
   gap: 4px;
 }
 
-.info-copy strong,
-.trail-copy strong {
+.info-copy strong {
   font-size: 18px;
 }
 
-.info-copy span,
-.trail-copy span {
+.info-copy span {
   font-size: 15px;
   line-height: 1.35;
   color: var(--text-soft);
 }
 
-.info-meta,
-.trail-level {
+.info-meta {
   flex-shrink: 0;
   font-size: 13px;
   font-weight: 700;
@@ -1180,10 +1178,6 @@ textarea {
   gap: 10px;
 }
 
-.small-grid .full {
-  grid-column: 1 / -1;
-}
-
 .quick-shortcuts .special-cta {
   width: 100%;
 }
@@ -1226,12 +1220,53 @@ textarea {
   line-height: 1;
 }
 
+.coop-nav-btn-update {
+  background: #62B32F;
+  color: #fff;
+  border: 0;
+}
+
+.coop-nav-btn-update:hover {
+  filter: brightness(0.96);
+}
+
+.coop-nav-btn-update.is-loading {
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+.coop-sync-box {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(119, 179, 58, 0.08);
+  border: 1px solid rgba(119, 179, 58, 0.2);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.coop-sync-label {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #4d7e1f;
+  letter-spacing: 0.04em;
+}
+
+#syncCoopDashboardStatus {
+  font-size: 12px;
+  line-height: 1.4;
+  color: #5f5b56;
+}
+
 /* =========================
    RESPONSIVO
 ========================= */
 
 @media (max-width: 1280px) {
-  .quick-grid {
+  .quick-grid,
+  .quick-grid.quick-grid-three {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
@@ -1306,7 +1341,8 @@ textarea {
     padding: 18px;
   }
 
-  .quick-grid {
+  .quick-grid,
+  .quick-grid.quick-grid-three {
     grid-template-columns: 1fr;
   }
 

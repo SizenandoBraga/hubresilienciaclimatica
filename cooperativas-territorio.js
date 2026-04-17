@@ -18,7 +18,7 @@ import {
 const bodyConfig = document.body.dataset || {};
 
 const PAGE_TERRITORY = {
-  territoryId: bodyConfig.territoryId || "vila-pinto",
+  territoryId: bodyConfig.territoryId || "crgr_vila_pinto",
   territoryLabel: bodyConfig.territoryLabel || "Território",
   cooperativeName: bodyConfig.cooperativeName || "Cooperativa",
   participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
@@ -185,12 +185,14 @@ function isAdminUser(role) {
 
 function participantIcon(type) {
   const key = normalizeText(type);
+
   if (key === "condominio") return "🏢";
   if (key === "comercio") return "🏪";
   if (key === "familia") return "👨‍👩‍👧";
   if (key === "morador") return "👤";
   if (key === "lideranca") return "📣";
   if (key === "participante") return "🧩";
+
   return "👤";
 }
 
@@ -244,6 +246,45 @@ function hasValidLatLng(item) {
   const lat = Number(item?.lat ?? item?.address?.lat);
   const lng = Number(item?.lng ?? item?.address?.lng);
   return Number.isFinite(lat) && Number.isFinite(lng);
+}
+
+function sumNumericFromItem(item) {
+  if (typeof item === "number") return item;
+  if (!item || typeof item !== "object") return 0;
+  if (typeof item.peso === "number") return item.peso;
+  if (typeof item.kg === "number") return item.kg;
+  if (typeof item.quantidade === "number") return item.quantidade;
+  if (typeof item.total === "number") return item.total;
+  return 0;
+}
+
+function sumObjectNumericValues(obj) {
+  if (!obj || typeof obj !== "object") return 0;
+  let total = 0;
+  for (const key of Object.keys(obj)) {
+    total += sumNumericFromItem(obj[key]);
+  }
+  return total;
+}
+
+function getResiduosTotalFromColeta(coleta = {}) {
+  let total = 0;
+
+  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
+
+  if (coleta.recebimento && typeof coleta.recebimento === "object") {
+    total += sumObjectNumericValues(coleta.recebimento);
+  }
+
+  if (coleta.residuos && typeof coleta.residuos === "object") {
+    total += sumObjectNumericValues(coleta.residuos);
+  }
+
+  if (coleta.materiais && typeof coleta.materiais === "object") {
+    total += sumObjectNumericValues(coleta.materiais);
+  }
+
+  return Math.round(total);
 }
 
 function setCoopSyncStatus(text) {
@@ -317,12 +358,10 @@ function fillHeader(profile) {
   const territory =
     profile.territoryLabel ||
     (isAdmin ? "Todos os territórios" : PAGE_TERRITORY.territoryLabel);
-
   const coop =
     profile.cooperativeName ||
     profile.cooperativeLabel ||
     (isAdmin ? "Todas as cooperativas" : PAGE_TERRITORY.cooperativeName);
-
   const name = profile.displayName || profile.name || "Usuário";
 
   if (els.territoryNameTop) els.territoryNameTop.textContent = territory;
@@ -357,16 +396,21 @@ function fillHeader(profile) {
     if (isAdmin) {
       els.participantsSectionText.textContent =
         "Visualização geral de participantes cadastrados no sistema.";
-    } else {
+    } else if (isCommonUser) {
       els.participantsSectionText.textContent =
         "Participantes vinculados à cooperativa.";
+    } else {
+      els.participantsSectionText.textContent =
+        "Participantes vinculados à sua cooperativa e ao seu território.";
     }
   }
 }
 
 function renderInfoList(container, items) {
   if (!container) return;
-  container.innerHTML = items.map((item) => `
+  container.innerHTML = items
+    .map(
+      (item) => `
     <article class="info-item">
       <div class="info-copy">
         <strong>${escapeHtml(item.title)}</strong>
@@ -374,12 +418,16 @@ function renderInfoList(container, items) {
       </div>
       ${item.meta ? `<span class="info-meta">${escapeHtml(item.meta)}</span>` : ""}
     </article>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
 function renderTrailList(container, items) {
   if (!container) return;
-  container.innerHTML = items.map((item) => `
+  container.innerHTML = items
+    .map(
+      (item) => `
     <article class="trail-item">
       <div class="trail-copy">
         <strong>${escapeHtml(item.title)}</strong>
@@ -387,7 +435,9 @@ function renderTrailList(container, items) {
       </div>
       ${item.level ? `<span class="trail-level">${escapeHtml(item.level)}</span>` : ""}
     </article>
-  `).join("");
+  `
+    )
+    .join("");
 }
 
 function fillStaticPanels() {
@@ -472,8 +522,6 @@ function fillStaticPanels() {
 
   if (els.summaryAccepted) els.summaryAccepted.textContent = "4";
   if (els.summaryRejected) els.summaryRejected.textContent = "4";
-  if (els.indicatorDocs) els.indicatorDocs.textContent = "0";
-  if (els.indicatorActions) els.indicatorActions.textContent = "0";
 }
 
 function setupTerritoryTabs() {
@@ -515,7 +563,8 @@ function computeParticipantsKpis(items) {
   ).length;
 
   const condoCount = items.filter(
-    (item) => normalizeText(item.participantType || item.tipoParticipante || item.tipo) === "condominio"
+    (item) =>
+      normalizeText(item.participantType || item.tipoParticipante || item.tipo) === "condominio"
   ).length;
 
   if (els.participantsTotalCount) els.participantsTotalCount.textContent = String(total);
@@ -536,11 +585,11 @@ function renderParticipants(items) {
     return;
   }
 
-  els.participantsList.innerHTML = items.map((item) => {
-    const participantType = item.participantType || item.tipoParticipante || item.tipo;
-    const address = buildFullAddress(item) || "Endereço não informado";
-
-    return `
+  els.participantsList.innerHTML = items
+    .map((item) => {
+      const participantType = item.participantType || item.tipoParticipante || item.tipo;
+      const address = buildFullAddress(item) || "Endereço não informado";
+      return `
       <article class="participant-row">
         <div class="participant-main">
           <div class="participant-avatar">${participantIcon(participantType)}</div>
@@ -555,15 +604,16 @@ function renderParticipants(items) {
           <span class="participant-tag">${escapeHtml(formatParticipantType(participantType))}</span>
           <span class="participant-subtag">${escapeHtml(
             item.localType ||
-            item.address?.neighborhood ||
-            item.bairro ||
-            item.territoryLabel ||
-            "Território"
+              item.address?.neighborhood ||
+              item.bairro ||
+              item.territoryLabel ||
+              "Território"
           )}</span>
         </div>
       </article>
     `;
-  }).join("");
+    })
+    .join("");
 }
 
 function filterParticipants() {
@@ -592,7 +642,9 @@ function filterParticipants() {
       item.bairro,
       item.cidade,
       item.enderecoCompleto
-    ].map(normalizeText).join(" ");
+    ]
+      .map(normalizeText)
+      .join(" ");
 
     return haystack.includes(term);
   });
@@ -623,7 +675,10 @@ function buildParticipantsQuery(profile, useOrdered = true) {
 
 function applyParticipantsSnapshot(snapshot) {
   STATE.allParticipants = snapshot.docs
-    .map((docItem) => ({ id: docItem.id, ...docItem.data() }))
+    .map((docItem) => ({
+      id: docItem.id,
+      ...docItem.data()
+    }))
     .filter((item) => item.approvalStatus !== "rejected");
 
   computeParticipantsKpis(STATE.allParticipants);
@@ -638,7 +693,9 @@ function applyParticipantsSnapshot(snapshot) {
 
 function loadParticipants(profile) {
   if (typeof STATE.participantsUnsubscribe === "function") {
-    try { STATE.participantsUnsubscribe(); } catch (_) {}
+    try {
+      STATE.participantsUnsubscribe();
+    } catch (_) {}
     STATE.participantsUnsubscribe = null;
   }
 
@@ -650,7 +707,10 @@ function loadParticipants(profile) {
       applyParticipantsSnapshot(snapshot);
     },
     (error) => {
-      console.warn("Falha na consulta ordenada de participantes. Tentando fallback sem orderBy...", error);
+      console.warn(
+        "Falha na consulta ordenada de participantes. Tentando fallback sem orderBy...",
+        error
+      );
 
       const fallbackQuery = buildParticipantsQuery(profile, false);
 
@@ -727,43 +787,48 @@ function renderApprovalRequests(items) {
     return;
   }
 
-  els.approvalRequestsList.innerHTML = items.map((item) => {
-    const snapshot = item.applicantSnapshot || {};
-    const address = snapshot.address?.addressLine || [
-      snapshot.address?.street,
-      snapshot.address?.number,
-      snapshot.address?.neighborhood,
-      snapshot.address?.city,
-      snapshot.address?.state
-    ].filter(Boolean).join(", ");
+  els.approvalRequestsList.innerHTML = items
+    .map((item) => {
+      const snapshot = item.applicantSnapshot || {};
+      const address = snapshot.address?.addressLine
+        || [
+          snapshot.address?.street,
+          snapshot.address?.number,
+          snapshot.address?.neighborhood,
+          snapshot.address?.city,
+          snapshot.address?.state
+        ]
+          .filter(Boolean)
+          .join(", ");
 
-    return `
-      <article class="participant-row">
-        <div class="participant-main">
-          <div class="participant-avatar">${participantIcon(item.participantType)}</div>
-          <div class="participant-copy">
-            <strong>${escapeHtml(item.participantName || "Sem nome")}</strong>
-            <span>${escapeHtml(item.participantCode || "-")}</span>
-            <span>${escapeHtml(address || "Endereço não informado")}</span>
-            <span>${escapeHtml(snapshot.phone || "Telefone não informado")}</span>
+      return `
+        <article class="participant-row">
+          <div class="participant-main">
+            <div class="participant-avatar">${participantIcon(item.participantType)}</div>
+            <div class="participant-copy">
+              <strong>${escapeHtml(item.participantName || "Sem nome")}</strong>
+              <span>${escapeHtml(item.participantCode || "-")}</span>
+              <span>${escapeHtml(address || "Endereço não informado")}</span>
+              <span>${escapeHtml(snapshot.phone || "Telefone não informado")}</span>
+            </div>
           </div>
-        </div>
 
-        <div class="participant-meta">
-          <span class="participant-tag">${escapeHtml(formatParticipantType(item.participantType))}</span>
-          <span class="participant-subtag">${escapeHtml(item.territoryLabel || "Território")}</span>
-          <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-            <button type="button" class="map-mini-btn green" data-approve-request="${escapeHtml(item.id)}">
-              Aprovar
-            </button>
-            <button type="button" class="map-mini-btn orange" data-reject-request="${escapeHtml(item.id)}">
-              Rejeitar
-            </button>
+          <div class="participant-meta">
+            <span class="participant-tag">${escapeHtml(formatParticipantType(item.participantType))}</span>
+            <span class="participant-subtag">${escapeHtml(item.territoryLabel || "Território")}</span>
+            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+              <button type="button" class="map-mini-btn green" data-approve-request="${escapeHtml(item.id)}">
+                Aprovar
+              </button>
+              <button type="button" class="map-mini-btn orange" data-reject-request="${escapeHtml(item.id)}">
+                Rejeitar
+              </button>
+            </div>
           </div>
-        </div>
-      </article>
-    `;
-  }).join("");
+        </article>
+      `;
+    })
+    .join("");
 
   els.approvalRequestsList.querySelectorAll("[data-approve-request]").forEach((btn) => {
     btn.addEventListener("click", () => approveParticipantRequest(btn.dataset.approveRequest));
@@ -778,7 +843,9 @@ function loadApprovalRequests(profile) {
   if (!els.approvalRequestsList) return;
 
   if (typeof STATE.approvalRequestsUnsubscribe === "function") {
-    try { STATE.approvalRequestsUnsubscribe(); } catch (_) {}
+    try {
+      STATE.approvalRequestsUnsubscribe();
+    } catch (_) {}
     STATE.approvalRequestsUnsubscribe = null;
   }
 
@@ -834,10 +901,14 @@ async function approveParticipantRequest(requestId) {
     const requestRef = doc(db, "approvalRequests", requestId);
     const requestSnap = await getDoc(requestRef);
 
-    if (!requestSnap.exists()) throw new Error("Solicitação não encontrada.");
+    if (!requestSnap.exists()) {
+      throw new Error("Solicitação não encontrada.");
+    }
 
     const requestData = requestSnap.data();
-    if (!requestData.participantId) throw new Error("Solicitação sem participantId.");
+    if (!requestData.participantId) {
+      throw new Error("Solicitação sem participantId.");
+    }
 
     const participantRef = doc(db, "participants", requestData.participantId);
     const now = serverTimestamp();
@@ -870,13 +941,11 @@ async function approveParticipantRequest(requestId) {
       "review.rejectedByName": null
     });
 
-    if (STATE.profile) {
-      await runCooperativaDashboardSync({
-        territoryId: STATE.profile.territoryId || PAGE_TERRITORY.territoryId,
-        territoryLabel: STATE.profile.territoryLabel || PAGE_TERRITORY.territoryLabel,
-        silent: true
-      });
-    }
+    await runCooperativaDashboardSync({
+      territoryId: STATE.profile?.territoryId || PAGE_TERRITORY.territoryId,
+      territoryLabel: STATE.profile?.territoryLabel || PAGE_TERRITORY.territoryLabel,
+      silent: true
+    });
 
     alert("Solicitação aprovada com sucesso.");
   } catch (error) {
@@ -890,10 +959,14 @@ async function rejectParticipantRequest(requestId) {
     const requestRef = doc(db, "approvalRequests", requestId);
     const requestSnap = await getDoc(requestRef);
 
-    if (!requestSnap.exists()) throw new Error("Solicitação não encontrada.");
+    if (!requestSnap.exists()) {
+      throw new Error("Solicitação não encontrada.");
+    }
 
     const requestData = requestSnap.data();
-    if (!requestData.participantId) throw new Error("Solicitação sem participantId.");
+    if (!requestData.participantId) {
+      throw new Error("Solicitação sem participantId.");
+    }
 
     const participantRef = doc(db, "participants", requestData.participantId);
     const now = serverTimestamp();
@@ -919,13 +992,11 @@ async function rejectParticipantRequest(requestId) {
       "review.rejectedByName": STATE.profile?.name || STATE.profile?.displayName || "Administrador"
     });
 
-    if (STATE.profile) {
-      await runCooperativaDashboardSync({
-        territoryId: STATE.profile.territoryId || PAGE_TERRITORY.territoryId,
-        territoryLabel: STATE.profile.territoryLabel || PAGE_TERRITORY.territoryLabel,
-        silent: true
-      });
-    }
+    await runCooperativaDashboardSync({
+      territoryId: STATE.profile?.territoryId || PAGE_TERRITORY.territoryId,
+      territoryLabel: STATE.profile?.territoryLabel || PAGE_TERRITORY.territoryLabel,
+      silent: true
+    });
 
     alert("Solicitação rejeitada com sucesso.");
   } catch (error) {
@@ -937,7 +1008,7 @@ async function rejectParticipantRequest(requestId) {
 function getDefaultTerritoryPoints(profile) {
   const territoryId = profile?.territoryId || PAGE_TERRITORY.territoryId;
 
-  if (territoryId === "vila-pinto") {
+  if (territoryId === "crgr_vila_pinto") {
     return [
       {
         id: "vp-main",
@@ -970,15 +1041,15 @@ function getDefaultTerritoryPoints(profile) {
     return [
       {
         id: "coa-1",
-        name: "COOADESC",
+        name: "COADESC",
         type: "seletiva",
         lat: -30.003,
         lng: -51.206,
-        address: "Base da COOADESC"
+        address: "Base da COADESC"
       },
       {
         id: "coa-2",
-        name: "Ponto comunitário COOADESC",
+        name: "Ponto comunitário COADESC",
         type: "plastico",
         lat: -30.006,
         lng: -51.203,
@@ -1112,7 +1183,9 @@ function renderMapPointsList(points) {
     return;
   }
 
-  els.mapPointsList.innerHTML = points.map((point) => `
+  els.mapPointsList.innerHTML = points
+    .map(
+      (point) => `
     <article class="map-point-card">
       <strong>${escapeHtml(point.name)}</strong>
       <span>${escapeHtml(point.address || "Endereço não informado")}</span>
@@ -1123,7 +1196,9 @@ function renderMapPointsList(points) {
         <button class="map-mini-btn orange" type="button" data-focus-point="${escapeHtml(point.id)}">Ver no mapa</button>
       </div>
     </article>
-  `).join("");
+  `
+    )
+    .join("");
 
   els.mapPointsList.querySelectorAll("[data-edit-point]").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -1200,15 +1275,22 @@ function renderTerritoryMap(points) {
     STATE.territoryMap.fitBounds(bounds, { padding: [30, 30] });
   }
 
-  if (els.mapPointsCount) els.mapPointsCount.textContent = String(points.length);
-  if (els.summaryPoints) els.summaryPoints.textContent = String(points.length);
+  if (els.mapPointsCount) {
+    els.mapPointsCount.textContent = String(points.length);
+  }
+
+  if (els.summaryPoints) {
+    els.summaryPoints.textContent = String(points.length);
+  }
 
   renderMapPointsList(points);
 }
 
 function getCurrentMapFilteredPoints() {
   const filter = els.mapTypeFilter?.value || "all";
+
   if (filter === "all") return STATE.allMapPoints;
+
   return STATE.allMapPoints.filter((point) => normalizeText(point.type) === normalizeText(filter));
 }
 
@@ -1277,7 +1359,9 @@ function setupMapActions() {
         userMarker.bindPopup("Sua localização atual").openPopup();
 
         setTimeout(() => {
-          try { STATE.territoryMap.removeLayer(userMarker); } catch (_) {}
+          try {
+            STATE.territoryMap.removeLayer(userMarker);
+          } catch (_) {}
         }, 12000);
       },
       () => {
@@ -1362,7 +1446,9 @@ async function loadParticipantAddressPoints() {
   const points = [];
 
   for (const participant of STATE.allParticipants) {
-    if (participant.approvalStatus && participant.approvalStatus !== "approved") continue;
+    if (participant.approvalStatus && participant.approvalStatus !== "approved") {
+      continue;
+    }
 
     if (hasValidLatLng(participant)) {
       const pointCoords = {
@@ -1378,7 +1464,9 @@ async function loadParticipantAddressPoints() {
 
     try {
       const coords = await geocodeAddress(address);
-      if (coords) points.push(buildParticipantPoint(participant, coords));
+      if (coords) {
+        points.push(buildParticipantPoint(participant, coords));
+      }
     } catch (error) {
       console.warn("Endereço não geocodificado:", address, error);
     }
@@ -1415,38 +1503,39 @@ async function loadCollectionCount(collectionName, profile, whereField = "territ
   }
 }
 
-function getResiduosTotalFromColeta(coleta = {}) {
-  let total = 0;
+function updateParticipantIndicator() {
+  if (els.indicatorParticipants) {
+    const approvedCount = STATE.allParticipants.filter(
+      (item) => item.approvalStatus === "approved" || item.status === "active"
+    ).length;
+    els.indicatorParticipants.textContent = String(approvedCount);
+  }
+}
 
-  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
-  if (typeof coleta.pesoKg === "number") total += coleta.pesoKg;
-  if (typeof coleta.kg === "number") total += coleta.kg;
+async function loadIndicators(profile) {
+  const isAdmin = isAdminUser(profile.role);
 
-  if (coleta.recebimento && typeof coleta.recebimento === "object") {
-    Object.values(coleta.recebimento).forEach((value) => {
-      if (typeof value === "number") total += value;
-      if (value && typeof value === "object") {
-        Object.values(value).forEach((sub) => {
-          if (typeof sub === "number") total += sub;
-        });
-      }
-    });
+  const coletas = await loadCollectionCount("coletas", profile, "territoryId");
+  const usersCount = isAdmin ? await loadCollectionCount("users", profile, "territoryId") : null;
+  const participantsCount = STATE.allParticipants.filter(
+    (item) => item.approvalStatus === "approved" || item.status === "active"
+  ).length;
+
+  if (els.indicatorColetas) {
+    els.indicatorColetas.textContent = String(coletas);
   }
 
-  if (coleta.finalTurno && typeof coleta.finalTurno === "object") {
-    Object.values(coleta.finalTurno).forEach((value) => {
-      if (typeof value === "number") total += value;
-      if (Array.isArray(value)) {
-        value.forEach((item) => {
-          if (item && typeof item.pesoKg === "number") total += item.pesoKg;
-          if (item && typeof item.kg === "number") total += item.kg;
-          if (item && typeof item.quantidade === "number") total += item.quantidade;
-        });
-      }
-    });
+  if (els.indicatorParticipants) {
+    els.indicatorParticipants.textContent = String(participantsCount);
   }
 
-  return Number(total.toFixed(1));
+  if (els.indicatorDocs) {
+    els.indicatorDocs.textContent = isAdmin ? String(usersCount) : "—";
+  }
+
+  if (els.indicatorActions) {
+    els.indicatorActions.textContent = isAdmin ? String(STATE.approvalRequests.length) : "—";
+  }
 }
 
 async function loadCollectionSafe(name) {
@@ -1471,7 +1560,7 @@ function buildCooperativaPublicSummary({ users, participants, coletas, approvalR
   const approvalFiltered = approvalRequests.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
 
   const cooperativaMembersCount = usersFiltered.filter((item) =>
-    ["cooperativa", "operador", "usuario", "user", "integrante", "catador"].includes(normalizeText(item.role))
+    ["cooperativa", "integrante", "catador", "user", "usuario"].includes(normalizeText(item.role))
   ).length;
 
   const residuosCount = coletasFiltered.reduce((acc, item) => acc + getResiduosTotalFromColeta(item), 0);
@@ -1479,23 +1568,24 @@ function buildCooperativaPublicSummary({ users, participants, coletas, approvalR
   return {
     territoryId,
     territoryLabel,
-    usersCount: usersFiltered.length,
+    usersCount: usersFiltered.length + participantsFiltered.length,
     participantsCount: participantsFiltered.length,
     cooperativaMembersCount,
     coletasCount: coletasFiltered.length,
-    residuosCount: Number(residuosCount.toFixed(1)),
+    residuosCount,
     approvalsCount: approvalFiltered.length,
     crgrsCount: 1,
-    pontosCount: STATE.allMapPoints?.length || 1,
-    alertsCount: 0,
-    updatedAt: serverTimestamp()
+    alertsCount: 0
   };
 }
 
 async function saveCooperativaPublicDashboard(payload) {
   await setDoc(
     doc(db, "dashboard_public_by_cooperativa", payload.territoryId),
-    payload,
+    {
+      ...payload,
+      updatedAt: serverTimestamp()
+    },
     { merge: true }
   );
 }
@@ -1503,11 +1593,7 @@ async function saveCooperativaPublicDashboard(payload) {
 async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent = false }) {
   try {
     setCoopSyncButtonLoading(true);
-    setCoopSyncStatus(
-      silent
-        ? "Verificando atualização automática..."
-        : "Atualizando indicadores da cooperativa..."
-    );
+    setCoopSyncStatus(silent ? "Verificando atualização automática..." : "Atualizando indicadores da cooperativa...");
 
     const [users, participants, coletas, approvalRequests] = await Promise.all([
       loadCollectionSafe("users"),
@@ -1527,11 +1613,12 @@ async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent
 
     await saveCooperativaPublicDashboard(summary);
 
-    console.log("[SYNC COOP] Documento salvo:", summary);
-    setCoopSyncStatus(`Atualizado em ${new Date().toLocaleString("pt-BR")}`);
+    const nowLabel = new Date().toLocaleString("pt-BR");
+    setCoopSyncStatus(`Atualizado em ${nowLabel}`);
+
     return true;
   } catch (error) {
-    console.error("[SYNC COOP] Erro:", error);
+    console.error("[Cooperativa] Erro ao sincronizar dashboard público:", error);
     setCoopSyncStatus("Erro ao atualizar indicadores da cooperativa.");
     return false;
   } finally {
@@ -1541,29 +1628,41 @@ async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent
 
 async function autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabel }) {
   try {
+    setCoopSyncStatus("Verificando última atualização...");
+
     const snap = await getDoc(doc(db, "dashboard_public_by_cooperativa", territoryId));
 
     if (!snap.exists()) {
-      await runCooperativaDashboardSync({ territoryId, territoryLabel, silent: true });
+      await runCooperativaDashboardSync({
+        territoryId,
+        territoryLabel,
+        silent: true
+      });
       return;
     }
 
     const data = snap.data();
-    const updatedAt =
-      data?.updatedAt && typeof data.updatedAt.toDate === "function"
-        ? data.updatedAt.toDate().getTime()
-        : 0;
+    const updatedAt = data?.updatedAt && typeof data.updatedAt.toDate === "function"
+      ? data.updatedAt.toDate().getTime()
+      : 0;
 
-    const diff = Date.now() - updatedAt;
+    const now = Date.now();
+    const diff = now - updatedAt;
 
     if (!updatedAt || diff >= AUTO_SYNC_INTERVAL_MS) {
-      await runCooperativaDashboardSync({ territoryId, territoryLabel, silent: true });
+      await runCooperativaDashboardSync({
+        territoryId,
+        territoryLabel: data?.territoryLabel || territoryLabel,
+        silent: true
+      });
       return;
     }
 
-    setCoopSyncStatus(`Última atualização em ${new Date(updatedAt).toLocaleString("pt-BR")}`);
+    setCoopSyncStatus(
+      `Última atualização em ${new Date(updatedAt).toLocaleString("pt-BR")}`
+    );
   } catch (error) {
-    console.error("[AUTO SYNC COOP] Erro:", error);
+    console.error("[Cooperativa] Falha na verificação automática:", error);
     setCoopSyncStatus("Não foi possível verificar a atualização automática.");
   }
 }
@@ -1580,30 +1679,6 @@ function bindCooperativaSyncButton({ territoryId, territoryLabel }) {
   });
 }
 
-async function loadIndicators(profile) {
-  const isAdmin = isAdminUser(profile.role);
-
-  const coletas = await loadCollectionCount("coletas", profile, "territoryId");
-  const usersCount = isAdmin ? await loadCollectionCount("users", profile, "territoryId") : null;
-  const participantsCount = STATE.allParticipants.filter(
-    (item) => item.approvalStatus === "approved" || item.status === "active"
-  ).length;
-
-  if (els.indicatorColetas) els.indicatorColetas.textContent = String(coletas);
-  if (els.indicatorParticipants) els.indicatorParticipants.textContent = String(participantsCount);
-  if (els.indicatorDocs) els.indicatorDocs.textContent = isAdmin ? String(usersCount) : "—";
-  if (els.indicatorActions) els.indicatorActions.textContent = isAdmin ? String(STATE.approvalRequests.length) : "—";
-}
-
-function updateParticipantIndicator() {
-  if (els.indicatorParticipants) {
-    const approvedCount = STATE.allParticipants.filter(
-      (item) => item.approvalStatus === "approved" || item.status === "active"
-    ).length;
-    els.indicatorParticipants.textContent = String(approvedCount);
-  }
-}
-
 function applyPermissionRules(profile) {
   STATE.isAdmin = profile.role === "admin";
   STATE.canEditAll = STATE.isAdmin || ["cooperativa", "user", "usuario"].includes(profile.role);
@@ -1613,23 +1688,40 @@ function applyRoleVisibility(profile) {
   const isAdmin = isAdminUser(profile.role);
   const isCommonUser = isCommonCoopUser(profile.role);
 
-  if (els.usersNavLink) els.usersNavLink.style.display = isAdmin ? "" : "none";
-  if (els.newParticipantBtn) els.newParticipantBtn.style.display = isAdmin ? "" : "none";
-  if (els.participantsSectionShell) els.participantsSectionShell.style.display = "";
+  if (els.usersNavLink) {
+    els.usersNavLink.style.display = isAdmin ? "" : "none";
+  }
+
+  if (els.newParticipantBtn) {
+    els.newParticipantBtn.style.display = isAdmin ? "" : "none";
+  }
+
+  if (els.participantsSectionShell) {
+    els.participantsSectionShell.style.display = "";
+  }
 
   if (els.indicatorDocs) {
     const labelEl = els.indicatorDocs.parentElement?.querySelector("span");
-    if (labelEl) labelEl.textContent = "Usuários";
+    if (labelEl) {
+      labelEl.textContent = "Usuários";
+    }
   }
 
   if (!isAdmin) {
-    if (els.indicatorDocs) els.indicatorDocs.textContent = "—";
+    if (els.indicatorDocs) {
+      els.indicatorDocs.textContent = "—";
+    }
+  }
+
+  if (!isAdmin) {
     document.querySelectorAll(".admin-only").forEach((el) => {
       el.style.display = "none";
     });
   }
 
-  if (isCommonUser) clearPointEditor();
+  if (isCommonUser) {
+    clearPointEditor();
+  }
 }
 
 function boot() {
