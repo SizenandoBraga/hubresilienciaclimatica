@@ -69,7 +69,7 @@ const PAGES = {
   login: "./login.html",
   cooperativas: {
     crgr_vila_pinto: "./cooperativa-vila-pinto.html",
-    crgr_coadesc: "./cooperativa-coadesc.html",
+    crgr_coadesc: "./cooperativa-cooadesc.html",
     crgr_padre_cacique: "./cooperativa-padre-cacique.html"
   }
 };
