@@ -14,62 +14,11 @@ import {
    CONFIG TERRITORIAL
 ========================= */
 
-function normalizeTerritoryId(rawValue = "") {
-  const value = String(rawValue || "").trim().toLowerCase();
-
-  const aliasMap = {
-    "vila-pinto": "crgr_vila_pinto",
-    "crgr_vila_pinto": "crgr_vila_pinto",
-
-    "coadesc": "crgr_coadesc",
-    "crgr_coadesc": "crgr_coadesc",
-
-    "padre-cacique": "crgr_padre_cacique",
-    "padre_cacique": "crgr_padre_cacique",
-    "crgr_padre_cacique": "crgr_padre_cacique"
-  };
-
-  return aliasMap[value] || value || null;
-}
-
-const TERRITORY_META = {
-  crgr_vila_pinto: {
-    label: "Centro de Triagem Vila Pinto",
-    backUrl: "./vila-pinto.html"
-  },
-  crgr_coadesc: {
-    label: "COADESC",
-    backUrl: "./coadesc.html"
-  },
-  crgr_padre_cacique: {
-    label: "Padre Cacique",
-    backUrl: "./padre-cacique.html"
-  }
-};
-
 const PAGE_TERRITORY = {
-  territoryId: normalizeTerritoryId(document.body.dataset.territoryId || ""),
-  territoryLabel: String(document.body.dataset.territoryLabel || "").trim(),
-  backUrl: String(document.body.dataset.backUrl || "").trim()
+  territoryId: document.body.dataset.territoryId || null,
+  territoryLabel: document.body.dataset.territoryLabel || "Território",
+  backUrl: document.body.dataset.backUrl || "cooperativa.html"
 };
-
-if (PAGE_TERRITORY.territoryId && TERRITORY_META[PAGE_TERRITORY.territoryId]) {
-  if (!PAGE_TERRITORY.territoryLabel) {
-    PAGE_TERRITORY.territoryLabel = TERRITORY_META[PAGE_TERRITORY.territoryId].label;
-  }
-
-  if (!PAGE_TERRITORY.backUrl) {
-    PAGE_TERRITORY.backUrl = TERRITORY_META[PAGE_TERRITORY.territoryId].backUrl;
-  }
-}
-
-if (!PAGE_TERRITORY.territoryLabel) {
-  PAGE_TERRITORY.territoryLabel = "Território";
-}
-
-if (!PAGE_TERRITORY.backUrl) {
-  PAGE_TERRITORY.backUrl = "./cooperativa.html";
-}
 
 /* =========================
    STATE GLOBAL
@@ -81,8 +30,7 @@ const STATE = {
   territoryId: PAGE_TERRITORY.territoryId || null,
   operacao: null,
   ultimaEtiqueta: null,
-  salvando: false,
-  authResolved: false
+  salvando: false
 };
 
 /* =========================
@@ -115,8 +63,7 @@ function parseNum(value) {
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "-";
-  const [year, month, day] = String(dateStr).split("-");
-  if (!year || !month || !day) return "-";
+  const [year, month, day] = dateStr.split("-");
   return `${day}/${month}/${year}`;
 }
 
@@ -151,106 +98,38 @@ function ensureTerritory() {
   }
 }
 
-function ensureAuthenticatedUser() {
-  if (!STATE.user?.uid) {
-    throw new Error("Usuário não autenticado.");
-  }
-
-  if (!STATE.userDoc) {
-    throw new Error("Documento do usuário não carregado.");
-  }
-}
-
-function setConnectionState(label) {
-  setText("dbStatus", label);
-}
-
-function setPageTerritoryState() {
-  setText("territoryStatus", PAGE_TERRITORY.territoryLabel);
-}
-
-function setBackLink() {
-  const backLink = document.querySelector(".topbar-actions a.btn.ghost");
-  if (backLink) {
-    backLink.href = PAGE_TERRITORY.backUrl;
-  }
-}
-
-function showFatalError(message) {
-  const target =
-    $("msgOperacao") ||
-    $("msgRecebimento") ||
-    $("msgFinalTurno");
-
-  if (target) {
-    setMsg(target, "bad", message);
-  }
-
-  console.error("[FATAL]", message);
-}
-
-function normalizeRole(data = {}) {
-  if (data.role) return String(data.role).toLowerCase();
-  if (data.roles?.governanca) return "governanca";
-  if (data.roles?.admin) return "admin";
-  if (data.roles?.gestor) return "gestor";
-  if (data.roles?.brigadista) return "brigadista";
-  return "usuario";
-}
-
-function isAdminOrGovernanca(userData = {}) {
-  const role = normalizeRole(userData);
-  return String(userData.status || "").toLowerCase() === "active" && (
-    role === "governanca" ||
-    role === "gestor" ||
-    role === "admin" ||
-    userData.roles?.governanca === true ||
-    userData.roles?.admin === true
-  );
-}
-
 /* =========================
    AUTH + USER
 ========================= */
 
 async function loadUserDoc(uid) {
   const snap = await getDoc(doc(db, "users", uid));
-  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+  return snap.exists() ? snap.data() : null;
 }
 
 async function bootstrap(user) {
-  setConnectionState("conectando");
-  setPageTerritoryState();
-  setBackLink();
+  setText("dbStatus", "conectado");
+  setText("territoryStatus", PAGE_TERRITORY.territoryLabel);
 
   const userDoc = await loadUserDoc(user.uid);
 
   if (!userDoc) {
-    throw new Error("Usuário autenticado sem documento na coleção users.");
+    alert("Usuário não encontrado.");
+    location.href = "index.html";
+    return;
   }
 
   STATE.user = user;
   STATE.userDoc = userDoc;
 
-  if (!STATE.territoryId) {
-    setConnectionState("território indefinido");
-    throw new Error("Esta página não possui territoryId definido no HTML.");
-  }
-
-  const userTerritoryId = normalizeTerritoryId(userDoc.territoryId || "");
-  const isGovOrAdmin = isAdminOrGovernanca(userDoc);
-
-  if (!isGovOrAdmin && userTerritoryId && userTerritoryId !== STATE.territoryId) {
-    throw new Error("Usuário sem permissão para registrar coleta neste território.");
-  }
-
   console.log("UID logado:", user.uid);
   console.log("UserDoc:", userDoc);
   console.log("territoryId da página:", STATE.territoryId);
-  console.log("hostname atual:", window.location.hostname);
-  console.log("origin atual:", window.location.origin);
 
-  setConnectionState("conectado");
+  if (!STATE.territoryId) {
+    setText("dbStatus", "território indefinido");
+    alert("Esta página não possui territoryId definido no HTML.");
+  }
 }
 
 /* =========================
@@ -297,7 +176,7 @@ function wireChoices() {
 
       btn.classList.add("active");
       btn.setAttribute("aria-pressed", "true");
-      if ($("qualidadeNota")) $("qualidadeNota").value = btn.dataset.quality;
+      $("qualidadeNota").value = btn.dataset.quality;
     };
   });
 
@@ -509,17 +388,8 @@ function wireLabelModal() {
    FIRESTORE
 ========================= */
 
-async function trySyncPublicDashboardSafe() {
-  try {
-    await syncPublicDashboard();
-  } catch (error) {
-    console.warn("Falha ao sincronizar dashboard público. A coleta foi salva mesmo assim.", error);
-  }
-}
-
 async function salvarRecebimento() {
   ensureTerritory();
-  ensureAuthenticatedUser();
 
   const familyCode = $("familyCode")?.value.trim() || null;
   const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
@@ -530,12 +400,13 @@ async function salvarRecebimento() {
 
   if (
     !STATE.operacao ||
+    !familyCode ||
     pesoResiduoSecoKg === null ||
     qualidadeNota === null ||
     pesoRejeitoKg === null ||
     pesoNaoComercializadoKg === null
   ) {
-    throw new Error("Preencha todos os campos obrigatórios do recebimento.");
+    throw new Error("Preencha o código da família e todos os campos obrigatórios do recebimento.");
   }
 
   const codigoEtiqueta = gerarCodigoEtiqueta();
@@ -547,8 +418,8 @@ async function salvarRecebimento() {
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
 
-    createdBy: STATE.user.uid,
-    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || STATE.user.email || null,
+    createdBy: STATE.user?.uid || null,
+    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
 
     opDate: STATE.operacao.opDate,
     deliveryType: STATE.operacao.deliveryType,
@@ -569,10 +440,8 @@ async function salvarRecebimento() {
     }
   };
 
-  console.log("Salvando recebimento:", payload);
-
   const docRef = await addDoc(collection(db, "coletas"), payload);
-  await trySyncPublicDashboardSafe();
+  await syncPublicDashboard();
 
   return {
     ...payload,
@@ -585,7 +454,6 @@ async function salvarRecebimento() {
 
 async function salvarFinalTurno() {
   ensureTerritory();
-  ensureAuthenticatedUser();
 
   const condCode = $("condCode")?.value.trim() || null;
   const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
@@ -604,8 +472,8 @@ async function salvarFinalTurno() {
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
 
-    createdBy: STATE.user.uid,
-    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || STATE.user.email || null,
+    createdBy: STATE.user?.uid || null,
+    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
 
     opDate: STATE.operacao.opDate,
     deliveryType: STATE.operacao.deliveryType,
@@ -630,10 +498,8 @@ async function salvarFinalTurno() {
     }
   };
 
-  console.log("Salvando final do turno:", payload);
-
   const docRef = await addDoc(collection(db, "coletas"), payload);
-  await trySyncPublicDashboardSafe();
+  await syncPublicDashboard();
 
   return {
     ...payload,
@@ -690,7 +556,6 @@ function wireForms() {
         submitBtn.textContent = "Salvando coleta...";
       }
 
-      setConnectionState("salvando");
       const registro = await salvarRecebimento();
       preencherEtiquetaSimples(registro);
       openLabelModal();
@@ -701,11 +566,9 @@ function wireForms() {
         `Coleta de recebimento salva com sucesso em ${PAGE_TERRITORY.territoryLabel}.`
       );
 
-      setConnectionState("conectado");
       resetRecebimentoForm();
     } catch (error) {
       console.error(error);
-      setConnectionState("erro");
       setMsg($("msgRecebimento"), "bad", error.message || "Erro ao salvar recebimento.");
     } finally {
       STATE.salvando = false;
@@ -730,7 +593,6 @@ function wireForms() {
         submitBtn.textContent = "Salvando fechamento...";
       }
 
-      setConnectionState("salvando");
       const registro = await salvarFinalTurno();
       preencherEtiquetaSimples(registro);
       openLabelModal();
@@ -741,11 +603,9 @@ function wireForms() {
         `Registro final do turno salvo com sucesso em ${PAGE_TERRITORY.territoryLabel}.`
       );
 
-      setConnectionState("conectado");
       resetFinalTurnoForm();
     } catch (error) {
       console.error(error);
-      setConnectionState("erro");
       setMsg($("msgFinalTurno"), "bad", error.message || "Erro ao salvar fechamento do turno.");
     } finally {
       STATE.salvando = false;
@@ -767,21 +627,6 @@ function wireForms() {
 }
 
 /* =========================
-   DIAGNOSTICO
-========================= */
-
-function startAuthTimeoutWatch() {
-  setTimeout(() => {
-    if (!STATE.authResolved) {
-      setConnectionState("aguardando login");
-      showFatalError(
-        "A autenticação não foi resolvida neste domínio. Verifique se o domínio da Vercel está autorizado no Firebase Authentication e se existe uma sessão ativa."
-      );
-    }
-  }, 5000);
-}
-
-/* =========================
    INIT
 ========================= */
 
@@ -795,28 +640,20 @@ function init() {
     $("opDate").value = toISODate(new Date());
   }
 
-  setPageTerritoryState();
-  setBackLink();
-  startAuthTimeoutWatch();
-
   onAuthStateChanged(auth, async (user) => {
-    STATE.authResolved = true;
-
     if (!user) {
-      setConnectionState("deslogado");
-      showFatalError(
-        "Sem sessão autenticada neste domínio. Faça login novamente e confira se o domínio publicado está autorizado no Firebase Authentication."
-      );
+      setText("dbStatus", "deslogado");
+      location.href = "index.html";
       return;
     }
 
     try {
       await bootstrap(user);
-      console.log("Firebase conectado");
+      console.log("🔥 Firebase conectado");
     } catch (error) {
       console.error("Erro no bootstrap:", error);
-      setConnectionState("erro");
-      showFatalError(error.message || "Não foi possível carregar os dados do usuário.");
+      setText("dbStatus", "erro");
+      alert("Não foi possível carregar os dados do usuário.");
     }
   });
 }
