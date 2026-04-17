@@ -28,8 +28,8 @@ document.addEventListener("DOMContentLoaded", () => {
       id: "vilapinto",
       code: "vilapinto",
       territoryId: "crgr_vila_pinto",
-      name: "Vila Pinto",
-      territoryLabel: "Vila Pinto",
+      name: "CRGR Vila Pinto",
+      territoryLabel: "CRGR Vila Pinto",
       lat: -30.048729170292532,
       lng: -51.15652604283108,
       address: "Avenida Joaquim Porto Vilanova, 143 • Bom Jesus • Porto Alegre/RS",
@@ -40,8 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
       id: "cooadesc",
       code: "cooadesc",
       territoryId: "crgr_cooadesc",
-      name: "COOADESC",
-      territoryLabel: "COOADESC",
+      name: "CRGR Cooadesc",
+      territoryLabel: "CRGR Cooadesc",
       lat: -30.003,
       lng: -51.206,
       address: "Rua Seis (Vila Esperança), 113 • Farrapos • Porto Alegre/RS",
@@ -52,8 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
       id: "padrecacique",
       code: "padrecacique",
       territoryId: "crgr_padre_cacique",
-      name: "Padre Cacique",
-      territoryLabel: "Padre Cacique",
+      name: "CRGR Padre Cacique",
+      territoryLabel: "CRGR Padre Cacique",
       lat: -30.140122365657504,
       lng: -51.1268772051727,
       address: "Estrada do Rincão, 6781 • Belém Velho • Porto Alegre/RS",
@@ -192,10 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
 
       dots.forEach((dot, index) => {
-        if (dot.dataset.slide !== undefined) {
-          dot.classList.toggle("is-active", index === currentIndex);
-          dot.setAttribute("aria-pressed", index === currentIndex ? "true" : "false");
-        }
+        dot.classList.toggle("is-active", index === currentIndex);
       });
     }
 
@@ -238,7 +235,6 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     dots.forEach((dot) => {
-      if (dot.dataset.slide === undefined) return;
       dot.addEventListener("click", () => {
         goTo(Number(dot.dataset.slide || 0));
         startAuto();
@@ -247,19 +243,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
     root.addEventListener("mouseenter", stopAuto);
     root.addEventListener("mouseleave", startAuto);
-    root.addEventListener("focusin", stopAuto);
-    root.addEventListener("focusout", startAuto);
 
     render();
     startAuto();
   }
 
-  function getCrgrPage(name = "", id = "") {
-    const base = `${name} ${id}`.toLowerCase();
+  function getCrgrPage(name = "", id = "", territoryId = "") {
+    const base = `${name} ${id} ${territoryId}`.toLowerCase();
 
-    if (base.includes("vila pinto") || base.includes("vilapinto")) return "vila-pinto.html";
-    if (base.includes("cooadesc") || base.includes("farrapos")) return "cooadesc.html";
-    if (base.includes("padre") || base.includes("cacique")) return "padre-cacique.html";
+    if (base.includes("vila pinto") || base.includes("vilapinto") || base.includes("crgr_vila_pinto")) {
+      return "vila-pinto.html";
+    }
+    if (base.includes("cooadesc") || base.includes("crgr_cooadesc")) {
+      return "cooadesc.html";
+    }
+    if (base.includes("padre") || base.includes("cacique") || base.includes("crgr_padre_cacique")) {
+      return "padre-cacique.html";
+    }
 
     return "#";
   }
@@ -286,18 +286,8 @@ document.addEventListener("DOMContentLoaded", () => {
           item.cooperativaNome ||
           item.code ||
           item.id,
-        lat: toNumberOrNull(
-          item.lat ??
-          item.latitude ??
-          item.coords?.lat ??
-          item.location?.lat
-        ),
-        lng: toNumberOrNull(
-          item.lng ??
-          item.longitude ??
-          item.coords?.lng ??
-          item.location?.lng
-        ),
+        lat: toNumberOrNull(item.lat ?? item.latitude ?? item.coords?.lat ?? item.location?.lat),
+        lng: toNumberOrNull(item.lng ?? item.longitude ?? item.coords?.lng ?? item.location?.lng),
         address:
           item.address ||
           item.enderecoCompleto ||
@@ -322,7 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const card = byId("selectedCrgrCard");
     if (!card || !item) return;
 
-    const page = item.page || getCrgrPage(item.name, item.id);
+    const page = item.page || getCrgrPage(item.name, item.id, item.territoryId);
     const hasCoords = Number.isFinite(item.lat) && Number.isFinite(item.lng);
 
     card.classList.toggle("is-active", activatedFromMap);
@@ -334,11 +324,7 @@ document.addEventListener("DOMContentLoaded", () => {
           ${item.address || "Território conectado à plataforma"}
         </div>
         <div class="panel-card-meta">
-          ${
-            hasCoords
-              ? `Lat/Lng: ${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}`
-              : "Sem coordenadas cadastradas"
-          }
+          ${hasCoords ? `Lat/Lng: ${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}` : "Sem coordenadas cadastradas"}
         </div>
       </div>
 
@@ -363,7 +349,6 @@ document.addEventListener("DOMContentLoaded", () => {
             Quando houver CRGRs com coordenadas, eles aparecerão no mapa.
           </div>
         </div>
-        <div class="panel-card-actions"></div>
       `;
       return;
     }
@@ -508,7 +493,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const snap = await getDoc(doc(db, "publicDashboard", "index"));
 
       if (!snap.exists()) {
-        console.warn("[INDEX] publicDashboard/index ainda não existe.");
         renderMetrics({
           users: 0,
           coletas: 0,
@@ -521,31 +505,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const data = snap.data();
 
-      const usersCount =
-        Number(data.usersCount ?? (Number(data.participantsCount || 0) + Number(data.cooperativaMembersCount || 0)));
-
-      const coletasCount =
-        Number(data.coletasCount ?? 0);
-
-      const approvalsCount =
-        Number(data.approvalsCount ?? 0);
-
-      const crgrsCount =
-        Number(data.crgrsCount ?? data.territoriesCount ?? STATE.crgrs.length ?? FALLBACK_CRGRS.length);
-
-      const alertsCount =
-        Number(data.alertsCount ?? 0);
-
       STATE.metrics = {
-        users: usersCount,
-        coletas: coletasCount,
-        approvals: approvalsCount,
-        crgrs: crgrsCount,
-        alerts: alertsCount
+        users: Number(data.usersCount ?? (Number(data.participantsCount || 0) + Number(data.cooperativaMembersCount || 0))),
+        coletas: Number(data.coletasCount ?? 0),
+        approvals: Number(data.approvalsCount ?? 0),
+        crgrs: Number(data.crgrsCount ?? data.territoriesCount ?? STATE.crgrs.length ?? FALLBACK_CRGRS.length),
+        alerts: Number(data.alertsCount ?? 0)
       };
 
       renderMetrics(STATE.metrics);
-      console.log("[INDEX] Indicadores públicos carregados:", data);
     } catch (error) {
       console.error("[INDEX] Erro ao carregar indicadores públicos:", error);
       renderMetrics({
