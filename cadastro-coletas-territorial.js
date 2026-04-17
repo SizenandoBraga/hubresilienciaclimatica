@@ -14,62 +14,11 @@ import {
    CONFIG TERRITORIAL
 ========================= */
 
-function normalizeTerritoryId(rawValue = "") {
-  const value = String(rawValue || "").trim().toLowerCase();
-
-  const aliasMap = {
-    "vila-pinto": "crgr_vila_pinto",
-    "crgr_vila_pinto": "crgr_vila_pinto",
-
-    "coadesc": "crgr_coadesc",
-    "crgr_coadesc": "crgr_coadesc",
-
-    "padre-cacique": "crgr_padre_cacique",
-    "padre_cacique": "crgr_padre_cacique",
-    "crgr_padre_cacique": "crgr_padre_cacique"
-  };
-
-  return aliasMap[value] || value || null;
-}
-
-const TERRITORY_META = {
-  crgr_vila_pinto: {
-    label: "Centro de Triagem Vila Pinto",
-    backUrl: "./vila-pinto.html"
-  },
-  crgr_coadesc: {
-    label: "COADESC",
-    backUrl: "./coadesc.html"
-  },
-  crgr_padre_cacique: {
-    label: "Padre Cacique",
-    backUrl: "./padre-cacique.html"
-  }
-};
-
 const PAGE_TERRITORY = {
-  territoryId: normalizeTerritoryId(document.body.dataset.territoryId || ""),
-  territoryLabel: String(document.body.dataset.territoryLabel || "").trim(),
-  backUrl: String(document.body.dataset.backUrl || "").trim()
+  territoryId: String(document.body.dataset.territoryId || "").trim() || null,
+  territoryLabel: String(document.body.dataset.territoryLabel || "").trim() || "Território",
+  backUrl: String(document.body.dataset.backUrl || "cooperativa.html").trim()
 };
-
-if (PAGE_TERRITORY.territoryId && TERRITORY_META[PAGE_TERRITORY.territoryId]) {
-  if (!PAGE_TERRITORY.territoryLabel) {
-    PAGE_TERRITORY.territoryLabel = TERRITORY_META[PAGE_TERRITORY.territoryId].label;
-  }
-
-  if (!PAGE_TERRITORY.backUrl) {
-    PAGE_TERRITORY.backUrl = TERRITORY_META[PAGE_TERRITORY.territoryId].backUrl;
-  }
-}
-
-if (!PAGE_TERRITORY.territoryLabel) {
-  PAGE_TERRITORY.territoryLabel = "Território";
-}
-
-if (!PAGE_TERRITORY.backUrl) {
-  PAGE_TERRITORY.backUrl = "./cooperativa.html";
-}
 
 /* =========================
    STATE GLOBAL
@@ -114,7 +63,7 @@ function parseNum(value) {
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "-";
-  const [year, month, day] = String(dateStr).split("-");
+  const [year, month, day] = dateStr.split("-");
   if (!year || !month || !day) return "-";
   return `${day}/${month}/${year}`;
 }
@@ -168,33 +117,6 @@ function setPageTerritoryState() {
   setText("territoryStatus", PAGE_TERRITORY.territoryLabel);
 }
 
-function setBackLink() {
-  const backLink = document.querySelector(".topbar-actions a.btn.ghost");
-  if (backLink) {
-    backLink.href = PAGE_TERRITORY.backUrl;
-  }
-}
-
-function normalizeRole(data = {}) {
-  if (data.role) return String(data.role).toLowerCase();
-  if (data.roles?.governanca) return "governanca";
-  if (data.roles?.admin) return "admin";
-  if (data.roles?.gestor) return "gestor";
-  if (data.roles?.brigadista) return "brigadista";
-  return "usuario";
-}
-
-function isAdminOrGovernanca(userData = {}) {
-  const role = normalizeRole(userData);
-  return String(userData.status || "").toLowerCase() === "active" && (
-    role === "governanca" ||
-    role === "gestor" ||
-    role === "admin" ||
-    userData.roles?.governanca === true ||
-    userData.roles?.admin === true
-  );
-}
-
 /* =========================
    AUTH + USER
 ========================= */
@@ -207,7 +129,6 @@ async function loadUserDoc(uid) {
 async function bootstrap(user) {
   setConnectionState("conectando");
   setPageTerritoryState();
-  setBackLink();
 
   const userDoc = await loadUserDoc(user.uid);
 
@@ -218,25 +139,14 @@ async function bootstrap(user) {
   STATE.user = user;
   STATE.userDoc = userDoc;
 
+  console.log("UID logado:", user.uid);
+  console.log("UserDoc:", userDoc);
+  console.log("territoryId da página:", STATE.territoryId);
+
   if (!STATE.territoryId) {
     setConnectionState("território indefinido");
     throw new Error("Esta página não possui territoryId definido no HTML.");
   }
-
-  const userTerritoryId = normalizeTerritoryId(userDoc.territoryId || "");
-  const isGovOrAdmin = isAdminOrGovernanca(userDoc);
-
-  if (
-    !isGovOrAdmin &&
-    userTerritoryId &&
-    userTerritoryId !== STATE.territoryId
-  ) {
-    throw new Error("Usuário sem permissão para registrar coleta neste território.");
-  }
-
-  console.log("UID logado:", user.uid);
-  console.log("UserDoc:", userDoc);
-  console.log("territoryId da página:", STATE.territoryId);
 
   setConnectionState("conectado");
 }
@@ -518,12 +428,13 @@ async function salvarRecebimento() {
 
   if (
     !STATE.operacao ||
+    !familyCode ||
     pesoResiduoSecoKg === null ||
     qualidadeNota === null ||
     pesoRejeitoKg === null ||
     pesoNaoComercializadoKg === null
   ) {
-    throw new Error("Preencha todos os campos obrigatórios do recebimento.");
+    throw new Error("Preencha o código da família e todos os campos obrigatórios do recebimento.");
   }
 
   const codigoEtiqueta = gerarCodigoEtiqueta();
@@ -769,12 +680,11 @@ function init() {
   }
 
   setPageTerritoryState();
-  setBackLink();
 
   onAuthStateChanged(auth, async (user) => {
     if (!user) {
       setConnectionState("deslogado");
-      location.href = "./index.html";
+      location.href = "index.html";
       return;
     }
 

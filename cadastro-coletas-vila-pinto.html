@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Language" content="pt-BR">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cadastro de Coletas Seletivas • NSRU</title>
+  <title>Cadastro de Coletas Seletivas • Vila Pinto • NSRU</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,7 +13,11 @@
 
   <link rel="stylesheet" href="cadastro-coletas.css">
 </head>
-<body>
+<body
+  data-territory-id="crgr_vila_pinto"
+  data-territory-label="Centro de Triagem Vila Pinto"
+  data-back-url="vila-pinto.html"
+>
   <div class="bg-grid"></div>
   <div class="noise"></div>
 
@@ -27,12 +31,12 @@
         <div class="brand-text">
           <div class="brand-kicker">Plataforma Digital</div>
           <div class="brand-title">Núcleo de Soluções para Resíduos Urbanos</div>
-          <div class="brand-sub">Cadastro de Coletas Seletivas</div>
+          <div class="brand-sub">Cadastro de Coletas Seletivas • Vila Pinto</div>
         </div>
       </a>
 
       <div class="topbar-actions">
-        <a class="btn ghost" href="cooperativas.html">Voltar ao menu</a>
+        <a class="btn ghost" href="vila-pinto.html">Voltar ao território</a>
       </div>
     </div>
   </header>
@@ -44,7 +48,7 @@
           <span class="page-badge">Operação territorial</span>
           <h1>Cadastro de Coletas Seletivas</h1>
           <p class="page-lead">
-            Preencha os dados da operação. Os campos marcados com <strong>*</strong> são obrigatórios.
+            Território: <strong>Centro de Triagem Vila Pinto</strong>. Preencha os dados da operação.
           </p>
         </div>
 
@@ -57,10 +61,13 @@
             <span class="status-label">Fluxo</span>
             <b id="flowStatus">não selecionado</b>
           </div>
+          <div class="status-item">
+            <span class="status-label">Território</span>
+            <b id="territoryStatus">Vila Pinto</b>
+          </div>
         </div>
       </div>
 
-      <!-- ETAPA 1 -->
       <section class="block-card">
         <div class="block-head">
           <div class="block-icon">1</div>
@@ -133,7 +140,6 @@
         <div id="msgOperacao" class="msg hidden"></div>
       </section>
 
-      <!-- ETAPA 2A -->
       <section id="panelRecebimento" class="block-card hidden">
         <div class="block-head">
           <div class="block-icon success">2</div>
@@ -175,13 +181,11 @@
           <div class="field">
             <label for="pesoRejeitoKg">Peso do rejeito (kg) <span>*</span></label>
             <input type="number" step="0.01" id="pesoRejeitoKg" placeholder="0" required>
-            <small>Se não houver rejeito, informar zero.</small>
           </div>
 
           <div class="field">
             <label for="pesoNaoComercializadoKg">Peso não comercializado (kg) <span>*</span></label>
             <input type="number" step="0.01" id="pesoNaoComercializadoKg" placeholder="0" required>
-            <small>Se não houver, informar zero.</small>
           </div>
 
           <div class="field">
@@ -203,7 +207,6 @@
         <div id="msgRecebimento" class="msg hidden"></div>
       </section>
 
-      <!-- ETAPA 2B -->
       <section id="panelFinalTurno" class="block-card hidden">
         <div class="block-head">
           <div class="block-icon success">2</div>
@@ -224,45 +227,14 @@
             <input type="number" step="0.01" id="pesoRejeitoGeralKg" placeholder="0" required>
           </div>
 
-          <div class="field">
-            <label for="plasticoKg">Plástico (kg)</label>
-            <input type="number" step="0.01" id="plasticoKg" placeholder="0">
-          </div>
-
-          <div class="field">
-            <label for="papelMistoKg">Papel misto (kg)</label>
-            <input type="number" step="0.01" id="papelMistoKg" placeholder="0">
-          </div>
-
-          <div class="field">
-            <label for="papelaoKg">Papelão (kg)</label>
-            <input type="number" step="0.01" id="papelaoKg" placeholder="0">
-          </div>
-
-          <div class="field">
-            <label for="aluminioMetalKg">Alumínio / metal (kg)</label>
-            <input type="number" step="0.01" id="aluminioMetalKg" placeholder="0">
-          </div>
-
-          <div class="field">
-            <label for="vidroKg">Vidro (kg)</label>
-            <input type="number" step="0.01" id="vidroKg" placeholder="0">
-          </div>
-
-          <div class="field">
-            <label for="sacariaKg">Sacaria / sacolinha (kg)</label>
-            <input type="number" step="0.01" id="sacariaKg" placeholder="0">
-          </div>
-
-          <div class="field">
-            <label for="isoporKg">Isopor (kg)</label>
-            <input type="number" step="0.01" id="isoporKg" placeholder="0">
-          </div>
-
-          <div class="field">
-            <label for="oleoKg">Óleo (kg)</label>
-            <input type="number" step="0.01" id="oleoKg" placeholder="0">
-          </div>
+          <div class="field"><label for="plasticoKg">Plástico (kg)</label><input type="number" step="0.01" id="plasticoKg" placeholder="0"></div>
+          <div class="field"><label for="papelMistoKg">Papel misto (kg)</label><input type="number" step="0.01" id="papelMistoKg" placeholder="0"></div>
+          <div class="field"><label for="papelaoKg">Papelão (kg)</label><input type="number" step="0.01" id="papelaoKg" placeholder="0"></div>
+          <div class="field"><label for="aluminioMetalKg">Alumínio / metal (kg)</label><input type="number" step="0.01" id="aluminioMetalKg" placeholder="0"></div>
+          <div class="field"><label for="vidroKg">Vidro (kg)</label><input type="number" step="0.01" id="vidroKg" placeholder="0"></div>
+          <div class="field"><label for="sacariaKg">Sacaria / sacolinha (kg)</label><input type="number" step="0.01" id="sacariaKg" placeholder="0"></div>
+          <div class="field"><label for="isoporKg">Isopor (kg)</label><input type="number" step="0.01" id="isoporKg" placeholder="0"></div>
+          <div class="field"><label for="oleoKg">Óleo (kg)</label><input type="number" step="0.01" id="oleoKg" placeholder="0"></div>
 
           <div class="field span-2">
             <div class="extra-head">
@@ -283,6 +255,8 @@
             <input type="file" id="fotoFinalTurno" multiple>
           </div>
 
+          <div id="previewFinalTurno" class="preview-grid span-2"></div>
+
           <div class="form-actions span-2">
             <button type="button" class="btn ghost" id="btnVoltarFinalTurno">Voltar</button>
             <button type="submit" class="btn primary">Salvar registro final do turno</button>
@@ -294,61 +268,52 @@
     </section>
   </main>
 
- 
-  <!-- MODAL DA ETIQUETA -->
-<div id="labelModal" class="modal hidden" aria-hidden="true">
-  <div class="modal-backdrop" id="labelModalBackdrop"></div>
+  <div id="labelModal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" id="labelModalBackdrop"></div>
 
-  <div class="modal-dialog label-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="labelModalTitle">
-    <div class="modal-head">
-      <h2 id="labelModalTitle">Cartão de identificação</h2>
-      <button type="button" class="icon-btn" id="btnCloseLabelModal" aria-label="Fechar modal">✕</button>
-    </div>
+    <div class="modal-dialog label-modal-dialog" role="dialog" aria-modal="true" aria-labelledby="labelModalTitle">
+      <div class="modal-head">
+        <h2 id="labelModalTitle">Cartão de identificação</h2>
+        <button type="button" class="icon-btn" id="btnCloseLabelModal" aria-label="Fechar modal">✕</button>
+      </div>
 
-    <div class="modal-body">
-      <div id="labelPrintArea" class="label-print-area">
-        <div class="id-card" id="idCard">
-          <div class="id-card__header">
-            <img src="img/NSRU - Logo-Preto.png" alt="Logo NSRU" class="id-card__logo">
-            <div class="id-card__title-wrap">
-              <div class="id-card__title">NSRU</div>
-              <div class="id-card__subtitle">Cartão de identificação da coleta</div>
-            </div>
-          </div>
-
-          <div class="id-card__body">
-            <div class="id-card__code-label">Código da família</div>
-            <div class="id-card__family-code" id="labelFamilyCode">0000</div>
-
-            <div class="id-card__qr-wrap">
-              <div id="qrcode"></div>
-              <img
-                src="img/NSRU - Logo-Preto.png"
-                alt="Logo NSRU"
-                class="qr-center-logo"
-                id="qrCenterLogo"
-              >
+      <div class="modal-body">
+        <div id="labelPrintArea" class="label-print-area">
+          <div class="id-card" id="idCard">
+            <div class="id-card__header">
+              <img src="img/NSRU - Logo-Preto.png" alt="Logo NSRU" class="id-card__logo">
+              <div class="id-card__title-wrap">
+                <div class="id-card__title">NSRU</div>
+                <div class="id-card__subtitle">Cartão de identificação da coleta</div>
+              </div>
             </div>
 
-            <div class="id-card__meta">
-              <span>Data</span>
-              <strong id="labelDate">--/--/----</strong>
+            <div class="id-card__body">
+              <div class="id-card__code-label">Código da família</div>
+              <div class="id-card__family-code" id="labelFamilyCode">0000</div>
+
+              <div class="id-card__qr-wrap">
+                <div id="qrcode"></div>
+                <img src="img/NSRU - Logo-Preto.png" alt="Logo NSRU" class="qr-center-logo" id="qrCenterLogo">
+              </div>
+
+              <div class="id-card__meta">
+                <span>Data</span>
+                <strong id="labelDate">--/--/----</strong>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <div class="modal-actions">
-        <button type="button" class="btn ghost" id="btnCloseLabelModalFooter">Fechar</button>
-        <button type="button" class="btn primary" id="btnPrintLabel">Imprimir cartão</button>
+        <div class="modal-actions">
+          <button type="button" class="btn ghost" id="btnCloseLabelModalFooter">Fechar</button>
+          <button type="button" class="btn primary" id="btnPrintLabel">Imprimir cartão</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
 
-<!-- biblioteca QRCode -->
-<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-
+  <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script type="module" src="cadastro-coletas-territorial.js"></script>
 </body>
 </html>
