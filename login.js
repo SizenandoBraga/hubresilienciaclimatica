@@ -34,13 +34,13 @@ const ACCESS_RULES = {
     scope: "cooperativa"
   },
 
-  "admin.cooa@teste.com": {
+  "admin.cooadesc@teste.com": {
     cooperativaId: "crgr_coadesc",
     cooperativaNome: "COADESC",
     perfil: "admin",
     scope: "cooperativa"
   },
-  "user.cooa@teste.com": {
+  "user.cooades@teste.com": {
     cooperativaId: "crgr_coadesc",
     cooperativaNome: "COADESC",
     perfil: "cooperativa",
