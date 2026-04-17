@@ -1,23 +1,18 @@
-import { auth, db } from "./firebase-init.js";
-import { syncPublicDashboard } from "./dashboard-public-sync.js";
-
-import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { db } from "./firebase-init.js";
 import {
-  doc,
-  getDoc,
   addDoc,
   collection,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-   CONFIG TERRITORIAL
+   CONFIG FIXA VILA PINTO
 ========================= */
 
 const PAGE_TERRITORY = {
-  territoryId: document.body.dataset.territoryId || null,
-  territoryLabel: document.body.dataset.territoryLabel || "Território",
-  backUrl: document.body.dataset.backUrl || "cooperativa.html"
+  territoryId: "crgr_vila_pinto",
+  territoryLabel: "Centro de Triagem Vila Pinto",
+  backUrl: "./vila-pinto.html"
 };
 
 /* =========================
@@ -25,9 +20,7 @@ const PAGE_TERRITORY = {
 ========================= */
 
 const STATE = {
-  user: null,
-  userDoc: null,
-  territoryId: PAGE_TERRITORY.territoryId || null,
+  territoryId: PAGE_TERRITORY.territoryId,
   operacao: null,
   ultimaEtiqueta: null,
   salvando: false
@@ -63,7 +56,8 @@ function parseNum(value) {
 
 function formatDateBR(dateStr) {
   if (!dateStr) return "-";
-  const [year, month, day] = dateStr.split("-");
+  const [year, month, day] = String(dateStr).split("-");
+  if (!year || !month || !day) return "-";
   return `${day}/${month}/${year}`;
 }
 
@@ -92,43 +86,24 @@ function togglePanels(flowType) {
   $("panelFinalTurno")?.classList.toggle("hidden", flowType !== "final_turno");
 }
 
+function setConnectionState(label) {
+  setText("dbStatus", label);
+}
+
+function setPageTerritoryState() {
+  setText("territoryStatus", PAGE_TERRITORY.territoryLabel);
+}
+
+function setBackLink() {
+  const backLink = document.querySelector(".topbar-actions a.btn.ghost");
+  if (backLink) {
+    backLink.href = PAGE_TERRITORY.backUrl;
+  }
+}
+
 function ensureTerritory() {
   if (!STATE.territoryId) {
-    throw new Error("Território não definido nesta página.");
-  }
-}
-
-/* =========================
-   AUTH + USER
-========================= */
-
-async function loadUserDoc(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-  return snap.exists() ? snap.data() : null;
-}
-
-async function bootstrap(user) {
-  setText("dbStatus", "conectado");
-  setText("territoryStatus", PAGE_TERRITORY.territoryLabel);
-
-  const userDoc = await loadUserDoc(user.uid);
-
-  if (!userDoc) {
-    alert("Usuário não encontrado.");
-    location.href = "index.html";
-    return;
-  }
-
-  STATE.user = user;
-  STATE.userDoc = userDoc;
-
-  console.log("UID logado:", user.uid);
-  console.log("UserDoc:", userDoc);
-  console.log("territoryId da página:", STATE.territoryId);
-
-  if (!STATE.territoryId) {
-    setText("dbStatus", "território indefinido");
-    alert("Esta página não possui territoryId definido no HTML.");
+    throw new Error("Território não definido.");
   }
 }
 
@@ -176,7 +151,7 @@ function wireChoices() {
 
       btn.classList.add("active");
       btn.setAttribute("aria-pressed", "true");
-      $("qualidadeNota").value = btn.dataset.quality;
+      if ($("qualidadeNota")) $("qualidadeNota").value = btn.dataset.quality;
     };
   });
 
@@ -400,13 +375,12 @@ async function salvarRecebimento() {
 
   if (
     !STATE.operacao ||
-    !familyCode ||
     pesoResiduoSecoKg === null ||
     qualidadeNota === null ||
     pesoRejeitoKg === null ||
     pesoNaoComercializadoKg === null
   ) {
-    throw new Error("Preencha o código da família e todos os campos obrigatórios do recebimento.");
+    throw new Error("Preencha todos os campos obrigatórios do recebimento.");
   }
 
   const codigoEtiqueta = gerarCodigoEtiqueta();
@@ -418,8 +392,8 @@ async function salvarRecebimento() {
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
 
-    createdBy: STATE.user?.uid || null,
-    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
+    createdBy: null,
+    createdByName: "Cadastro Vila Pinto",
 
     opDate: STATE.operacao.opDate,
     deliveryType: STATE.operacao.deliveryType,
@@ -440,8 +414,9 @@ async function salvarRecebimento() {
     }
   };
 
+  console.log("Salvando recebimento:", payload);
+
   const docRef = await addDoc(collection(db, "coletas"), payload);
-  await syncPublicDashboard();
 
   return {
     ...payload,
@@ -472,8 +447,8 @@ async function salvarFinalTurno() {
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
 
-    createdBy: STATE.user?.uid || null,
-    createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || null,
+    createdBy: null,
+    createdByName: "Cadastro Vila Pinto",
 
     opDate: STATE.operacao.opDate,
     deliveryType: STATE.operacao.deliveryType,
@@ -498,8 +473,9 @@ async function salvarFinalTurno() {
     }
   };
 
+  console.log("Salvando final do turno:", payload);
+
   const docRef = await addDoc(collection(db, "coletas"), payload);
-  await syncPublicDashboard();
 
   return {
     ...payload,
@@ -556,6 +532,7 @@ function wireForms() {
         submitBtn.textContent = "Salvando coleta...";
       }
 
+      setConnectionState("salvando");
       const registro = await salvarRecebimento();
       preencherEtiquetaSimples(registro);
       openLabelModal();
@@ -566,9 +543,11 @@ function wireForms() {
         `Coleta de recebimento salva com sucesso em ${PAGE_TERRITORY.territoryLabel}.`
       );
 
+      setConnectionState("conectado");
       resetRecebimentoForm();
     } catch (error) {
       console.error(error);
+      setConnectionState("erro");
       setMsg($("msgRecebimento"), "bad", error.message || "Erro ao salvar recebimento.");
     } finally {
       STATE.salvando = false;
@@ -593,6 +572,7 @@ function wireForms() {
         submitBtn.textContent = "Salvando fechamento...";
       }
 
+      setConnectionState("salvando");
       const registro = await salvarFinalTurno();
       preencherEtiquetaSimples(registro);
       openLabelModal();
@@ -603,9 +583,11 @@ function wireForms() {
         `Registro final do turno salvo com sucesso em ${PAGE_TERRITORY.territoryLabel}.`
       );
 
+      setConnectionState("conectado");
       resetFinalTurnoForm();
     } catch (error) {
       console.error(error);
+      setConnectionState("erro");
       setMsg($("msgFinalTurno"), "bad", error.message || "Erro ao salvar fechamento do turno.");
     } finally {
       STATE.salvando = false;
@@ -640,22 +622,11 @@ function init() {
     $("opDate").value = toISODate(new Date());
   }
 
-  onAuthStateChanged(auth, async (user) => {
-    if (!user) {
-      setText("dbStatus", "deslogado");
-      location.href = "index.html";
-      return;
-    }
+  setPageTerritoryState();
+  setBackLink();
 
-    try {
-      await bootstrap(user);
-      console.log("🔥 Firebase conectado");
-    } catch (error) {
-      console.error("Erro no bootstrap:", error);
-      setText("dbStatus", "erro");
-      alert("Não foi possível carregar os dados do usuário.");
-    }
-  });
+  setConnectionState("conectado");
+  console.log("Modo direto Vila Pinto carregado. Testando Firestore sem autenticação.");
 }
 
 init();
