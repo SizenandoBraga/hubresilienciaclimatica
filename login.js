@@ -40,7 +40,7 @@ const ACCESS_RULES = {
     perfil: "admin",
     scope: "cooperativa"
   },
-  "user.cooades@teste.com": {
+  "user.cooadesc@teste.com": {
     cooperativaId: "crgr_coadesc",
     cooperativaNome: "COADESC",
     perfil: "cooperativa",
