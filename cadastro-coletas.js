@@ -124,9 +124,9 @@ function getUserTerritoryId() {
 function userHasRoleFlag(flag) {
   return Boolean(
     STATE.userDoc &&
-    STATE.userDoc.roles &&
-    typeof STATE.userDoc.roles === "object" &&
-    STATE.userDoc.roles[flag] === true
+      STATE.userDoc.roles &&
+      typeof STATE.userDoc.roles === "object" &&
+      STATE.userDoc.roles[flag] === true
   );
 }
 
@@ -142,6 +142,16 @@ function isGovernanca() {
   );
 }
 
+function getCreatedByName() {
+  return (
+    STATE.userDoc?.displayName ||
+    STATE.userDoc?.name ||
+    STATE.user?.displayName ||
+    STATE.user?.email ||
+    "Usuário"
+  );
+}
+
 function ensureAuthenticatedUser() {
   if (!STATE.user) {
     throw new Error("Usuário não autenticado. Faça login novamente.");
@@ -152,7 +162,9 @@ function ensureAuthenticatedUser() {
   }
 
   if (getUserStatus() !== "active") {
-    throw new Error("Usuário sem permissão. Verifique se o status está como active.");
+    throw new Error(
+      `Usuário sem permissão. O campo status em users deve ser "active" e hoje está "${getUserStatus() || "vazio"}".`
+    );
   }
 
   const allowedCoopRoles = ["cooperativa", "operador", "usuario"];
@@ -162,7 +174,9 @@ function ensureAuthenticatedUser() {
     allowedCoopRoles.includes(getUserRole());
 
   if (!canOperate) {
-    throw new Error("Seu perfil não tem permissão para registrar coletas.");
+    throw new Error(
+      `Seu perfil não tem permissão para registrar coletas. role atual: "${getUserRole() || "vazio"}".`
+    );
   }
 
   if (!isAdmin() && !isGovernanca()) {
@@ -172,16 +186,6 @@ function ensureAuthenticatedUser() {
       );
     }
   }
-}
-
-function getCreatedByName() {
-  return (
-    STATE.userDoc?.displayName ||
-    STATE.userDoc?.name ||
-    STATE.user?.displayName ||
-    STATE.user?.email ||
-    "Usuário"
-  );
 }
 
 /* =========================
@@ -208,6 +212,7 @@ async function loadCurrentUser() {
         if (!snap.exists()) {
           STATE.userDoc = null;
           setConnectionState("usuário sem cadastro");
+          console.error("Documento users não encontrado para UID:", user.uid);
           resolve();
           return;
         }
@@ -216,6 +221,14 @@ async function loadCurrentUser() {
           id: snap.id,
           ...snap.data()
         };
+
+        console.log("Usuário autenticado:", {
+          uid: user.uid,
+          email: user.email || null,
+          role: STATE.userDoc?.role || null,
+          status: STATE.userDoc?.status || null,
+          territoryId: STATE.userDoc?.territoryId || null
+        });
 
         setConnectionState("conectado");
         resolve();
@@ -432,14 +445,14 @@ function preencherEtiquetaSimples(registro) {
 
   const familyCode =
     registro.familyCode ||
-    registro.condCode ||
     registro.participantCode ||
+    registro.condCode ||
     registro.codigoFamilia ||
     "SEM-CODIGO";
 
   const qrPayload = JSON.stringify({
+    participantCode: registro.participantCode || null,
     codigoFamilia: familyCode,
-    participantCode: registro.participantCode || familyCode,
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
     flowType: registro.flowType || null,
@@ -493,8 +506,8 @@ async function salvarRecebimento() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  const familyCode = $("familyCode")?.value.trim() || null;
-  const participantCode = familyCode;
+  const participantCode = $("familyCode")?.value.trim() || null;
+  const familyCode = participantCode;
 
   const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
   const qualidadeNota = parseNum($("qualidadeNota")?.value);
@@ -507,7 +520,7 @@ async function salvarRecebimento() {
   }
 
   if (!participantCode) {
-    throw new Error("Informe o código da família.");
+    throw new Error("Informe o código do participante aprovado.");
   }
 
   if (
@@ -551,7 +564,17 @@ async function salvarRecebimento() {
     }
   };
 
-  console.log("Salvando recebimento:", payload);
+  console.log("Tentando salvar recebimento com:", {
+    uid: STATE.user?.uid || null,
+    role: STATE.userDoc?.role || null,
+    status: STATE.userDoc?.status || null,
+    userTerritoryId: STATE.userDoc?.territoryId || null,
+    payloadTerritoryId: payload.territoryId,
+    participantCode: payload.participantCode || null,
+    createdBy: payload.createdBy || null
+  });
+
+  console.log("Payload recebimento:", JSON.stringify(payload, null, 2));
 
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
@@ -565,8 +588,8 @@ async function salvarFinalTurno() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  const condCode = $("condCode")?.value.trim() || null;
-  const participantCode = condCode;
+  const participantCode = $("condCode")?.value.trim() || null;
+  const condCode = participantCode;
 
   const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
 
@@ -575,7 +598,7 @@ async function salvarFinalTurno() {
   }
 
   if (!participantCode) {
-    throw new Error("Informe o código do condomínio/família.");
+    throw new Error("Informe o código do participante/condomínio.");
   }
 
   if (pesoRejeitoGeralKg === null) {
@@ -619,7 +642,17 @@ async function salvarFinalTurno() {
     }
   };
 
-  console.log("Salvando final do turno:", payload);
+  console.log("Tentando salvar final do turno com:", {
+    uid: STATE.user?.uid || null,
+    role: STATE.userDoc?.role || null,
+    status: STATE.userDoc?.status || null,
+    userTerritoryId: STATE.userDoc?.territoryId || null,
+    payloadTerritoryId: payload.territoryId,
+    participantCode: payload.participantCode || null,
+    createdBy: payload.createdBy || null
+  });
+
+  console.log("Payload finalTurno:", JSON.stringify(payload, null, 2));
 
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
