@@ -124,9 +124,9 @@ function getUserTerritoryId() {
 function userHasRoleFlag(flag) {
   return Boolean(
     STATE.userDoc &&
-      STATE.userDoc.roles &&
-      typeof STATE.userDoc.roles === "object" &&
-      STATE.userDoc.roles[flag] === true
+    STATE.userDoc.roles &&
+    typeof STATE.userDoc.roles === "object" &&
+    STATE.userDoc.roles[flag] === true
   );
 }
 
@@ -161,9 +161,12 @@ function ensureAuthenticatedUser() {
     throw new Error("Usuário sem cadastro na coleção users.");
   }
 
-  if (getUserStatus() !== "active") {
+  const status = getUserStatus();
+  const allowedStatus = ["active", "aprovado"];
+
+  if (!allowedStatus.includes(status) && STATE.userDoc?.active !== true) {
     throw new Error(
-      `Usuário sem permissão. O campo status em users deve ser "active" e hoje está "${getUserStatus() || "vazio"}".`
+      `Usuário sem permissão. O status em users deve ser "active" (ou compatível nas regras). Atual: "${status || "vazio"}".`
     );
   }
 
@@ -227,6 +230,7 @@ async function loadCurrentUser() {
           email: user.email || null,
           role: STATE.userDoc?.role || null,
           status: STATE.userDoc?.status || null,
+          active: STATE.userDoc?.active ?? null,
           territoryId: STATE.userDoc?.territoryId || null
         });
 
@@ -447,7 +451,6 @@ function preencherEtiquetaSimples(registro) {
     registro.familyCode ||
     registro.participantCode ||
     registro.condCode ||
-    registro.codigoFamilia ||
     "SEM-CODIGO";
 
   const qrPayload = JSON.stringify({
@@ -506,6 +509,7 @@ async function salvarRecebimento() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
+  // O campo visual "Código da família" é, na prática, o participantCode
   const participantCode = $("familyCode")?.value.trim() || null;
   const familyCode = participantCode;
 
@@ -568,6 +572,7 @@ async function salvarRecebimento() {
     uid: STATE.user?.uid || null,
     role: STATE.userDoc?.role || null,
     status: STATE.userDoc?.status || null,
+    active: STATE.userDoc?.active ?? null,
     userTerritoryId: STATE.userDoc?.territoryId || null,
     payloadTerritoryId: payload.territoryId,
     participantCode: payload.participantCode || null,
@@ -588,6 +593,8 @@ async function salvarFinalTurno() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
+  // Aqui mantive o mesmo comportamento do teu fluxo atual:
+  // o campo condCode também é usado como identificador da coleta.
   const participantCode = $("condCode")?.value.trim() || null;
   const condCode = participantCode;
 
@@ -646,6 +653,7 @@ async function salvarFinalTurno() {
     uid: STATE.user?.uid || null,
     role: STATE.userDoc?.role || null,
     status: STATE.userDoc?.status || null,
+    active: STATE.userDoc?.active ?? null,
     userTerritoryId: STATE.userDoc?.territoryId || null,
     payloadTerritoryId: payload.territoryId,
     participantCode: payload.participantCode || null,
