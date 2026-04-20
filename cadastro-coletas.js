@@ -1,8 +1,11 @@
-import { db } from "./firebase-init.js";
+import { auth, db } from "./firebase-init.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   addDoc,
   collection,
-  serverTimestamp
+  serverTimestamp,
+  doc,
+  getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
@@ -23,7 +26,9 @@ const STATE = {
   territoryId: PAGE_TERRITORY.territoryId,
   operacao: null,
   ultimaEtiqueta: null,
-  salvando: false
+  salvando: false,
+  user: null,
+  userDoc: null
 };
 
 /* =========================
@@ -96,15 +101,99 @@ function setPageTerritoryState() {
 
 function setBackLink() {
   const backLink = document.querySelector(".topbar-actions a.btn.ghost");
-  if (backLink) {
-    backLink.href = PAGE_TERRITORY.backUrl;
-  }
+  if (backLink) backLink.href = PAGE_TERRITORY.backUrl;
 }
 
 function ensureTerritory() {
   if (!STATE.territoryId) {
     throw new Error("Território não definido.");
   }
+}
+
+function ensureAuthenticatedUser() {
+  if (!STATE.user) {
+    throw new Error("Usuário não autenticado. Faça login novamente.");
+  }
+
+  if (!STATE.userDoc) {
+    throw new Error("Documento do usuário não encontrado.");
+  }
+
+  const role = STATE.userDoc.role || null;
+  const status = STATE.userDoc.status || null;
+  const userTerritoryId = STATE.userDoc.territoryId || null;
+
+  if (status && status !== "active") {
+    throw new Error("Usuário sem permissão de acesso.");
+  }
+
+  const allowedRoles = ["admin", "cooperativa", "gestor", "governanca"];
+  if (role && !allowedRoles.includes(role)) {
+    throw new Error("Seu perfil não tem permissão para registrar coletas.");
+  }
+
+  if (
+    role !== "governanca" &&
+    role !== "gestor" &&
+    userTerritoryId &&
+    userTerritoryId !== STATE.territoryId
+  ) {
+    throw new Error("Seu usuário não pertence ao território desta página.");
+  }
+}
+
+function getCreatedByName() {
+  return (
+    STATE.userDoc?.displayName ||
+    STATE.userDoc?.name ||
+    STATE.user?.displayName ||
+    STATE.user?.email ||
+    "Usuário"
+  );
+}
+
+/* =========================
+   AUTH
+========================= */
+
+async function loadCurrentUser() {
+  return new Promise((resolve) => {
+    onAuthStateChanged(auth, async (user) => {
+      try {
+        if (!user) {
+          STATE.user = null;
+          STATE.userDoc = null;
+          setConnectionState("sem login");
+          resolve();
+          return;
+        }
+
+        STATE.user = user;
+
+        const userRef = doc(db, "users", user.uid);
+        const snap = await getDoc(userRef);
+
+        if (!snap.exists()) {
+          STATE.userDoc = null;
+          setConnectionState("usuário sem cadastro");
+          resolve();
+          return;
+        }
+
+        STATE.userDoc = {
+          id: snap.id,
+          ...snap.data()
+        };
+
+        setConnectionState("conectado");
+        resolve();
+      } catch (error) {
+        console.error("Erro ao carregar usuário:", error);
+        setConnectionState("erro");
+        resolve();
+      }
+    });
+  });
 }
 
 /* =========================
@@ -365,6 +454,7 @@ function wireLabelModal() {
 
 async function salvarRecebimento() {
   ensureTerritory();
+  ensureAuthenticatedUser();
 
   const familyCode = $("familyCode")?.value.trim() || null;
   const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
@@ -392,8 +482,8 @@ async function salvarRecebimento() {
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
 
-    createdBy: null,
-    createdByName: "Cadastro Vila Pinto",
+    createdBy: STATE.user.uid,
+    createdByName: getCreatedByName(),
 
     opDate: STATE.operacao.opDate,
     deliveryType: STATE.operacao.deliveryType,
@@ -414,8 +504,6 @@ async function salvarRecebimento() {
     }
   };
 
-  console.log("Salvando recebimento:", payload);
-
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
   return {
@@ -429,6 +517,7 @@ async function salvarRecebimento() {
 
 async function salvarFinalTurno() {
   ensureTerritory();
+  ensureAuthenticatedUser();
 
   const condCode = $("condCode")?.value.trim() || null;
   const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
@@ -447,8 +536,8 @@ async function salvarFinalTurno() {
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
 
-    createdBy: null,
-    createdByName: "Cadastro Vila Pinto",
+    createdBy: STATE.user.uid,
+    createdByName: getCreatedByName(),
 
     opDate: STATE.operacao.opDate,
     deliveryType: STATE.operacao.deliveryType,
@@ -472,8 +561,6 @@ async function salvarFinalTurno() {
       fotosQtd: fotosFinalTurno.length
     }
   };
-
-  console.log("Salvando final do turno:", payload);
 
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
@@ -612,7 +699,7 @@ function wireForms() {
    INIT
 ========================= */
 
-function init() {
+async function init() {
   wireChoices();
   wireExtras();
   wireForms();
@@ -624,9 +711,11 @@ function init() {
 
   setPageTerritoryState();
   setBackLink();
+  setConnectionState("carregando");
 
-  setConnectionState("conectado");
-  console.log("Modo direto Vila Pinto carregado. Testando Firestore sem autenticação.");
+  await loadCurrentUser();
+
+  console.log("Página de coletas Vila Pinto iniciada com autenticação.");
 }
 
 init();
