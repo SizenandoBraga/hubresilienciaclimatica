@@ -82,7 +82,6 @@ function gerarCodigoEtiqueta() {
   const h = String(now.getHours()).padStart(2, "0");
   const min = String(now.getMinutes()).padStart(2, "0");
   const s = String(now.getSeconds()).padStart(2, "0");
-
   return `ETQ-${y}${m}${d}-${h}${min}${s}`;
 }
 
@@ -110,35 +109,68 @@ function ensureTerritory() {
   }
 }
 
+function getUserRole() {
+  return STATE.userDoc?.role || null;
+}
+
+function getUserStatus() {
+  return STATE.userDoc?.status || null;
+}
+
+function getUserTerritoryId() {
+  return STATE.userDoc?.territoryId || null;
+}
+
+function userHasRoleFlag(flag) {
+  return Boolean(
+    STATE.userDoc &&
+    STATE.userDoc.roles &&
+    typeof STATE.userDoc.roles === "object" &&
+    STATE.userDoc.roles[flag] === true
+  );
+}
+
+function isAdmin() {
+  return getUserRole() === "admin" || userHasRoleFlag("admin");
+}
+
+function isGovernanca() {
+  return (
+    getUserRole() === "governanca" ||
+    getUserRole() === "gestor" ||
+    userHasRoleFlag("governanca")
+  );
+}
+
 function ensureAuthenticatedUser() {
   if (!STATE.user) {
     throw new Error("Usuário não autenticado. Faça login novamente.");
   }
 
   if (!STATE.userDoc) {
-    throw new Error("Documento do usuário não encontrado.");
+    throw new Error("Usuário sem cadastro na coleção users.");
   }
 
-  const role = STATE.userDoc.role || null;
-  const status = STATE.userDoc.status || null;
-  const userTerritoryId = STATE.userDoc.territoryId || null;
-
-  if (status && status !== "active") {
-    throw new Error("Usuário sem permissão de acesso.");
+  if (getUserStatus() !== "active") {
+    throw new Error("Usuário sem permissão. Verifique se o status está como active.");
   }
 
-  const allowedRoles = ["admin", "cooperativa", "gestor", "governanca"];
-  if (role && !allowedRoles.includes(role)) {
+  const allowedCoopRoles = ["cooperativa", "operador", "usuario"];
+  const canOperate =
+    isAdmin() ||
+    isGovernanca() ||
+    allowedCoopRoles.includes(getUserRole());
+
+  if (!canOperate) {
     throw new Error("Seu perfil não tem permissão para registrar coletas.");
   }
 
-  if (
-    role !== "governanca" &&
-    role !== "gestor" &&
-    userTerritoryId &&
-    userTerritoryId !== STATE.territoryId
-  ) {
-    throw new Error("Seu usuário não pertence ao território desta página.");
+  if (!isAdmin() && !isGovernanca()) {
+    if (getUserTerritoryId() !== STATE.territoryId) {
+      throw new Error(
+        `Seu usuário pertence ao território "${getUserTerritoryId() || "sem território"}" e não ao território "${STATE.territoryId}".`
+      );
+    }
   }
 }
 
@@ -240,7 +272,10 @@ function wireChoices() {
 
       btn.classList.add("active");
       btn.setAttribute("aria-pressed", "true");
-      if ($("qualidadeNota")) $("qualidadeNota").value = btn.dataset.quality;
+
+      if ($("qualidadeNota")) {
+        $("qualidadeNota").value = btn.dataset.quality;
+      }
     };
   });
 
@@ -398,11 +433,13 @@ function preencherEtiquetaSimples(registro) {
   const familyCode =
     registro.familyCode ||
     registro.condCode ||
+    registro.participantCode ||
     registro.codigoFamilia ||
     "SEM-CODIGO";
 
   const qrPayload = JSON.stringify({
     codigoFamilia: familyCode,
+    participantCode: registro.participantCode || familyCode,
     territoryId: STATE.territoryId,
     territoryLabel: PAGE_TERRITORY.territoryLabel,
     flowType: registro.flowType || null,
@@ -457,14 +494,23 @@ async function salvarRecebimento() {
   ensureAuthenticatedUser();
 
   const familyCode = $("familyCode")?.value.trim() || null;
+  const participantCode = familyCode;
+
   const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
   const qualidadeNota = parseNum($("qualidadeNota")?.value);
   const recebimentoObs = $("recebimentoObs")?.value.trim() || null;
   const pesoRejeitoKg = parseNum($("pesoRejeitoKg")?.value);
   const pesoNaoComercializadoKg = parseNum($("pesoNaoComercializadoKg")?.value);
 
+  if (!STATE.operacao) {
+    throw new Error("Salve primeiro a etapa da operação.");
+  }
+
+  if (!participantCode) {
+    throw new Error("Informe o código da família.");
+  }
+
   if (
-    !STATE.operacao ||
     pesoResiduoSecoKg === null ||
     qualidadeNota === null ||
     pesoRejeitoKg === null ||
@@ -486,6 +532,7 @@ async function salvarRecebimento() {
     createdByName: getCreatedByName(),
 
     opDate: STATE.operacao.opDate,
+    participantCode,
     deliveryType: STATE.operacao.deliveryType,
     flowType: "recebimento",
     observacao: STATE.operacao.opNotes || null,
@@ -504,14 +551,13 @@ async function salvarRecebimento() {
     }
   };
 
+  console.log("Salvando recebimento:", payload);
+
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
   return {
     ...payload,
-    id: docRef.id,
-    familyCode,
-    opDate: STATE.operacao.opDate,
-    flowType: "recebimento"
+    id: docRef.id
   };
 }
 
@@ -520,10 +566,20 @@ async function salvarFinalTurno() {
   ensureAuthenticatedUser();
 
   const condCode = $("condCode")?.value.trim() || null;
+  const participantCode = condCode;
+
   const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
 
-  if (!STATE.operacao || !condCode || pesoRejeitoGeralKg === null) {
-    throw new Error("Preencha o código do condomínio/família e os campos obrigatórios do fechamento do turno.");
+  if (!STATE.operacao) {
+    throw new Error("Salve primeiro a etapa da operação.");
+  }
+
+  if (!participantCode) {
+    throw new Error("Informe o código do condomínio/família.");
+  }
+
+  if (pesoRejeitoGeralKg === null) {
+    throw new Error("Preencha o peso do rejeito geral.");
   }
 
   const extras = getExtras();
@@ -540,6 +596,7 @@ async function salvarFinalTurno() {
     createdByName: getCreatedByName(),
 
     opDate: STATE.operacao.opDate,
+    participantCode,
     deliveryType: STATE.operacao.deliveryType,
     flowType: "final_turno",
     observacao: STATE.operacao.opNotes || null,
@@ -562,14 +619,13 @@ async function salvarFinalTurno() {
     }
   };
 
+  console.log("Salvando final do turno:", payload);
+
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
   return {
     ...payload,
-    id: docRef.id,
-    condCode,
-    opDate: STATE.operacao.opDate,
-    flowType: "final_turno"
+    id: docRef.id
   };
 }
 
@@ -579,7 +635,10 @@ async function salvarFinalTurno() {
 
 function resetRecebimentoForm() {
   $("formRecebimento")?.reset();
-  if ($("qualidadeNota")) $("qualidadeNota").value = "";
+
+  if ($("qualidadeNota")) {
+    $("qualidadeNota").value = "";
+  }
 
   document.querySelectorAll(".quality-btn").forEach((btn) => {
     btn.classList.remove("active");
@@ -609,10 +668,12 @@ function wireForms() {
   $("formRecebimento")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (STATE.salvando) return;
+
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
     try {
       STATE.salvando = true;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -620,6 +681,7 @@ function wireForms() {
       }
 
       setConnectionState("salvando");
+
       const registro = await salvarRecebimento();
       preencherEtiquetaSimples(registro);
       openLabelModal();
@@ -633,11 +695,16 @@ function wireForms() {
       setConnectionState("conectado");
       resetRecebimentoForm();
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao salvar recebimento:", error);
       setConnectionState("erro");
-      setMsg($("msgRecebimento"), "bad", error.message || "Erro ao salvar recebimento.");
+      setMsg(
+        $("msgRecebimento"),
+        "bad",
+        error?.message || "Erro ao salvar recebimento."
+      );
     } finally {
       STATE.salvando = false;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -649,10 +716,12 @@ function wireForms() {
   $("formFinalTurno")?.addEventListener("submit", async (e) => {
     e.preventDefault();
     if (STATE.salvando) return;
+
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
     try {
       STATE.salvando = true;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -660,6 +729,7 @@ function wireForms() {
       }
 
       setConnectionState("salvando");
+
       const registro = await salvarFinalTurno();
       preencherEtiquetaSimples(registro);
       openLabelModal();
@@ -673,11 +743,16 @@ function wireForms() {
       setConnectionState("conectado");
       resetFinalTurnoForm();
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao salvar final do turno:", error);
       setConnectionState("erro");
-      setMsg($("msgFinalTurno"), "bad", error.message || "Erro ao salvar fechamento do turno.");
+      setMsg(
+        $("msgFinalTurno"),
+        "bad",
+        error?.message || "Erro ao salvar fechamento do turno."
+      );
     } finally {
       STATE.salvando = false;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -707,6 +782,11 @@ async function init() {
 
   if ($("opDate")) {
     $("opDate").value = toISODate(new Date());
+  }
+
+  const wrap = $("extrasWrap");
+  if (wrap && !wrap.children.length) {
+    wrap.appendChild(buildExtraRow());
   }
 
   setPageTerritoryState();
