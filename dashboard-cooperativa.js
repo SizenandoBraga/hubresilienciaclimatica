@@ -3,8 +3,10 @@ import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/f
 import {
   doc,
   getDoc,
+  setDoc,
   collection,
   query,
+  where,
   onSnapshot,
   updateDoc,
   serverTimestamp
@@ -148,6 +150,7 @@ const els = {
 ========================= */
 
 let coopProfile = null;
+let pageTerritoryId = "";
 let allColetas = [];
 let filteredColetas = [];
 let tableFilteredColetas = [];
@@ -266,6 +269,19 @@ function sameTerritoryValue(a, b) {
   return aliases.includes(aNorm);
 }
 
+function resolvePageTerritory(profile) {
+  const bodyTerritory = normalizeTerritory(document.body?.dataset?.territoryId || "");
+  const urlTerritory = normalizeTerritory(new URLSearchParams(window.location.search).get("territory") || "");
+  const userTerritory = normalizeTerritory(profile?.territoryId || "");
+  const role = normalizeText(profile?.role);
+
+  if (role === "admin" || role === "governanca" || role === "gestor") {
+    return bodyTerritory || urlTerritory || userTerritory || "";
+  }
+
+  return userTerritory || bodyTerritory || urlTerritory || "";
+}
+
 function createdAtToISO(item) {
   if (item.createdAt?.toDate) return item.createdAt.toDate().toISOString();
   if (item.updatedAt?.toDate) return item.updatedAt.toDate().toISOString();
@@ -295,7 +311,7 @@ function inferEntrega(item) {
 }
 
 function inferTerritorio(item) {
-  return item.territoryLabel || coopProfile?.territoryLabel || "Território";
+  return item.territoryLabel || coopProfile?.territoryLabel || pageTerritoryId || "Território";
 }
 
 function inferResiduoSeco(item) {
@@ -733,6 +749,101 @@ function fillUser(profile) {
   if (els.userTerritory) els.userTerritory.textContent = profile.territoryLabel || profile.territoryId || "—";
 }
 
+/* =========================
+   BOTÃO ATUALIZAR DADOS PÚBLICOS
+========================= */
+
+function ensureRefreshButton() {
+  let btn = document.getElementById("btnRefreshPublicStats");
+  if (btn) return btn;
+
+  const topActions = document.querySelector(".top-actions");
+  if (!topActions) return null;
+
+  btn = document.createElement("button");
+  btn.type = "button";
+  btn.id = "btnRefreshPublicStats";
+  btn.className = "mini-btn";
+  btn.textContent = "Atualizar dados públicos";
+  topActions.appendChild(btn);
+
+  btn.addEventListener("click", publishPublicStats);
+  return btn;
+}
+
+async function publishPublicStats() {
+  try {
+    const btn = ensureRefreshButton();
+    if (btn) {
+      btn.disabled = true;
+      btn.textContent = "Atualizando...";
+    }
+
+    const ativos = allColetas.filter((item) => getStatus(item) !== "cancelado");
+    const participantSet = new Set();
+    ativos.forEach((item) => {
+      const p = resolveParticipant(item);
+      if (p.code && p.code !== "—") participantSet.add(p.code);
+    });
+
+    const totalReciclavelKg = ativos.reduce((acc, item) => {
+      const somaMateriais = MATERIAL_META.reduce((sum, mat) => sum + getMaterialValue(item, mat.key), 0);
+      return acc + (isFinalTurno(item) ? somaMateriais : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item)));
+    }, 0);
+
+    const pontosSet = new Set();
+    participantsMap.forEach((p) => {
+      if (
+        p &&
+        sameTerritoryValue(p.territoryId || pageTerritoryId, pageTerritoryId) &&
+        (p.lat || p.lng || p.enderecoCompleto || p.localColeta)
+      ) {
+        pontosSet.add(p.code || p.id || p.name);
+      }
+    });
+
+    const payload = {
+      territoryId: pageTerritoryId,
+      territoryLabel: coopProfile?.territoryLabel || pageTerritoryId,
+      cooperativaMembersCount: 0,
+      participantsCount: participantSet.size,
+      totalPublicoPessoas: participantSet.size,
+      coletasCount: ativos.length,
+      residuosCount: Number((totalReciclavelKg / 1000).toFixed(1)),
+      pontosCount: pontosSet.size,
+      updatedAt: serverTimestamp()
+    };
+
+    await setDoc(doc(db, "dashboard_public_by_cooperativa", pageTerritoryId), payload, { merge: true });
+    await setDoc(doc(db, "publicDashboard", pageTerritoryId), payload, { merge: true });
+
+    alert("Dados públicos atualizados com sucesso.");
+  } catch (error) {
+    console.error("Erro ao atualizar dados públicos:", error);
+    alert("Não foi possível atualizar os dados públicos.");
+  } finally {
+    const btn = document.getElementById("btnRefreshPublicStats");
+    if (btn) {
+      btn.disabled = false;
+      btn.textContent = "Atualizar dados públicos";
+    }
+  }
+}
+
+/* =========================
+   FIRESTORE
+========================= */
+
+function buildTerritoryQuery(colName) {
+  const aliases = getTerritoryAliases(pageTerritoryId);
+
+  if (!aliases.length) {
+    return query(collection(db, colName));
+  }
+
+  return query(collection(db, colName), where("territoryId", "in", aliases));
+}
+
 function loadParticipantsMap() {
   if (activeParticipantsUnsubscribe) {
     activeParticipantsUnsubscribe();
@@ -740,20 +851,12 @@ function loadParticipantsMap() {
   }
 
   activeParticipantsUnsubscribe = onSnapshot(
-    query(collection(db, "participants")),
+    buildTerritoryQuery("participants"),
     (snap) => {
       participantsMap.clear();
 
       snap.forEach((d) => {
         const data = d.data();
-
-        if (
-          coopProfile &&
-          !["admin", "governanca", "gestor"].includes(normalizeText(coopProfile.role)) &&
-          !matchesProfileTerritory(data, coopProfile)
-        ) {
-          return;
-        }
 
         const coords = extractLatLngFromSource(data);
 
@@ -784,14 +887,10 @@ function loadParticipantsMap() {
       applyFilters();
     },
     (error) => {
-      console.error("Erro ao carregar participantes em tempo real:", error);
+      console.error("Erro ao carregar participantes:", error);
     }
   );
 }
-
-/* =========================
-   FIRESTORE COLETAS
-========================= */
 
 function subscribeToQuery(qRef) {
   if (activeUnsubscribe) {
@@ -808,11 +907,6 @@ function subscribeToQuery(qRef) {
       }));
 
       loaded = sortColetasLocally(loaded);
-
-      if (!["admin", "governanca", "gestor"].includes(normalizeText(coopProfile?.role))) {
-        loaded = loaded.filter((item) => matchesProfileTerritory(item, coopProfile));
-      }
-
       allColetas = loaded;
 
       if (els.dbStatus) els.dbStatus.textContent = "conectado";
@@ -832,8 +926,7 @@ function subscribeToQuery(qRef) {
 
 function listenColetas() {
   if (els.dbStatus) els.dbStatus.textContent = "conectando…";
-  const qRef = query(collection(db, "coletas"));
-  subscribeToQuery(qRef);
+  subscribeToQuery(buildTerritoryQuery("coletas"));
 }
 
 /* =========================
@@ -1354,7 +1447,7 @@ function renderCharts(items) {
 ========================= */
 
 function getCoopBaseLatLng() {
-  const aliases = getTerritoryAliases(coopProfile?.territoryId);
+  const aliases = getTerritoryAliases(pageTerritoryId);
   const territoryKey = aliases[0] || "vila-pinto";
   return COOP_BASES[territoryKey] || COOP_BASES["vila-pinto"];
 }
@@ -1797,7 +1890,7 @@ async function exportToPDF() {
 
       pdf.setFont("helvetica", "normal");
       pdf.setFontSize(9);
-      pdf.text(`Território: ${coopProfile?.territoryLabel || coopProfile?.territoryId || "Vila Pinto"}`, marginX, y);
+      pdf.text(`Território: ${coopProfile?.territoryLabel || coopProfile?.territoryId || pageTerritoryId || "Território"}`, marginX, y);
       y += 5;
       pdf.text(`Período: ${els.txtPeriodo?.textContent || "—"}`, marginX, y);
       y += 5;
@@ -2077,6 +2170,7 @@ function initCursorGlow() {
 
 function bindUI() {
   ensureCollectionDetailsModal();
+  ensureRefreshButton();
 
   els.btnAplicar?.addEventListener("click", applyFilters);
   els.btnLimpar?.addEventListener("click", clearFilters);
@@ -2195,6 +2289,12 @@ async function boot() {
       const profile = await getUserProfile(user.uid);
       validateProfile(profile);
       coopProfile = profile;
+
+      pageTerritoryId = resolvePageTerritory(profile);
+
+      if (!pageTerritoryId) {
+        throw new Error("Território da página não definido.");
+      }
 
       fillUser(profile);
       loadParticipantsMap();
