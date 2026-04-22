@@ -7,6 +7,12 @@ import {
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+import {
+  getStorage,
+  ref as storageRef,
+  uploadBytes,
+  getDownloadURL
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 /* =========================
    CONFIG FIXA VILA PINTO
@@ -18,6 +24,8 @@ const PAGE_TERRITORY = {
   backUrl: "./vila-pinto.html"
 };
 
+const storage = getStorage();
+
 /* =========================
    STATE GLOBAL
 ========================= */
@@ -25,7 +33,6 @@ const PAGE_TERRITORY = {
 const STATE = {
   territoryId: PAGE_TERRITORY.territoryId,
   operacao: null,
-  ultimaEtiqueta: null,
   salvando: false,
   user: null,
   userDoc: null
@@ -59,31 +66,12 @@ function parseNum(value) {
   return Number.isFinite(n) ? n : null;
 }
 
-function formatDateBR(dateStr) {
-  if (!dateStr) return "-";
-  const [year, month, day] = String(dateStr).split("-");
-  if (!year || !month || !day) return "-";
-  return `${day}/${month}/${year}`;
-}
-
 function formatFlow(value) {
   const map = {
     recebimento: "Recebimento",
     final_turno: "Final do turno"
   };
   return map[value] || value || "-";
-}
-
-function gerarCodigoEtiqueta() {
-  const now = new Date();
-  const y = now.getFullYear();
-  const m = String(now.getMonth() + 1).padStart(2, "0");
-  const d = String(now.getDate()).padStart(2, "0");
-  const h = String(now.getHours()).padStart(2, "0");
-  const min = String(now.getMinutes()).padStart(2, "0");
-  const s = String(now.getSeconds()).padStart(2, "0");
-
-  return `ETQ-${y}${m}${d}-${h}${min}${s}`;
 }
 
 function togglePanels(flowType) {
@@ -195,6 +183,56 @@ function ensureAuthenticatedUser() {
       );
     }
   }
+}
+
+function makeSafeFileName(name = "arquivo.jpg") {
+  return String(name)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-zA-Z0-9._-]/g, "_");
+}
+
+function ensureImageFile(file, label = "foto") {
+  if (!file) {
+    throw new Error(`A ${label} é obrigatória.`);
+  }
+  if (!String(file.type || "").startsWith("image/")) {
+    throw new Error(`O arquivo enviado em ${label} deve ser uma imagem.`);
+  }
+}
+
+async function uploadSingleImage(file, folderPath) {
+  ensureImageFile(file, "foto");
+
+  const path = `${folderPath}/${Date.now()}_${makeSafeFileName(file.name)}`;
+  const ref = storageRef(storage, path);
+
+  await uploadBytes(ref, file, {
+    contentType: file.type || "image/jpeg"
+  });
+
+  const url = await getDownloadURL(ref);
+  return {
+    path,
+    url,
+    name: file.name,
+    type: file.type || "",
+    size: file.size || 0
+  };
+}
+
+async function uploadManyImages(files, folderPath) {
+  const validFiles = Array.from(files || []).filter(Boolean);
+  if (!validFiles.length) {
+    throw new Error("Pelo menos uma foto é obrigatória.");
+  }
+
+  const uploaded = [];
+  for (const file of validFiles) {
+    const result = await uploadSingleImage(file, folderPath);
+    uploaded.push(result);
+  }
+  return uploaded;
 }
 
 /* =========================
@@ -425,91 +463,6 @@ function saveOperacaoBase() {
 }
 
 /* =========================
-   ETIQUETA
-========================= */
-
-function gerarQrCode(valor) {
-  const qrContainer = $("qrcode");
-  if (!qrContainer) return;
-
-  qrContainer.innerHTML = "";
-
-  if (typeof QRCode === "undefined") {
-    qrContainer.innerHTML = "<small>QRCode não disponível</small>";
-    return;
-  }
-
-  const texto = String(valor || "").trim();
-
-  if (!texto) {
-    qrContainer.innerHTML = "<small>Sem conteúdo para gerar QRCode</small>";
-    return;
-  }
-
-  try {
-    new QRCode(qrContainer, {
-      text: texto,
-      width: 200,
-      height: 200,
-      correctLevel: QRCode.CorrectLevel.M
-    });
-  } catch (error) {
-    console.error("Erro ao gerar QRCode:", error);
-    qrContainer.innerHTML = "<small>Não foi possível gerar o QRCode</small>";
-  }
-}
-
-function preencherEtiquetaSimples(registro) {
-  STATE.ultimaEtiqueta = registro;
-
-  const familyCode =
-    registro.familyCode ||
-    registro.participantCode ||
-    registro.condCode ||
-    "SEM-CODIGO";
-
-  // QR enxuto para não dar overflow
-  const qrPayload = `${registro.participantCode || familyCode}|${STATE.territoryId}|${registro.id || ""}`;
-
-  setText("labelFamilyCode", familyCode);
-  setText("labelDate", formatDateBR(registro.opDate));
-  gerarQrCode(qrPayload);
-}
-
-function openLabelModal() {
-  const modal = $("labelModal");
-  if (!modal) return;
-
-  modal.classList.remove("hidden");
-  modal.setAttribute("aria-hidden", "false");
-  document.body.style.overflow = "hidden";
-}
-
-function closeLabelModal() {
-  const modal = $("labelModal");
-  if (!modal) return;
-
-  modal.classList.add("hidden");
-  modal.setAttribute("aria-hidden", "true");
-  document.body.style.overflow = "";
-}
-
-function wireLabelModal() {
-  $("btnPrintLabel")?.addEventListener("click", () => {
-    if (!STATE.ultimaEtiqueta) return;
-    window.print();
-  });
-
-  $("btnCloseLabelModal")?.addEventListener("click", closeLabelModal);
-  $("btnCloseLabelModalFooter")?.addEventListener("click", closeLabelModal);
-  $("labelModalBackdrop")?.addEventListener("click", closeLabelModal);
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "Escape") closeLabelModal();
-  });
-}
-
-/* =========================
    FIRESTORE
 ========================= */
 
@@ -517,7 +470,6 @@ async function salvarRecebimento() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  // O campo visual "Código da família" recebe o participantCode aprovado
   const participantCode = $("familyCode")?.value.trim() || null;
   const familyCode = participantCode;
 
@@ -526,6 +478,9 @@ async function salvarRecebimento() {
   const recebimentoObs = $("recebimentoObs")?.value.trim() || null;
   const pesoRejeitoKg = parseNum($("pesoRejeitoKg")?.value);
   const pesoNaoComercializadoKg = parseNum($("pesoNaoComercializadoKg")?.value);
+
+  const fotoResiduoFile = $("fotoResiduo")?.files?.[0] || null;
+  const fotoNaoComercializadoFile = $("fotoNaoComercializado")?.files?.[0] || null;
 
   if (!STATE.operacao) {
     throw new Error("Salve primeiro a etapa da operação.");
@@ -544,7 +499,15 @@ async function salvarRecebimento() {
     throw new Error("Preencha todos os campos obrigatórios do recebimento.");
   }
 
-  const codigoEtiqueta = gerarCodigoEtiqueta();
+  ensureImageFile(fotoResiduoFile, "foto do resíduo");
+  ensureImageFile(fotoNaoComercializadoFile, "foto do não comercializado");
+
+  const uploadBase = `coletas/${STATE.territoryId}/recebimento/${participantCode}/${Date.now()}`;
+
+  const [fotoResiduoUpload, fotoNaoComercializadoUpload] = await Promise.all([
+    uploadSingleImage(fotoResiduoFile, `${uploadBase}/residuo`),
+    uploadSingleImage(fotoNaoComercializadoFile, `${uploadBase}/nao-comercializado`)
+  ]);
 
   const payload = {
     createdAt: serverTimestamp(),
@@ -561,9 +524,10 @@ async function salvarRecebimento() {
     deliveryType: STATE.operacao.deliveryType,
     flowType: "recebimento",
     observacao: STATE.operacao.opNotes || null,
-    codigoEtiqueta,
-
     familyCode,
+
+    photoUrl: fotoResiduoUpload.url,
+    photos: [fotoResiduoUpload.url, fotoNaoComercializadoUpload.url],
 
     recebimento: {
       pesoResiduoSecoKg,
@@ -571,8 +535,16 @@ async function salvarRecebimento() {
       observacao: recebimentoObs,
       pesoRejeitoKg,
       pesoNaoComercializadoKg,
-      fotosResiduoQtd: $("fotoResiduo")?.files?.length || 0,
-      fotosNaoComercializadoQtd: $("fotoNaoComercializado")?.files?.length || 0
+
+      fotoResiduoUrl: fotoResiduoUpload.url,
+      fotoNaoComercializadoUrl: fotoNaoComercializadoUpload.url,
+
+      photos: [fotoResiduoUpload.url, fotoNaoComercializadoUpload.url],
+
+      uploads: {
+        fotoResiduo: fotoResiduoUpload,
+        fotoNaoComercializado: fotoNaoComercializadoUpload
+      }
     }
   };
 
@@ -617,8 +589,14 @@ async function salvarFinalTurno() {
     throw new Error("Preencha o peso do rejeito geral.");
   }
 
+  if (!fotosFinalTurno.length) {
+    throw new Error("Pelo menos uma foto do final do turno é obrigatória.");
+  }
+
   const extras = getExtras();
-  const codigoEtiqueta = gerarCodigoEtiqueta();
+  const uploadBase = `coletas/${STATE.territoryId}/final_turno/${participantCode}/${Date.now()}`;
+  const uploadedPhotos = await uploadManyImages(fotosFinalTurno, `${uploadBase}/fotos`);
+  const photoUrls = uploadedPhotos.map((item) => item.url);
 
   const payload = {
     createdAt: serverTimestamp(),
@@ -635,9 +613,10 @@ async function salvarFinalTurno() {
     deliveryType: STATE.operacao.deliveryType,
     flowType: "final_turno",
     observacao: STATE.operacao.opNotes || null,
-    codigoEtiqueta,
-
     condCode,
+
+    photoUrl: photoUrls[0],
+    photos: photoUrls,
 
     finalTurno: {
       pesoRejeitoGeralKg,
@@ -650,7 +629,8 @@ async function salvarFinalTurno() {
       isoporKg: parseNum($("isoporKg")?.value) || 0,
       oleoKg: parseNum($("oleoKg")?.value) || 0,
       extras,
-      fotosQtd: fotosFinalTurno.length
+      photos: photoUrls,
+      uploads: uploadedPhotos
     }
   };
 
@@ -722,9 +702,7 @@ function wireForms() {
       }
 
       setConnectionState("salvando");
-      const registro = await salvarRecebimento();
-      preencherEtiquetaSimples(registro);
-      openLabelModal();
+      await salvarRecebimento();
 
       setMsg(
         $("msgRecebimento"),
@@ -762,9 +740,7 @@ function wireForms() {
       }
 
       setConnectionState("salvando");
-      const registro = await salvarFinalTurno();
-      preencherEtiquetaSimples(registro);
-      openLabelModal();
+      await salvarFinalTurno();
 
       setMsg(
         $("msgFinalTurno"),
@@ -805,7 +781,6 @@ async function init() {
   wireChoices();
   wireExtras();
   wireForms();
-  wireLabelModal();
 
   if ($("opDate")) {
     $("opDate").value = toISODate(new Date());
