@@ -17,8 +17,22 @@ import {
 
 const bodyConfig = document.body.dataset || {};
 
+function canonicalTerritoryId(value) {
+  const raw = String(value || "")
+    .trim()
+    .toLowerCase()
+    .replaceAll("_", "-")
+    .replace(/\s+/g, "-");
+
+  if (!raw) return "vila-pinto";
+  if (raw === "crgr-vila-pinto") return "vila-pinto";
+  if (raw === "crgr-coadesc" || raw === "crgr-cooadesc") return "coadesc";
+  if (raw === "crgr-padre-cacique") return "padre-cacique";
+  return raw;
+}
+
 const PAGE_TERRITORY = {
-  territoryId: bodyConfig.territoryId || "crgr_vila_pinto",
+  territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
   territoryLabel: bodyConfig.territoryLabel || "Território",
   cooperativeName: bodyConfig.cooperativeName || "Cooperativa",
   participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
@@ -162,6 +176,10 @@ function normalizeText(value) {
     .toLowerCase();
 }
 
+function normalizedTerritoryEqual(a, b) {
+  return canonicalTerritoryId(a) === canonicalTerritoryId(b);
+}
+
 function roleLabel(role) {
   const map = {
     admin: "Administrador da cooperativa",
@@ -300,7 +318,9 @@ function setCoopSyncButtonLoading(isLoading) {
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) throw new Error("Usuário não encontrado.");
-  return { id: snap.id, ...snap.data() };
+  const data = { id: snap.id, ...snap.data() };
+  if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
+  return data;
 }
 
 function validateProfile(profile) {
@@ -651,10 +671,11 @@ function buildParticipantsQuery(profile, useOrdered = true) {
 
 function applyParticipantsSnapshot(snapshot) {
   STATE.allParticipants = snapshot.docs
-    .map((docItem) => ({
-      id: docItem.id,
-      ...docItem.data()
-    }))
+    .map((docItem) => {
+      const data = { id: docItem.id, ...docItem.data() };
+      if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
+      return data;
+    })
     .filter((item) => item.approvalStatus !== "rejected");
 
   computeParticipantsKpis(STATE.allParticipants);
@@ -835,10 +856,11 @@ function loadApprovalRequests(profile) {
   STATE.approvalRequestsUnsubscribe = onSnapshot(
     orderedQuery,
     (snapshot) => {
-      STATE.approvalRequests = snapshot.docs.map((docItem) => ({
-        id: docItem.id,
-        ...docItem.data()
-      }));
+      STATE.approvalRequests = snapshot.docs.map((docItem) => {
+        const data = { id: docItem.id, ...docItem.data() };
+        if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
+        return data;
+      });
       renderApprovalRequests(STATE.approvalRequests);
       if (STATE.profile) loadIndicators(STATE.profile);
     },
@@ -850,10 +872,11 @@ function loadApprovalRequests(profile) {
       STATE.approvalRequestsUnsubscribe = onSnapshot(
         fallbackQuery,
         (snapshot) => {
-          STATE.approvalRequests = snapshot.docs.map((docItem) => ({
-            id: docItem.id,
-            ...docItem.data()
-          }));
+          STATE.approvalRequests = snapshot.docs.map((docItem) => {
+            const data = { id: docItem.id, ...docItem.data() };
+            if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
+            return data;
+          });
           renderApprovalRequests(STATE.approvalRequests);
           if (STATE.profile) loadIndicators(STATE.profile);
         },
@@ -982,9 +1005,9 @@ async function rejectParticipantRequest(requestId) {
 }
 
 function getDefaultTerritoryPoints(profile) {
-  const territoryId = profile?.territoryId || PAGE_TERRITORY.territoryId;
+  const territoryId = canonicalTerritoryId(profile?.territoryId || PAGE_TERRITORY.territoryId);
 
-  if (territoryId === "crgr_vila_pinto") {
+  if (territoryId === "vila-pinto") {
     return [
       {
         id: "vp-main",
@@ -1013,7 +1036,7 @@ function getDefaultTerritoryPoints(profile) {
     ];
   }
 
-  if (territoryId === "crgr_coadesc" || territoryId === "crgr_cooadesc") {
+  if (territoryId === "coadesc" || territoryId === "cooadesc") {
     return [
       {
         id: "coa-1",
@@ -1034,7 +1057,7 @@ function getDefaultTerritoryPoints(profile) {
     ];
   }
 
-  if (territoryId === "crgr_padre_cacique") {
+  if (territoryId === "padre-cacique") {
     return [
       {
         id: "pc-1",
@@ -1519,11 +1542,19 @@ async function loadIndicators(profile) {
 async function loadCollectionSafe(name) {
   try {
     const snap = await getDocs(query(collection(db, name), orderBy("createdAt", "desc")));
-    return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    return snap.docs.map((d) => {
+      const data = { id: d.id, ...d.data() };
+      if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
+      return data;
+    });
   } catch {
     try {
       const snap = await getDocs(collection(db, name));
-      return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      return snap.docs.map((d) => {
+        const data = { id: d.id, ...d.data() };
+        if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
+        return data;
+      });
     } catch (error) {
       console.warn(`Não foi possível ler a coleção ${name}:`, error);
       return [];
@@ -1532,10 +1563,12 @@ async function loadCollectionSafe(name) {
 }
 
 function buildCooperativaPublicSummary({ users, participants, coletas, approvalRequests, territoryId, territoryLabel }) {
-  const usersFiltered = users.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
-  const participantsFiltered = participants.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
-  const coletasFiltered = coletas.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
-  const approvalFiltered = approvalRequests.filter((item) => normalizeText(item.territoryId) === normalizeText(territoryId));
+  const normalizedId = canonicalTerritoryId(territoryId);
+
+  const usersFiltered = users.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
+  const participantsFiltered = participants.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
+  const coletasFiltered = coletas.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
+  const approvalFiltered = approvalRequests.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
 
   const cooperativaMembersCount = usersFiltered.filter((item) =>
     ["cooperativa", "integrante", "catador", "user", "usuario", "admin"].includes(normalizeText(item.role))
@@ -1544,7 +1577,7 @@ function buildCooperativaPublicSummary({ users, participants, coletas, approvalR
   const residuosCount = coletasFiltered.reduce((acc, item) => acc + getResiduosTotalFromColeta(item), 0);
 
   return {
-    territoryId,
+    territoryId: normalizedId,
     territoryLabel,
     usersCount: usersFiltered.length + participantsFiltered.length,
     participantsCount: participantsFiltered.length,
@@ -1570,6 +1603,8 @@ async function saveCooperativaPublicDashboard(payload) {
 
 async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent = false }) {
   try {
+    const normalizedId = canonicalTerritoryId(territoryId);
+
     setCoopSyncButtonLoading(true);
     setCoopSyncStatus(silent ? "Verificando atualização automática..." : "Atualizando indicadores da cooperativa...");
 
@@ -1585,7 +1620,7 @@ async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent
       participants,
       coletas,
       approvalRequests,
-      territoryId,
+      territoryId: normalizedId,
       territoryLabel
     });
 
@@ -1606,13 +1641,15 @@ async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent
 
 async function autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabel }) {
   try {
+    const normalizedId = canonicalTerritoryId(territoryId);
+
     setCoopSyncStatus("Verificando última atualização...");
 
-    const snap = await getDoc(doc(db, "dashboard_public_by_cooperativa", territoryId));
+    const snap = await getDoc(doc(db, "dashboard_public_by_cooperativa", normalizedId));
 
     if (!snap.exists()) {
       await runCooperativaDashboardSync({
-        territoryId,
+        territoryId: normalizedId,
         territoryLabel,
         silent: true
       });
@@ -1629,7 +1666,7 @@ async function autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabe
 
     if (!updatedAt || diff >= AUTO_SYNC_INTERVAL_MS) {
       await runCooperativaDashboardSync({
-        territoryId,
+        territoryId: normalizedId,
         territoryLabel: data?.territoryLabel || territoryLabel,
         silent: true
       });
@@ -1730,7 +1767,7 @@ function boot() {
       loadApprovalRequests(profile);
       initTerritoryMap(profile);
 
-      const territoryId = profile.territoryId || PAGE_TERRITORY.territoryId;
+      const territoryId = canonicalTerritoryId(profile.territoryId || PAGE_TERRITORY.territoryId);
       const territoryLabel = profile.territoryLabel || PAGE_TERRITORY.territoryLabel;
 
       bindCooperativaSyncButton({ territoryId, territoryLabel });
