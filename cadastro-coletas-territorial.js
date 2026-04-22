@@ -7,12 +7,6 @@ import {
   doc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-import {
-  getStorage,
-  ref as storageRef,
-  uploadBytes,
-  getDownloadURL
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-storage.js";
 
 /* =========================
    CONFIG FIXA VILA PINTO
@@ -23,8 +17,6 @@ const PAGE_TERRITORY = {
   territoryLabel: "Centro de Triagem Vila Pinto",
   backUrl: "./vila-pinto.html"
 };
-
-const storage = getStorage();
 
 /* =========================
    STATE GLOBAL
@@ -185,13 +177,6 @@ function ensureAuthenticatedUser() {
   }
 }
 
-function makeSafeFileName(name = "arquivo.jpg") {
-  return String(name)
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-zA-Z0-9._-]/g, "_");
-}
-
 function ensureImageFile(file, label = "foto") {
   if (!file) {
     throw new Error(`A ${label} é obrigatória.`);
@@ -201,38 +186,81 @@ function ensureImageFile(file, label = "foto") {
   }
 }
 
-async function uploadSingleImage(file, folderPath) {
+function readFileAsDataURL(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImageFromDataUrl(dataUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = () => reject(new Error("Não foi possível processar a imagem."));
+    img.src = dataUrl;
+  });
+}
+
+async function compressImageFile(file, options = {}) {
   ensureImageFile(file, "foto");
 
-  const path = `${folderPath}/${Date.now()}_${makeSafeFileName(file.name)}`;
-  const ref = storageRef(storage, path);
+  const {
+    maxWidth = 1280,
+    maxHeight = 1280,
+    quality = 0.72,
+    mimeType = "image/jpeg"
+  } = options;
 
-  await uploadBytes(ref, file, {
-    contentType: file.type || "image/jpeg"
-  });
+  const dataUrl = await readFileAsDataURL(file);
+  const img = await loadImageFromDataUrl(dataUrl);
 
-  const url = await getDownloadURL(ref);
+  let { width, height } = img;
+
+  const widthRatio = maxWidth / width;
+  const heightRatio = maxHeight / height;
+  const ratio = Math.min(widthRatio, heightRatio, 1);
+
+  const targetWidth = Math.max(1, Math.round(width * ratio));
+  const targetHeight = Math.max(1, Math.round(height * ratio));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = targetWidth;
+  canvas.height = targetHeight;
+
+  const ctx = canvas.getContext("2d");
+  if (!ctx) {
+    throw new Error("Não foi possível preparar a imagem para salvar.");
+  }
+
+  ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+  const compressedDataUrl = canvas.toDataURL(mimeType, quality);
+
   return {
-    path,
-    url,
-    name: file.name,
-    type: file.type || "",
-    size: file.size || 0
+    dataUrl: compressedDataUrl,
+    originalName: file.name || "foto.jpg",
+    originalType: file.type || "",
+    originalSize: file.size || 0,
+    savedType: mimeType,
+    width: targetWidth,
+    height: targetHeight
   };
 }
 
-async function uploadManyImages(files, folderPath) {
+async function compressManyImages(files, options = {}) {
   const validFiles = Array.from(files || []).filter(Boolean);
   if (!validFiles.length) {
     throw new Error("Pelo menos uma foto é obrigatória.");
   }
 
-  const uploaded = [];
+  const result = [];
   for (const file of validFiles) {
-    const result = await uploadSingleImage(file, folderPath);
-    uploaded.push(result);
+    result.push(await compressImageFile(file, options));
   }
-  return uploaded;
+  return result;
 }
 
 /* =========================
@@ -502,11 +530,9 @@ async function salvarRecebimento() {
   ensureImageFile(fotoResiduoFile, "foto do resíduo");
   ensureImageFile(fotoNaoComercializadoFile, "foto do não comercializado");
 
-  const uploadBase = `coletas/${STATE.territoryId}/recebimento/${participantCode}/${Date.now()}`;
-
-  const [fotoResiduoUpload, fotoNaoComercializadoUpload] = await Promise.all([
-    uploadSingleImage(fotoResiduoFile, `${uploadBase}/residuo`),
-    uploadSingleImage(fotoNaoComercializadoFile, `${uploadBase}/nao-comercializado`)
+  const [fotoResiduo, fotoNaoComercializado] = await Promise.all([
+    compressImageFile(fotoResiduoFile),
+    compressImageFile(fotoNaoComercializadoFile)
   ]);
 
   const payload = {
@@ -526,8 +552,8 @@ async function salvarRecebimento() {
     observacao: STATE.operacao.opNotes || null,
     familyCode,
 
-    photoUrl: fotoResiduoUpload.url,
-    photos: [fotoResiduoUpload.url, fotoNaoComercializadoUpload.url],
+    photoUrl: fotoResiduo.dataUrl,
+    photos: [fotoResiduo.dataUrl, fotoNaoComercializado.dataUrl],
 
     recebimento: {
       pesoResiduoSecoKg,
@@ -536,30 +562,19 @@ async function salvarRecebimento() {
       pesoRejeitoKg,
       pesoNaoComercializadoKg,
 
-      fotoResiduoUrl: fotoResiduoUpload.url,
-      fotoNaoComercializadoUrl: fotoNaoComercializadoUpload.url,
+      fotoResiduoUrl: fotoResiduo.dataUrl,
+      fotoNaoComercializadoUrl: fotoNaoComercializado.dataUrl,
 
-      photos: [fotoResiduoUpload.url, fotoNaoComercializadoUpload.url],
+      photos: [fotoResiduo.dataUrl, fotoNaoComercializado.dataUrl],
 
       uploads: {
-        fotoResiduo: fotoResiduoUpload,
-        fotoNaoComercializado: fotoNaoComercializadoUpload
+        fotoResiduo: fotoResiduo,
+        fotoNaoComercializado: fotoNaoComercializado
       }
     }
   };
 
-  console.log("Tentando salvar recebimento com:", {
-    uid: STATE.user?.uid || null,
-    role: STATE.userDoc?.role || null,
-    status: STATE.userDoc?.status || null,
-    active: STATE.userDoc?.active ?? null,
-    userTerritoryId: STATE.userDoc?.territoryId || null,
-    payloadTerritoryId: payload.territoryId,
-    participantCode: payload.participantCode || null,
-    createdBy: payload.createdBy || null
-  });
-
-  console.log("Payload recebimento:", JSON.stringify(payload, null, 2));
+  console.log("Payload recebimento:", payload);
 
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
@@ -594,9 +609,8 @@ async function salvarFinalTurno() {
   }
 
   const extras = getExtras();
-  const uploadBase = `coletas/${STATE.territoryId}/final_turno/${participantCode}/${Date.now()}`;
-  const uploadedPhotos = await uploadManyImages(fotosFinalTurno, `${uploadBase}/fotos`);
-  const photoUrls = uploadedPhotos.map((item) => item.url);
+  const uploadedPhotos = await compressManyImages(fotosFinalTurno);
+  const photoUrls = uploadedPhotos.map((item) => item.dataUrl);
 
   const payload = {
     createdAt: serverTimestamp(),
@@ -634,18 +648,7 @@ async function salvarFinalTurno() {
     }
   };
 
-  console.log("Tentando salvar final do turno com:", {
-    uid: STATE.user?.uid || null,
-    role: STATE.userDoc?.role || null,
-    status: STATE.userDoc?.status || null,
-    active: STATE.userDoc?.active ?? null,
-    userTerritoryId: STATE.userDoc?.territoryId || null,
-    payloadTerritoryId: payload.territoryId,
-    participantCode: payload.participantCode || null,
-    createdBy: payload.createdBy || null
-  });
-
-  console.log("Payload finalTurno:", JSON.stringify(payload, null, 2));
+  console.log("Payload finalTurno:", payload);
 
   const docRef = await addDoc(collection(db, "coletas"), payload);
 
