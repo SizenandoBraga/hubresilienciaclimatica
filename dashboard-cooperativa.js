@@ -6,7 +6,6 @@ import {
   collection,
   query,
   onSnapshot,
-  getDocs,
   updateDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -425,6 +424,173 @@ function buildExportFileStamp() {
   return `${yyyy}-${mm}-${dd}_${hh}-${mi}`;
 }
 
+function firstFinite(...values) {
+  for (const value of values) {
+    const n = Number(value);
+    if (Number.isFinite(n)) return n;
+  }
+  return null;
+}
+
+function extractLatLngFromSource(source) {
+  if (!source || typeof source !== "object") {
+    return { lat: null, lng: null };
+  }
+
+  const lat = firstFinite(
+    source.lat,
+    source.latitude,
+    source.coords?.lat,
+    source.coords?.latitude,
+    source.location?.lat,
+    source.location?.latitude,
+    source.address?.lat,
+    source.address?.latitude,
+    source.geo?.lat,
+    source.geo?.latitude
+  );
+
+  const lng = firstFinite(
+    source.lng,
+    source.longitude,
+    source.lon,
+    source.coords?.lng,
+    source.coords?.longitude,
+    source.coords?.lon,
+    source.location?.lng,
+    source.location?.longitude,
+    source.location?.lon,
+    source.address?.lng,
+    source.address?.longitude,
+    source.address?.lon,
+    source.geo?.lng,
+    source.geo?.longitude,
+    source.geo?.lon
+  );
+
+  return { lat, lng };
+}
+
+function buildAddressFromParticipant(data = {}) {
+  const nested = data.address || {};
+  return (
+    data.enderecoCompleto ||
+    [
+      nested.street,
+      nested.number,
+      nested.neighborhood,
+      nested.city,
+      nested.state
+    ].filter(Boolean).join(", ") ||
+    [
+      data.rua,
+      data.numero,
+      data.bairro,
+      data.cidade,
+      data.uf
+    ].filter(Boolean).join(", ")
+  );
+}
+
+function getColetaPhotoUrls(item = {}) {
+  const rawCandidates = [
+    item.photoUrl,
+    item.photoURL,
+    item.imageUrl,
+    item.imageURL,
+    item.fotoUrl,
+    item.fotoURL,
+    item.downloadURL,
+
+    item.recebimento?.photoUrl,
+    item.recebimento?.photoURL,
+    item.recebimento?.imageUrl,
+    item.recebimento?.imageURL,
+    item.recebimento?.fotoUrl,
+    item.recebimento?.downloadURL,
+
+    item.finalTurno?.photoUrl,
+    item.finalTurno?.photoURL,
+    item.finalTurno?.imageUrl,
+    item.finalTurno?.imageURL,
+    item.finalTurno?.fotoUrl,
+    item.finalTurno?.downloadURL
+  ];
+
+  const arrayCandidates = [
+    item.photos,
+    item.images,
+    item.fotos,
+    item.attachments,
+    item.recebimento?.photos,
+    item.recebimento?.images,
+    item.recebimento?.fotos,
+    item.finalTurno?.photos,
+    item.finalTurno?.images,
+    item.finalTurno?.fotos
+  ].filter(Array.isArray);
+
+  const urls = [];
+
+  rawCandidates.forEach((value) => {
+    if (typeof value === "string" && value.trim()) urls.push(value.trim());
+  });
+
+  arrayCandidates.forEach((arr) => {
+    arr.forEach((entry) => {
+      if (typeof entry === "string" && entry.trim()) {
+        urls.push(entry.trim());
+        return;
+      }
+      if (entry && typeof entry === "object") {
+        const possible = entry.url || entry.downloadURL || entry.photoUrl || entry.imageUrl;
+        if (typeof possible === "string" && possible.trim()) {
+          urls.push(possible.trim());
+        }
+      }
+    });
+  });
+
+  return [...new Set(urls)];
+}
+
+function inferCreatorLabel(item = {}) {
+  return item.createdByName || item.createdByPublicCode || item.createdBy || "—";
+}
+
+function inferParticipantExtraInfo(item = {}) {
+  return (
+    item.participantType ||
+    item.recebimento?.participantType ||
+    item.finalTurno?.participantType ||
+    item.localType ||
+    "—"
+  );
+}
+
+function ensureCollectionDetailsModal() {
+  let modal = document.getElementById("collectionDetailsModal");
+  if (modal) return modal;
+
+  modal = document.createElement("div");
+  modal.id = "collectionDetailsModal";
+  modal.className = "modal";
+  modal.setAttribute("aria-hidden", "true");
+  modal.innerHTML = `
+    <div class="modal-backdrop" data-close="collectionDetailsModal"></div>
+    <div class="modal-card" style="width:min(980px, calc(100vw - 28px));">
+      <button class="modal-close" data-close="collectionDetailsModal" aria-label="Fechar">×</button>
+      <div class="modal-head">
+        <h3>Detalhes da coleta</h3>
+        <p>Visualização completa do registro salvo.</p>
+      </div>
+      <div class="modal-body" id="collectionDetailsContent"></div>
+    </div>
+  `;
+  document.body.appendChild(modal);
+  return modal;
+}
+
 /* =========================
    PERFIL / PARTICIPANTES
 ========================= */
@@ -478,8 +644,8 @@ function resolveParticipant(item) {
     status: matched?.status || "—",
     address,
     localColeta: matched?.localColeta || item.localColeta || "",
-    lat: Number(matched?.lat ?? matched?.latitude ?? matched?.coords?.lat ?? 0),
-    lng: Number(matched?.lng ?? matched?.longitude ?? matched?.coords?.lng ?? 0)
+    lat: Number(matched?.lat ?? 0),
+    lng: Number(matched?.lng ?? 0)
   };
 }
 
@@ -551,20 +717,22 @@ function loadParticipantsMap() {
 
       snap.forEach((d) => {
         const data = d.data();
+        const coords = extractLatLngFromSource(data);
+
         const payload = {
           id: d.id,
           name: data.name || data.participantName || "Sem nome",
           participantCode: data.participantCode || data.familyCode || data.codigo || d.id,
           participantType: data.participantType || data.type || "",
           status: data.status || "",
-          enderecoCompleto: data.enderecoCompleto || "",
-          rua: data.rua || "",
-          numero: data.numero || "",
-          bairro: data.bairro || "",
-          cidade: data.cidade || "",
-          localColeta: data.localColeta || "",
-          lat: data.lat ?? data.latitude ?? null,
-          lng: data.lng ?? data.longitude ?? null,
+          enderecoCompleto: buildAddressFromParticipant(data),
+          rua: data.rua || data.address?.street || "",
+          numero: data.numero || data.address?.number || "",
+          bairro: data.bairro || data.address?.neighborhood || "",
+          cidade: data.cidade || data.address?.city || "",
+          localColeta: data.localColeta || data.address?.localColeta || "",
+          lat: coords.lat,
+          lng: coords.lng,
           coords: data.coords || null
         };
 
@@ -948,12 +1116,6 @@ function renderExpandedPanel(items) {
    GRÁFICOS
 ========================= */
 
-function destroyCharts() {
-  [mainChart, secA, secB, secC, weightTimelineChart].forEach((chart) => {
-    if (chart) chart.destroy();
-  });
-}
-
 function getChartOptions(type, horizontal = false) {
   const base = {
     responsive: true,
@@ -1300,15 +1462,6 @@ function renderCollectionPoints(items) {
    TABELA
 ========================= */
 
-function renderQualidadeBadge(item) {
-  const q = getQualidade(item);
-  if (!q) return `<span class="quality-badge">—</span>`;
-  if (q === "1") return `<span class="quality-badge quality-1">1</span>`;
-  if (q === "2") return `<span class="quality-badge quality-2">2</span>`;
-  if (q === "3") return `<span class="quality-badge quality-3">3</span>`;
-  return `<span class="quality-badge">${escapeHtml(q)}</span>`;
-}
-
 function renderStatusBadge(item) {
   const status = getStatus(item);
 
@@ -1363,6 +1516,82 @@ function updateTableSummary() {
   }
 }
 
+function openCollectionDetailsModal(itemId) {
+  const item = allColetas.find((x) => x.id === itemId);
+  if (!item) return;
+
+  const modal = ensureCollectionDetailsModal();
+  const content = document.getElementById("collectionDetailsContent");
+  if (!content) return;
+
+  const participant = resolveParticipant(item);
+  const photos = getColetaPhotoUrls(item);
+  const materialsHtml = MATERIAL_META
+    .map((mat) => {
+      const value = getMaterialValue(item, mat.key);
+      if (!value) return "";
+      return `<div><strong>${escapeHtml(mat.label)}:</strong> ${formatKg(value)}</div>`;
+    })
+    .filter(Boolean)
+    .join("");
+
+  const rawPayload = escapeHtml(JSON.stringify(item, null, 2));
+
+  content.innerHTML = `
+    <div style="display:grid;gap:18px;">
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;">
+        <div class="read-box"><strong>Data:</strong> ${escapeHtml(formatDateBR(inferDateISO(item)))}</div>
+        <div class="read-box"><strong>Fluxo:</strong> ${escapeHtml(inferFluxo(item))}</div>
+        <div class="read-box"><strong>Participante:</strong> ${escapeHtml(participant.name)}</div>
+        <div class="read-box"><strong>Código:</strong> ${escapeHtml(participant.code)}</div>
+        <div class="read-box"><strong>Entrega:</strong> ${escapeHtml(inferEntrega(item))}</div>
+        <div class="read-box"><strong>Status:</strong> ${escapeHtml(resolveHumanStatus(item))}</div>
+        <div class="read-box"><strong>Tipo cadastro:</strong> ${escapeHtml(inferParticipantExtraInfo(item))}</div>
+        <div class="read-box"><strong>Criado por:</strong> ${escapeHtml(inferCreatorLabel(item))}</div>
+        <div class="read-box" style="grid-column:1 / -1;"><strong>Endereço:</strong> ${escapeHtml(participant.address || "—")}</div>
+        <div class="read-box"><strong>Resíduo seco:</strong> ${escapeHtml(formatKg(inferResiduoSeco(item)))}</div>
+        <div class="read-box"><strong>Rejeito:</strong> ${escapeHtml(formatKg(inferRejeito(item)))}</div>
+        <div class="read-box"><strong>Não comercializado:</strong> ${escapeHtml(formatKg(inferNaoComercializado(item)))}</div>
+        <div class="read-box"><strong>Qualidade:</strong> ${escapeHtml(getQualidade(item) || "—")}</div>
+        <div class="read-box" style="grid-column:1 / -1;"><strong>Observação:</strong> ${escapeHtml(inferObservacao(item) || "—")}</div>
+      </div>
+
+      <div class="read-box">
+        <strong>Materiais informados</strong>
+        <div style="margin-top:10px;display:grid;gap:6px;">
+          ${materialsHtml || "<div>Nenhum material detalhado informado.</div>"}
+        </div>
+      </div>
+
+      <div class="read-box">
+        <strong>Foto(s) do registro</strong>
+        <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;">
+          ${
+            photos.length
+              ? photos.map((url) => `
+                  <img
+                    src="${escapeHtml(url)}"
+                    alt="Foto da coleta"
+                    data-photo="${escapeHtml(url)}"
+                    style="width:120px;height:120px;object-fit:cover;border-radius:16px;border:1px solid rgba(60,58,57,.12);cursor:pointer;"
+                  />
+                `).join("")
+              : `<div>Nenhuma foto vinculada ao registro.</div>`
+          }
+        </div>
+      </div>
+
+      <details class="read-box">
+        <summary style="cursor:pointer;font-weight:800;">Ver payload salvo do registro</summary>
+        <pre style="margin-top:12px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.45;">${rawPayload}</pre>
+      </details>
+    </div>
+  `;
+
+  modal.classList.add("open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
 function renderMainTable(items) {
   if (!els.tableColetasBody) return;
 
@@ -1379,13 +1608,6 @@ function renderMainTable(items) {
   els.tableColetasBody.innerHTML = items.map((item) => {
     const participant = resolveParticipant(item);
     const canceled = getStatus(item) === "cancelado";
-    const detailParts = [
-      `Entrega: ${inferEntrega(item)}`,
-      `Seco: ${formatKg(inferResiduoSeco(item))}`,
-      `Rejeito: ${formatKg(inferRejeito(item))}`,
-      `Não comerc.: ${formatKg(inferNaoComercializado(item))}`,
-      `Qualidade: ${getQualidade(item) || "—"}`
-    ];
 
     return `
       <tr class="${canceled ? "row-muted" : ""}">
@@ -1394,7 +1616,11 @@ function renderMainTable(items) {
         <td>${escapeHtml(participant.code)}</td>
         <td>${escapeHtml(inferFluxo(item))}</td>
         <td>${renderStatusBadge(item)}</td>
-        <td>${detailParts.map((p) => `<div>${escapeHtml(p)}</div>`).join("")}</td>
+        <td>
+          <button class="action-btn edit" type="button" data-view-details="${item.id}">
+            Ver coleta
+          </button>
+        </td>
         <td>
           <div class="table-actions">
             <button class="action-btn edit" data-edit="${item.id}" ${canceled ? "disabled" : ""}>Editar</button>
@@ -1762,6 +1988,8 @@ function initCursorGlow() {
 }
 
 function bindUI() {
+  ensureCollectionDetailsModal();
+
   els.btnAplicar?.addEventListener("click", applyFilters);
   els.btnLimpar?.addEventListener("click", clearFilters);
   els.btnPrint?.addEventListener("click", () => window.print());
@@ -1821,6 +2049,12 @@ function bindUI() {
       return;
     }
 
+    const detailsBtn = event.target.closest("[data-view-details]");
+    if (detailsBtn) {
+      openCollectionDetailsModal(detailsBtn.dataset.viewDetails);
+      return;
+    }
+
     const editBtn = event.target.closest("[data-edit]");
     if (editBtn) {
       openEditModal(editBtn.dataset.edit);
@@ -1875,7 +2109,7 @@ async function boot() {
       coopProfile = profile;
 
       fillUser(profile);
-      await loadParticipantsMap();
+      loadParticipantsMap();
       listenColetas();
 
       const urlParams = new URLSearchParams(window.location.search);
