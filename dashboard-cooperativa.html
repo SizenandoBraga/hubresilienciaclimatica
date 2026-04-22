@@ -11,16 +11,13 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-  />
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css"
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
 
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 
   <link rel="stylesheet" href="./dashboard-cooperativa.css">
 </head>
@@ -200,59 +197,45 @@
           <div class="top-actions">
             <span class="pill pill-orange"><span class="b"></span> Período: <span id="txtPeriodo">—</span></span>
             <span class="pill"><span class="b"></span> Registros: <span id="txtRegistrosTopo">0</span></span>
-            <button class="mini-btn mini-btn-orange" id="btnPrint" type="button">Imprimir / PDF</button>
+            <button class="mini-btn" id="btnPrint" type="button">Imprimir tela</button>
+            <button class="mini-btn mini-btn-orange" id="btnExportPDF" type="button">Baixar PDF</button>
+            <button class="mini-btn mini-btn-green" id="btnExportExcel" type="button">Baixar Excel</button>
           </div>
         </div>
 
         <div class="kpis" aria-label="Indicadores principais">
           <div class="kpi kpi-orange">
-            <div class="kpi-head">
-              <span class="kpi-icon">📦</span>
-              <span class="klabel">Total de coletas</span>
-            </div>
+            <div class="kpi-head"><span class="kpi-icon">📦</span><span class="klabel">Total de coletas</span></div>
             <p class="kvalue" id="k_totalColetas">0</p>
             <p class="khint">Quantidade total no período filtrado.</p>
           </div>
 
           <div class="kpi">
-            <div class="kpi-head">
-              <span class="kpi-icon">👥</span>
-              <span class="klabel">Participantes únicos</span>
-            </div>
+            <div class="kpi-head"><span class="kpi-icon">👥</span><span class="klabel">Participantes únicos</span></div>
             <p class="kvalue" id="k_participantes">0</p>
             <p class="khint">Participantes distintos com operação no período.</p>
           </div>
 
           <div class="kpi">
-            <div class="kpi-head">
-              <span class="kpi-icon">♻️</span>
-              <span class="klabel">Resíduo seco (kg)</span>
-            </div>
+            <div class="kpi-head"><span class="kpi-icon">♻️</span><span class="klabel">Resíduo seco (kg)</span></div>
             <p class="kvalue" id="k_residuoSeco">0</p>
             <p class="khint">Somatório de recebimento e materiais do turno.</p>
           </div>
 
           <div class="kpi kpi-orange-soft">
-            <div class="kpi-head">
-              <span class="kpi-icon">🚯</span>
-              <span class="klabel">Rejeito total (kg)</span>
-            </div>
+            <div class="kpi-head"><span class="kpi-icon">🚯</span><span class="klabel">Rejeito total (kg)</span></div>
             <p class="kvalue" id="k_rejeito">0</p>
             <p class="khint">Peso rejeitado no período.</p>
           </div>
 
           <div class="kpi">
-            <div class="kpi-head">
-              <span class="kpi-icon">🕒</span>
-              <span class="klabel">Final de turno</span>
-            </div>
+            <div class="kpi-head"><span class="kpi-icon">🕒</span><span class="klabel">Final de turno</span></div>
             <p class="kvalue" id="k_finalTurno">0</p>
             <p class="khint">Quantidade de fechamentos operacionais.</p>
           </div>
         </div>
       </section>
 
-      <!-- SEÇÃO 1 -->
       <section class="panel">
         <div class="panel-inner">
           <div class="panel-head">
@@ -339,7 +322,6 @@
         </div>
       </section>
 
-      <!-- SEÇÃO 2 -->
       <section class="panel">
         <div class="panel-inner">
           <div class="panel-head">
@@ -348,12 +330,10 @@
               <p>Materiais recicláveis com cards visuais, peso e participação percentual.</p>
             </div>
           </div>
-
           <div class="material-cards enhanced" id="materialCards"></div>
         </div>
       </section>
 
-      <!-- SEÇÃO 3 -->
       <section class="panel">
         <div class="panel-inner">
           <div class="panel-head">
@@ -375,13 +355,10 @@
               <div class="reject-value"><span id="k_naoComercializadoPct">0%</span></div>
               <div class="reject-kg" id="k_naoComercializadoKg">0 kg</div>
             </div>
-
-          
           </div>
         </div>
       </section>
 
-      <!-- SEÇÃO 4 -->
       <section class="panel">
         <div class="panel-inner">
           <div class="panel-head">
@@ -390,14 +367,10 @@
               <p>Evolução do peso reciclável e rejeito por operação registrada.</p>
             </div>
           </div>
-
-          <div class="canvas-wrap">
-            <canvas id="weightTimelineChart"></canvas>
-          </div>
+          <div class="canvas-wrap"><canvas id="weightTimelineChart"></canvas></div>
         </div>
       </section>
 
-      <!-- SEÇÃO 5 -->
       <section class="panel">
         <div class="panel-inner">
           <div class="panel-head">
@@ -408,38 +381,14 @@
           </div>
 
           <div class="charts-grid-2x2">
-            <div class="chart-card">
-              <div class="chart-title">Quantidade de coletas</div>
-              <div class="canvas-wrap medium">
-                <canvas id="mainChart"></canvas>
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <div class="chart-title">Tipos de coletas</div>
-              <div class="canvas-wrap medium">
-                <canvas id="secA"></canvas>
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <div class="chart-title">Coletas por materiais</div>
-              <div class="canvas-wrap medium">
-                <canvas id="secB"></canvas>
-              </div>
-            </div>
-
-            <div class="chart-card">
-              <div class="chart-title">Pontos de coleta</div>
-              <div class="canvas-wrap medium">
-                <canvas id="secC"></canvas>
-              </div>
-            </div>
+            <div class="chart-card"><div class="chart-title">Quantidade de coletas</div><div class="canvas-wrap medium"><canvas id="mainChart"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">Tipos de coletas</div><div class="canvas-wrap medium"><canvas id="secA"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">Coletas por materiais</div><div class="canvas-wrap medium"><canvas id="secB"></canvas></div></div>
+            <div class="chart-card"><div class="chart-title">Pontos de coleta</div><div class="canvas-wrap medium"><canvas id="secC"></canvas></div></div>
           </div>
         </div>
       </section>
 
-      <!-- MAPA E ROTA -->
       <section class="panel">
         <div class="panel-inner">
           <div class="panel-head">
@@ -469,163 +418,123 @@
         </div>
       </section>
 
-      <!-- SEÇÃO 6 -->
-     <section class="panel">
-  <div class="panel-inner">
-    <div class="panel-head">
-      <div class="hgroup">
-        <h2>Seção 6 • Tabela de coletas</h2>
-        <p>
-          Visualização detalhada dos registros com filtros rápidos, leitura operacional
-          e geração de etiqueta da coleta.
-        </p>
-      </div>
-    </div>
-
-    <div class="table-section-pro">
-      <div class="table-summary-cards">
-        <div class="mini-summary-card">
-          <span class="mini-summary-label">Registros visíveis</span>
-          <strong id="tableVisibleCount">0</strong>
-        </div>
-        <div class="mini-summary-card">
-          <span class="mini-summary-label">Filtrados na tabela</span>
-          <strong id="tableFilteredCount">0</strong>
-        </div>
-        <div class="mini-summary-card">
-          <span class="mini-summary-label">Última atualização</span>
-          <strong id="tableLastUpdate">—</strong>
-        </div>
-      </div>
-
-      <div class="table-filters-pro">
-        <div class="table-filter-field search">
-          <label for="tSearch">Busca na tabela</label>
-          <input
-            id="tSearch"
-            type="text"
-            placeholder="participante, código, observação, material..."
-          />
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tFluxo">Fluxo</label>
-          <select id="tFluxo">
-            <option value="__all__">Todos</option>
-            <option value="recebimento">Recebimento</option>
-            <option value="final_turno">Final do turno</option>
-          </select>
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tEntrega">Entrega</label>
-          <select id="tEntrega">
-            <option value="__all__">Todas</option>
-          </select>
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tStatus">Status</label>
-          <select id="tStatus">
-            <option value="__all__">Todos</option>
-            <option value="ativo">Ativo</option>
-            <option value="editado">Editado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tTipoCadastro">Tipo cadastro</label>
-          <select id="tTipoCadastro">
-            <option value="__all__">Todos</option>
-            <option value="participante">Participante</option>
-            <option value="condominio">Condomínio</option>
-            <option value="comercio">Comércio</option>
-            <option value="outro">Outro</option>
-          </select>
-        </div>
-
-        <div class="table-filter-actions">
-          <button type="button" class="btn btn-primary" id="btnApplyTableFilters">Filtrar tabela</button>
-          <button type="button" class="btn btn-ghost" id="btnClearTableFilters">Limpar tabela</button>
-        </div>
-      </div>
-
-      <div class="table-with-label-layout">
-        <div class="table-wrap table-wrap-pro">
-          <table id="tbl" class="table-pro">
-            
-       <thead>
-  <tr>
-    <th>Data</th>
-    <th>Participante</th>
-    <th>Código</th>
-    <th>Tipo de recebimento</th>
-    <th>Status</th>
-    <th>Detalhes</th>
-    <th>Ações</th>
-  </tr>
-</thead>
-            
-            <tbody id="tableColetasBody"></tbody>
-          </table>
-        </div>
-
-        <aside class="label-generator-card">
-          <div class="label-generator-head">
-            <h3>Etiqueta da coleta</h3>
-            <p>Selecione um registro da tabela para gerar a etiqueta.</p>
-          </div>
-
-          <div class="label-preview-card" id="collectionLabelPreview">
-            <div class="label-preview-brand">
-              <img src="img/NSRU - Logo-Preto.png" alt="NSRU">
-              <div>
-                <strong>NSRU</strong>
-                <span>Etiqueta operacional</span>
-              </div>
-            </div>
-
-            <div class="label-preview-body">
-              <div class="label-preview-line">
-                <span>Participante</span>
-                <strong id="labelParticipantName">—</strong>
-              </div>
-
-              <div class="label-preview-line">
-                <span>Código</span>
-                <strong id="labelParticipantCode">—</strong>
-              </div>
-
-              <div class="label-preview-line">
-                <span>Data</span>
-                <strong id="labelCollectionDate">—</strong>
-              </div>
-
-              <div class="label-preview-line">
-                <span>Fluxo</span>
-                <strong id="labelCollectionFlow">—</strong>
-              </div>
-
-              <div class="label-qr-wrap">
-                <div id="collectionLabelQr"></div>
-              </div>
-
-              <div class="label-preview-note">
-                QR Code com acesso rápido ao dashboard filtrado pelo código do participante.
-              </div>
+      <section class="panel">
+        <div class="panel-inner">
+          <div class="panel-head">
+            <div class="hgroup">
+              <h2>Seção 6 • Tabela de coletas</h2>
+              <p>Visualização detalhada dos registros com filtros rápidos, leitura operacional e geração de etiqueta da coleta.</p>
             </div>
           </div>
 
-          <div class="label-generator-actions">
-            <button type="button" class="btn btn-primary" id="btnGenerateCollectionLabel">Gerar etiqueta</button>
-            <button type="button" class="btn btn-orange" id="btnPrintCollectionLabel">Imprimir etiqueta</button>
+          <div class="table-section-pro">
+            <div class="table-summary-cards">
+              <div class="mini-summary-card"><span class="mini-summary-label">Registros visíveis</span><strong id="tableVisibleCount">0</strong></div>
+              <div class="mini-summary-card"><span class="mini-summary-label">Filtrados na tabela</span><strong id="tableFilteredCount">0</strong></div>
+              <div class="mini-summary-card"><span class="mini-summary-label">Última atualização</span><strong id="tableLastUpdate">—</strong></div>
+            </div>
+
+            <div class="table-filters-pro">
+              <div class="table-filter-field search">
+                <label for="tSearch">Busca na tabela</label>
+                <input id="tSearch" type="text" placeholder="participante, código, observação, material..." />
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tFluxo">Fluxo</label>
+                <select id="tFluxo">
+                  <option value="__all__">Todos</option>
+                  <option value="recebimento">Recebimento</option>
+                  <option value="final_turno">Final do turno</option>
+                </select>
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tEntrega">Entrega</label>
+                <select id="tEntrega">
+                  <option value="__all__">Todas</option>
+                </select>
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tStatus">Status</label>
+                <select id="tStatus">
+                  <option value="__all__">Todos</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="editado">Editado</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tTipoCadastro">Tipo cadastro</label>
+                <select id="tTipoCadastro">
+                  <option value="__all__">Todos</option>
+                  <option value="participante">Participante</option>
+                  <option value="condominio">Condomínio</option>
+                  <option value="comercio">Comércio</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+
+              <div class="table-filter-actions">
+                <button type="button" class="btn btn-primary" id="btnApplyTableFilters">Filtrar tabela</button>
+                <button type="button" class="btn btn-ghost" id="btnClearTableFilters">Limpar tabela</button>
+              </div>
+            </div>
+
+            <div class="table-with-label-layout">
+              <div class="table-wrap table-wrap-pro">
+                <table id="tbl" class="table-pro">
+                  <thead>
+                    <tr>
+                      <th>Data</th>
+                      <th>Participante</th>
+                      <th>Código</th>
+                      <th>Tipo de recebimento</th>
+                      <th>Status</th>
+                      <th>Detalhes</th>
+                      <th>Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableColetasBody"></tbody>
+                </table>
+              </div>
+
+              <aside class="label-generator-card">
+                <div class="label-generator-head">
+                  <h3>Etiqueta da coleta</h3>
+                  <p>Selecione um registro da tabela para gerar a etiqueta.</p>
+                </div>
+
+                <div class="label-preview-card" id="collectionLabelPreview">
+                  <div class="label-preview-brand">
+                    <img src="img/NSRU - Logo-Preto.png" alt="NSRU">
+                    <div>
+                      <strong>NSRU</strong>
+                      <span>Etiqueta operacional</span>
+                    </div>
+                  </div>
+
+                  <div class="label-preview-body">
+                    <div class="label-preview-line"><span>Participante</span><strong id="labelParticipantName">—</strong></div>
+                    <div class="label-preview-line"><span>Código</span><strong id="labelParticipantCode">—</strong></div>
+                    <div class="label-preview-line"><span>Data</span><strong id="labelCollectionDate">—</strong></div>
+                    <div class="label-preview-line"><span>Fluxo</span><strong id="labelCollectionFlow">—</strong></div>
+                    <div class="label-qr-wrap"><div id="collectionLabelQr"></div></div>
+                    <div class="label-preview-note">QR Code com acesso rápido ao dashboard filtrado pelo código do participante.</div>
+                  </div>
+                </div>
+
+                <div class="label-generator-actions">
+                  <button type="button" class="btn btn-primary" id="btnGenerateCollectionLabel">Gerar etiqueta</button>
+                  <button type="button" class="btn btn-orange" id="btnPrintCollectionLabel">Imprimir etiqueta</button>
+                </div>
+              </aside>
+            </div>
           </div>
-        </aside>
-      </div>
-    </div>
-  </div>
-</section>
+        </div>
+      </section>
 
       <div class="foot">© <span id="year"></span> • NSRU • Dashboard de Coletas</div>
     </main>

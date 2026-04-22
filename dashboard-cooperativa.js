@@ -433,9 +433,7 @@ function firstFinite(...values) {
 }
 
 function extractLatLngFromSource(source) {
-  if (!source || typeof source !== "object") {
-    return { lat: null, lng: null };
-  }
+  if (!source || typeof source !== "object") return { lat: null, lng: null };
 
   const lat = firstFinite(
     source.lat,
@@ -597,17 +595,14 @@ function ensureCollectionDetailsModal() {
 
 function matchesProfileTerritory(item, profile) {
   if (!profile?.territoryId) return false;
+
   const role = normalizeText(profile.role);
-  if (role === "admin" || role === "governanca") return true;
+  if (role === "admin" || role === "governanca" || role === "gestor") return true;
 
-  const itemTerr = normalizeTerritory(item.territoryId);
-  const userTerr = normalizeTerritory(profile.territoryId);
+  const itemTerr = normalizeTerritory(item.territoryId || item.territory || "");
+  const userTerr = normalizeTerritory(profile.territoryId || "");
 
-  return (
-    itemTerr === userTerr ||
-    itemTerr.includes(userTerr) ||
-    userTerr.includes(itemTerr)
-  );
+  return itemTerr === userTerr;
 }
 
 function resolveParticipant(item) {
@@ -636,6 +631,8 @@ function resolveParticipant(item) {
         .join(" ");
   }
 
+  const coords = extractLatLngFromSource(matched || {});
+
   return {
     id: participantId || matched?.id || "",
     code: matched?.participantCode || fallbackCode,
@@ -644,8 +641,8 @@ function resolveParticipant(item) {
     status: matched?.status || "—",
     address,
     localColeta: matched?.localColeta || item.localColeta || "",
-    lat: Number(matched?.lat ?? 0),
-    lng: Number(matched?.lng ?? 0)
+    lat: coords.lat,
+    lng: coords.lng
   };
 }
 
@@ -682,18 +679,26 @@ function showQuickParticipantPreviewByCode(code) {
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) throw new Error("Usuário não encontrado.");
-  return snap.data();
+  return { id: snap.id, ...snap.data() };
 }
 
 function validateProfile(profile) {
   const role = normalizeText(profile.role);
-  if (!["cooperativa", "admin", "governanca"].includes(role)) {
-    throw new Error("Acesso permitido somente para cooperativa, admin ou governança.");
+
+  if (!["cooperativa", "operador", "usuario", "admin", "governanca", "gestor"].includes(role)) {
+    throw new Error("Acesso permitido somente para perfis autorizados.");
   }
-  if (profile.status !== "active") {
+
+  const isActiveUser =
+    profile.status === "active" ||
+    profile.status === "aprovado" ||
+    profile.active === true;
+
+  if (!isActiveUser) {
     throw new Error("Usuário sem acesso ativo.");
   }
-  if (!profile.territoryId && role !== "admin" && role !== "governanca") {
+
+  if (!["admin", "governanca", "gestor"].includes(role) && !profile.territoryId) {
     throw new Error("Usuário sem território vinculado.");
   }
 }
@@ -717,6 +722,15 @@ function loadParticipantsMap() {
 
       snap.forEach((d) => {
         const data = d.data();
+
+        if (
+          coopProfile &&
+          !["admin", "governanca", "gestor"].includes(normalizeText(coopProfile.role)) &&
+          !matchesProfileTerritory(data, coopProfile)
+        ) {
+          return;
+        }
+
         const coords = extractLatLngFromSource(data);
 
         const payload = {
@@ -733,7 +747,8 @@ function loadParticipantsMap() {
           localColeta: data.localColeta || data.address?.localColeta || "",
           lat: coords.lat,
           lng: coords.lng,
-          coords: data.coords || null
+          coords: data.coords || null,
+          territoryId: data.territoryId || ""
         };
 
         participantsMap.set(d.id, payload);
@@ -770,7 +785,7 @@ function subscribeToQuery(qRef) {
 
       loaded = sortColetasLocally(loaded);
 
-      if (normalizeText(coopProfile?.role) !== "admin" && normalizeText(coopProfile?.role) !== "governanca") {
+      if (!["admin", "governanca", "gestor"].includes(normalizeText(coopProfile?.role))) {
         loaded = loaded.filter((item) => matchesProfileTerritory(item, coopProfile));
       }
 
@@ -1700,19 +1715,9 @@ async function exportToExcel() {
     const workbook = XLSX.utils.book_new();
 
     const colWidths = [
-      { wch: 14 },
-      { wch: 28 },
-      { wch: 18 },
-      { wch: 18 },
-      { wch: 20 },
-      { wch: 22 },
-      { wch: 18 },
-      { wch: 14 },
-      { wch: 18 },
-      { wch: 16 },
-      { wch: 26 },
-      { wch: 12 },
-      { wch: 40 }
+      { wch: 14 }, { wch: 28 }, { wch: 18 }, { wch: 18 }, { wch: 20 },
+      { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 16 },
+      { wch: 26 }, { wch: 12 }, { wch: 40 }
     ];
     worksheet["!cols"] = colWidths;
 
@@ -1844,6 +1849,17 @@ function renderLabelQr(record) {
   const participant = resolveParticipant(record);
   const filterUrl = `${window.location.origin}${window.location.pathname}?codigo=${encodeURIComponent(participant.code || "")}`;
 
+  if (window.QRCode) {
+    els.collectionLabelQr.innerHTML = "";
+    new window.QRCode(els.collectionLabelQr, {
+      text: filterUrl,
+      width: 132,
+      height: 132,
+      correctLevel: window.QRCode.CorrectLevel.H
+    });
+    return;
+  }
+
   els.collectionLabelQr.innerHTML = `
     <div style="display:grid;place-items:center;width:100%;min-height:140px;border:1px dashed rgba(60,58,57,.18);border-radius:16px;padding:12px;text-align:center;">
       <div>
@@ -1877,7 +1893,54 @@ function printCollectionLabel() {
     alert("Gere uma etiqueta antes de imprimir.");
     return;
   }
-  window.print();
+
+  const preview = document.getElementById("collectionLabelPreview");
+  if (!preview) {
+    window.print();
+    return;
+  }
+
+  const printWindow = window.open("", "_blank", "width=900,height=700");
+  if (!printWindow) {
+    alert("Não foi possível abrir a janela de impressão.");
+    return;
+  }
+
+  const styles = `
+    <style>
+      body { font-family: Inter, Arial, sans-serif; margin: 0; padding: 24px; }
+      .print-wrap { display:flex; justify-content:center; align-items:center; min-height:100vh; }
+      .label-preview-card {
+        width: 420px; border: 1px solid #ddd; border-radius: 18px; padding: 20px;
+        box-sizing: border-box;
+      }
+      .label-preview-brand { display:flex; gap:12px; align-items:center; margin-bottom:16px; }
+      .label-preview-brand img { width:48px; height:auto; }
+      .label-preview-body { display:grid; gap:10px; }
+      .label-preview-line { display:flex; justify-content:space-between; gap:12px; }
+      .label-qr-wrap { display:flex; justify-content:center; padding:14px 0; }
+      .label-preview-note { font-size:12px; color:#555; text-align:center; }
+    </style>
+  `;
+
+  printWindow.document.write(`
+    <html>
+      <head>
+        <title>Etiqueta da coleta</title>
+        ${styles}
+      </head>
+      <body>
+        <div class="print-wrap">${preview.outerHTML}</div>
+        <script>
+          window.onload = function() {
+            window.print();
+            setTimeout(function(){ window.close(); }, 300);
+          };
+        <\/script>
+      </body>
+    </html>
+  `);
+  printWindow.document.close();
 }
 
 /* =========================

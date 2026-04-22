@@ -1,13 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
   "use strict";
 
-  const $ = (selector, scope = document) => scope.querySelector(selector);
-  const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
-
   const bodyData = document.body.dataset || {};
 
   const TERRITORY_DATA = {
-    territoryId: bodyData.territoryId || "vila-pinto",
+    territoryId: bodyData.territoryId || "",
     title: bodyData.title || "Território",
     lead: bodyData.lead || "",
     label: bodyData.label || "Território",
@@ -41,6 +38,31 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
   };
+
+  function normalizeTerritory(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .replace(/_/g, "-");
+  }
+
+  function territoryAliases(value) {
+    const v = normalizeTerritory(value);
+
+    if (v === "vila-pinto" || v === "crgr-vila-pinto") {
+      return ["vila-pinto", "crgr-vila-pinto"];
+    }
+
+    if (v === "cooadesc" || v === "cooadesc" || v === "crgr-cooadesc" || v === "crgr-cooadesc") {
+      return ["cooadesc", "cooadesc", "crgr-cooadesc", "crgr-cooadesc"];
+    }
+
+    if (v === "padre-cacique" || v === "crgr-padre-cacique") {
+      return ["padre-cacique", "crgr-padre-cacique"];
+    }
+
+    return v ? [v] : [];
+  }
 
   function formatNumber(value) {
     return Number(value || 0).toLocaleString("pt-BR");
@@ -99,35 +121,65 @@ document.addEventListener("DOMContentLoaded", () => {
     setText("pontosValue", formatNumber(stats.pontos));
   }
 
+  async function tryGetDashboardDoc(db, firestore, docId) {
+    const { doc, getDoc } = firestore;
+    const snap = await getDoc(doc(db, "dashboard_public_by_cooperativa", docId));
+    return snap;
+  }
+
   async function loadPublicTerritoryStats() {
     try {
+      if (!TERRITORY_DATA.territoryId) {
+        console.error("[TERRITÓRIO] territoryId não definido no HTML.");
+        renderStats({
+          cooperados: 0,
+          coletas: 0,
+          volume: 0,
+          pontos: 0
+        });
+        return;
+      }
+
       const firebaseInit = await import("./firebase-init.js");
       const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
       const { db } = firebaseInit;
-      const { doc, getDoc } = firestore;
+      const aliases = territoryAliases(TERRITORY_DATA.territoryId);
 
-      console.log("[TERRITÓRIO] lendo doc:", TERRITORY_DATA.territoryId);
+      console.log("[TERRITÓRIO] territoryId da página:", TERRITORY_DATA.territoryId);
+      console.log("[TERRITÓRIO] aliases aceitos:", aliases);
 
-      const snap = await getDoc(
-        doc(db, "dashboard_public_by_cooperativa", TERRITORY_DATA.territoryId)
-      );
+      let foundSnap = null;
+      let foundId = null;
 
-      if (!snap.exists()) {
-        console.warn("[TERRITÓRIO] doc não existe, usando fallback");
-        renderStats(TERRITORY_DATA.stats);
+      for (const alias of aliases) {
+        const snap = await tryGetDashboardDoc(db, firestore, alias);
+        if (snap.exists()) {
+          foundSnap = snap;
+          foundId = alias;
+          break;
+        }
+      }
+
+      if (!foundSnap) {
+        console.warn("[TERRITÓRIO] nenhum dashboard encontrado para:", aliases);
+        renderStats({
+          cooperados: 0,
+          coletas: 0,
+          volume: 0,
+          pontos: 0
+        });
         return;
       }
 
-      const data = snap.data();
-      console.log("[TERRITÓRIO] doc carregado:", data);
+      const data = foundSnap.data();
+      console.log("[TERRITÓRIO] doc carregado:", foundId, data);
 
-      // 🔥 CORREÇÃO PRINCIPAL AQUI
       const cooperados = Number(
-        data.totalPublicoPessoas ||
-        (Number(data.cooperativaMembersCount || 0) + Number(data.participantsCount || 0)) ||
-        data.usersCount ||
-        TERRITORY_DATA.stats.cooperados ||
+        data.totalPublicoPessoas ??
+        ((Number(data.cooperativaMembersCount || 0) + Number(data.participantsCount || 0)) || 0) ??
+        data.usersCount ??
+        TERRITORY_DATA.stats.cooperados ??
         0
       );
 
@@ -139,6 +191,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const volume = Number(
         data.residuosCount ??
+        data.volumeCount ??
         TERRITORY_DATA.stats.volume ??
         0
       );
@@ -159,13 +212,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (error) {
       console.error("[TERRITÓRIO] erro:", error);
-      renderStats(TERRITORY_DATA.stats);
+      renderStats({
+        cooperados: 0,
+        coletas: 0,
+        volume: 0,
+        pontos: 0
+      });
     }
   }
 
   function initMap() {
     const mapEl = document.getElementById("map");
-
     if (!mapEl || typeof window.L === "undefined") return;
 
     const map = window.L.map(mapEl).setView(

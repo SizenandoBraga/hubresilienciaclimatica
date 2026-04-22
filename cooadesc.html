@@ -6,8 +6,8 @@
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>Território COOADESC • Núcleo de Soluções para Resíduos Urbanos</title>
-  <meta name="description" content="Território COOADESC no Núcleo de Soluções para Resíduos Urbanos: indicadores, cooperativa, mapa territorial e acessos operacionais." />
+  <title>Território COADESC • Núcleo de Soluções para Resíduos Urbanos</title>
+  <meta name="description" content="Território COADESC no Núcleo de Soluções para Resíduos Urbanos: indicadores, cooperativa, mapa territorial e acessos operacionais." />
   <meta name="theme-color" content="#81B92A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,36 +19,38 @@
   <link rel="stylesheet" href="footer-publico.css" />
   <link rel="stylesheet" href="/territorio-publico.css">
 </head>
+
 <body
-  data-title="COOADESC"
-  data-lead="Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território."
-  data-label="COOADESC"
+data-territory-id="cooadesc"
+  data-title="COADESC"
+  data-lead="Cooperativa com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem, inserida em um dos territórios de maior vulnerabilidade socioeconômica e risco climático de Porto Alegre."
+  data-label="COADESC"
   data-region="Porto Alegre / RS"
-  data-profile="Operação comunitária e cooperativa"
-  data-focus="Coleta seletiva, triagem e fortalecimento territorial"
-  data-coop-name="COOADESC"
-  data-coop-description="Território com atuação em mobilização comunitária, coleta seletiva e fortalecimento da reciclagem local."
+  data-profile="Cooperativa de trabalho com inserção produtiva e vínculo territorial"
+  data-focus="Coleta seletiva, triagem e resiliência climática"
+  data-coop-name="COADESC"
+  data-coop-description="Cooperativa com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem."
   data-participant-url="cadastro-participantes-cooadesc.html"
   data-dashboard-url="dashboard-cooperativa.html"
   data-coop-url="cooperativa.html"
   data-users-url="usuarios.html"
-  data-cooperados="18"
-  data-coletas="102"
-  data-volume="12.4"
-  data-pontos="9"
+  data-cooperados="0"
+  data-coletas="0"
+  data-volume="0"
+  data-pontos="0"
   data-map-center-lat="-30.003"
   data-map-center-lng="-51.206"
   data-map-zoom="14"
   data-marker-lat="-30.003"
   data-marker-lng="-51.206"
-  data-marker-popup="<div style='font-family:Archivo Condensed,sans-serif;'><strong>COOADESC</strong><br>COOADESC<br>Farrapos<br>Porto Alegre • RS</div>"
+  data-marker-popup="<div style='font-family:Archivo Condensed,sans-serif;'><strong>COADESC</strong><br>Farrapos<br>Porto Alegre • RS</div>"
 >
   <div class="bg-grid"></div>
   <div class="bg-orb orb-1"></div>
   <div class="bg-orb orb-2"></div>
   <div class="noise"></div>
 
- <div id="site-header"></div>
+  <div id="site-header"></div>
 
   <main>
     <section class="hero-territory">
@@ -56,21 +58,22 @@
         <div class="hero-copy">
           <span class="eyebrow">CRGR • Território prioritário</span>
 
-          <h1 id="territoryHeroTitle">COOADESC</h1>
+          <h1 id="territoryHeroTitle">COADESC</h1>
 
           <p class="hero-lead" id="territoryHeroLead">
-            Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território.
+            Cooperativa com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem,
+            inserida em um dos territórios de maior vulnerabilidade socioeconômica e risco climático de Porto Alegre.
           </p>
 
           <div class="hero-tags">
             <span class="tag">Gestão Territorial</span>
             <span class="tag">Reciclagem</span>
-            <span class="tag">Economia Circular</span>
+            <span class="tag">Resiliência Climática</span>
           </div>
 
           <div class="hero-actions">
-            <a href="#" class="btn btn-primary" data-participant-link>Cadastrar participante</a>
-            <a href="#" class="btn btn-secondary" data-dashboard-link>Ver dashboard</a>
+            <a href="cadastro-participantes-cooadesc.html" class="btn btn-primary" data-participant-link>Cadastrar participante</a>
+            <a href="dashboard-cooperativa.html" class="btn btn-secondary" data-dashboard-link>Ver dashboard</a>
           </div>
         </div>
 
@@ -86,7 +89,7 @@
             <ul class="territory-meta">
               <li>
                 <strong>Nome:</strong>
-                <span id="territoryLabelText">COOADESC</span>
+                <span id="territoryLabelText">COADESC</span>
               </li>
               <li>
                 <strong>Região:</strong>
@@ -94,11 +97,11 @@
               </li>
               <li>
                 <strong>Perfil:</strong>
-                <span id="territoryProfileText">Operação comunitária e cooperativa</span>
+                <span id="territoryProfileText">Cooperativa de trabalho com inserção produtiva e vínculo territorial</span>
               </li>
               <li>
                 <strong>Foco:</strong>
-                <span id="territoryFocusText">Coleta seletiva, triagem e fortalecimento territorial</span>
+                <span id="territoryFocusText">Coleta seletiva, triagem e resiliência climática</span>
               </li>
             </ul>
           </div>
@@ -110,8 +113,8 @@
       <div class="container">
         <div class="stats-grid">
           <article class="stat-card">
-            <span class="stat-label">Cooperados</span>
-            <strong class="stat-value" id="cooperadosValue">0</strong>
+            <span class="stat-label">Cooperados totais</span>
+            <strong class="stat-value" id="cooperadosValue">?</strong>
             <p class="stat-note">Equipe vinculada ao território</p>
           </article>
 
@@ -122,8 +125,8 @@
           </article>
 
           <article class="stat-card">
-            <span class="stat-label">Volume reciclado</span>
-            <strong class="stat-value" id="volumeValue">0,0 t</strong>
+            <span class="stat-label">Volume reciclado por mês</span>
+            <strong class="stat-value" id="volumeValue">?</strong>
             <p class="stat-note">Soma das quantidades registradas</p>
           </article>
 
@@ -146,26 +149,37 @@
             </div>
           </div>
 
-          <div id="map" class="territory-map" aria-label="Mapa do território COOADESC"></div>
+          <div id="map" class="territory-map" aria-label="Mapa do território COADESC"></div>
+
+          <div style="margin-top:16px;">
+            <a
+              href="https://maps.app.goo.gl/A3YuWBqR632XDMtb9"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-link"
+            >
+              Abrir localização no Google Maps
+            </a>
+          </div>
         </section>
 
         <aside class="panel side-stack">
           <div class="mini-panel">
             <span class="section-kicker">Cooperativa</span>
-            <h3 id="coopNameText">COOADESC</h3>
+            <h3 id="coopNameText">COADESC</h3>
             <p id="coopDescriptionText">
-              Território com atuação em mobilização comunitária, coleta seletiva e fortalecimento da reciclagem local.
+              Cooperativa com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.
             </p>
-            <a href="#" class="inline-link" data-coop-link>Acessar página da cooperativa</a>
+            <a href="cooperativa.html" class="inline-link" data-coop-link>Acessar página da cooperativa</a>
           </div>
 
           <div class="mini-panel">
             <span class="section-kicker">Ações rápidas</span>
             <div class="quick-actions">
-              <a href="#" class="quick-btn" data-participant-link>Cadastro de participante</a>
-              <a href="#" class="quick-btn" data-dashboard-link>Indicadores</a>
+              <a href="cadastro-participantes-cooadesc.html" class="quick-btn" data-participant-link>Cadastro de participante</a>
+              <a href="dashboard-cooperativa.html" class="quick-btn" data-dashboard-link>Indicadores</a>
               <a href="conteudos.html" class="quick-btn">Conteúdos</a>
-              <a href="#" class="quick-btn" data-users-link>Usuários</a>
+              <a href="usuarios.html" class="quick-btn" data-users-link>Usuários</a>
             </div>
           </div>
         </aside>
@@ -174,29 +188,54 @@
 
     <section class="details-section">
       <div class="container details-grid">
+
         <article class="panel detail-card">
-          <span class="section-kicker">Sobre o território</span>
-          <h3>Território estratégico de atuação</h3>
+          <span class="section-kicker">Sobre a cooperativa</span>
+          <h3>COADESC</h3>
           <p>
-            A página territorial centraliza informações essenciais para leitura rápida da operação local, permitindo acompanhar volume, registros, acessos e articulações vinculadas ao CRGR.
+            A COADESC atua na triagem de materiais recicláveis, articulação comunitária e fortalecimento da cadeia local
+            de reciclagem, inserida em um dos territórios de maior vulnerabilidade socioeconômica e risco climático de Porto Alegre.
+          </p>
+          <p>
+            Sua presença no território combina inserção produtiva, geração de renda e fortalecimento da organização local
+            em torno da gestão de resíduos e da economia circular.
           </p>
         </article>
 
         <article class="panel detail-card">
-          <span class="section-kicker">Objetivo</span>
-          <h3>Gestão integrada e acompanhamento contínuo</h3>
+          <span class="section-kicker">Território estratégico</span>
+          <h3>Bairro Farrapos</h3>
           <p>
-            Este ambiente foi pensado para apoiar coordenação, governança, cooperados e equipes técnicas com uma visão mais clara e organizada do território.
+            Com cerca de 19 mil habitantes, renda média de R$ 542,17 mensais e taxa de analfabetismo de 4,16%,
+            o Farrapos está entre os bairros mais vulneráveis de Porto Alegre.
+          </p>
+          <p>
+            Foi também um dos dez bairros mais atingidos pela enchente de maio de 2024, evento que expôs a baixa
+            resiliência do território diante de crises climáticas.
+          </p>
+          <p>
+            A pesquisa realizada em 196 domicílios reforça esse diagnóstico: 83% dos moradores desconhecem o destino do lixo
+            após a coleta e 93% não sabem onde descartar resíduos especiais, lacunas que dificultam a resposta coletiva do bairro.
           </p>
         </article>
 
         <article class="panel detail-card">
-          <span class="section-kicker">Conectado ao Firebase</span>
-          <h3>Dados reais por território</h3>
+          <span class="section-kicker">COADESC como CRGR</span>
+          <h3>Centro de Referência em Gestão de Resíduos</h3>
           <p>
-            Os indicadores, participantes, coletas e pontos de coleta podem ser carregados automaticamente conforme o território do usuário logado.
+            A COADESC opera no Farrapos como Unidade de Triagem conveniada ao DMLU, integrando a infraestrutura municipal
+            de reciclagem com geração direta de trabalho e renda no território.
+          </p>
+          <p>
+            Em 2024, foi uma das três cooperativas que receberam aporte emergencial do Programa Ser+ da Braskem para retomada
+            das operações após as enchentes, evidenciando ao mesmo tempo sua vulnerabilidade climática e sua capacidade de mobilização.
+          </p>
+          <p>
+            Como CRGR, a cooperativa amplia sua função: torna-se ponto de formação, articulação territorial e registro de dados,
+            conectando o ciclo dos resíduos à comunidade que o produz.
           </p>
         </article>
+
       </div>
     </section>
   </main>

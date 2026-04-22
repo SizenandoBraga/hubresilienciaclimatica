@@ -15,36 +15,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-   <link rel="stylesheet" href="header-publico.css" />
+  <link rel="stylesheet" href="header-publico.css" />
   <link rel="stylesheet" href="footer-publico.css" />
- 
   <link rel="stylesheet" href="/territorio-publico.css">
-  
-   
 </head>
+
 <body
-  data-title="Padre Cacique"
-  data-lead="Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território."
+data-territory-id="padre_cacique"
+  data-title="Associação de Catadores da Padre Cacique"
+  data-lead="Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem, operando como Unidade de Triagem conveniada ao DMLU no bairro Belém Velho."
   data-label="Padre Cacique"
-  data-region="Porto Alegre / RS"
-  data-profile="Operação comunitária e cooperativa"
-  data-focus="Coleta seletiva, triagem e fortalecimento territorial"
-  data-coop-name="Padre Cacique"
-  data-coop-description="Território com atuação em gestão de resíduos, articulação comunitária e fortalecimento da economia circular."
+  data-region="Restinga • Porto Alegre / RS"
+  data-profile="Associação de catadores com inserção produtiva e vínculo territorial"
+  data-focus="Coleta seletiva, triagem e fortalecimento da cadeia local de reciclagem"
+  data-coop-name="Associação de Catadores da Padre Cacique"
+  data-coop-description="Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem."
   data-participant-url="cadastro-participantes-padre-cacique.html"
   data-dashboard-url="dashboard-cooperativa.html"
   data-coop-url="cooperativa.html"
   data-users-url="usuarios.html"
-  data-cooperados="16"
-  data-coletas="89"
-  data-volume="10.1"
-  data-pontos="7"
+  data-cooperados="0"
+  data-coletas="0"
+  data-volume="0"
+  data-pontos="0"
   data-map-center-lat="-30.140122365657504"
   data-map-center-lng="-51.1268772051727"
   data-map-zoom="14"
   data-marker-lat="-30.140122365657504"
   data-marker-lng="-51.1268772051727"
-  data-marker-popup="<div style='font-family:Archivo Condensed,sans-serif;'><strong>Padre Cacique</strong><br>Padre Cacique<br>Belém Velho<br>Porto Alegre • RS</div>"
+  data-marker-popup="<div style='font-family:Archivo Condensed,sans-serif;'><strong>Padre Cacique</strong><br>Estrada do Rincão, 6781<br>Belém Velho<br>Porto Alegre • RS</div>"
 >
   <div class="bg-grid"></div>
   <div class="bg-orb orb-1"></div>
@@ -59,10 +58,11 @@
         <div class="hero-copy">
           <span class="eyebrow">CRGR • Território prioritário</span>
 
-          <h1 id="territoryHeroTitle">Padre Cacique</h1>
+          <h1 id="territoryHeroTitle">Associação de Catadores da Padre Cacique</h1>
 
           <p class="hero-lead" id="territoryHeroLead">
-            Página territorial com visão integrada da operação local, indicadores, cooperativa vinculada, mapa de referência e acessos rápidos para as rotinas do território.
+            Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem,
+            operando como Unidade de Triagem conveniada ao DMLU no bairro Belém Velho.
           </p>
 
           <div class="hero-tags">
@@ -72,8 +72,8 @@
           </div>
 
           <div class="hero-actions">
-            <a href="#" class="btn btn-primary" data-participant-link>Cadastrar participante</a>
-            <a href="#" class="btn btn-secondary" data-dashboard-link>Ver dashboard</a>
+            <a href="cadastro-participantes-padre-cacique.html" class="btn btn-primary" data-participant-link>Cadastrar participante</a>
+            <a href="dashboard-cooperativa.html" class="btn btn-secondary" data-dashboard-link>Ver dashboard</a>
           </div>
         </div>
 
@@ -89,19 +89,19 @@
             <ul class="territory-meta">
               <li>
                 <strong>Nome:</strong>
-                <span id="territoryLabelText">Padre Cacique</span>
+                <span id="territoryLabelText">Associação de Catadores da Padre Cacique</span>
               </li>
               <li>
                 <strong>Região:</strong>
-                <span id="territoryRegionText">Porto Alegre / RS</span>
+                <span id="territoryRegionText">Restinga • Porto Alegre / RS</span>
               </li>
               <li>
                 <strong>Perfil:</strong>
-                <span id="territoryProfileText">Operação comunitária e cooperativa</span>
+                <span id="territoryProfileText">Associação de catadores com inserção produtiva e vínculo territorial</span>
               </li>
               <li>
                 <strong>Foco:</strong>
-                <span id="territoryFocusText">Coleta seletiva, triagem e fortalecimento territorial</span>
+                <span id="territoryFocusText">Coleta seletiva, triagem e fortalecimento da cadeia local de reciclagem</span>
               </li>
             </ul>
           </div>
@@ -113,8 +113,8 @@
       <div class="container">
         <div class="stats-grid">
           <article class="stat-card">
-            <span class="stat-label">Cooperados</span>
-            <strong class="stat-value" id="cooperadosValue">0</strong>
+            <span class="stat-label">Cooperados totais</span>
+            <strong class="stat-value" id="cooperadosValue">?</strong>
             <p class="stat-note">Equipe vinculada ao território</p>
           </article>
 
@@ -125,8 +125,8 @@
           </article>
 
           <article class="stat-card">
-            <span class="stat-label">Volume reciclado</span>
-            <strong class="stat-value" id="volumeValue">0,0 t</strong>
+            <span class="stat-label">Volume reciclado por mês</span>
+            <strong class="stat-value" id="volumeValue">?</strong>
             <p class="stat-note">Soma das quantidades registradas</p>
           </article>
 
@@ -150,25 +150,36 @@
           </div>
 
           <div id="map" class="territory-map" aria-label="Mapa do território Padre Cacique"></div>
+
+          <div style="margin-top:16px;">
+            <a
+              href="https://maps.google.com/?q=-30.140122365657504,-51.1268772051727"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-link"
+            >
+              Abrir localização no Google Maps
+            </a>
+          </div>
         </section>
 
         <aside class="panel side-stack">
           <div class="mini-panel">
             <span class="section-kicker">Cooperativa</span>
-            <h3 id="coopNameText">Padre Cacique</h3>
+            <h3 id="coopNameText">Associação de Catadores da Padre Cacique</h3>
             <p id="coopDescriptionText">
-              Território com atuação em gestão de resíduos, articulação comunitária e fortalecimento da economia circular.
+              Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.
             </p>
-            <a href="#" class="inline-link" data-coop-link>Acessar página da cooperativa</a>
+            <a href="cooperativa.html" class="inline-link" data-coop-link>Acessar página da cooperativa</a>
           </div>
 
           <div class="mini-panel">
             <span class="section-kicker">Ações rápidas</span>
             <div class="quick-actions">
-              <a href="#" class="quick-btn" data-participant-link>Cadastro de participante</a>
-              <a href="#" class="quick-btn" data-dashboard-link>Indicadores</a>
+              <a href="cadastro-participantes-padre-cacique.html" class="quick-btn" data-participant-link>Cadastro de participante</a>
+              <a href="dashboard-cooperativa.html" class="quick-btn" data-dashboard-link>Indicadores</a>
               <a href="conteudos.html" class="quick-btn">Conteúdos</a>
-              <a href="#" class="quick-btn" data-users-link>Usuários</a>
+              <a href="usuarios.html" class="quick-btn" data-users-link>Usuários</a>
             </div>
           </div>
         </aside>
@@ -177,37 +188,63 @@
 
     <section class="details-section">
       <div class="container details-grid">
+
         <article class="panel detail-card">
-          <span class="section-kicker">Sobre o território</span>
-          <h3>Território estratégico de atuação</h3>
+          <span class="section-kicker">Sobre a associação</span>
+          <h3>Associação de Catadores da Padre Cacique</h3>
           <p>
-            A página territorial centraliza informações essenciais para leitura rápida da operação local, permitindo acompanhar volume, registros, acessos e articulações vinculadas ao CRGR.
+            A Associação de Catadores da Padre Cacique atua na triagem de resíduos, articulação comunitária e fortalecimento
+            da cadeia local de reciclagem, operando como Unidade de Triagem conveniada ao DMLU no bairro Belém Velho.
+          </p>
+          <p>
+            Sua atuação promove inserção produtiva, geração de renda e vínculo territorial, consolidando sua presença
+            como ponto estratégico dentro da economia circular urbana.
           </p>
         </article>
 
         <article class="panel detail-card">
-          <span class="section-kicker">Objetivo</span>
-          <h3>Gestão integrada e acompanhamento contínuo</h3>
+          <span class="section-kicker">Território estratégico</span>
+          <h3>Bairro Restinga</h3>
           <p>
-            Este ambiente foi pensado para apoiar coordenação, governança, cooperados e equipes técnicas com uma visão mais clara e organizada do território.
+            Com mais de 60 mil habitantes, a Restinga representa 4,31% da população de Porto Alegre e está situada
+            a cerca de 20km do Centro Histórico, na zona sul da cidade.
+          </p>
+          <p>
+            O território concentra aproximadamente 23% da população autodeclarada preta da cidade e registra um dos
+            rendimentos nominais mensais mais baixos de Porto Alegre.
+          </p>
+          <p>
+            A taxa de analfabetismo era de 4% e o rendimento médio dos responsáveis por domicílio correspondia a
+            1,86 salários mínimos. Apesar da escala populacional, o território ainda acumula déficits históricos
+            em infraestrutura, mobilidade e acesso a serviços.
           </p>
         </article>
 
         <article class="panel detail-card">
-          <span class="section-kicker">Conectado ao Firebase</span>
-          <h3>Dados reais por território</h3>
+          <span class="section-kicker">Padre Cacique como CRGR</span>
+          <h3>Centro de Referência em Gestão de Resíduos</h3>
           <p>
-            Os indicadores, participantes, coletas e pontos de coleta podem ser carregados automaticamente conforme o território do usuário logado.
+            A Associação de Catadores da Padre Cacique opera na Estrada do Rincão, 6781, como Unidade de Triagem
+            conveniada ao DMLU, integrando o sistema municipal de coleta seletiva com geração direta de trabalho e renda.
+          </p>
+          <p>
+            Como CRGR, assume um papel ampliado: atua como ponto de formação, articulação territorial e registro de dados,
+            tornando-se ponte entre o ciclo dos resíduos e a comunidade que o produz.
+          </p>
+          <p>
+            Sua presença representa um ponto de ancoragem concreto para articular gestão de resíduos, geração de renda
+            e resposta comunitária em um território onde a organização coletiva já demonstrou capacidade de conquistar
+            equipamentos públicos essenciais ao longo das décadas.
           </p>
         </article>
+
       </div>
     </section>
   </main>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="header-publico.js"></script>
-<script src="footer-publico.js"></script>
+  <script src="footer-publico.js"></script>
   <script type="module" src="/territorio-publico.js"></script>
-  
 </body>
 </html>
