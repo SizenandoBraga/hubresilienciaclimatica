@@ -32,7 +32,9 @@ const CHART_COLORS = {
 };
 
 const COOP_BASES = {
-  "vila-pinto": { lat: -30.048729170292532, lng: -51.15652604283108 }
+  "vila-pinto": { lat: -30.048729170292532, lng: -51.15652604283108 },
+  "cooadesc": { lat: -30.003, lng: -51.206 },
+  "padre-cacique": { lat: -30.140122365657504, lng: -51.1268772051727 }
 };
 
 /* =========================
@@ -238,6 +240,30 @@ function normalizeTerritory(value) {
     .replace(/_/g, "-")
     .replace(/\s+/g, "")
     .trim();
+}
+
+function getTerritoryAliases(value) {
+  const v = normalizeTerritory(value);
+
+  if (v === "vila-pinto" || v === "crgr-vila-pinto") {
+    return ["vila-pinto", "crgr-vila-pinto"];
+  }
+
+  if (v === "cooadesc" || v === "crgr-cooadesc") {
+    return ["cooadesc", "crgr-cooadesc"];
+  }
+
+  if (v === "padre-cacique" || v === "crgr-padre-cacique") {
+    return ["padre-cacique", "crgr-padre-cacique"];
+  }
+
+  return v ? [v] : [];
+}
+
+function sameTerritoryValue(a, b) {
+  const aNorm = normalizeTerritory(a);
+  const aliases = getTerritoryAliases(b);
+  return aliases.includes(aNorm);
 }
 
 function createdAtToISO(item) {
@@ -600,9 +626,7 @@ function matchesProfileTerritory(item, profile) {
   if (role === "admin" || role === "governanca" || role === "gestor") return true;
 
   const itemTerr = normalizeTerritory(item.territoryId || item.territory || "");
-  const userTerr = normalizeTerritory(profile.territoryId || "");
-
-  return itemTerr === userTerr;
+  return sameTerritoryValue(itemTerr, profile.territoryId);
 }
 
 function resolveParticipant(item) {
@@ -1330,7 +1354,8 @@ function renderCharts(items) {
 ========================= */
 
 function getCoopBaseLatLng() {
-  const territoryKey = normalizeTerritory(coopProfile?.territoryId);
+  const aliases = getTerritoryAliases(coopProfile?.territoryId);
+  const territoryKey = aliases[0] || "vila-pinto";
   return COOP_BASES[territoryKey] || COOP_BASES["vila-pinto"];
 }
 
