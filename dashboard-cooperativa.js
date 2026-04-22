@@ -64,6 +64,8 @@ const els = {
   btnAplicar: document.getElementById("btnAplicar"),
   btnLimpar: document.getElementById("btnLimpar"),
   btnPrint: document.getElementById("btnPrint"),
+  btnExportPDF: document.getElementById("btnExportPDF"),
+  btnExportExcel: document.getElementById("btnExportExcel"),
 
   txtPeriodo: document.getElementById("txtPeriodo"),
   txtRegistrosTopo: document.getElementById("txtRegistrosTopo"),
@@ -163,6 +165,7 @@ let routeControl = null;
 let destinationMarker = null;
 let selectedPointKey = null;
 let activeUnsubscribe = null;
+let activeParticipantsUnsubscribe = null;
 
 /* =========================
    UTILS
@@ -341,6 +344,87 @@ function sortColetasLocally(items) {
   });
 }
 
+function getExportBaseItems() {
+  return Array.isArray(tableFilteredColetas) && tableFilteredColetas.length
+    ? tableFilteredColetas
+    : filteredColetas;
+}
+
+function inferTotalReciclavelRegistro(item) {
+  const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
+  return isFinalTurno(item)
+    ? somaMateriais
+    : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
+}
+
+function getExportRows(items) {
+  return items.map((item) => {
+    const participant = resolveParticipant(item);
+    return {
+      data: formatDateBR(inferDateISO(item)),
+      participante: participant.name || "—",
+      codigo: participant.code || "—",
+      fluxo: inferFluxo(item),
+      entrega: inferEntrega(item),
+      territorio: inferTerritorio(item),
+      tipoCadastro: participant.type || "—",
+      status: resolveHumanStatus(item),
+      reciclavelKg: Number(inferTotalReciclavelRegistro(item) || 0),
+      rejeitoKg: Number(inferRejeito(item) || 0),
+      naoComercializadoKg: Number(inferNaoComercializado(item) || 0),
+      qualidade: getQualidade(item) || "—",
+      observacao: inferObservacao(item) || ""
+    };
+  });
+}
+
+function loadScriptOnce(src) {
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      if (existing.dataset.loaded === "true") {
+        resolve();
+        return;
+      }
+      existing.addEventListener("load", () => resolve(), { once: true });
+      existing.addEventListener("error", () => reject(new Error(`Falha ao carregar ${src}`)), { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = src;
+    script.async = true;
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      resolve();
+    };
+    script.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
+    document.head.appendChild(script);
+  });
+}
+
+async function ensureXLSX() {
+  if (window.XLSX) return window.XLSX;
+  await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js");
+  return window.XLSX;
+}
+
+async function ensureJsPDF() {
+  if (window.jspdf?.jsPDF) return window.jspdf.jsPDF;
+  await loadScriptOnce("https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js");
+  return window.jspdf?.jsPDF;
+}
+
+function buildExportFileStamp() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const mi = String(now.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}_${hh}-${mi}`;
+}
+
 /* =========================
    PERFIL / PARTICIPANTES
 ========================= */
@@ -454,41 +538,48 @@ function fillUser(profile) {
   if (els.userTerritory) els.userTerritory.textContent = profile.territoryLabel || profile.territoryId || "—";
 }
 
-async function loadParticipantsMap() {
-  participantsMap.clear();
-
-  let snap;
-  try {
-    snap = await getDocs(query(collection(db, "participants")));
-  } catch (error) {
-    console.error("Erro ao carregar participantes:", error);
-    return;
+function loadParticipantsMap() {
+  if (activeParticipantsUnsubscribe) {
+    activeParticipantsUnsubscribe();
+    activeParticipantsUnsubscribe = null;
   }
 
-  snap.forEach((d) => {
-    const data = d.data();
-    const payload = {
-      id: d.id,
-      name: data.name || data.participantName || "Sem nome",
-      participantCode: data.participantCode || data.familyCode || data.codigo || d.id,
-      participantType: data.participantType || data.type || "",
-      status: data.status || "",
-      enderecoCompleto: data.enderecoCompleto || "",
-      rua: data.rua || "",
-      numero: data.numero || "",
-      bairro: data.bairro || "",
-      cidade: data.cidade || "",
-      localColeta: data.localColeta || "",
-      lat: data.lat ?? data.latitude ?? null,
-      lng: data.lng ?? data.longitude ?? null,
-      coords: data.coords || null
-    };
+  activeParticipantsUnsubscribe = onSnapshot(
+    query(collection(db, "participants")),
+    (snap) => {
+      participantsMap.clear();
 
-    participantsMap.set(d.id, payload);
-    if (data.participantCode) participantsMap.set(String(data.participantCode), payload);
-    if (data.familyCode) participantsMap.set(String(data.familyCode), payload);
-    if (data.codigo) participantsMap.set(String(data.codigo), payload);
-  });
+      snap.forEach((d) => {
+        const data = d.data();
+        const payload = {
+          id: d.id,
+          name: data.name || data.participantName || "Sem nome",
+          participantCode: data.participantCode || data.familyCode || data.codigo || d.id,
+          participantType: data.participantType || data.type || "",
+          status: data.status || "",
+          enderecoCompleto: data.enderecoCompleto || "",
+          rua: data.rua || "",
+          numero: data.numero || "",
+          bairro: data.bairro || "",
+          cidade: data.cidade || "",
+          localColeta: data.localColeta || "",
+          lat: data.lat ?? data.latitude ?? null,
+          lng: data.lng ?? data.longitude ?? null,
+          coords: data.coords || null
+        };
+
+        participantsMap.set(d.id, payload);
+        if (data.participantCode) participantsMap.set(String(data.participantCode), payload);
+        if (data.familyCode) participantsMap.set(String(data.familyCode), payload);
+        if (data.codigo) participantsMap.set(String(data.codigo), payload);
+      });
+
+      applyFilters();
+    },
+    (error) => {
+      console.error("Erro ao carregar participantes em tempo real:", error);
+    }
+  );
 }
 
 /* =========================
@@ -887,7 +978,7 @@ function getChartOptions(type, horizontal = false) {
 
 function renderWeightTimeline(items) {
   const canvas = document.getElementById("weightTimelineChart");
-  if (!canvas) return;
+  if (!canvas || typeof Chart === "undefined") return;
 
   const valid = [...items]
     .filter((item) => getStatus(item) !== "cancelado")
@@ -964,6 +1055,7 @@ function renderCharts(items) {
   const ctxB = document.getElementById("secB");
   const ctxC = document.getElementById("secC");
 
+  if (typeof Chart === "undefined") return;
   if (!ctxMain && !ctxA && !ctxB && !ctxC) return;
 
   [mainChart, secA, secB, secC].forEach((chart) => {
@@ -1349,6 +1441,175 @@ function applyTableFilters() {
 }
 
 /* =========================
+   EXPORTAÇÕES
+========================= */
+
+async function exportToExcel() {
+  try {
+    const items = getExportBaseItems();
+
+    if (!items.length) {
+      alert("Nenhum registro encontrado para exportar.");
+      return;
+    }
+
+    const XLSX = await ensureXLSX();
+    const rows = getExportRows(items).map((row) => ({
+      "Data": row.data,
+      "Participante": row.participante,
+      "Código": row.codigo,
+      "Fluxo": row.fluxo,
+      "Entrega": row.entrega,
+      "Território": row.territorio,
+      "Tipo cadastro": row.tipoCadastro,
+      "Status": row.status,
+      "Reciclável (kg)": row.reciclavelKg,
+      "Rejeito (kg)": row.rejeitoKg,
+      "Não comercializado (kg)": row.naoComercializadoKg,
+      "Qualidade": row.qualidade,
+      "Observação": row.observacao
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+
+    const colWidths = [
+      { wch: 14 },
+      { wch: 28 },
+      { wch: 18 },
+      { wch: 18 },
+      { wch: 20 },
+      { wch: 22 },
+      { wch: 18 },
+      { wch: 14 },
+      { wch: 18 },
+      { wch: 16 },
+      { wch: 26 },
+      { wch: 12 },
+      { wch: 40 }
+    ];
+    worksheet["!cols"] = colWidths;
+
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Relatorio");
+    XLSX.writeFile(workbook, `relatorio-coletas_${buildExportFileStamp()}.xlsx`);
+  } catch (error) {
+    console.error("Erro ao exportar Excel:", error);
+    alert("Não foi possível exportar o Excel.");
+  }
+}
+
+async function exportToPDF() {
+  try {
+    const items = getExportBaseItems();
+
+    if (!items.length) {
+      alert("Nenhum registro encontrado para exportar.");
+      return;
+    }
+
+    const jsPDF = await ensureJsPDF();
+    const rows = getExportRows(items);
+
+    const pdf = new jsPDF({
+      orientation: "landscape",
+      unit: "mm",
+      format: "a4"
+    });
+
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+
+    let y = 14;
+    const marginX = 10;
+    const rowHeight = 7;
+    const colX = {
+      data: 10,
+      participante: 30,
+      codigo: 95,
+      fluxo: 128,
+      entrega: 158,
+      reciclavel: 196,
+      rejeito: 225,
+      status: 252
+    };
+
+    const drawHeader = () => {
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(14);
+      pdf.text("Relatório geral de coletas", marginX, y);
+      y += 7;
+
+      pdf.setFont("helvetica", "normal");
+      pdf.setFontSize(9);
+      pdf.text(`Território: ${coopProfile?.territoryLabel || coopProfile?.territoryId || "Vila Pinto"}`, marginX, y);
+      y += 5;
+      pdf.text(`Período: ${els.txtPeriodo?.textContent || "—"}`, marginX, y);
+      y += 5;
+      pdf.text(`Registros exportados: ${rows.length}`, marginX, y);
+      y += 8;
+
+      pdf.setDrawColor(180);
+      pdf.line(marginX, y, pageWidth - marginX, y);
+      y += 5;
+
+      pdf.setFont("helvetica", "bold");
+      pdf.setFontSize(8);
+      pdf.text("Data", colX.data, y);
+      pdf.text("Participante", colX.participante, y);
+      pdf.text("Código", colX.codigo, y);
+      pdf.text("Fluxo", colX.fluxo, y);
+      pdf.text("Entrega", colX.entrega, y);
+      pdf.text("Reciclável", colX.reciclavel, y, { align: "right" });
+      pdf.text("Rejeito", colX.rejeito, y, { align: "right" });
+      pdf.text("Status", colX.status, y);
+      y += 3;
+
+      pdf.line(marginX, y, pageWidth - marginX, y);
+      y += 5;
+    };
+
+    const addPageIfNeeded = (extraHeight = rowHeight) => {
+      if (y + extraHeight > pageHeight - 12) {
+        pdf.addPage();
+        y = 14;
+        drawHeader();
+      }
+    };
+
+    drawHeader();
+
+    pdf.setFont("helvetica", "normal");
+    pdf.setFontSize(8);
+
+    rows.forEach((row) => {
+      addPageIfNeeded(10);
+
+      const participante = String(row.participante || "—").slice(0, 32);
+      const codigo = String(row.codigo || "—").slice(0, 18);
+      const fluxo = String(row.fluxo || "—").slice(0, 18);
+      const entrega = String(row.entrega || "—").slice(0, 20);
+      const status = String(row.status || "—").slice(0, 12);
+
+      pdf.text(String(row.data || "—"), colX.data, y);
+      pdf.text(participante, colX.participante, y);
+      pdf.text(codigo, colX.codigo, y);
+      pdf.text(fluxo, colX.fluxo, y);
+      pdf.text(entrega, colX.entrega, y);
+      pdf.text(formatNumber(row.reciclavelKg), colX.reciclavel, y, { align: "right" });
+      pdf.text(formatNumber(row.rejeitoKg), colX.rejeito, y, { align: "right" });
+      pdf.text(status, colX.status, y);
+
+      y += rowHeight;
+    });
+
+    pdf.save(`relatorio-coletas_${buildExportFileStamp()}.pdf`);
+  } catch (error) {
+    console.error("Erro ao exportar PDF:", error);
+    alert("Não foi possível exportar o PDF.");
+  }
+}
+
+/* =========================
    ETIQUETA
 ========================= */
 
@@ -1504,6 +1765,8 @@ function bindUI() {
   els.btnAplicar?.addEventListener("click", applyFilters);
   els.btnLimpar?.addEventListener("click", clearFilters);
   els.btnPrint?.addEventListener("click", () => window.print());
+  els.btnExportPDF?.addEventListener("click", exportToPDF);
+  els.btnExportExcel?.addEventListener("click", exportToExcel);
   els.btnSaveEdit?.addEventListener("click", saveEdit);
 
   els.fParticipantCode?.addEventListener("input", () => {

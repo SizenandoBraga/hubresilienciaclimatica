@@ -27,7 +27,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "vilapinto",
       code: "vilapinto",
-      territoryId: "crgr_vila_pinto",
+      territoryId: "vila-pinto",
       name: "CRGR Vila Pinto",
       territoryLabel: "CRGR Vila Pinto",
       lat: -30.048729170292532,
@@ -39,7 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "cooadesc",
       code: "cooadesc",
-      territoryId: "crgr_cooadesc",
+      territoryId: "coadesc",
       name: "CRGR Cooadesc",
       territoryLabel: "CRGR Cooadesc",
       lat: -30.003,
@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "padrecacique",
       code: "padrecacique",
-      territoryId: "crgr_padre_cacique",
+      territoryId: "padre-cacique",
       name: "CRGR Padre Cacique",
       territoryLabel: "CRGR Padre Cacique",
       lat: -30.140122365657504,
@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let map = null;
   let mapMarkers = [];
+  let publicIndicatorsUnsubscribe = null;
 
   function byId(id) {
     return document.getElementById(id);
@@ -88,6 +89,20 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!target) return;
     const top = target.getBoundingClientRect().top + window.scrollY - offset;
     window.scrollTo({ top, behavior: "smooth" });
+  }
+
+  function canonicalTerritoryId(value) {
+    const raw = String(value || "")
+      .trim()
+      .toLowerCase()
+      .replaceAll("_", "-")
+      .replace(/\s+/g, "-");
+
+    if (!raw) return "";
+    if (raw === "crgr-vila-pinto") return "vila-pinto";
+    if (raw === "crgr-coadesc" || raw === "crgr-cooadesc") return "coadesc";
+    if (raw === "crgr-padre-cacique") return "padre-cacique";
+    return raw;
   }
 
   function initCursorGlow() {
@@ -251,13 +266,13 @@ document.addEventListener("DOMContentLoaded", () => {
   function getCrgrPage(name = "", id = "", territoryId = "") {
     const base = `${name} ${id} ${territoryId}`.toLowerCase();
 
-    if (base.includes("vila pinto") || base.includes("vilapinto") || base.includes("crgr_vila_pinto")) {
+    if (base.includes("vila pinto") || base.includes("vilapinto") || base.includes("crgr_vila_pinto") || base.includes("vila-pinto")) {
       return "vila-pinto.html";
     }
-    if (base.includes("cooadesc") || base.includes("crgr_cooadesc")) {
+    if (base.includes("cooadesc") || base.includes("coadesc") || base.includes("crgr_cooadesc") || base.includes("crgr_coadesc")) {
       return "cooadesc.html";
     }
-    if (base.includes("padre") || base.includes("cacique") || base.includes("crgr_padre_cacique")) {
+    if (base.includes("padre") || base.includes("cacique") || base.includes("crgr_padre_cacique") || base.includes("padre-cacique")) {
       return "padre-cacique.html";
     }
 
@@ -269,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .map((item) => ({
         id: item.id || item.code || item.territoryId,
         code: item.code || item.id || item.territoryId,
-        territoryId: item.territoryId || item.code || item.id,
+        territoryId: canonicalTerritoryId(item.territoryId || item.code || item.id),
         name:
           item.name ||
           item.title ||
@@ -488,32 +503,86 @@ document.addEventListener("DOMContentLoaded", () => {
       const firestore = await import("https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js");
 
       const { db } = firebaseInit;
-      const { doc, getDoc } = firestore;
+      const { collection, getDocs, onSnapshot } = firestore;
 
-      const snap = await getDoc(doc(db, "publicDashboard", "index"));
-
-      if (!snap.exists()) {
-        renderMetrics({
-          users: 0,
-          coletas: 0,
-          approvals: 0,
-          crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
-          alerts: 0
-        });
-        return;
+      if (typeof publicIndicatorsUnsubscribe === "function") {
+        try {
+          publicIndicatorsUnsubscribe();
+        } catch (_) {}
+        publicIndicatorsUnsubscribe = null;
       }
 
-      const data = snap.data();
+      const publicCollectionRef = collection(db, "dashboard_public_by_cooperativa");
 
-      STATE.metrics = {
-        users: Number(data.usersCount ?? (Number(data.participantsCount || 0) + Number(data.cooperativaMembersCount || 0))),
-        coletas: Number(data.coletasCount ?? 0),
-        approvals: Number(data.approvalsCount ?? 0),
-        crgrs: Number(data.crgrsCount ?? data.territoriesCount ?? STATE.crgrs.length ?? FALLBACK_CRGRS.length),
-        alerts: Number(data.alertsCount ?? 0)
-      };
+      function applyDocs(docs) {
+        const summaries = docs.map((docItem) => ({
+          id: docItem.id,
+          ...docItem.data()
+        }));
 
-      renderMetrics(STATE.metrics);
+        if (!summaries.length) {
+          STATE.metrics = {
+            users: 0,
+            coletas: 0,
+            approvals: 0,
+            crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
+            alerts: 0
+          };
+          renderMetrics(STATE.metrics);
+          return;
+        }
+
+        const totals = summaries.reduce(
+          (acc, item) => {
+            acc.users += Number(item.usersCount ?? item.participantsCount ?? 0);
+            acc.coletas += Number(item.coletasCount ?? 0);
+            acc.approvals += Number(item.approvalsCount ?? 0);
+            acc.alerts += Number(item.alertsCount ?? 0);
+            return acc;
+          },
+          { users: 0, coletas: 0, approvals: 0, alerts: 0 }
+        );
+
+        const activeCrgrs = summaries.filter((item) => {
+          const count = Number(item.crgrsCount ?? 1);
+          return count > 0;
+        }).length;
+
+        STATE.metrics = {
+          users: totals.users,
+          coletas: totals.coletas,
+          approvals: totals.approvals,
+          crgrs: activeCrgrs || summaries.length || STATE.crgrs.length || FALLBACK_CRGRS.length,
+          alerts: totals.alerts
+        };
+
+        renderMetrics(STATE.metrics);
+      }
+
+      publicIndicatorsUnsubscribe = onSnapshot(
+        publicCollectionRef,
+        (snapshot) => {
+          applyDocs(snapshot.docs);
+        },
+        async (snapshotError) => {
+          console.warn("[INDEX] Falha no onSnapshot dos indicadores públicos:", snapshotError);
+
+          try {
+            const snap = await getDocs(publicCollectionRef);
+            applyDocs(snap.docs);
+          } catch (fallbackError) {
+            console.error("[INDEX] Erro ao carregar indicadores públicos:", fallbackError);
+            STATE.metrics = {
+              users: 0,
+              coletas: 0,
+              approvals: 0,
+              crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
+              alerts: 0
+            };
+            renderMetrics(STATE.metrics);
+          }
+        }
+      );
     } catch (error) {
       console.error("[INDEX] Erro ao carregar indicadores públicos:", error);
       renderMetrics({
