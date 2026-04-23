@@ -1716,16 +1716,17 @@ function openCollectionDetailsModal(itemId) {
 
       <div class="read-box">
         <strong>Foto(s) do registro</strong>
-        <div class="collection-details-photos">
+        <div class="collection-details-actions">
           ${
             photos.length
-              ? photos.map((url) => `
-                  <img
-                    src="${escapeHtml(url)}"
-                    alt="Foto da coleta"
+              ? photos.map((url, index) => `
+                  <button
+                    type="button"
+                    class="action-btn edit"
                     data-photo="${escapeHtml(url)}"
-                    class="collection-photo-thumb"
-                  />
+                  >
+                    Abrir foto ${index + 1}
+                  </button>
                 `).join("")
               : `<div>Nenhuma foto vinculada ao registro.</div>`
           }
