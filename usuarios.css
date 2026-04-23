@@ -7,9 +7,11 @@
   --green: #81b92a;
   --green-dark: #5f8f17;
   --lime: #b7d96a;
-  --orange: #f3c94b;
+  --orange: #ef6b22;
+  --yellow-soft: #fff5d6;
   --purple: #8c7ae6;
   --danger: #d95b5b;
+  --blue: #53acde;
   --shadow: 0 18px 40px rgba(41, 61, 20, 0.08);
   --radius: 22px;
 }
@@ -36,6 +38,10 @@ input,
 select,
 textarea {
   font: inherit;
+}
+
+.hidden {
+  display: none !important;
 }
 
 .app-shell {
@@ -117,7 +123,7 @@ textarea {
 
 .sidebar-userbox {
   border: 1px solid rgba(255,255,255,.08);
-  background:  #53ACDE;
+  background: #53ACDE;
   border-radius: 16px;
   padding: 14px;
 }
@@ -145,17 +151,6 @@ textarea {
   align-items: flex-start;
   gap: 18px;
   flex-wrap: wrap;
-}
-
-.topbar-left h1 {
-  margin: 0;
-  font-size: 36px;
-  line-height: 1;
-}
-
-.topbar-left p {
-  margin: 6px 0 0;
-  color: var(--muted);
 }
 
 .topbar-right {
@@ -217,7 +212,7 @@ textarea {
   margin-bottom: 12px;
 }
 
-.hero-card h2 {
+.hero-card h1 {
   margin: 0 0 8px;
   font-size: 36px;
 }
@@ -459,6 +454,131 @@ textarea {
   border: 1px solid var(--line);
 }
 
+/* NOVA SEÇÃO */
+.coop-users-layout {
+  align-items: stretch;
+}
+
+.coop-user-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.permissions-box {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: #f8fbf2;
+  padding: 16px;
+}
+
+.permissions-head {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.permissions-head strong {
+  font-size: 18px;
+}
+
+.permissions-head span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.permissions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.permission-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+  padding: 12px 14px;
+  cursor: pointer;
+}
+
+.permission-item input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--green);
+}
+
+.permission-item span {
+  font-size: 15px;
+}
+
+.modal-actions-inline {
+  padding: 0;
+  justify-content: flex-end;
+}
+
+.coop-user-card {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 14px;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.coop-user-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+
+.coop-user-card-top strong {
+  font-size: 22px;
+}
+
+.coop-user-card-top span {
+  display: block;
+  color: var(--muted);
+  font-size: 15px;
+  margin-top: 2px;
+}
+
+.coop-user-badges,
+.coop-user-permissions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.coop-user-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
+  border-radius: 999px;
+  background: #eef7ff;
+  color: #2c6d91;
+  border: 1px solid rgba(83,172,222,.24);
+  font-size: 14px;
+}
+
+.coop-user-permission {
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 11px;
+  border-radius: 999px;
+  background: #eff8df;
+  color: #5e8a18;
+  border: 1px solid rgba(129,185,42,.24);
+  font-size: 13px;
+}
+
 .info-pills {
   display: flex;
   gap: 10px;
@@ -655,6 +775,20 @@ th {
   flex-wrap: wrap;
 }
 
+.debug-status {
+  border: 1px dashed var(--line);
+  border-radius: 16px;
+  padding: 12px 14px;
+  color: var(--muted);
+  background: #fafcf6;
+}
+
+.debug-status strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+}
+
 @media (max-width: 1180px) {
   .content-grid {
     grid-template-columns: 1fr;
@@ -666,6 +800,10 @@ th {
 
   .kpi-grid {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .permissions-grid {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
@@ -691,7 +829,8 @@ th {
 
   .kpi-grid,
   .filters-grid,
-  .map-stats {
+  .map-stats,
+  .permissions-grid {
     grid-template-columns: 1fr;
   }
 
@@ -704,8 +843,12 @@ th {
     justify-content: flex-start;
   }
 
-  .topbar-left h1,
-  .hero-card h2 {
+  .hero-card h1 {
     font-size: 28px;
+  }
+
+  .coop-user-card-top strong,
+  .user-main strong {
+    font-size: 20px;
   }
 }

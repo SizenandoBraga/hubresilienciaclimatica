@@ -26,9 +26,11 @@ const STATE = {
   approvalRequests: [],
   users: [],
   filteredUsers: [],
+  coopUsers: [],
   territoryBase: DEFAULT_BASE,
   unsubParticipants: null,
   unsubApprovals: null,
+  unsubCoopUsers: null,
   lastPendingIds: new Set(),
   notificationPermissionAsked: false
 };
@@ -83,7 +85,29 @@ const els = {
   modalFocusMap: document.getElementById("modalFocusMap"),
   modalRejectBtn: document.getElementById("modalRejectBtn"),
   modalApproveBtn: document.getElementById("modalApproveBtn"),
-  debugStatus: document.getElementById("debugStatus")
+  debugStatus: document.getElementById("debugStatus"),
+
+  coopUsersSection: document.getElementById("coopUsersSection"),
+  coopUserCreateCard: document.getElementById("coopUserCreateCard"),
+  coopUserForm: document.getElementById("coopUserForm"),
+  coopUserName: document.getElementById("coopUserName"),
+  coopUserDisplayName: document.getElementById("coopUserDisplayName"),
+  coopUserEmail: document.getElementById("coopUserEmail"),
+  coopUserPassword: document.getElementById("coopUserPassword"),
+  coopUserRole: document.getElementById("coopUserRole"),
+  coopUserTerritory: document.getElementById("coopUserTerritory"),
+  btnCreateCoopUser: document.getElementById("btnCreateCoopUser"),
+  coopUsersList: document.getElementById("coopUsersList"),
+  coopUsersCountLabel: document.getElementById("coopUsersCountLabel"),
+
+  permDashboard: document.getElementById("permDashboard"),
+  permColetas: document.getElementById("permColetas"),
+  permParticipants: document.getElementById("permParticipants"),
+  permConteudos: document.getElementById("permConteudos"),
+  permDocumentos: document.getElementById("permDocumentos"),
+  permMapa: document.getElementById("permMapa"),
+  permAprovarCadastros: document.getElementById("permAprovarCadastros"),
+  permGerenciarUsuarios: document.getElementById("permGerenciarUsuarios")
 };
 
 let map = null;
@@ -178,14 +202,20 @@ function sameTerritory(a, b) {
   return x && y && x === y;
 }
 
+function roleName() {
+  return String(STATE.userDoc?.role || "").toLowerCase();
+}
+
 function canViewAllTerritories() {
-  const role = String(STATE.userDoc?.role || "").toLowerCase();
-  return ["governanca", "gestor", "superadmin", "admin_master"].includes(role);
+  return ["governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
 }
 
 function canManageApprovals() {
-  const role = String(STATE.userDoc?.role || "").toLowerCase();
-  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(role);
+  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
+}
+
+function canManageCoopUsers() {
+  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
 }
 
 function getMyTerritoryId() {
@@ -196,8 +226,23 @@ function getMyTerritoryLabel() {
   return STATE.userDoc?.territoryLabel || null;
 }
 
+function canViewUserFromSameTerritory(targetUser) {
+  if (!STATE.userDoc || !targetUser) return false;
+  if (canViewAllTerritories()) return true;
+  return sameTerritory(getMyTerritoryId(), targetUser.territoryId);
+}
+
+function getTerritoryLabelById(territoryId) {
+  const normalized = normalizeTerritory(territoryId);
+  if (normalized === "vila-pinto") return "Centro de Triagem Vila Pinto";
+  if (normalized === "cooadesc" || normalized === "coadesc") return "COOADESC";
+  if (normalized === "padre-cacique") return "Padre Cacique";
+  return territoryId || "Território";
+}
+
 function setDebug(message, strong = "Status do sistema.") {
   if (!els.debugStatus) return;
+  els.debugStatus.classList.remove("hidden");
   els.debugStatus.innerHTML = `<strong>${strong}</strong><span>${message}</span>`;
 }
 
@@ -261,6 +306,263 @@ function notifyNewRequest(user) {
         body: `${safeText(user.name)} • ${safeText(user.territoryLabel || user.territoryId)}`
       });
     } catch (_err) {}
+  }
+}
+
+/* =========================
+USUÁRIOS INTERNOS DA COOP
+========================= */
+
+function getCoopPermissionsPayload() {
+  return {
+    dashboard: !!els.permDashboard?.checked,
+    coletas: !!els.permColetas?.checked,
+    participants: !!els.permParticipants?.checked,
+    conteudos: !!els.permConteudos?.checked,
+    documentos: !!els.permDocumentos?.checked,
+    mapa: !!els.permMapa?.checked,
+    aprovarCadastros: !!els.permAprovarCadastros?.checked,
+    gerenciarUsuarios: !!els.permGerenciarUsuarios?.checked
+  };
+}
+
+function getCoopRolesPayload() {
+  return {
+    cooperativa: true,
+    dashboard: !!els.permDashboard?.checked,
+    coletas: !!els.permColetas?.checked,
+    participants: !!els.permParticipants?.checked,
+    conteudos: !!els.permConteudos?.checked,
+    documentos: !!els.permDocumentos?.checked,
+    mapa: !!els.permMapa?.checked,
+    aprovarCadastros: !!els.permAprovarCadastros?.checked,
+    gerenciarUsuarios: !!els.permGerenciarUsuarios?.checked
+  };
+}
+
+function usersRef() {
+  if (canViewAllTerritories()) {
+    return collection(db, "users");
+  }
+
+  const territoryId = getMyTerritoryId();
+  if (!territoryId) {
+    throw new Error("Usuário sem territoryId em /users.");
+  }
+
+  return query(collection(db, "users"), where("territoryId", "==", territoryId));
+}
+
+function mapInternalUserDoc(docSnap) {
+  const data = docSnap.data() || {};
+  return {
+    id: docSnap.id,
+    uid: data.uid || docSnap.id,
+    name: data.name || data.displayName || "Usuário",
+    displayName: data.displayName || data.name || "Usuário",
+    email: data.email || "",
+    role: String(data.role || "").toLowerCase(),
+    status: String(data.status || "").toLowerCase(),
+    territoryId: data.territoryId || null,
+    territoryLabel: data.territoryLabel || "",
+    permissions: data.permissions || {},
+    raw: data
+  };
+}
+
+function internalUserRoleLabel(role) {
+  if (role === "admin") return "Administrador";
+  if (role === "cooperativa") return "Cooperativa";
+  if (role === "operador") return "Operador";
+  if (role === "usuario") return "Usuário";
+  return role || "Perfil";
+}
+
+function renderCoopUsersList() {
+  if (!els.coopUsersList) return;
+
+  const list = STATE.coopUsers.filter((item) => {
+    if (canViewAllTerritories()) {
+      return ["admin", "cooperativa", "operador", "usuario"].includes(item.role);
+    }
+
+    return ["admin", "cooperativa", "operador", "usuario"].includes(item.role)
+      && canViewUserFromSameTerritory(item);
+  });
+
+  if (els.coopUsersCountLabel) {
+    els.coopUsersCountLabel.textContent = `${list.length} itens`;
+  }
+
+  if (!list.length) {
+    els.coopUsersList.innerHTML = `<div class="empty-state">Nenhum usuário interno da cooperativa encontrado.</div>`;
+    return;
+  }
+
+  els.coopUsersList.innerHTML = list.map((item) => {
+    const permissions = item.permissions || {};
+    const permissionLabels = [];
+    if (permissions.dashboard) permissionLabels.push("Dashboard");
+    if (permissions.coletas) permissionLabels.push("Coletas");
+    if (permissions.participants) permissionLabels.push("Participantes");
+    if (permissions.conteudos) permissionLabels.push("Conteúdos");
+    if (permissions.documentos) permissionLabels.push("Documentos");
+    if (permissions.mapa) permissionLabels.push("Mapa");
+    if (permissions.aprovarCadastros) permissionLabels.push("Aprovar cadastros");
+    if (permissions.gerenciarUsuarios) permissionLabels.push("Gerenciar usuários");
+
+    return `
+      <article class="coop-user-card">
+        <div class="coop-user-card-top">
+          <div>
+            <strong>${safeText(item.displayName || item.name)}</strong>
+            <span>${safeText(item.email)}</span>
+          </div>
+        </div>
+
+        <div class="coop-user-badges">
+          <span class="coop-user-badge">${safeText(internalUserRoleLabel(item.role))}</span>
+          <span class="coop-user-badge">${safeText(item.territoryLabel || item.territoryId)}</span>
+          <span class="coop-user-badge">${safeText(item.status || "active")}</span>
+        </div>
+
+        <div class="coop-user-permissions">
+          ${permissionLabels.length
+            ? permissionLabels.map((label) => `<span class="coop-user-permission">${safeText(label)}</span>`).join("")
+            : `<span class="coop-user-permission">Sem permissões extras</span>`
+          }
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+async function createCoopUserRecord() {
+  if (!canManageCoopUsers()) {
+    alert("Seu perfil não tem permissão para criar usuários da cooperativa.");
+    return;
+  }
+
+  const name = els.coopUserName?.value?.trim();
+  const displayName = els.coopUserDisplayName?.value?.trim() || name;
+  const email = els.coopUserEmail?.value?.trim().toLowerCase();
+  const password = els.coopUserPassword?.value?.trim();
+  const role = els.coopUserRole?.value || "cooperativa";
+  const territoryId = canViewAllTerritories()
+    ? (els.coopUserTerritory?.value || getMyTerritoryId())
+    : getMyTerritoryId();
+  const territoryLabel = getTerritoryLabelById(territoryId);
+
+  if (!name || !email || !password) {
+    alert("Preencha nome, e-mail e senha provisória.");
+    return;
+  }
+
+  try {
+    if (els.btnCreateCoopUser) {
+      els.btnCreateCoopUser.disabled = true;
+      els.btnCreateCoopUser.textContent = "Criando...";
+    }
+
+    const existingQuery = query(collection(db, "users"), where("email", "==", email));
+    const existingSnap = await getDocs(existingQuery);
+
+    if (!existingSnap.empty) {
+      throw new Error("Já existe um usuário cadastrado com este e-mail.");
+    }
+
+    const userDocRef = doc(collection(db, "users"));
+    const payload = {
+      uid: userDocRef.id,
+      name,
+      displayName,
+      email,
+      role,
+      status: "active",
+      territoryId,
+      territoryLabel,
+      onboardingCompleted: true,
+      permissions: getCoopPermissionsPayload(),
+      roles: getCoopRolesPayload(),
+      publicCode: `RB-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      createdBy: STATE.authUser?.uid || null,
+      createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || "Administrador",
+      provisionalPassword: password
+    };
+
+    await setDoc(userDocRef, payload);
+
+    showToast("Usuário da cooperativa criado com sucesso.");
+    els.coopUserForm?.reset();
+
+    if (els.permDashboard) els.permDashboard.checked = true;
+    if (els.permColetas) els.permColetas.checked = true;
+    if (els.permParticipants) els.permParticipants.checked = true;
+    if (els.permConteudos) els.permConteudos.checked = true;
+    if (els.permDocumentos) els.permDocumentos.checked = true;
+    if (els.permMapa) els.permMapa.checked = true;
+
+    if (!canViewAllTerritories() && els.coopUserTerritory) {
+      els.coopUserTerritory.value = getMyTerritoryId() || "vila-pinto";
+    }
+  } catch (error) {
+    console.error("Erro ao criar usuário da cooperativa:", error);
+    alert(`Não foi possível criar o usuário.\n${error?.message || ""}`);
+  } finally {
+    if (els.btnCreateCoopUser) {
+      els.btnCreateCoopUser.disabled = false;
+      els.btnCreateCoopUser.textContent = "Criar usuário da cooperativa";
+    }
+  }
+}
+
+function applyCoopUserPermissionsUI() {
+  if (!els.coopUsersSection) return;
+
+  if (!canManageCoopUsers()) {
+    els.coopUsersSection.classList.add("hidden");
+    return;
+  }
+
+  els.coopUsersSection.classList.remove("hidden");
+
+  if (!canViewAllTerritories() && els.coopUserTerritory) {
+    els.coopUserTerritory.value = getMyTerritoryId() || "vila-pinto";
+    els.coopUserTerritory.disabled = true;
+  }
+}
+
+function startUsersListener() {
+  if (STATE.unsubCoopUsers) {
+    STATE.unsubCoopUsers();
+    STATE.unsubCoopUsers = null;
+  }
+
+  try {
+    STATE.unsubCoopUsers = onSnapshot(
+      usersRef(),
+      (snapshot) => {
+        STATE.coopUsers = snapshot.docs.map(mapInternalUserDoc);
+        renderCoopUsersList();
+      },
+      async (error) => {
+        console.warn("Listener users falhou:", error);
+        try {
+          const snap = await getDocs(usersRef());
+          STATE.coopUsers = snap.docs.map(mapInternalUserDoc);
+          renderCoopUsersList();
+        } catch (fallbackError) {
+          console.error("Erro ao carregar users:", fallbackError);
+          if (els.coopUsersList) {
+            els.coopUsersList.innerHTML = `<div class="empty-state">Não foi possível carregar os usuários da cooperativa.</div>`;
+          }
+        }
+      }
+    );
+  } catch (error) {
+    console.warn("Erro ao iniciar listener users:", error);
   }
 }
 
@@ -1120,6 +1422,12 @@ async function loadApprovalsInitial() {
 async function reloadAll() {
   await loadApprovalsInitial();
   await loadParticipantsInitial();
+
+  try {
+    const snap = await getDocs(usersRef());
+    STATE.coopUsers = snap.docs.map(mapInternalUserDoc);
+    renderCoopUsersList();
+  } catch (_error) {}
 }
 
 function startParticipantsListener() {
@@ -1255,7 +1563,7 @@ function fillSidebar() {
   const seesAll = canViewAllTerritories();
 
   if (pills[0]) pills[0].textContent = seesAll ? "🟢 Todos os territórios" : `🟢 ${territory}`;
-  if (pills[1]) pills[1].textContent = seesAll ? "🏢 Todas as cooperativas" : "🏢 Cooperativa";
+  if (pills[1]) pills[1].textContent = seesAll ? "🏢 Todas as cooperativas" : `🏢 ${territory}`;
   if (pills[2]) pills[2].textContent = canManageApprovals() ? "🔐 Administrador" : "🔐 Leitura";
   if (pills[3]) pills[3].textContent = `👤 ${role}`;
 }
@@ -1266,9 +1574,10 @@ function renderAll() {
   renderPendingList();
   renderTable();
   renderMap();
+  renderCoopUsersList();
 
   setDebug(
-    `Participants: ${STATE.participants.length} • ApprovalRequests: ${STATE.approvalRequests.length} • Visíveis: ${STATE.filteredUsers.length}`,
+    `Participants: ${STATE.participants.length} • ApprovalRequests: ${STATE.approvalRequests.length} • Visíveis: ${STATE.filteredUsers.length} • Usuários internos: ${STATE.coopUsers.length}`,
     "Dados carregados."
   );
 }
@@ -1349,6 +1658,11 @@ function bindEvents() {
     event.preventDefault();
     await saveModalUserChanges();
   });
+
+  els.coopUserForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await createCoopUserRecord();
+  });
 }
 
 /* =========================
@@ -1369,6 +1683,7 @@ onAuthStateChanged(auth, async (user) => {
     STATE.userDoc = await loadCurrentUser(user.uid);
 
     fillSidebar();
+    applyCoopUserPermissionsUI();
     await loadTerritoryBase();
     await maybeRequestNotificationPermission();
 
@@ -1379,8 +1694,17 @@ onAuthStateChanged(auth, async (user) => {
     await loadApprovalsInitial();
     await loadParticipantsInitial();
 
+    try {
+      const snap = await getDocs(usersRef());
+      STATE.coopUsers = snap.docs.map(mapInternalUserDoc);
+      renderCoopUsersList();
+    } catch (error) {
+      console.error("Erro ao carregar usuários da cooperativa:", error);
+    }
+
     startApprovalsListener();
     startParticipantsListener();
+    startUsersListener();
 
     setTimeout(async () => {
       renderMap();
