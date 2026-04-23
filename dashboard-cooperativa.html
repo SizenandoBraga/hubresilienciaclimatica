@@ -540,15 +540,27 @@
     </main>
   </div>
 
-  <div class="modal" id="photoModal" aria-hidden="true">
-    <div class="modal-backdrop" data-close="photoModal"></div>
-    <div class="modal-card modal-photo">
-      <button class="modal-close" data-close="photoModal" aria-label="Fechar">×</button>
-      <div class="modal-body">
-        <img id="photoModalImg" src="" alt="Foto do registro">
-      </div>
+  <div id="photoModal" class="modal" aria-hidden="true">
+  <div class="modal-backdrop" data-close="photoModal"></div>
+
+  <div class="modal-card modal-photo">
+    <button
+      type="button"
+      class="modal-close"
+      data-close="photoModal"
+      aria-label="Fechar"
+    >×</button>
+
+    <div class="modal-head">
+      <h3>Visualizar foto</h3>
+      <p>Imagem do registro selecionado.</p>
+    </div>
+
+    <div class="modal-body">
+      <img id="photoModalImg" src="" alt="Foto ampliada da coleta">
     </div>
   </div>
+</div>
 
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="editModal"></div>

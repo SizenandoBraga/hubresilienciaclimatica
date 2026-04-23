@@ -1611,6 +1611,18 @@ body.modal-open {
   border-radius: var(--radius-md);
   background: #f5f5f5;
 }
+#photoModal {
+  z-index: 10020;
+}
+
+#photoModal .modal-backdrop {
+  z-index: 0;
+}
+
+#photoModal .modal-card {
+  position: relative;
+  z-index: 2;
+}
 
 /* =========================
    MODAL DETALHES DA COLETA

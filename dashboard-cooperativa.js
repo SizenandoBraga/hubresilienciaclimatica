@@ -2087,6 +2087,13 @@ function printCollectionLabel() {
 
 function openPhoto(url) {
   if (!url || !els.photoModal || !els.photoModalImg) return;
+
+  const detailsModal = document.getElementById("collectionDetailsModal");
+  if (detailsModal?.classList.contains("open")) {
+    detailsModal.classList.remove("open");
+    detailsModal.setAttribute("aria-hidden", "true");
+  }
+
   els.photoModalImg.src = url;
   els.photoModal.classList.add("open");
   els.photoModal.setAttribute("aria-hidden", "false");
@@ -2099,6 +2106,14 @@ function closeModal(id) {
 
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+
+  if (id === "photoModal") {
+    const detailsModal = document.getElementById("collectionDetailsModal");
+    if (detailsModal) {
+      detailsModal.classList.add("open");
+      detailsModal.setAttribute("aria-hidden", "false");
+    }
+  }
 
   const hasAnyOpenModal = document.querySelector(".modal.open");
   if (!hasAnyOpenModal) {
