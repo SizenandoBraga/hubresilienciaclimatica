@@ -1476,4 +1476,143 @@ textarea:focus{
     padding:24px;
     background:#fff;
   }
+}body.modal-open {
+  overflow: hidden;
+}
+
+.modal.modal-scrollable {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: none;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 24px 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.modal.modal-scrollable.open {
+  display: flex;
+}
+
+.modal.modal-scrollable .modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+}
+
+.modal-card-collection-details {
+  position: relative;
+  z-index: 2;
+  width: min(980px, 100%);
+  max-height: calc(100vh - 48px);
+  margin: auto 0;
+  display: flex;
+  flex-direction: column;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.modal-card-collection-details .modal-head {
+  flex: 0 0 auto;
+  padding: 22px 24px 16px;
+  border-bottom: 1px solid rgba(60, 58, 57, 0.12);
+  background: #fff;
+}
+
+.modal-body-scroll {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: calc(100vh - 180px);
+  padding: 20px 24px 24px;
+  background: #fff;
+  -webkit-overflow-scrolling: touch;
+}
+
+.collection-details-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.collection-details-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.collection-span-full {
+  grid-column: 1 / -1;
+}
+
+.collection-details-list {
+  margin-top: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.collection-details-photos {
+  margin-top: 12px;
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.collection-photo-thumb {
+  width: 120px;
+  height: 120px;
+  object-fit: cover;
+  border-radius: 16px;
+  border: 1px solid rgba(60, 58, 57, 0.12);
+  cursor: pointer;
+  display: block;
+}
+
+.collection-details-summary {
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.collection-details-payload {
+  margin-top: 12px;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+@media (max-width: 768px) {
+  .modal.modal-scrollable {
+    padding: 12px;
+  }
+
+  .modal-card-collection-details {
+    width: 100%;
+    max-height: calc(100vh - 24px);
+    border-radius: 18px;
+  }
+
+  .modal-card-collection-details .modal-head {
+    padding: 18px 18px 14px;
+  }
+
+  .modal-body-scroll {
+    max-height: calc(100vh - 140px);
+    padding: 16px 18px 20px;
+  }
+
+  .collection-details-fields {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .collection-span-full {
+    grid-column: auto;
+  }
+
+  .collection-photo-thumb {
+    width: 100px;
+    height: 100px;
+  }
 }

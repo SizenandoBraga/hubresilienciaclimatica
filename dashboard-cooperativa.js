@@ -614,19 +614,29 @@ function ensureCollectionDetailsModal() {
 
   modal = document.createElement("div");
   modal.id = "collectionDetailsModal";
-  modal.className = "modal";
+  modal.className = "modal modal-scrollable";
   modal.setAttribute("aria-hidden", "true");
+
   modal.innerHTML = `
     <div class="modal-backdrop" data-close="collectionDetailsModal"></div>
-    <div class="modal-card" style="width:min(980px, calc(100vw - 28px));">
-      <button class="modal-close" data-close="collectionDetailsModal" aria-label="Fechar">×</button>
+
+    <div class="modal-card modal-card-collection-details">
+      <button
+        class="modal-close"
+        type="button"
+        data-close="collectionDetailsModal"
+        aria-label="Fechar"
+      >×</button>
+
       <div class="modal-head">
         <h3>Detalhes da coleta</h3>
         <p>Visualização completa do registro salvo.</p>
       </div>
-      <div class="modal-body" id="collectionDetailsContent"></div>
+
+      <div class="modal-body modal-body-scroll" id="collectionDetailsContent"></div>
     </div>
   `;
+
   document.body.appendChild(modal);
   return modal;
 }
@@ -1659,6 +1669,7 @@ function openCollectionDetailsModal(itemId) {
 
   const participant = resolveParticipant(item);
   const photos = getColetaPhotoUrls(item);
+
   const materialsHtml = MATERIAL_META
     .map((mat) => {
       const value = getMaterialValue(item, mat.key);
@@ -1671,8 +1682,8 @@ function openCollectionDetailsModal(itemId) {
   const rawPayload = escapeHtml(JSON.stringify(item, null, 2));
 
   content.innerHTML = `
-    <div style="display:grid;gap:18px;">
-      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;">
+    <div class="collection-details-grid">
+      <div class="collection-details-fields">
         <div class="read-box"><strong>Data:</strong> ${escapeHtml(formatDateBR(inferDateISO(item)))}</div>
         <div class="read-box"><strong>Fluxo:</strong> ${escapeHtml(inferFluxo(item))}</div>
         <div class="read-box"><strong>Participante:</strong> ${escapeHtml(participant.name)}</div>
@@ -1681,24 +1692,31 @@ function openCollectionDetailsModal(itemId) {
         <div class="read-box"><strong>Status:</strong> ${escapeHtml(resolveHumanStatus(item))}</div>
         <div class="read-box"><strong>Tipo cadastro:</strong> ${escapeHtml(inferParticipantExtraInfo(item))}</div>
         <div class="read-box"><strong>Criado por:</strong> ${escapeHtml(inferCreatorLabel(item))}</div>
-        <div class="read-box" style="grid-column:1 / -1;"><strong>Endereço:</strong> ${escapeHtml(participant.address || "—")}</div>
+
+        <div class="read-box collection-span-full">
+          <strong>Endereço:</strong> ${escapeHtml(participant.address || "—")}
+        </div>
+
         <div class="read-box"><strong>Resíduo seco:</strong> ${escapeHtml(formatKg(inferResiduoSeco(item)))}</div>
         <div class="read-box"><strong>Rejeito:</strong> ${escapeHtml(formatKg(inferRejeito(item)))}</div>
         <div class="read-box"><strong>Não comercializado:</strong> ${escapeHtml(formatKg(inferNaoComercializado(item)))}</div>
         <div class="read-box"><strong>Qualidade:</strong> ${escapeHtml(getQualidade(item) || "—")}</div>
-        <div class="read-box" style="grid-column:1 / -1;"><strong>Observação:</strong> ${escapeHtml(inferObservacao(item) || "—")}</div>
+
+        <div class="read-box collection-span-full">
+          <strong>Observação:</strong> ${escapeHtml(inferObservacao(item) || "—")}
+        </div>
       </div>
 
       <div class="read-box">
         <strong>Materiais informados</strong>
-        <div style="margin-top:10px;display:grid;gap:6px;">
+        <div class="collection-details-list">
           ${materialsHtml || "<div>Nenhum material detalhado informado.</div>"}
         </div>
       </div>
 
       <div class="read-box">
         <strong>Foto(s) do registro</strong>
-        <div style="margin-top:12px;display:flex;gap:12px;flex-wrap:wrap;">
+        <div class="collection-details-photos">
           ${
             photos.length
               ? photos.map((url) => `
@@ -1706,7 +1724,7 @@ function openCollectionDetailsModal(itemId) {
                     src="${escapeHtml(url)}"
                     alt="Foto da coleta"
                     data-photo="${escapeHtml(url)}"
-                    style="width:120px;height:120px;object-fit:cover;border-radius:16px;border:1px solid rgba(60,58,57,.12);cursor:pointer;"
+                    class="collection-photo-thumb"
                   />
                 `).join("")
               : `<div>Nenhuma foto vinculada ao registro.</div>`
@@ -1715,14 +1733,15 @@ function openCollectionDetailsModal(itemId) {
       </div>
 
       <details class="read-box">
-        <summary style="cursor:pointer;font-weight:800;">Ver payload salvo do registro</summary>
-        <pre style="margin-top:12px;white-space:pre-wrap;word-break:break-word;font-size:12px;line-height:1.45;">${rawPayload}</pre>
+        <summary class="collection-details-summary">Ver payload salvo do registro</summary>
+        <pre class="collection-details-payload">${rawPayload}</pre>
       </details>
     </div>
   `;
 
   modal.classList.add("open");
   modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
 }
 
 function renderMainTable(items) {
@@ -2070,14 +2089,22 @@ function openPhoto(url) {
   els.photoModalImg.src = url;
   els.photoModal.classList.add("open");
   els.photoModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
 }
 
 function closeModal(id) {
   const modal = document.getElementById(id);
   if (!modal) return;
+
   modal.classList.remove("open");
   modal.setAttribute("aria-hidden", "true");
+
+  const hasAnyOpenModal = document.querySelector(".modal.open");
+  if (!hasAnyOpenModal) {
+    document.body.classList.remove("modal-open");
+  }
 }
+
 
 function openEditModal(itemId) {
   const item = allColetas.find((x) => x.id === itemId);
@@ -2095,10 +2122,11 @@ function openEditModal(itemId) {
   if (els.editNaoComercializado) els.editNaoComercializado.value = String(inferNaoComercializado(item) || "");
   if (els.editObs) els.editObs.value = inferObservacao(item);
 
-  if (els.editModal) {
-    els.editModal.classList.add("open");
-    els.editModal.setAttribute("aria-hidden", "false");
-  }
+ if (els.editModal) {
+  els.editModal.classList.add("open");
+  els.editModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
 }
 
 async function saveEdit() {
@@ -2171,6 +2199,14 @@ function initCursorGlow() {
 function bindUI() {
   ensureCollectionDetailsModal();
   ensureRefreshButton();
+  
+  document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    document.querySelectorAll(".modal.open").forEach((modal) => {
+      closeModal(modal.id);
+    });
+  }
+});
 
   els.btnAplicar?.addEventListener("click", applyFilters);
   els.btnLimpar?.addEventListener("click", clearFilters);
