@@ -22,6 +22,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
+
   <link rel="stylesheet" href="usuarios.css" />
 </head>
 <body>
@@ -44,6 +45,11 @@
         <a href="/usuarios.html" class="nav-link active">
           <span class="nav-ico">👥</span>
           <span>Participantes cadastrados</span>
+        </a>
+
+        <a href="/user-cooperativa.html" class="nav-link">
+          <span class="nav-ico">🧑‍💼</span>
+          <span>Usuários da cooperativa</span>
         </a>
 
         <a href="/cadastro-coletas-vila-pinto.html" class="nav-link">
@@ -97,140 +103,6 @@
           Acompanhe participantes cadastrados, aprove pedidos pendentes, visualize
           os pontos de coleta no mapa e monte a rota da cooperativa até os locais.
         </p>
-      </section>
-
-      <!-- NOVA SEÇÃO -->
-      <section class="content-grid coop-users-layout" id="coopUsersSection">
-        <div class="left-column">
-          <article class="panel-card" id="coopUserCreateCard">
-            <div class="panel-head">
-              <div>
-                <span class="section-kicker">Cadastro interno</span>
-                <h2>Criar usuário da cooperativa</h2>
-              </div>
-              <span class="panel-count" id="coopCreateStatusLabel">Permissões por módulo</span>
-            </div>
-
-            <form id="coopUserForm" class="coop-user-form" autocomplete="off">
-              <div class="modal-grid">
-                <div class="field">
-                  <label for="coopUserName">Nome completo</label>
-                  <input id="coopUserName" type="text" placeholder="Nome completo" required />
-                </div>
-
-                <div class="field">
-                  <label for="coopUserDisplayName">Nome de exibição</label>
-                  <input id="coopUserDisplayName" type="text" placeholder="Como aparecerá no sistema" />
-                </div>
-              </div>
-
-              <div class="modal-grid">
-                <div class="field">
-                  <label for="coopUserEmail">E-mail</label>
-                  <input id="coopUserEmail" type="email" placeholder="usuario@teste.com" required />
-                </div>
-
-                <div class="field">
-                  <label for="coopUserPassword">Senha provisória</label>
-                  <input id="coopUserPassword" type="password" minlength="6" placeholder="Mínimo 6 caracteres" required />
-                </div>
-              </div>
-
-              <div class="modal-grid">
-                <div class="field">
-                  <label for="coopUserRole">Perfil</label>
-                  <select id="coopUserRole">
-                    <option value="cooperativa">Cooperativa</option>
-                    <option value="usuario">Usuário</option>
-                    <option value="operador">Operador</option>
-                  </select>
-                </div>
-
-                <div class="field">
-                  <label for="coopUserTerritory">Cooperativa / território</label>
-                  <select id="coopUserTerritory">
-                    <option value="vila-pinto">Vila Pinto</option>
-                    <option value="cooadesc">COOADESC</option>
-                    <option value="padre-cacique">Padre Cacique</option>
-                  </select>
-                </div>
-              </div>
-
-              <div class="permissions-box">
-                <div class="permissions-head">
-                  <strong>Permissões de acesso</strong>
-                  <span>Defina os módulos liberados para este usuário.</span>
-                </div>
-
-                <div class="permissions-grid">
-                  <label class="permission-item">
-                    <input type="checkbox" id="permDashboard" checked />
-                    <span>Dashboard</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permColetas" checked />
-                    <span>Registro de coletas</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permParticipants" checked />
-                    <span>Participantes</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permConteudos" checked />
-                    <span>Conteúdos</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permDocumentos" checked />
-                    <span>Documentos</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permMapa" checked />
-                    <span>Mapa / rotas</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permAprovarCadastros" />
-                    <span>Aprovar cadastros</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permGerenciarUsuarios" />
-                    <span>Gerenciar usuários</span>
-                  </label>
-                </div>
-              </div>
-
-              <div class="modal-actions modal-actions-inline">
-                <div class="modal-actions-right">
-                  <button class="btn btn-primary" type="submit" id="btnCreateCoopUser">
-                    Criar usuário da cooperativa
-                  </button>
-                </div>
-              </div>
-            </form>
-          </article>
-        </div>
-
-        <div class="right-column">
-          <article class="panel-card">
-            <div class="panel-head">
-              <div>
-                <span class="section-kicker">Usuários internos</span>
-                <h2>Usuários da cooperativa</h2>
-              </div>
-              <span class="panel-count" id="coopUsersCountLabel">0 itens</span>
-            </div>
-
-            <div class="panel-list" id="coopUsersList">
-              <div class="empty-state">Carregando usuários internos da cooperativa...</div>
-            </div>
-          </article>
-        </div>
       </section>
 
       <section class="kpi-grid">
@@ -481,21 +353,9 @@
             </div>
 
             <div class="field">
-  <label for="modalRouteShift">Rota / turno de coleta</label>
-  <select id="modalRouteShift">
-    <option value="">Selecione o turno</option>
-    <option value="segunda_manha">Segunda-feira • Manhã</option>
-    <option value="segunda_tarde">Segunda-feira • Tarde</option>
-    <option value="terca_manha">Terça-feira • Manhã</option>
-    <option value="terca_tarde">Terça-feira • Tarde</option>
-    <option value="quarta_manha">Quarta-feira • Manhã</option>
-    <option value="quarta_tarde">Quarta-feira • Tarde</option>
-    <option value="quinta_manha">Quinta-feira • Manhã</option>
-    <option value="quinta_tarde">Quinta-feira • Tarde</option>
-    <option value="sexta_manha">Sexta-feira • Manhã</option>
-    <option value="sexta_tarde">Sexta-feira • Tarde</option>
-  </select>
-</div>
+              <label for="modalInOperationHint">Rota</label>
+              <input id="modalInOperationHint" type="text" disabled />
+            </div>
           </div>
 
           <div class="info-box">
@@ -521,13 +381,11 @@
   </div>
 
   <script
-  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-  crossorigin=""
-></script>
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
 
-
-
-<script type="module" src="usuarios.js"></script>
+  <script type="module" src="usuarios.js"></script>
 </body>
 </html>

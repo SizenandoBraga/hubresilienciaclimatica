@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <title>NSRU • Usuários da cooperativa</title>
+  <meta name="theme-color" content="#81B92A" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+
+  <link rel="stylesheet" href="usuarios.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="sidebar-top">
+        <div class="brand-wrap">
+          <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo" />
+        </div>
+      </div>
+
+      <nav class="sidebar-nav">
+        <p class="nav-label">Menu</p>
+
+        <a href="/cooperativa-vila-pinto.html" class="nav-link">
+          <span class="nav-ico">🏠</span>
+          <span>Painel inicial</span>
+        </a>
+
+        <a href="/usuarios.html" class="nav-link">
+          <span class="nav-ico">👥</span>
+          <span>Participantes cadastrados</span>
+        </a>
+
+        <a href="/user-cooperativa.html" class="nav-link active">
+          <span class="nav-ico">🧑‍💼</span>
+          <span>Usuários da cooperativa</span>
+        </a>
+
+        <a href="/cadastro-coletas-vila-pinto.html" class="nav-link">
+          <span class="nav-ico">♻️</span>
+          <span>Registro de coletas</span>
+        </a>
+
+        <a href="/dashboard-cooperativa.html" class="nav-link">
+          <span class="nav-ico">📊</span>
+          <span>Dashboard da cooperativa</span>
+        </a>
+      </nav>
+
+      <div class="sidebar-bottom">
+        <p class="nav-label">Sessão</p>
+
+        <button class="nav-link nav-button" id="btnLogout" type="button">
+          <span class="nav-ico">↩</span>
+          <span>Sair</span>
+        </button>
+
+        <div class="sidebar-userbox">
+          <strong id="sidebarUserName">Carregando participante...</strong>
+          <span id="sidebarTerritoryLabel">Carregando território...</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div class="topbar-right">
+          <span class="status-pill status-green">🟢 Todos os territórios</span>
+          <span class="status-pill status-lime">🏢 Todas as cooperativas</span>
+          <span class="status-pill status-orange">🔐 Administrador</span>
+          <span class="status-pill status-purple">👤 Admin Governança</span>
+        </div>
+      </header>
+
+      <section class="notice-banner">
+        <strong>Acesso administrativo ativo.</strong>
+        <span>
+          Você pode criar usuários internos da cooperativa e definir permissões de acesso
+          aos módulos da plataforma.
+        </span>
+      </section>
+
+      <section class="hero-card">
+        <div class="hero-badge">Área de gestão da cooperativa</div>
+        <h1>Cadastro de usuários da cooperativa</h1>
+        <p>
+          Crie usuários internos da cooperativa, defina o território e libere permissões
+          por módulo da plataforma.
+        </p>
+      </section>
+
+      <!-- NOVA SEÇÃO -->
+      <section class="content-grid coop-users-layout" id="coopUsersSection">
+        <div class="left-column">
+          <article class="panel-card" id="coopUserCreateCard">
+            <div class="panel-head">
+              <div>
+                <span class="section-kicker">Cadastro interno</span>
+                <h2>Criar usuário da cooperativa</h2>
+              </div>
+              <span class="panel-count" id="coopCreateStatusLabel">Permissões por módulo</span>
+            </div>
+
+            <form id="coopUserForm" class="coop-user-form" autocomplete="off">
+              <div class="modal-grid">
+                <div class="field">
+                  <label for="coopUserName">Nome completo</label>
+                  <input id="coopUserName" type="text" placeholder="Nome completo" required />
+                </div>
+
+                <div class="field">
+                  <label for="coopUserDisplayName">Nome de exibição</label>
+                  <input id="coopUserDisplayName" type="text" placeholder="Como aparecerá no sistema" />
+                </div>
+              </div>
+
+              <div class="modal-grid">
+                <div class="field">
+                  <label for="coopUserEmail">E-mail</label>
+                  <input id="coopUserEmail" type="email" placeholder="usuario@teste.com" required />
+                </div>
+
+                <div class="field">
+                  <label for="coopUserPassword">Senha provisória</label>
+                  <input id="coopUserPassword" type="password" minlength="6" placeholder="Mínimo 6 caracteres" required />
+                </div>
+              </div>
+
+              <div class="modal-grid">
+                <div class="field">
+                  <label for="coopUserRole">Perfil</label>
+                  <select id="coopUserRole">
+                    <option value="cooperativa">Cooperativa</option>
+                    <option value="usuario">Usuário</option>
+                    <option value="operador">Operador</option>
+                  </select>
+                </div>
+
+                <div class="field">
+                  <label for="coopUserTerritory">Cooperativa / território</label>
+                  <select id="coopUserTerritory">
+                    <option value="vila-pinto">Vila Pinto</option>
+                    <option value="cooadesc">COOADESC</option>
+                    <option value="padre-cacique">Padre Cacique</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="permissions-box">
+                <div class="permissions-head">
+                  <strong>Permissões de acesso</strong>
+                  <span>Defina os módulos liberados para este usuário.</span>
+                </div>
+
+                <div class="permissions-grid">
+                  <label class="permission-item">
+                    <input type="checkbox" id="permDashboard" checked />
+                    <span>Dashboard</span>
+                  </label>
+
+                  <label class="permission-item">
+                    <input type="checkbox" id="permColetas" checked />
+                    <span>Registro de coletas</span>
+                  </label>
+
+                  <label class="permission-item">
+                    <input type="checkbox" id="permParticipants" checked />
+                    <span>Participantes</span>
+                  </label>
+
+                  <label class="permission-item">
+                    <input type="checkbox" id="permConteudos" checked />
+                    <span>Conteúdos</span>
+                  </label>
+
+                  <label class="permission-item">
+                    <input type="checkbox" id="permDocumentos" checked />
+                    <span>Documentos</span>
+                  </label>
+
+                  <label class="permission-item">
+                    <input type="checkbox" id="permMapa" checked />
+                    <span>Mapa / rotas</span>
+                  </label>
+
+                  <label class="permission-item">
+                    <input type="checkbox" id="permAprovarCadastros" />
+                    <span>Aprovar cadastros</span>
+                  </label>
+
+                  <label class="permission-item">
+                    <input type="checkbox" id="permGerenciarUsuarios" />
+                    <span>Gerenciar usuários</span>
+                  </label>
+                </div>
+              </div>
+
+              <div class="modal-actions modal-actions-inline">
+                <div class="modal-actions-right">
+                  <button class="btn btn-primary" type="submit" id="btnCreateCoopUser">
+                    Criar usuário da cooperativa
+                  </button>
+                </div>
+              </div>
+            </form>
+          </article>
+        </div>
+
+        <div class="right-column">
+          <article class="panel-card">
+            <div class="panel-head">
+              <div>
+                <span class="section-kicker">Usuários internos</span>
+                <h2>Usuários da cooperativa</h2>
+              </div>
+              <span class="panel-count" id="coopUsersCountLabel">0 itens</span>
+            </div>
+
+            <div class="panel-list" id="coopUsersList">
+              <div class="empty-state">Carregando usuários internos da cooperativa...</div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+
+
+      <div class="debug-status hidden" id="debugStatus"></div>
+    </main>
+  </div>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+
+  <script type="module" src="usuarios.js"></script>
+</body>
+</html>
