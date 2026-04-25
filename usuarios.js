@@ -79,7 +79,7 @@ const els = {
   modalAddress: document.getElementById("modalAddress"),
   modalLat: document.getElementById("modalLat"),
   modalLng: document.getElementById("modalLng"),
-  modalInOperationHint: document.getElementById("modalInOperationHint"),
+  modalRouteShift: document.getElementById("modalRouteShift"),
   modalRequestInfo: document.getElementById("modalRequestInfo"),
   userModalStatusNote: document.getElementById("userModalStatusNote"),
   modalFocusMap: document.getElementById("modalFocusMap"),
@@ -637,6 +637,7 @@ function mapParticipantDoc(docSnap) {
     lat: toNumberOrNull(data.lat) ?? toNumberOrNull(data.address?.lat),
     lng: toNumberOrNull(data.lng) ?? toNumberOrNull(data.address?.lng),
     schedule: data.schedule || "A definir",
+    routeShift: data.routeShift || data.rota || data.schedule || "",
     wasteKg: Number(data.wasteKg || 0),
     raw: data
   };
@@ -723,6 +724,7 @@ function mergeUsers() {
         lat: participant?.lat ?? toNumberOrNull(snapshot.lat),
         lng: participant?.lng ?? toNumberOrNull(snapshot.lng),
         schedule: participant?.schedule || "A definir",
+        routeShift: participant?.routeShift || snapshot.routeShift || snapshot.rota || snapshot.schedule || "",
         wasteKg: Number(participant?.wasteKg || 0),
         raw: participant?.raw || raw
       };
@@ -1161,7 +1163,9 @@ function openUserModal(userId) {
   if (els.modalAddress) els.modalAddress.value = user.address || "";
   if (els.modalLat) els.modalLat.value = user.lat ?? "";
   if (els.modalLng) els.modalLng.value = user.lng ?? "";
-  if (els.modalInOperationHint) els.modalInOperationHint.value = user.inOperation === "sim" ? "Na rota operacional" : "Fora da rota";
+  if (els.modalRouteShift) {
+    els.modalRouteShift.value = user.routeShift || "";
+  }
 
   if (els.modalRequestInfo) {
     els.modalRequestInfo.textContent = user.linkedApprovalRequestId
@@ -1234,7 +1238,8 @@ async function upsertParticipantFromApprovedRequest(user) {
     territoryLabel: user.territoryLabel || snapshot.territoryLabel || "",
     inTerritory: "sim",
     inOperation: user.inOperation || "sim",
-    schedule: user.schedule || "A definir",
+    schedule: user.routeShift || user.schedule || "A definir",
+    routeShift: user.routeShift || "",
     status: "aprovado",
     approvalStatus: "approved",
     active: true,
@@ -1370,6 +1375,8 @@ async function saveModalUserChanges() {
       lat: toNumberOrNull(els.modalLat?.value) ?? user.lat,
       lng: toNumberOrNull(els.modalLng?.value) ?? user.lng,
       inOperation: chosenOperation,
+      routeShift: els.modalRouteShift?.value || "",
+      schedule: els.modalRouteShift?.value || user.schedule || "A definir",
       status: user.status
     });
 
