@@ -1353,13 +1353,9 @@ async function saveModalUserChanges() {
 
   const chosenStatus = els.modalUserStatus?.value || user.status;
   const chosenOperation = chosenStatus === "aprovado" ? (els.modalOperation?.value || "sim") : "nao";
+  const chosenRouteShift = els.modalRouteShift?.value || "";
 
   try {
-    if (chosenStatus === "aprovado") {
-      await approveUser(userId);
-      return;
-    }
-
     if (chosenStatus === "inativo") {
       await rejectUser(userId);
       return;
@@ -1375,10 +1371,28 @@ async function saveModalUserChanges() {
       lat: toNumberOrNull(els.modalLat?.value) ?? user.lat,
       lng: toNumberOrNull(els.modalLng?.value) ?? user.lng,
       inOperation: chosenOperation,
-      routeShift: els.modalRouteShift?.value || "",
-      schedule: els.modalRouteShift?.value || user.schedule || "A definir",
-      status: user.status
+      status: chosenStatus,
+      routeShift: chosenRouteShift,
+      schedule: chosenRouteShift || user.schedule || "A definir"
     });
+
+    if (chosenStatus === "aprovado") {
+      const batch = writeBatch(db);
+
+      const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
+
+      sameRequests.forEach((req) => {
+        batch.update(doc(db, "approvalRequests", req.id), {
+          status: "approved",
+          decision: "approved",
+          reviewedAt: serverTimestamp(),
+          reviewedBy: STATE.authUser?.uid || null,
+          reviewedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null
+        });
+      });
+
+      await batch.commit();
+    }
 
     closeUserModal();
     showToast("Alterações salvas.");
