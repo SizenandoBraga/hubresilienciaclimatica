@@ -366,23 +366,33 @@ function ensureTableHeaderForLabels() {
 
 function loadQRCodeLib() {
   return new Promise((resolve, reject) => {
-    if (window.QRCode?.toDataURL) {
+    if (window.QRCode && typeof window.QRCode.toDataURL === "function") {
       resolve();
       return;
     }
 
-    const existing = document.querySelector('script[data-qrcode-lib="true"]');
-    if (existing) {
-      existing.addEventListener("load", resolve, { once: true });
-      existing.addEventListener("error", reject, { once: true });
-      return;
+    const existingScript = document.querySelector("script[data-qrcode-lib='true']");
+    if (existingScript) {
+      existingScript.remove();
     }
 
     const script = document.createElement("script");
-    script.src = "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js";
     script.setAttribute("data-qrcode-lib", "true");
-    script.onload = resolve;
-    script.onerror = reject;
+
+    script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js";
+
+    script.onload = () => {
+      if (window.QRCode && typeof window.QRCode.toDataURL === "function") {
+        resolve();
+      } else {
+        reject(new Error("Biblioteca QRCode carregou, mas QRCode.toDataURL não está disponível."));
+      }
+    };
+
+    script.onerror = () => {
+      reject(new Error("Não foi possível carregar a biblioteca QRCode. Verifique internet, CDN ou bloqueio do navegador."));
+    };
+
     document.head.appendChild(script);
   });
 }
