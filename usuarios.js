@@ -135,12 +135,36 @@ function onlyDigits(value) {
 
 function toNumberOrNull(value) {
   if (value === null || value === undefined || value === "") return null;
-  const n = Number(value);
+
+  let raw = String(value).trim().replace(",", ".");
+  let n = Number(raw);
+
+  if (!Number.isFinite(n)) return null;
+
+  // Corrige latitude/longitude salvas sem ponto decimal.
+  // Exemplo: -5113316456181438 vira -51.13316456181438
+  if (Math.abs(n) > 180) {
+    const sign = n < 0 ? -1 : 1;
+    const digits = String(Math.abs(Math.trunc(n)));
+
+    if (digits.length >= 4) {
+      const fixed = Number(digits.slice(0, 2) + "." + digits.slice(2));
+      n = sign * fixed;
+    }
+  }
+
   return Number.isFinite(n) ? n : null;
 }
 
 function isValidCoord(lat, lng) {
-  return Number.isFinite(lat) && Number.isFinite(lng);
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
 }
 
 function normalizeStatus(value) {
@@ -365,38 +389,10 @@ function ensureTableHeaderForLabels() {
 }
 
 function loadQRCodeLib() {
-  return new Promise((resolve, reject) => {
-    if (window.QRCode && typeof window.QRCode.toDataURL === "function") {
-      resolve();
-      return;
-    }
-
-    const existingScript = document.querySelector("script[data-qrcode-lib='true']");
-    if (existingScript) {
-      existingScript.remove();
-    }
-
-    const script = document.createElement("script");
-    script.setAttribute("data-qrcode-lib", "true");
-
-    script.src = "https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js";
-
-    script.onload = () => {
-      if (window.QRCode && typeof window.QRCode.toDataURL === "function") {
-        resolve();
-      } else {
-        reject(new Error("Biblioteca QRCode carregou, mas QRCode.toDataURL não está disponível."));
-      }
-    };
-
-    script.onerror = () => {
-      reject(new Error("Não foi possível carregar a biblioteca QRCode. Verifique internet, CDN ou bloqueio do navegador."));
-    };
-
-    document.head.appendChild(script);
-  });
+  // Mantido por compatibilidade com chamadas antigas.
+  // A etiqueta usa QRCode via URL de imagem, sem depender de biblioteca externa.
+  return Promise.resolve();
 }
-
 function generateLabelHtml(user, qrUrl, targetUrl) {
   return `
     <section class="label-card">
@@ -437,10 +433,9 @@ async function printParticipantLabel(userId) {
     await loadQRCodeLib();
 
     const targetUrl = getTerritoryPageUrl(user);
-    const qrUrl = await window.QRCode.toDataURL(targetUrl, {
-      width: 240,
-      margin: 1
-    });
+    const qrUrl =
+      "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=" +
+      encodeURIComponent(targetUrl);
 
     const printWindow = window.open("", "_blank", "width=460,height=680");
 
@@ -1606,10 +1601,9 @@ async function upsertParticipantFromApprovedRequest(user) {
       ? user.id
       : (user.code
           ? user.code.replace(/[^a-zA-Z0-9_-]/g, "_")
-          : `participant_${user.linkedApprovalRequestId}`);
+          : "participant_" + user.linkedApprovalRequestId);
 
   const snapshot = user.raw?.payloadSnapshot || {};
-
   const isApproved = user.status === "aprovado";
 
   const payload = {
@@ -1618,47 +1612,30 @@ async function upsertParticipantFromApprovedRequest(user) {
     participantCode: user.code || snapshot.participantCode || "—",
     participantType: snapshot.participantType || "participante",
     localType: snapshot.localType || user.raw?.localType || "casa",
-
     phone: user.phone || snapshot.phone || null,
     email: user.email || snapshot.email || null,
     cpf: user.cpf || snapshot.cpf || null,
-
     territoryId: user.territoryId || snapshot.territoryId || null,
     territoryLabel: user.territoryLabel || snapshot.territoryLabel || "",
-
     inTerritory: "sim",
     inOperation: user.inOperation || (isApproved ? "sim" : "nao"),
-
-    // 🔥 ROTA / TURNO
-    routeShift: user.routeShift || "",
     schedule: user.routeShift || user.schedule || "A definir",
-
-    // 🔥 STATUS CORRETO
+    routeShift: user.routeShift || "",
     status: user.status || "pendente",
     approvalStatus: isApproved ? "approved" : "pending",
     active: isApproved,
-
     approvalRequestId: user.linkedApprovalRequestId || null,
     source: user.raw?.source || "approval_request",
-
     address: snapshot.address || null,
     enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
-
-    lat: isValidCoord(user.lat, user.lng)
-      ? user.lat
-      : (toNumberOrNull(snapshot.lat) ?? null),
-
-    lng: isValidCoord(user.lat, user.lng)
-      ? user.lng
-      : (toNumberOrNull(snapshot.lng) ?? null),
-
+    lat: isValidCoord(user.lat, user.lng) ? user.lat : (toNumberOrNull(snapshot.lat) ?? null),
+    lng: isValidCoord(user.lat, user.lng) ? user.lng : (toNumberOrNull(snapshot.lng) ?? null),
     updatedAt: serverTimestamp(),
     updatedBy: STATE.authUser?.uid || null
   };
 
   await setDoc(doc(db, "participants", participantId), payload, { merge: true });
 }
-
 async function approveUser(userId) {
   if (!canManageApprovals()) {
     alert("Seu perfil não tem permissão para aprovar participantes.");
