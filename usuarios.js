@@ -80,6 +80,10 @@ const els = {
   modalLat: document.getElementById("modalLat"),
   modalLng: document.getElementById("modalLng"),
   modalRouteShift: document.getElementById("modalRouteShift"),
+  labelStatusFilter: document.getElementById("labelStatusFilter"),
+  labelRouteFilter: document.getElementById("labelRouteFilter"),
+  labelSearchInput: document.getElementById("labelSearchInput"),
+  labelAddressInput: document.getElementById("labelAddressInput"),
   modalRequestInfo: document.getElementById("modalRequestInfo"),
   userModalStatusNote: document.getElementById("userModalStatusNote"),
   modalFocusMap: document.getElementById("modalFocusMap"),
@@ -238,6 +242,341 @@ function getTerritoryLabelById(territoryId) {
   if (normalized === "cooadesc" || normalized === "coadesc") return "COOADESC";
   if (normalized === "padre-cacique") return "Padre Cacique";
   return territoryId || "Território";
+}
+
+function routeShiftLabel(value) {
+  const normalized = String(value || "").trim();
+
+  const map = {
+    segunda_manha: "Segunda-feira • Manhã",
+    segunda_tarde: "Segunda-feira • Tarde",
+    terca_manha: "Terça-feira • Manhã",
+    terca_tarde: "Terça-feira • Tarde",
+    quarta_manha: "Quarta-feira • Manhã",
+    quarta_tarde: "Quarta-feira • Tarde",
+    quinta_manha: "Quinta-feira • Manhã",
+    quinta_tarde: "Quinta-feira • Tarde",
+    sexta_manha: "Sexta-feira • Manhã",
+    sexta_tarde: "Sexta-feira • Tarde"
+  };
+
+  return map[normalized] || "Rota não definida";
+}
+
+function getTerritoryPageUrl(user) {
+  const territory = normalizeTerritory(user?.territoryId || getMyTerritoryId());
+
+  const code = encodeURIComponent(user?.code || user?.participantCode || "");
+
+  if (territory === "vila-pinto") {
+    return `${window.location.origin}/cadastro-coletas-vila-pinto.html?participantCode=${code}`;
+  }
+
+  if (territory === "cooadesc" || territory === "coadesc") {
+    return `${window.location.origin}/cadastro-coletas-cooadesc.html?participantCode=${code}`;
+  }
+
+  if (territory === "padre-cacique") {
+    return `${window.location.origin}/cadastro-coletas-padre-cacique.html?participantCode=${code}`;
+  }
+
+  return `${window.location.origin}/cadastro-coletas-vila-pinto.html?participantCode=${code}`;
+}
+
+function ensureBaseGeneralFilters() {
+  const table = els.usersTableBody?.closest("table");
+  const panel = table?.closest(".panel-card");
+
+  if (!panel || panel.querySelector("#labelFiltersCard")) return;
+
+  const filters = document.createElement("div");
+  filters.id = "labelFiltersCard";
+  filters.className = "filters-grid";
+  filters.style.margin = "16px 0";
+
+  filters.innerHTML = `
+    <div class="field">
+      <label for="labelStatusFilter">Status</label>
+      <select id="labelStatusFilter">
+        <option value="all">Todos</option>
+        <option value="pendente">Pendentes</option>
+        <option value="aprovado">Aprovados</option>
+        <option value="inativo">Inativos</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="labelRouteFilter">Rota</label>
+      <select id="labelRouteFilter">
+        <option value="all">Todas as rotas</option>
+        <option value="">Sem rota definida</option>
+        <option value="segunda_manha">Segunda-feira • Manhã</option>
+        <option value="segunda_tarde">Segunda-feira • Tarde</option>
+        <option value="terca_manha">Terça-feira • Manhã</option>
+        <option value="terca_tarde">Terça-feira • Tarde</option>
+        <option value="quarta_manha">Quarta-feira • Manhã</option>
+        <option value="quarta_tarde">Quarta-feira • Tarde</option>
+        <option value="quinta_manha">Quinta-feira • Manhã</option>
+        <option value="quinta_tarde">Quinta-feira • Tarde</option>
+        <option value="sexta_manha">Sexta-feira • Manhã</option>
+        <option value="sexta_tarde">Sexta-feira • Tarde</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="labelSearchInput">Participante</label>
+      <input id="labelSearchInput" type="text" placeholder="Nome, código ou telefone" />
+    </div>
+
+    <div class="field">
+      <label for="labelAddressInput">Endereço</label>
+      <input id="labelAddressInput" type="text" placeholder="Rua, bairro, cidade ou CEP" />
+    </div>
+  `;
+
+  const tableWrap = panel.querySelector(".table-wrap");
+  panel.insertBefore(filters, tableWrap || table);
+
+  els.labelStatusFilter = document.getElementById("labelStatusFilter");
+  els.labelRouteFilter = document.getElementById("labelRouteFilter");
+  els.labelSearchInput = document.getElementById("labelSearchInput");
+  els.labelAddressInput = document.getElementById("labelAddressInput");
+
+  els.labelStatusFilter?.addEventListener("change", renderTable);
+  els.labelRouteFilter?.addEventListener("change", renderTable);
+  els.labelSearchInput?.addEventListener("input", renderTable);
+  els.labelAddressInput?.addEventListener("input", renderTable);
+}
+
+function ensureTableHeaderForLabels() {
+  const table = els.usersTableBody?.closest("table");
+  const headRow = table?.querySelector("thead tr");
+
+  if (!headRow) return;
+
+  headRow.innerHTML = `
+    <th>Participante</th>
+    <th>Status</th>
+    <th>Operação</th>
+    <th>Rota</th>
+    <th>Endereço</th>
+    <th>Ações</th>
+  `;
+}
+
+function loadQRCodeLib() {
+  return new Promise((resolve, reject) => {
+    if (window.QRCode?.toDataURL) {
+      resolve();
+      return;
+    }
+
+    const existing = document.querySelector('script[data-qrcode-lib="true"]');
+    if (existing) {
+      existing.addEventListener("load", resolve, { once: true });
+      existing.addEventListener("error", reject, { once: true });
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js";
+    script.setAttribute("data-qrcode-lib", "true");
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+}
+
+function generateLabelHtml(user, qrUrl, targetUrl) {
+  return `
+    <section class="label-card">
+      <div class="label-top">
+        <strong>NSRU</strong>
+        <span>Etiqueta do participante</span>
+      </div>
+
+      <div class="label-content">
+        <h1>${safeText(user.name)}</h1>
+
+        <div class="label-row">
+          <span>Código do participante</span>
+          <strong>${safeText(user.code)}</strong>
+        </div>
+
+        <div class="label-row">
+          <span>Rota de coleta</span>
+          <strong>${routeShiftLabel(user.routeShift || user.schedule)}</strong>
+        </div>
+
+        <div class="label-qr">
+          <img src="${qrUrl}" alt="QR Code do participante" />
+        </div>
+
+        <p>Escaneie o QR Code para abrir a página de coleta da cooperativa.</p>
+        <small>${safeText(targetUrl)}</small>
+      </div>
+    </section>
+  `;
+}
+
+async function printParticipantLabel(userId) {
+  const user = STATE.users.find((item) => item.id === userId);
+  if (!user) return;
+
+  try {
+    await loadQRCodeLib();
+
+    const targetUrl = getTerritoryPageUrl(user);
+    const qrUrl = await window.QRCode.toDataURL(targetUrl, {
+      width: 240,
+      margin: 1
+    });
+
+    const printWindow = window.open("", "_blank", "width=460,height=680");
+
+    if (!printWindow) {
+      alert("O navegador bloqueou a abertura da etiqueta. Permita pop-ups para esta página.");
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Etiqueta ${safeText(user.code)}</title>
+        <style>
+          * { box-sizing: border-box; }
+
+          body {
+            margin: 0;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f4f7ef;
+            color: #1f2a18;
+          }
+
+          .label-card {
+            width: 360px;
+            min-height: 500px;
+            margin: 0 auto;
+            background: #fff;
+            border: 2px solid #1f2a18;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, .12);
+          }
+
+          .label-top {
+            background: #81B92A;
+            padding: 18px;
+            text-align: center;
+            color: #1f2a18;
+          }
+
+          .label-top strong {
+            display: block;
+            font-size: 32px;
+            letter-spacing: 1px;
+          }
+
+          .label-top span {
+            display: block;
+            margin-top: 4px;
+            font-size: 14px;
+            font-weight: 700;
+          }
+
+          .label-content {
+            padding: 20px;
+            text-align: center;
+          }
+
+          .label-content h1 {
+            margin: 0 0 16px;
+            font-size: 22px;
+            line-height: 1.1;
+          }
+
+          .label-row {
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid #d8e8c0;
+            border-radius: 14px;
+            text-align: left;
+            background: #fbfdf7;
+          }
+
+          .label-row span {
+            display: block;
+            font-size: 11px;
+            color: #61704f;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+          }
+
+          .label-row strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 18px;
+          }
+
+          .label-qr {
+            margin: 18px 0 10px;
+          }
+
+          .label-qr img {
+            width: 190px;
+            height: 190px;
+          }
+
+          p {
+            margin: 8px 0 6px;
+            color: #536044;
+            font-size: 13px;
+          }
+
+          small {
+            display: block;
+            word-break: break-all;
+            color: #7d8872;
+            font-size: 10px;
+          }
+
+          @media print {
+            body {
+              padding: 0;
+              background: #fff;
+            }
+
+            .label-card {
+              width: 100%;
+              min-height: auto;
+              margin: 0;
+              border-radius: 0;
+              box-shadow: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${generateLabelHtml(user, qrUrl, targetUrl)}
+        <script>
+          window.onload = function () {
+            window.focus();
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  } catch (error) {
+    console.error("Erro ao gerar etiqueta:", error);
+    alert("Não foi possível gerar a etiqueta do participante.");
+  }
 }
 
 function setDebug(message, strong = "Status do sistema.") {
@@ -924,10 +1263,44 @@ function renderPendingList() {
 function renderTable() {
   if (!els.usersTableBody) return;
 
-  const allUsers = STATE.filteredUsers.filter((u) => u.status !== "inativo");
+  ensureBaseGeneralFilters();
+  ensureTableHeaderForLabels();
+
+  const statusFilter = String(els.labelStatusFilter?.value || "all");
+  const routeFilter = String(els.labelRouteFilter?.value ?? "all");
+  const participantTerm = String(els.labelSearchInput?.value || "").trim().toLowerCase();
+  const addressTerm = String(els.labelAddressInput?.value || "").trim().toLowerCase();
+
+  const allUsers = STATE.filteredUsers
+    .filter((u) => {
+      if (statusFilter === "all") return u.status !== "inativo";
+      return u.status === statusFilter;
+    })
+    .filter((user) => {
+      const routeValue = String(user.routeShift || user.schedule || "").trim();
+
+      const matchesRoute =
+        routeFilter === "all" ||
+        (routeFilter === "" && routeValue === "") ||
+        routeValue === routeFilter;
+
+      const matchesParticipant =
+        !participantTerm ||
+        String(user.name || "").toLowerCase().includes(participantTerm) ||
+        String(user.code || "").toLowerCase().includes(participantTerm) ||
+        String(user.phone || "").toLowerCase().includes(participantTerm) ||
+        String(user.email || "").toLowerCase().includes(participantTerm) ||
+        String(user.cpf || "").toLowerCase().includes(participantTerm);
+
+      const matchesAddress =
+        !addressTerm ||
+        String(user.address || "").toLowerCase().includes(addressTerm);
+
+      return matchesRoute && matchesParticipant && matchesAddress;
+    });
 
   if (!allUsers.length) {
-    els.usersTableBody.innerHTML = `<tr><td colspan="7">Nenhum usuário encontrado.</td></tr>`;
+    els.usersTableBody.innerHTML = `<tr><td colspan="6">Nenhum participante encontrado.</td></tr>`;
     return;
   }
 
@@ -940,11 +1313,11 @@ function renderTable() {
       </td>
       <td><span class="${badgeClass(user.status)}">${safeText(user.status)}</span></td>
       <td>${user.inOperation === "sim" ? "Em operação" : "Fora da operação"}</td>
-      <td>${safeText(user.territoryLabel || user.territoryId)}</td>
+      <td>${routeShiftLabel(user.routeShift || user.schedule)}</td>
       <td>${safeText(user.address)}</td>
-      <td>${isValidCoord(user.lat, user.lng) ? `${user.lat}, ${user.lng}` : "Sem coordenadas"}</td>
       <td>
         <div class="table-actions">
+          <button class="btn btn-dark" data-action="print-label" data-id="${user.id}" type="button">Etiqueta</button>
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
           <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Mapa</button>
@@ -1282,10 +1655,15 @@ async function approveUser(userId) {
 
     await batch.commit();
 
+    const modalIsCurrentUser = els.modalUserId?.value === userId;
+    const selectedRouteShift = modalIsCurrentUser ? (els.modalRouteShift?.value || user.routeShift || "") : (user.routeShift || "");
+
     await upsertParticipantFromApprovedRequest({
       ...user,
       status: "aprovado",
-      inOperation: "sim"
+      inOperation: "sim",
+      routeShift: selectedRouteShift,
+      schedule: selectedRouteShift || user.schedule || "A definir"
     });
 
     closeUserModal();
@@ -1651,6 +2029,7 @@ function bindEvents() {
     if (action === "reject") return rejectUser(userId);
     if (action === "focus") return focusUserOnMap(userId);
     if (action === "open") return openUserModal(userId);
+    if (action === "print-label") return printParticipantLabel(userId);
   });
 
   els.closeUserModal?.addEventListener("click", closeUserModal);
