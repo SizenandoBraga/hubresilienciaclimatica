@@ -1604,9 +1604,13 @@ async function upsertParticipantFromApprovedRequest(user) {
   const participantId =
     user.id && !String(user.id).startsWith("approval_")
       ? user.id
-      : (user.code ? user.code.replace(/[^a-zA-Z0-9_-]/g, "_") : `participant_${user.linkedApprovalRequestId}`);
+      : (user.code
+          ? user.code.replace(/[^a-zA-Z0-9_-]/g, "_")
+          : `participant_${user.linkedApprovalRequestId}`);
 
   const snapshot = user.raw?.payloadSnapshot || {};
+
+  const isApproved = user.status === "aprovado";
 
   const payload = {
     name: user.name || snapshot.name || "Sem nome",
@@ -1614,24 +1618,40 @@ async function upsertParticipantFromApprovedRequest(user) {
     participantCode: user.code || snapshot.participantCode || "—",
     participantType: snapshot.participantType || "participante",
     localType: snapshot.localType || user.raw?.localType || "casa",
+
     phone: user.phone || snapshot.phone || null,
     email: user.email || snapshot.email || null,
     cpf: user.cpf || snapshot.cpf || null,
+
     territoryId: user.territoryId || snapshot.territoryId || null,
     territoryLabel: user.territoryLabel || snapshot.territoryLabel || "",
+
     inTerritory: "sim",
-    inOperation: user.inOperation || "sim",
-    schedule: user.routeShift || user.schedule || "A definir",
+    inOperation: user.inOperation || (isApproved ? "sim" : "nao"),
+
+    // 🔥 ROTA / TURNO
     routeShift: user.routeShift || "",
-    status: "aprovado",
-    approvalStatus: "approved",
-    active: true,
+    schedule: user.routeShift || user.schedule || "A definir",
+
+    // 🔥 STATUS CORRETO
+    status: user.status || "pendente",
+    approvalStatus: isApproved ? "approved" : "pending",
+    active: isApproved,
+
     approvalRequestId: user.linkedApprovalRequestId || null,
     source: user.raw?.source || "approval_request",
+
     address: snapshot.address || null,
     enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
-    lat: isValidCoord(user.lat, user.lng) ? user.lat : (toNumberOrNull(snapshot.lat) ?? null),
-    lng: isValidCoord(user.lat, user.lng) ? user.lng : (toNumberOrNull(snapshot.lng) ?? null),
+
+    lat: isValidCoord(user.lat, user.lng)
+      ? user.lat
+      : (toNumberOrNull(snapshot.lat) ?? null),
+
+    lng: isValidCoord(user.lat, user.lng)
+      ? user.lng
+      : (toNumberOrNull(snapshot.lng) ?? null),
+
     updatedAt: serverTimestamp(),
     updatedBy: STATE.authUser?.uid || null
   };
