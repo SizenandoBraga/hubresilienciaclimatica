@@ -1,3 +1,45 @@
+/*
+===============================================================================
+NSRU • Dashboard de Coletas da Cooperativa
+Arquivo: dashboard-cooperativa.js
+
+Objetivo do arquivo
+- Autenticar o usuário.
+- Carregar coletas e participantes do Firestore por território.
+- Aplicar filtros gerais e filtros da tabela.
+- Calcular KPIs, cards, gráficos e relatórios.
+- Renderizar mapa e rota dos pontos de coleta.
+- Permitir edição segura dos registros, incluindo frações de resíduos.
+
+Política de cálculo das KPIs
+1) Apenas registros com status diferente de "cancelado" entram nos indicadores.
+2) "Resíduo seco / Reciclável" é calculado assim:
+   - Se o registro for final_turno: soma das frações em MATERIAL_META.
+   - Se for recebimento: usa soma das frações quando houver; se não houver,
+     usa pesoResiduoSecoKg.
+3) "Rejeito" é o peso declarado nos campos:
+   - recebimento.pesoRejeitoKg
+   - finalTurno.pesoRejeitoKg
+   - recebimento.rejeitoKg
+   - finalTurno.rejeitoKg
+   - pesoRejeitoKg
+   - rejeitoKg
+4) "Não comercializado" fica separado de rejeito. Ele aparece na seção de
+   tipos de rejeitos e no Excel, mas não soma no KPI principal "Rejeito total".
+   Caso a regra de negócio mude, basta alterar computeExpandedMetrics() e
+   renderKpis() para somar rejeito + não comercializado.
+
+Boas práticas aplicadas
+- Funções pequenas e nomeadas por responsabilidade.
+- Leitura defensiva de campos opcionais do Firestore.
+- Normalização de território para evitar divergências entre vila-pinto e
+  crgr_vila_pinto.
+- Sanitização de HTML em textos renderizados.
+- Separação entre:
+  dados brutos -> filtros -> cálculos -> renderização.
+===============================================================================
+*/
+
 import { auth, db } from "./firebase-init.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
@@ -330,6 +372,16 @@ function inferTerritorio(item) {
   return item.territoryLabel || coopProfile?.territoryLabel || pageTerritoryId || "Território";
 }
 
+/**
+ * Retorna o peso base de resíduo seco salvo no registro.
+ *
+ * Observação:
+ * Esta função NÃO soma as frações. Ela apenas busca o peso bruto/base salvo.
+ * A decisão de usar frações ou peso base acontece em:
+ * - inferTotalReciclavelRegistro()
+ * - renderKpis()
+ * - computeExpandedMetrics()
+ */
 function inferResiduoSeco(item) {
   return Number(
     item.recebimento?.pesoResiduoSecoKg ??
@@ -339,6 +391,21 @@ function inferResiduoSeco(item) {
   );
 }
 
+/**
+ * Retorna o peso de rejeito do registro.
+ *
+ * O rejeito pode estar salvo em estruturas diferentes conforme o fluxo:
+ * - recebimento.pesoRejeitoKg
+ * - finalTurno.pesoRejeitoKg
+ * - recebimento.rejeitoKg
+ * - finalTurno.rejeitoKg
+ * - pesoRejeitoKg
+ * - rejeitoKg
+ *
+ * Importante:
+ * "Não comercializado" NÃO entra aqui. Ele é tratado separadamente por
+ * inferNaoComercializado().
+ */
 function inferRejeito(item) {
   return Number(
     item.recebimento?.pesoRejeitoKg ??
@@ -351,6 +418,13 @@ function inferRejeito(item) {
   );
 }
 
+/**
+ * Retorna o peso de material não comercializado.
+ *
+ * No dashboard atual, esse valor é separado do rejeito.
+ * Ele aparece nos cards de rejeitos e no Excel, mas não entra no KPI principal
+ * "Rejeito total", a menos que você altere a regra de negócio.
+ */
 function inferNaoComercializado(item) {
   return Number(
     item.recebimento?.pesoNaoComercializadoKg ??
@@ -378,6 +452,19 @@ function getStatus(item) {
   return String(item.status || "ativo").toLowerCase();
 }
 
+/**
+ * Busca o valor de uma fração de resíduo.
+ *
+ * A mesma fração pode estar salva em locais diferentes do documento:
+ * - item.materiais
+ * - item.recebimento.materiais
+ * - item.finalTurno.materiais
+ * - item.recebimento
+ * - item.finalTurno
+ * - item raiz
+ *
+ * Essa leitura flexível evita que registros antigos fiquem fora dos cálculos.
+ */
 function getMaterialValue(item, key) {
   const fontes = [
     item.materiais,
@@ -411,6 +498,14 @@ function getExportBaseItems() {
     : filteredColetas;
 }
 
+/**
+ * Calcula o total reciclável de UM registro.
+ *
+ * Regra:
+ * - final_turno: usa a soma das frações cadastradas no fechamento.
+ * - recebimento: usa a soma das frações quando existirem; se não existirem,
+ *   usa o peso base de resíduo seco.
+ */
 function inferTotalReciclavelRegistro(item) {
   const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
   return isFinalTurno(item)
@@ -1114,12 +1209,25 @@ function clearFilters() {
   if (els.fSearchType) els.fSearchType.value = "all";
   if (els.quickParticipantPreview) els.quickParticipantPreview.classList.add("hidden");
   applyFilters();
-}
-
-/* =========================
+}/* =========================
    KPIs E MATERIAIS
 ========================= */
 
+/**
+ * Calcula e renderiza as KPIs principais do topo do dashboard.
+ *
+ * Entram no cálculo:
+ * - somente registros não cancelados;
+ * - somente registros dentro dos filtros ativos;
+ * - participantes únicos pelo código do participante.
+ *
+ * KPIs:
+ * - total de coletas: quantidade de registros ativos;
+ * - participantes únicos: códigos distintos;
+ * - resíduo seco: reciclável calculado por frações ou peso base;
+ * - rejeito: pesoRejeitoKg/rejeitoKg;
+ * - final de turno: quantidade de registros flowType === "final_turno".
+ */
 function renderKpis(items) {
   const ativos = items.filter((item) => getStatus(item) !== "cancelado");
   const participantIds = new Set();
@@ -1167,6 +1275,17 @@ function sumMaterials(items) {
   return totals;
 }
 
+/**
+ * Consolida os indicadores das seções analíticas.
+ *
+ * Essa função alimenta:
+ * - resumo do projeto;
+ * - total reciclável;
+ * - percentual reciclável;
+ * - rejeito total;
+ * - não comercializado;
+ * - receita estimada por material.
+ */
 function computeExpandedMetrics(items) {
   const ativos = items.filter((item) => getStatus(item) !== "cancelado");
   const materialTotals = sumMaterials(ativos);
@@ -1643,6 +1762,17 @@ function clearFullCollectionRoute() {
   - destino: pontos filtrados da tabela/dashboard
   - formato OSRM: longitude,latitude
 */
+/**
+ * Calcula e desenha a rota geral de coleta.
+ *
+ * Fluxo:
+ * 1. Valida coordenadas dos participantes.
+ * 2. Remove pontos duplicados.
+ * 3. Limita a quantidade de pontos para evitar travamento no OSRM público.
+ * 4. Ordena os pontos por vizinho mais próximo.
+ * 5. Envia a rota para OSRM usando o formato longitude,latitude.
+ * 6. Desenha a geometria retornada no Leaflet.
+ */
 async function drawFullCollectionRoute(points) {
   if (!routeMap || typeof L === "undefined") return;
 
