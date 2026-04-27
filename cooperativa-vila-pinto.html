@@ -42,8 +42,6 @@
             <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
           </div>
         </a>
-
-        
       </div>
 
       <nav class="sidebar-nav">
@@ -254,6 +252,52 @@
           </div>
 
           <div class="participants-list" id="participantsList"></div>
+        </section>
+
+        <!-- NOVA SEÇÃO: USUÁRIOS INTERNOS DA COOPERATIVA -->
+        <section class="dashboard-section participants-section-shell admin-only" id="coopUsersSection">
+          <div class="section-head participants-head">
+            <div>
+              <span class="section-tag">Gestão interna</span>
+              <h2>Usuários da cooperativa</h2>
+            </div>
+            <p id="coopUsersSectionText">
+              Cadastre e acompanhe os usuários internos da cooperativa com acesso à plataforma.
+            </p>
+          </div>
+
+          <div class="participants-toolbar">
+            <div class="participants-search">
+              <input
+                type="text"
+                id="coopUserSearchInput"
+                placeholder="Buscar por nome, e-mail, função ou perfil..."
+              />
+            </div>
+
+            <a class="participants-add-btn" href="usuarios.html" id="newCoopUserBtn">
+              + Novo usuário interno
+            </a>
+          </div>
+
+          <div class="participants-kpis">
+            <article class="participants-kpi-card">
+              <span>Total de usuários</span>
+              <strong id="coopUsersTotalCount">0</strong>
+            </article>
+
+            <article class="participants-kpi-card">
+              <span>Administradores</span>
+              <strong id="coopUsersAdminCount">0</strong>
+            </article>
+
+            <article class="participants-kpi-card">
+              <span>Usuários ativos</span>
+              <strong id="coopUsersActiveCount">0</strong>
+            </article>
+          </div>
+
+          <div class="participants-list" id="coopUsersList"></div>
         </section>
 
         <section class="dashboard-section territory-panel-shell">
