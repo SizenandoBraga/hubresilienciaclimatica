@@ -117,6 +117,14 @@ const els = {
   btnApplyTableFilters: document.getElementById("btnApplyTableFilters"),
   btnClearTableFilters: document.getElementById("btnClearTableFilters"),
 
+  labelParticipantName: document.getElementById("labelParticipantName"),
+  labelParticipantCode: document.getElementById("labelParticipantCode"),
+  labelCollectionDate: document.getElementById("labelCollectionDate"),
+  labelCollectionFlow: document.getElementById("labelCollectionFlow"),
+  collectionLabelQr: document.getElementById("collectionLabelQr"),
+  btnGenerateCollectionLabel: document.getElementById("btnGenerateCollectionLabel"),
+  btnPrintCollectionLabel: document.getElementById("btnPrintCollectionLabel"),
+
   photoModal: document.getElementById("photoModal"),
   photoModalImg: document.getElementById("photoModalImg"),
 
@@ -134,6 +142,7 @@ const els = {
   editRejeito: document.getElementById("editRejeito"),
   editNaoComercializado: document.getElementById("editNaoComercializado"),
 
+  /* Campos das frações de resíduos no modal de edição */
   editPlasticoKg: document.getElementById("editPlasticoKg"),
   editVidroKg: document.getElementById("editVidroKg"),
   editAluminioMetalKg: document.getElementById("editAluminioMetalKg"),
@@ -168,6 +177,12 @@ let weightTimelineChart = null;
 let routeMap = null;
 let routeControl = null;
 let destinationMarker = null;
+
+/* Camadas próprias para a rota geral da coleta */
+let routeFullLayer = null;
+let routeMarkersLayer = null;
+let routeRequestSeq = 0;
+
 let selectedPointKey = null;
 let activeUnsubscribe = null;
 let activeParticipantsUnsubscribe = null;
@@ -340,10 +355,7 @@ function inferNaoComercializado(item) {
   return Number(
     item.recebimento?.pesoNaoComercializadoKg ??
     item.finalTurno?.pesoNaoComercializadoKg ??
-    item.recebimento?.naoComercializadoKg ??
-    item.finalTurno?.naoComercializadoKg ??
     item.pesoNaoComercializadoKg ??
-    item.naoComercializadoKg ??
     0
   );
 }
@@ -1267,9 +1279,7 @@ function renderExpandedPanel(items) {
       `;
     }).join("");
   }
-}
-
-/* =========================
+}/* =========================
    GRÁFICOS
 ========================= */
 
@@ -1466,6 +1476,7 @@ function renderCharts(items) {
     });
   }
 }
+
 /* =========================
    MAPA E ROTA
 ========================= */
@@ -1525,10 +1536,227 @@ function clearRouteControl() {
   }
 }
 
+
+function isValidLatLngPoint(point) {
+  const lat = Number(point?.lat);
+  const lng = Number(point?.lng);
+
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
+/* Remove duplicados e limita pontos para evitar erro/travamento no OSRM público */
+function sanitizeRoutePoints(points, limit = 24) {
+  const seen = new Set();
+  const valid = [];
+
+  points.forEach((point) => {
+    if (!isValidLatLngPoint(point)) return;
+
+    const lat = Number(point.lat);
+    const lng = Number(point.lng);
+    const key = `${lat.toFixed(6)},${lng.toFixed(6)}`;
+
+    if (seen.has(key)) return;
+    seen.add(key);
+
+    valid.push({
+      ...point,
+      lat,
+      lng
+    });
+  });
+
+  return valid.slice(0, limit);
+}
+
+function distanceApproxKm(a, b) {
+  const lat1 = Number(a.lat);
+  const lng1 = Number(a.lng);
+  const lat2 = Number(b.lat);
+  const lng2 = Number(b.lng);
+
+  if (![lat1, lng1, lat2, lng2].every(Number.isFinite)) return Number.POSITIVE_INFINITY;
+
+  const r = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const s1 = Math.sin(dLat / 2);
+  const s2 = Math.sin(dLng / 2);
+
+  const h =
+    s1 * s1 +
+    Math.cos(lat1 * Math.PI / 180) *
+      Math.cos(lat2 * Math.PI / 180) *
+      s2 * s2;
+
+  return 2 * r * Math.asin(Math.sqrt(h));
+}
+
+/* Ordenação simples por vizinho mais próximo para deixar a rota mais prática */
+function orderPointsNearestNeighbor(origin, points) {
+  const remaining = [...points];
+  const ordered = [];
+  let current = origin;
+
+  while (remaining.length) {
+    let bestIndex = 0;
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    remaining.forEach((point, index) => {
+      const d = distanceApproxKm(current, point);
+      if (d < bestDistance) {
+        bestDistance = d;
+        bestIndex = index;
+      }
+    });
+
+    const [next] = remaining.splice(bestIndex, 1);
+    ordered.push(next);
+    current = next;
+  }
+
+  return ordered;
+}
+
+function clearFullCollectionRoute() {
+  if (routeFullLayer && routeMap) {
+    routeMap.removeLayer(routeFullLayer);
+    routeFullLayer = null;
+  }
+
+  if (routeMarkersLayer && routeMap) {
+    routeMap.removeLayer(routeMarkersLayer);
+    routeMarkersLayer = null;
+  }
+}
+
+/*
+  Rota geral da coleta:
+  - origem: cooperativa
+  - destino: pontos filtrados da tabela/dashboard
+  - formato OSRM: longitude,latitude
+*/
+async function drawFullCollectionRoute(points) {
+  if (!routeMap || typeof L === "undefined") return;
+
+  const requestId = ++routeRequestSeq;
+  const base = getCoopBaseLatLng();
+  const origin = {
+    lat: Number(base.lat),
+    lng: Number(base.lng),
+    name: "Cooperativa",
+    code: "Origem"
+  };
+
+  const validPoints = sanitizeRoutePoints(points, 24);
+  clearRouteControl();
+  clearFullCollectionRoute();
+
+  routeMarkersLayer = L.layerGroup().addTo(routeMap);
+
+  L.marker([origin.lat, origin.lng])
+    .addTo(routeMarkersLayer)
+    .bindPopup("<strong>Cooperativa</strong><br>Origem da rota");
+
+  validPoints.forEach((point, index) => {
+    L.marker([point.lat, point.lng])
+      .addTo(routeMarkersLayer)
+      .bindPopup(`
+        <strong>${escapeHtml(point.name || "Ponto de coleta")}</strong><br>
+        Código: ${escapeHtml(point.code || "—")}<br>
+        Ordem sugerida: ${index + 1}
+      `);
+  });
+
+  if (!validPoints.length) {
+    setRouteSummary("Cooperativa", "Nenhum ponto com coordenadas", null);
+    routeMap.setView([origin.lat, origin.lng], 12);
+    return;
+  }
+
+  const ordered = orderPointsNearestNeighbor(origin, validPoints);
+  const osrmPoints = [origin, ...ordered];
+
+  const coords = osrmPoints
+    .map((point) => `${Number(point.lng)},${Number(point.lat)}`)
+    .join(";");
+
+  const url = `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+
+  try {
+    setRouteSummary("Cooperativa", `${ordered.length} ponto(s) de coleta`, null);
+
+    const response = await fetch(url);
+
+    if (requestId !== routeRequestSeq) return;
+
+    if (!response.ok) {
+      throw new Error(`Falha ao calcular rota real. Status ${response.status}`);
+    }
+
+    const data = await response.json();
+    const route = data.routes?.[0];
+
+    if (!route?.geometry) {
+      throw new Error("OSRM não retornou geometria da rota.");
+    }
+
+    routeFullLayer = L.geoJSON(route.geometry, {
+      style: {
+        color: "#53ACDE",
+        opacity: 0.92,
+        weight: 6
+      }
+    }).addTo(routeMap);
+
+    const km = (route.distance || 0) / 1000;
+    const min = Math.round((route.duration || 0) / 60);
+
+    if (els.routeOriginLabel) els.routeOriginLabel.textContent = "Cooperativa";
+    if (els.routeDestLabel) els.routeDestLabel.textContent = `${ordered.length} ponto(s) de coleta`;
+    if (els.routeDistanceLabel) {
+      els.routeDistanceLabel.textContent = `${km.toLocaleString("pt-BR", { maximumFractionDigits: 1 })} km`;
+    }
+    if (els.routeTimeLabel) {
+      els.routeTimeLabel.textContent = `${min} min`;
+    }
+
+    const bounds = routeFullLayer.getBounds();
+    if (bounds.isValid()) {
+      routeMap.fitBounds(bounds, { padding: [28, 28] });
+    }
+  } catch (error) {
+    console.error("Erro ao calcular rota da coleta:", error);
+
+    const bounds = L.latLngBounds([
+      [origin.lat, origin.lng],
+      ...validPoints.map((point) => [point.lat, point.lng])
+    ]);
+
+    if (bounds.isValid()) {
+      routeMap.fitBounds(bounds, { padding: [28, 28] });
+    }
+
+    if (els.routeOriginLabel) els.routeOriginLabel.textContent = "Cooperativa";
+    if (els.routeDestLabel) els.routeDestLabel.textContent = `${validPoints.length} ponto(s) sem rota real`;
+    if (els.routeDistanceLabel) els.routeDistanceLabel.textContent = "rota indisponível";
+    if (els.routeTimeLabel) els.routeTimeLabel.textContent = "—";
+  }
+}
+
+
 function drawRouteToPoint(point) {
   if (!routeMap || !point?.lat || !point?.lng || typeof L === "undefined" || !L.Routing) return;
 
   const base = getCoopBaseLatLng();
+  clearFullCollectionRoute();
   clearRouteControl();
 
   destinationMarker = L.marker([point.lat, point.lng]).addTo(routeMap).bindPopup(point.name || "Destino");
@@ -1595,6 +1823,7 @@ function renderCollectionPoints(items) {
     `;
     setRouteSummary("—", "—", null);
     clearRouteControl();
+    clearFullCollectionRoute();
     return;
   }
 
@@ -1611,8 +1840,9 @@ function renderCollectionPoints(items) {
   `).join("");
 
   if (!selectedPointKey) selectedPointKey = points[0].key;
-  const selectedPoint = points.find((p) => p.key === selectedPointKey) || points[0];
-  if (selectedPoint) drawRouteToPoint(selectedPoint);
+
+  /* Desenha a rota geral da coleta usando todos os pontos filtrados com coordenadas */
+  drawFullCollectionRoute(points);
 }
 
 /* =========================
@@ -1876,8 +2106,8 @@ async function exportToExcel() {
     const colWidths = [
       { wch: 14 }, { wch: 28 }, { wch: 18 }, { wch: 18 }, { wch: 20 },
       { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 16 },
-      { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 16 },
-      { wch: 14 }, { wch: 20 }, { wch: 16 }, { wch: 26 }, { wch: 12 },
+      { wch: 14 }, { wch: 20 }, { wch: 14 }, { wch: 16 }, { wch: 16 },
+      { wch: 14 }, { wch: 18 }, { wch: 16 }, { wch: 26 }, { wch: 12 },
       { wch: 40 }
     ];
     worksheet["!cols"] = colWidths;
@@ -2057,6 +2287,7 @@ function openEditModal(itemId) {
   if (els.editRejeito) els.editRejeito.value = String(inferRejeito(item) || "");
   if (els.editNaoComercializado) els.editNaoComercializado.value = String(inferNaoComercializado(item) || "");
 
+  /* Preenche as frações de resíduos, tanto de recebimento quanto de final de turno */
   if (els.editPlasticoKg) els.editPlasticoKg.value = String(getMaterialValue(item, "plasticoKg") || "");
   if (els.editVidroKg) els.editVidroKg.value = String(getMaterialValue(item, "vidroKg") || "");
   if (els.editAluminioMetalKg) els.editAluminioMetalKg.value = String(getMaterialValue(item, "aluminioMetalKg") || "");
@@ -2101,8 +2332,6 @@ async function saveEdit() {
     oleoKg: Number(els.editOleoKg?.value || 0)
   };
 
-  payload.materiais = materiaisPayload;
-
   if (isEditFinalTurno) {
     payload["finalTurno.observacao"] = els.editObs?.value?.trim?.() || "";
     payload["finalTurno.pesoResiduoSecoKg"] = Number(els.editPesoBase?.value || 0);
@@ -2110,6 +2339,7 @@ async function saveEdit() {
     payload["finalTurno.pesoRejeitoKg"] = Number(els.editRejeito?.value || 0);
     payload["finalTurno.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado?.value || 0);
     payload["finalTurno.materiais"] = materiaisPayload;
+    payload.materiais = materiaisPayload;
   } else {
     payload["recebimento.observacao"] = els.editObs?.value?.trim?.() || "";
     payload["recebimento.pesoResiduoSecoKg"] = Number(els.editPesoBase?.value || 0);
@@ -2117,6 +2347,7 @@ async function saveEdit() {
     payload["recebimento.pesoRejeitoKg"] = Number(els.editRejeito?.value || 0);
     payload["recebimento.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado?.value || 0);
     payload["recebimento.materiais"] = materiaisPayload;
+    payload.materiais = materiaisPayload;
   }
 
   await updateDoc(ref, payload);
@@ -2247,6 +2478,7 @@ function bindUI() {
       }
       return;
     }
+
 
     const closer = event.target.closest("[data-close]");
     if (closer) {
