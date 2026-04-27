@@ -292,4 +292,33 @@
     display: block;
     height: 8px;
   }
+}/* Botão Acessar Plataforma dentro do menu */
+.header-mobile-cta {
+  background: var(--orange-primary) !important;
+  color: #fff !important;
+  box-shadow: 0 8px 16px rgba(239, 107, 34, 0.24);
+}
+
+.header-mobile-cta:hover {
+  filter: brightness(0.97);
+}
+
+/* No desktop, mantém o botão separado do menu escondido */
+@media (min-width: 921px) {
+  .header-mobile-cta {
+    display: none !important;
+  }
+}
+
+/* No mobile, mostra o botão dentro do menu */
+@media (max-width: 920px) {
+  .header-mobile-cta {
+    display: flex !important;
+    justify-content: center !important;
+    margin-top: 8px;
+    min-height: 48px;
+    border-radius: 14px;
+    font-weight: 900;
+    border: 0 !important;
+  }
 }

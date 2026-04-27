@@ -7,12 +7,29 @@ async function loadPublicHeader() {
     const html = await response.text();
     mountPoint.innerHTML = html;
 
+    ensurePlatformAccessButton();
     setupPublicHeaderMenu();
     setupPublicHeaderDropdown();
     markActivePublicNav();
   } catch (error) {
     console.error("Erro ao carregar header público:", error);
   }
+}
+
+function ensurePlatformAccessButton() {
+  const nav = document.getElementById("headerMainNav");
+  if (!nav) return;
+
+  const alreadyExists = nav.querySelector(".header-mobile-cta");
+  if (alreadyExists) return;
+
+  const link = document.createElement("a");
+  link.href = "login.html";
+  link.className = "header-nav-link header-mobile-cta";
+  link.textContent = "Acessar plataforma";
+  link.dataset.nav = "login";
+
+  nav.appendChild(link);
 }
 
 function setupPublicHeaderMenu() {
@@ -23,6 +40,15 @@ function setupPublicHeaderMenu() {
   btn.addEventListener("click", () => {
     const isOpen = nav.classList.toggle("is-open");
     btn.setAttribute("aria-expanded", String(isOpen));
+  });
+
+  nav.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 920) {
+        nav.classList.remove("is-open");
+        btn.setAttribute("aria-expanded", "false");
+      }
+    });
   });
 }
 
@@ -63,11 +89,11 @@ function setupPublicHeaderDropdown() {
   });
 
   window.addEventListener("resize", () => {
+    const btn = document.getElementById("headerMenuBtn");
+
     if (window.innerWidth > 920) {
-      const btn = document.getElementById("headerMenuBtn");
-      if (btn && nav) {
-        btn.setAttribute("aria-expanded", "false");
-      }
+      if (nav) nav.classList.remove("is-open");
+      if (btn) btn.setAttribute("aria-expanded", "false");
     }
   });
 }
@@ -79,7 +105,8 @@ function markActivePublicNav() {
   const map = {
     "index.html": "index",
     "quem-somos.html": "quem-somos",
-    "conteudos.html": "conteudos"
+    "conteudos.html": "conteudos",
+    "login.html": "login"
   };
 
   const subMap = {
@@ -100,19 +127,11 @@ function markActivePublicNav() {
   }
 
   document.querySelectorAll(".header-nav-link").forEach((link) => {
-    if (link.dataset.nav === activeKey) {
-      link.classList.add("is-active");
-    } else {
-      link.classList.remove("is-active");
-    }
+    link.classList.toggle("is-active", link.dataset.nav === activeKey);
   });
 
   document.querySelectorAll(".header-nav-sublink").forEach((link) => {
-    if (link.dataset.navSub === activeSubKey) {
-      link.classList.add("is-active");
-    } else {
-      link.classList.remove("is-active");
-    }
+    link.classList.toggle("is-active", link.dataset.navSub === activeSubKey);
   });
 
   if (activeSubKey) {
