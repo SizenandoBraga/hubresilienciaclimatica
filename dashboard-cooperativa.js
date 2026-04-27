@@ -40,27 +40,21 @@ import {
   - Não comercializado NÃO entra aqui porque é separado.
 */
 const MATERIAL_META = [
-  { key: "plasticoKg", label: "Plástico", price: 1.92, icon: "🧴" },
-  { key: "vidroKg", label: "Vidro", price: 0.08, icon: "🍾" },
-  { key: "aluminioMetalKg", label: "Metal / Alumínio", price: 2.9, icon: "🥫" },
-  { key: "sacariaKg", label: "Sacaria", price: 0.12, icon: "🧵" },
-  { key: "papelMistoKg", label: "Papel misto", price: 0.66, icon: "📄" },
-  { key: "papelaoKg", label: "Papelão", price: 0.52, icon: "📦" },
-  { key: "isoporKg", label: "Isopor", price: 0.4, icon: "🧊" }
+  { key: "plasticoKg", label: "Plástico", price: 1.92, color: "#2E7D32", icon: "bi-recycle" },
+  { key: "vidroKg", label: "Vidro", price: 0.08, color: "#00897B", icon: "bi-cup-straw" },
+  { key: "aluminioMetalKg", label: "Metal / Alumínio", price: 2.9, color: "#607D8B", icon: "bi-nut" },
+  { key: "sacariaKg", label: "Sacaria", price: 0.12, color: "#8D6E63", icon: "bi-bag" },
+  { key: "papelMistoKg", label: "Papel misto", price: 0.66, color: "#1565C0", icon: "bi-file-earmark-text" },
+  { key: "papelaoKg", label: "Papelão", price: 0.52, color: "#A65A2A", icon: "bi-box-seam" },
+  { key: "isoporKg", label: "Isopor", price: 0.4, color: "#00ACC1", icon: "bi-snow" }
 ];
 
-/*
-  Óleo é fluxo especial:
-  - não entra em resíduo seco;
-  - não entra em rejeito;
-  - entra no Excel;
-  - entra na receita estimada, se necessário.
-*/
 const MATERIAL_OLEO = {
   key: "oleoKg",
   label: "Óleo de cozinha",
   price: 1.5,
-  icon: "🛢️"
+  color: "#C79200",
+  icon: "bi-droplet-half"
 };
 
 const ALL_MATERIAL_META = [...MATERIAL_META, MATERIAL_OLEO];
@@ -1301,7 +1295,9 @@ function renderExpandedPanel(items) {
       return `
         <article class="material-card">
           <div class="material-top">
-            <div class="mat-icon">${mat.icon}</div>
+            <div class="mat-icon professional-icon" style="--material-color:${mat.color}">
+  <i class="bi ${mat.icon}"></i>
+</div>
             <div class="mat-pct">${formatNumber(pct)}%</div>
           </div>
           <div class="mat-name">${escapeHtml(mat.label)}</div>
@@ -1315,7 +1311,9 @@ function renderExpandedPanel(items) {
       ? `
         <article class="material-card material-card-special">
           <div class="material-top">
-            <div class="mat-icon">${MATERIAL_OLEO.icon}</div>
+            <div class="mat-icon professional-icon" style="--material-color:${MATERIAL_OLEO.color}">
+  <i class="bi ${MATERIAL_OLEO.icon}"></i>
+</div>
             <div class="mat-pct">fluxo especial</div>
           </div>
           <div class="mat-name">${escapeHtml(MATERIAL_OLEO.label)}</div>
