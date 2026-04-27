@@ -1,3 +1,15 @@
+/* =========================================================
+   NSRU • Dashboard Cooperativa
+   CSS atualizado e comentado
+
+   Ajustes aplicados:
+   1. Remove o layout da etiqueta do dashboard.
+   2. Faz a tabela de coletas ocupar 100% da largura.
+   3. Melhora rolagem horizontal e leitura da tabela.
+   4. Oculta botão/área de etiqueta caso ainda exista no HTML/JS antigo.
+   5. Adiciona estilo para os campos de frações no modal de edição.
+========================================================= */
+
 :root {
   --green: #81B92A;
   --black: #3C3A39;
@@ -1141,21 +1153,28 @@ textarea:focus {
   flex-wrap: wrap;
 }
 
-.table-with-label-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1.5fr) 360px;
-  gap: 18px;
-  align-items: start;
+/* Ajuste: a etiqueta saiu do dashboard, então a tabela ocupa 100% da área */
+.table-with-label-layout,
+.table-only-layout {
+  display: block;
+  width: 100%;
+  min-width: 0;
 }
 
+/* Ajuste: container da tabela com rolagem horizontal controlada */
 .table-wrap-pro {
-  overflow: auto;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
   border-radius: 22px;
+  -webkit-overflow-scrolling: touch;
 }
 
+/* Ajuste: tabela mais compacta, sem espaço reservado para etiqueta */
 .table-pro {
   width: 100%;
-  min-width: 1580px;
+  min-width: 1120px;
   border-collapse: separate;
   border-spacing: 0;
 }
@@ -1186,6 +1205,78 @@ textarea:focus {
 
 .table-pro tbody tr:hover td {
   background: rgba(129, 185, 42, .06);
+}
+
+/* Ajuste: melhora leitura da tabela de coletas */
+.table-pro th:nth-child(1),
+.table-pro td:nth-child(1) {
+  width: 110px;
+}
+
+.table-pro th:nth-child(2),
+.table-pro td:nth-child(2) {
+  min-width: 220px;
+}
+
+.table-pro th:nth-child(3),
+.table-pro td:nth-child(3) {
+  min-width: 150px;
+}
+
+.table-pro th:nth-child(6),
+.table-pro td:nth-child(6) {
+  min-width: 120px;
+}
+
+.table-pro th:nth-child(7),
+.table-pro td:nth-child(7) {
+  min-width: 170px;
+}
+
+/* Ajuste: ações ficam alinhadas e sem estourar a célula */
+.table-actions {
+  min-width: 160px;
+  justify-content: flex-start;
+}
+
+/* Ajuste: scrollbar mais discreta na tabela */
+.table-wrap-pro::-webkit-scrollbar {
+  height: 9px;
+}
+
+.table-wrap-pro::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(60, 58, 57, .18);
+}
+
+.table-wrap-pro::-webkit-scrollbar-track {
+  background: rgba(60, 58, 57, .04);
+}
+
+/* Ajuste: campos de frações no modal de edição */
+.materials-edit-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(60, 58, 57, .08);
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, .68);
+}
+
+.materials-edit-grid div {
+  display: grid;
+  gap: 6px;
+}
+
+.materials-edit-grid span {
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--muted);
+}
+
+.materials-edit-grid input {
+  padding: 10px 11px;
 }
 
 .cell-main {
@@ -1400,26 +1491,21 @@ textarea:focus {
   color: var(--orange);
 }
 
-.action-btn.label {
-  border: 1px solid rgba(129, 185, 42, .22);
-  background: rgba(129, 185, 42, .12);
-  color: var(--green);
+/* Ajuste: botão de etiqueta não deve aparecer no dashboard */
+.action-btn.label,
+.action-btn[data-label],
+[data-label] {
+  display: none !important;
 }
 
 /* =========================
    ETIQUETA / GERADOR
 ========================= */
 
+/* Ajuste: etiqueta removida do dashboard.
+   A etiqueta deve ficar na página de participante cadastrado. */
 .label-generator-card {
-  position: sticky;
-  top: 18px;
-  display: grid;
-  gap: 14px;
-  padding: 16px;
-  border: 1px solid rgba(60, 58, 57, .08);
-  border-radius: 22px;
-  background: rgba(255, 255, 255, .84);
-  box-shadow: var(--shadow-xs);
+  display: none !important;
 }
 
 .label-generator-head h3 {
@@ -1830,13 +1916,15 @@ body.modal-open {
 }
 
 @media (max-width: 1400px) {
-  .table-with-label-layout {
-    grid-template-columns: 1fr;
+  /* Ajuste: mantém a tabela em largura total também em telas menores */
+  .table-with-label-layout,
+  .table-only-layout {
+    display: block;
+    width: 100%;
   }
 
   .label-generator-card {
-    position: relative;
-    top: auto;
+    display: none !important;
   }
 }
 
@@ -2021,7 +2109,11 @@ body.modal-open {
   }
 
   .table-pro {
-    min-width: 1200px;
+    min-width: 980px;
+  }
+
+  .materials-edit-grid {
+    grid-template-columns: 1fr;
   }
 
   .modal-card {
