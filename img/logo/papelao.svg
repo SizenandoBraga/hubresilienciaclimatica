@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Papelão">
+  <rect width="256" height="256" rx="48" fill="#FFF3E0"/>
+  <circle cx="128" cy="128" r="92" fill="#A65A2A" opacity=".14"/>
+  <path d="M42 86 128 40l86 46-86 46-86-46Z" fill="#D08A45"/>
+  <path d="M42 86v94l86 46v-94L42 86Z" fill="#C07A35"/>
+  <path d="M214 86v94l-86 46v-94l86-46Z" fill="#B66A2A"/>
+  <path d="M42 86 128 132l86-46M128 132v94M83 64l86 46" fill="none" stroke="#6D3B1F" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M74 134l30 16" stroke="#FFE0B2" stroke-width="10" stroke-linecap="round"/>
+</svg>

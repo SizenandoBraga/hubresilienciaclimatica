@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Metal">
+  <rect width="256" height="256" rx="48" fill="#ECEFF1"/>
+  <circle cx="128" cy="128" r="92" fill="#607D8B" opacity=".16"/>
+  <ellipse cx="128" cy="62" rx="66" ry="27" fill="#90A4AE"/>
+  <path d="M62 62v132c0 19 30 35 66 35s66-16 66-35V62" fill="#CFD8DC"/>
+  <ellipse cx="128" cy="62" rx="66" ry="27" fill="none" stroke="#455A64" stroke-width="12"/>
+  <path d="M62 111c0 18 30 31 66 31s66-13 66-31M62 161c0 18 30 31 66 31s66-13 66-31" fill="none" stroke="#607D8B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M99 57h58" stroke="#FFFFFF" stroke-width="10" stroke-linecap="round" opacity=".75"/>
+</svg>

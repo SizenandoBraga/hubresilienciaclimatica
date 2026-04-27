@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Isopor">
+  <rect width="256" height="256" rx="48" fill="#E0F7FA"/>
+  <circle cx="128" cy="128" r="92" fill="#00ACC1" opacity=".13"/>
+  <path d="M51 84 128 40l77 44-77 44-77-44Z" fill="#FFFFFF"/>
+  <path d="M51 84v88l77 44v-88L51 84Z" fill="#E0F7FA"/>
+  <path d="M205 84v88l-77 44v-88l77-44Z" fill="#B2EBF2"/>
+  <path d="M128 128v88M51 84l77 44 77-44" fill="none" stroke="#00ACC1" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="91" cy="105" r="9" fill="#00ACC1"/>
+  <circle cx="131" cy="84" r="9" fill="#00ACC1"/>
+  <circle cx="165" cy="141" r="9" fill="#00ACC1"/>
+  <circle cx="101" cy="164" r="9" fill="#00ACC1"/>
+  <circle cx="145" cy="181" r="7" fill="#00ACC1" opacity=".8"/>
+</svg>

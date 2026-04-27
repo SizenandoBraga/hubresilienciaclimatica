@@ -17,15 +17,71 @@ import {
 ========================= */
 
 const MATERIAL_META = [
-  { key: "plasticoKg", label: "Plástico", price: 1.92, icon: "🧴" },
-  { key: "vidroKg", label: "Vidro", price: 0.08, icon: "🍾" },
-  { key: "aluminioMetalKg", label: "Metal", price: 2.9, icon: "🥫" },
-  { key: "sacariaKg", label: "Sacaria", price: 0.12, icon: "🧵" },
-  { key: "papelMistoKg", label: "Papel misto", price: 0.66, icon: "📄" },
-  { key: "papelaoKg", label: "Papelão", price: 0.52, icon: "📦" },
-  { key: "isoporKg", label: "Isopor", price: 0.4, icon: "🧊" },
-  { key: "oleoKg", label: "Óleo de cozinha", price: 1.5, icon: "🛢️" }
+  {
+    key: "plasticoKg",
+    label: "Plástico",
+    price: 1.92,
+    icon: "plastic-bottle",
+    color: "#2E7D32",
+    logo: "img/logos/plastico.svg"
+  },
+  {
+    key: "vidroKg",
+    label: "Vidro",
+    price: 0.08,
+    icon: "glass-bottle",
+    color: "#0288D1",
+    logo: "img/logos/vidro.svg"
+  },
+  {
+    key: "aluminioMetalKg",
+    label: "Metal / Alumínio",
+    price: 2.9,
+    icon: "metal-can",
+    color: "#757575",
+    logo: "img/logos/metal.svg"
+  },
+  {
+    key: "sacariaKg",
+    label: "Sacaria",
+    price: 0.12,
+    icon: "bag-waste",
+    color: "#8D6E63",
+    logo: "img/logos/sacaria.svg"
+  },
+  {
+    key: "papelMistoKg",
+    label: "Papel misto",
+    price: 0.66,
+    icon: "paper-sheet",
+    color: "#1565C0",
+    logo: "img/logos/papel.svg"
+  },
+  {
+    key: "papelaoKg",
+    label: "Papelão",
+    price: 0.52,
+    icon: "cardboard-box",
+    color: "#A65A2A",
+    logo: "img/logos/papelao.svg"
+  },
+  {
+    key: "isoporKg",
+    label: "Isopor",
+    price: 0.4,
+    icon: "foam-cube",
+    color: "#00ACC1",
+    logo: "img/logos/isopor.svg"
+  }
 ];
+const MATERIAL_OLEO = {
+  key: "oleoKg",
+  label: "Óleo de cozinha",
+  price: 1.5,
+  icon: "oil-drop",
+  color: "#C79200",
+  logo: "img/logos/oleo.svg"
+};
 
 const CHART_COLORS = {
   blue: "#53ACDE",

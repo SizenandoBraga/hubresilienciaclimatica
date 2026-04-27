@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Vidro">
+  <rect width="256" height="256" rx="48" fill="#E1F5FE"/>
+  <circle cx="128" cy="128" r="92" fill="#0288D1" opacity=".13"/>
+  <path d="M107 27h42v58l21 36v81c0 24-18 39-42 39s-42-15-42-39v-81l21-36V27Z" fill="#039BE5"/>
+  <path d="M101 124h54v76c0 14-11 23-27 23s-27-9-27-23v-76Z" fill="#81D4FA"/>
+  <path d="M107 49h42M105 80h46" stroke="#01579B" stroke-width="12" stroke-linecap="round"/>
+  <path d="M128 139v52" stroke="#FFFFFF" stroke-width="12" stroke-linecap="round" opacity=".8"/>
+</svg>
