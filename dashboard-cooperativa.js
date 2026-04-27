@@ -117,14 +117,6 @@ const els = {
   btnApplyTableFilters: document.getElementById("btnApplyTableFilters"),
   btnClearTableFilters: document.getElementById("btnClearTableFilters"),
 
-  labelParticipantName: document.getElementById("labelParticipantName"),
-  labelParticipantCode: document.getElementById("labelParticipantCode"),
-  labelCollectionDate: document.getElementById("labelCollectionDate"),
-  labelCollectionFlow: document.getElementById("labelCollectionFlow"),
-  collectionLabelQr: document.getElementById("collectionLabelQr"),
-  btnGenerateCollectionLabel: document.getElementById("btnGenerateCollectionLabel"),
-  btnPrintCollectionLabel: document.getElementById("btnPrintCollectionLabel"),
-
   photoModal: document.getElementById("photoModal"),
   photoModalImg: document.getElementById("photoModalImg"),
 
@@ -141,6 +133,16 @@ const els = {
   editQualidade: document.getElementById("editQualidade"),
   editRejeito: document.getElementById("editRejeito"),
   editNaoComercializado: document.getElementById("editNaoComercializado"),
+
+  editPlasticoKg: document.getElementById("editPlasticoKg"),
+  editVidroKg: document.getElementById("editVidroKg"),
+  editAluminioMetalKg: document.getElementById("editAluminioMetalKg"),
+  editSacariaKg: document.getElementById("editSacariaKg"),
+  editPapelMistoKg: document.getElementById("editPapelMistoKg"),
+  editPapelaoKg: document.getElementById("editPapelaoKg"),
+  editIsoporKg: document.getElementById("editIsoporKg"),
+  editOleoKg: document.getElementById("editOleoKg"),
+
   editObs: document.getElementById("editObs"),
   btnSaveEdit: document.getElementById("btnSaveEdit")
 };
@@ -156,7 +158,6 @@ let filteredColetas = [];
 let tableFilteredColetas = [];
 let participantsMap = new Map();
 let activeEditId = null;
-let selectedLabelRecordId = null;
 
 let mainChart = null;
 let secA = null;
@@ -327,7 +328,10 @@ function inferRejeito(item) {
   return Number(
     item.recebimento?.pesoRejeitoKg ??
     item.finalTurno?.pesoRejeitoKg ??
+    item.recebimento?.rejeitoKg ??
+    item.finalTurno?.rejeitoKg ??
     item.pesoRejeitoKg ??
+    item.rejeitoKg ??
     0
   );
 }
@@ -336,7 +340,10 @@ function inferNaoComercializado(item) {
   return Number(
     item.recebimento?.pesoNaoComercializadoKg ??
     item.finalTurno?.pesoNaoComercializadoKg ??
+    item.recebimento?.naoComercializadoKg ??
+    item.finalTurno?.naoComercializadoKg ??
     item.pesoNaoComercializadoKg ??
+    item.naoComercializadoKg ??
     0
   );
 }
@@ -365,7 +372,8 @@ function getMaterialValue(item, key) {
     item.recebimento?.materiais,
     item.finalTurno?.materiais,
     item.recebimento,
-    item.finalTurno
+    item.finalTurno,
+    item
   ].filter(Boolean);
 
   for (const fonte of fontes) {
@@ -401,7 +409,8 @@ function inferTotalReciclavelRegistro(item) {
 function getExportRows(items) {
   return items.map((item) => {
     const participant = resolveParticipant(item);
-    return {
+
+    const row = {
       data: formatDateBR(inferDateISO(item)),
       participante: participant.name || "—",
       codigo: participant.code || "—",
@@ -416,6 +425,12 @@ function getExportRows(items) {
       qualidade: getQualidade(item) || "—",
       observacao: inferObservacao(item) || ""
     };
+
+    MATERIAL_META.forEach((mat) => {
+      row[mat.key] = Number(getMaterialValue(item, mat.key) || 0);
+    });
+
+    return row;
   });
 }
 
@@ -1451,7 +1466,6 @@ function renderCharts(items) {
     });
   }
 }
-
 /* =========================
    MAPA E ROTA
 ========================= */
@@ -1778,7 +1792,6 @@ function renderMainTable(items) {
           <div class="table-actions">
             <button class="action-btn edit" data-edit="${item.id}" ${canceled ? "disabled" : ""}>Editar</button>
             <button class="action-btn cancel" data-cancel="${item.id}" ${canceled ? "disabled" : ""}>Cancelar</button>
-            <button class="action-btn edit" data-label="${item.id}">Etiqueta</button>
           </div>
         </td>
       </tr>
@@ -1842,7 +1855,15 @@ async function exportToExcel() {
       "Território": row.territorio,
       "Tipo cadastro": row.tipoCadastro,
       "Status": row.status,
-      "Reciclável (kg)": row.reciclavelKg,
+      "Reciclável total (kg)": row.reciclavelKg,
+      "Plástico (kg)": row.plasticoKg,
+      "Vidro (kg)": row.vidroKg,
+      "Metal / Alumínio (kg)": row.aluminioMetalKg,
+      "Sacaria (kg)": row.sacariaKg,
+      "Papel misto (kg)": row.papelMistoKg,
+      "Papelão (kg)": row.papelaoKg,
+      "Isopor (kg)": row.isoporKg,
+      "Óleo de cozinha (kg)": row.oleoKg,
       "Rejeito (kg)": row.rejeitoKg,
       "Não comercializado (kg)": row.naoComercializadoKg,
       "Qualidade": row.qualidade,
@@ -1854,8 +1875,10 @@ async function exportToExcel() {
 
     const colWidths = [
       { wch: 14 }, { wch: 28 }, { wch: 18 }, { wch: 18 }, { wch: 20 },
-      { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 18 }, { wch: 16 },
-      { wch: 26 }, { wch: 12 }, { wch: 40 }
+      { wch: 22 }, { wch: 18 }, { wch: 14 }, { wch: 20 }, { wch: 16 },
+      { wch: 16 }, { wch: 18 }, { wch: 14 }, { wch: 16 }, { wch: 16 },
+      { wch: 14 }, { wch: 20 }, { wch: 16 }, { wch: 26 }, { wch: 12 },
+      { wch: 40 }
     ];
     worksheet["!cols"] = colWidths;
 
@@ -1979,109 +2002,6 @@ async function exportToPDF() {
 }
 
 /* =========================
-   ETIQUETA
-========================= */
-
-function renderLabelQr(record) {
-  if (!els.collectionLabelQr) return;
-  const participant = resolveParticipant(record);
-  const filterUrl = `${window.location.origin}${window.location.pathname}?codigo=${encodeURIComponent(participant.code || "")}`;
-
-  if (window.QRCode) {
-    els.collectionLabelQr.innerHTML = "";
-    new window.QRCode(els.collectionLabelQr, {
-      text: filterUrl,
-      width: 132,
-      height: 132,
-      correctLevel: window.QRCode.CorrectLevel.H
-    });
-    return;
-  }
-
-  els.collectionLabelQr.innerHTML = `
-    <div style="display:grid;place-items:center;width:100%;min-height:140px;border:1px dashed rgba(60,58,57,.18);border-radius:16px;padding:12px;text-align:center;">
-      <div>
-        <div style="font-weight:800;margin-bottom:8px;">QR / Link rápido</div>
-        <div style="font-size:12px;word-break:break-word;">${escapeHtml(filterUrl)}</div>
-      </div>
-    </div>
-  `;
-}
-
-function generateCollectionLabel(recordId = selectedLabelRecordId) {
-  const record = allColetas.find((item) => item.id === recordId);
-  if (!record) {
-    alert("Selecione um registro da tabela para gerar a etiqueta.");
-    return;
-  }
-
-  selectedLabelRecordId = record.id;
-  const participant = resolveParticipant(record);
-
-  if (els.labelParticipantName) els.labelParticipantName.textContent = participant.name || "—";
-  if (els.labelParticipantCode) els.labelParticipantCode.textContent = participant.code || "—";
-  if (els.labelCollectionDate) els.labelCollectionDate.textContent = formatDateBR(inferDateISO(record));
-  if (els.labelCollectionFlow) els.labelCollectionFlow.textContent = inferFluxo(record);
-
-  renderLabelQr(record);
-}
-
-function printCollectionLabel() {
-  if (!selectedLabelRecordId) {
-    alert("Gere uma etiqueta antes de imprimir.");
-    return;
-  }
-
-  const preview = document.getElementById("collectionLabelPreview");
-  if (!preview) {
-    window.print();
-    return;
-  }
-
-  const printWindow = window.open("", "_blank", "width=900,height=700");
-  if (!printWindow) {
-    alert("Não foi possível abrir a janela de impressão.");
-    return;
-  }
-
-  const styles = `
-    <style>
-      body { font-family: Inter, Arial, sans-serif; margin: 0; padding: 24px; }
-      .print-wrap { display:flex; justify-content:center; align-items:center; min-height:100vh; }
-      .label-preview-card {
-        width: 420px; border: 1px solid #ddd; border-radius: 18px; padding: 20px;
-        box-sizing: border-box;
-      }
-      .label-preview-brand { display:flex; gap:12px; align-items:center; margin-bottom:16px; }
-      .label-preview-brand img { width:48px; height:auto; }
-      .label-preview-body { display:grid; gap:10px; }
-      .label-preview-line { display:flex; justify-content:space-between; gap:12px; }
-      .label-qr-wrap { display:flex; justify-content:center; padding:14px 0; }
-      .label-preview-note { font-size:12px; color:#555; text-align:center; }
-    </style>
-  `;
-
-  printWindow.document.write(`
-    <html>
-      <head>
-        <title>Etiqueta da coleta</title>
-        ${styles}
-      </head>
-      <body>
-        <div class="print-wrap">${preview.outerHTML}</div>
-        <script>
-          window.onload = function() {
-            window.print();
-            setTimeout(function(){ window.close(); }, 300);
-          };
-        <\/script>
-      </body>
-    </html>
-  `);
-  printWindow.document.close();
-}
-
-/* =========================
    MODAIS / AÇÕES
 ========================= */
 
@@ -2136,6 +2056,16 @@ function openEditModal(itemId) {
   if (els.editQualidade) els.editQualidade.value = getQualidade(item);
   if (els.editRejeito) els.editRejeito.value = String(inferRejeito(item) || "");
   if (els.editNaoComercializado) els.editNaoComercializado.value = String(inferNaoComercializado(item) || "");
+
+  if (els.editPlasticoKg) els.editPlasticoKg.value = String(getMaterialValue(item, "plasticoKg") || "");
+  if (els.editVidroKg) els.editVidroKg.value = String(getMaterialValue(item, "vidroKg") || "");
+  if (els.editAluminioMetalKg) els.editAluminioMetalKg.value = String(getMaterialValue(item, "aluminioMetalKg") || "");
+  if (els.editSacariaKg) els.editSacariaKg.value = String(getMaterialValue(item, "sacariaKg") || "");
+  if (els.editPapelMistoKg) els.editPapelMistoKg.value = String(getMaterialValue(item, "papelMistoKg") || "");
+  if (els.editPapelaoKg) els.editPapelaoKg.value = String(getMaterialValue(item, "papelaoKg") || "");
+  if (els.editIsoporKg) els.editIsoporKg.value = String(getMaterialValue(item, "isoporKg") || "");
+  if (els.editOleoKg) els.editOleoKg.value = String(getMaterialValue(item, "oleoKg") || "");
+
   if (els.editObs) els.editObs.value = inferObservacao(item);
 
  if (els.editModal) {
@@ -2160,18 +2090,33 @@ async function saveEdit() {
 
   const qualityValue = els.editQualidade?.value ? Number(els.editQualidade.value) : null;
 
+  const materiaisPayload = {
+    plasticoKg: Number(els.editPlasticoKg?.value || 0),
+    vidroKg: Number(els.editVidroKg?.value || 0),
+    aluminioMetalKg: Number(els.editAluminioMetalKg?.value || 0),
+    sacariaKg: Number(els.editSacariaKg?.value || 0),
+    papelMistoKg: Number(els.editPapelMistoKg?.value || 0),
+    papelaoKg: Number(els.editPapelaoKg?.value || 0),
+    isoporKg: Number(els.editIsoporKg?.value || 0),
+    oleoKg: Number(els.editOleoKg?.value || 0)
+  };
+
+  payload.materiais = materiaisPayload;
+
   if (isEditFinalTurno) {
     payload["finalTurno.observacao"] = els.editObs?.value?.trim?.() || "";
     payload["finalTurno.pesoResiduoSecoKg"] = Number(els.editPesoBase?.value || 0);
     payload["finalTurno.qualidadeNota"] = qualityValue;
     payload["finalTurno.pesoRejeitoKg"] = Number(els.editRejeito?.value || 0);
     payload["finalTurno.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado?.value || 0);
+    payload["finalTurno.materiais"] = materiaisPayload;
   } else {
     payload["recebimento.observacao"] = els.editObs?.value?.trim?.() || "";
     payload["recebimento.pesoResiduoSecoKg"] = Number(els.editPesoBase?.value || 0);
     payload["recebimento.qualidadeNota"] = qualityValue;
     payload["recebimento.pesoRejeitoKg"] = Number(els.editRejeito?.value || 0);
     payload["recebimento.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado?.value || 0);
+    payload["recebimento.materiais"] = materiaisPayload;
   }
 
   await updateDoc(ref, payload);
@@ -2266,9 +2211,6 @@ function bindUI() {
     applyTableFilters();
   });
 
-  els.btnGenerateCollectionLabel?.addEventListener("click", () => generateCollectionLabel());
-  els.btnPrintCollectionLabel?.addEventListener("click", printCollectionLabel);
-
   document.addEventListener("click", async (event) => {
     const photo = event.target.closest("[data-photo]");
     if (photo) {
@@ -2303,13 +2245,6 @@ function bindUI() {
         console.error(error);
         alert("Não foi possível cancelar o registro.");
       }
-      return;
-    }
-
-    const labelBtn = event.target.closest("[data-label]");
-    if (labelBtn) {
-      selectedLabelRecordId = labelBtn.dataset.label;
-      generateCollectionLabel(selectedLabelRecordId);
       return;
     }
 
