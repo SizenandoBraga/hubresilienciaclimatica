@@ -37,6 +37,7 @@
 
       <div class="topbar-actions">
         <a class="btn ghost" href="vila-pinto.html">Voltar ao território</a>
+        <button type="button" class="btn primary" id="btnNovaColetaTop">Registrar nova coleta</button>
       </div>
     </div>
   </header>
@@ -151,7 +152,7 @@
 
         <form id="formRecebimento" class="form-grid" autocomplete="off">
           <div class="field">
-            <label for="familyCode">Código da família / condomínio</label>
+            <label for="familyCode">Código</label>
             <input type="text" id="familyCode" placeholder="Ex.: 138">
             <small>Se não houver, pode deixar em branco.</small>
           </div>
@@ -189,18 +190,19 @@
           </div>
 
           <div class="field">
-            <label for="fotoResiduo">Fotos do resíduo</label>
+            <label for="fotoResiduo">Fotos do resíduo <small>(opcional)</small></label>
             <input type="file" id="fotoResiduo" multiple>
           </div>
 
           <div class="field">
-            <label for="fotoNaoComercializado">Fotos do não comercializado e rejeito</label>
+            <label for="fotoNaoComercializado">Fotos do não comercializado e rejeito <small>(opcional)</small></label>
             <input type="file" id="fotoNaoComercializado" multiple>
           </div>
 
           <div class="form-actions span-2">
             <button type="button" class="btn ghost" id="btnVoltarRecebimento">Voltar</button>
             <button type="submit" class="btn primary">Salvar coleta de recebimento</button>
+            <button type="button" class="btn ghost" id="btnNovaColetaRecebimento">Registrar nova coleta</button>
           </div>
         </form>
 
@@ -251,7 +253,7 @@
           </div>
 
           <div class="field span-2">
-            <label for="fotoFinalTurno">Incluir fotos dos resíduos e rejeitos</label>
+            <label for="fotoFinalTurno">Incluir fotos dos resíduos e rejeitos <small>(opcional)</small></label>
             <input type="file" id="fotoFinalTurno" multiple>
           </div>
 
@@ -260,6 +262,7 @@
           <div class="form-actions span-2">
             <button type="button" class="btn ghost" id="btnVoltarFinalTurno">Voltar</button>
             <button type="submit" class="btn primary">Salvar registro final do turno</button>
+            <button type="button" class="btn ghost" id="btnNovaColetaFinalTurno">Registrar nova coleta</button>
           </div>
         </form>
 
