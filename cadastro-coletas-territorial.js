@@ -15,7 +15,7 @@ import {
 const PAGE_TERRITORY = {
   territoryId: "vila-pinto",
   territoryLabel: "Centro de Triagem Vila Pinto",
-  backUrl: "./vila-pinto.html"
+  backUrl: "./login.html"
 };
 
 /* =========================
@@ -83,6 +83,7 @@ function setBackLink() {
   const backLink = document.querySelector(".topbar-actions a.btn.ghost");
   if (backLink) {
     backLink.href = PAGE_TERRITORY.backUrl;
+    backLink.textContent = "Voltar ao login";
   }
 }
 
@@ -181,6 +182,7 @@ function ensureImageFile(file, label = "foto") {
   if (!file) {
     throw new Error(`A ${label} é obrigatória.`);
   }
+
   if (!String(file.type || "").startsWith("image/")) {
     throw new Error(`O arquivo enviado em ${label} deve ser uma imagem.`);
   }
@@ -257,6 +259,7 @@ async function compressManyImages(files, options = {}) {
   for (const file of validFiles) {
     result.push(await compressImageFile(file, options));
   }
+
   return result;
 }
 
@@ -358,7 +361,10 @@ function wireChoices() {
 
       btn.classList.add("active");
       btn.setAttribute("aria-pressed", "true");
-      if ($("qualidadeNota")) $("qualidadeNota").value = btn.dataset.quality;
+
+      if ($("qualidadeNota")) {
+        $("qualidadeNota").value = btn.dataset.quality;
+      }
     };
   });
 
@@ -388,6 +394,7 @@ function buildExtraRow() {
   `;
 
   row.querySelector(".remove-extra")?.addEventListener("click", () => row.remove());
+
   return row;
 }
 
@@ -480,10 +487,21 @@ function saveOperacaoBase() {
     return false;
   }
 
-  STATE.operacao = { opDate, deliveryType, flowType, opNotes };
+  STATE.operacao = {
+    opDate,
+    deliveryType,
+    flowType,
+    opNotes
+  };
+
   togglePanels(flowType);
 
-  setMsg($("msgOperacao"), "ok", "Etapa inicial salva com sucesso. Continue o preenchimento da coleta.");
+  setMsg(
+    $("msgOperacao"),
+    "ok",
+    "Etapa inicial salva com sucesso. Continue o preenchimento da coleta."
+  );
+
   return true;
 }
 
@@ -573,8 +591,8 @@ async function salvarRecebimento() {
       photos: recebimentoPhotos,
 
       uploads: {
-        fotoResiduo: fotoResiduo,
-        fotoNaoComercializado: fotoNaoComercializado
+        fotoResiduo,
+        fotoNaoComercializado
       }
     }
   };
@@ -671,7 +689,10 @@ async function salvarFinalTurno() {
 
 function resetRecebimentoForm() {
   $("formRecebimento")?.reset();
-  if ($("qualidadeNota")) $("qualidadeNota").value = "";
+
+  if ($("qualidadeNota")) {
+    $("qualidadeNota").value = "";
+  }
 
   document.querySelectorAll(".quality-btn").forEach((btn) => {
     btn.classList.remove("active");
@@ -700,11 +721,13 @@ function wireForms() {
 
   $("formRecebimento")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     if (STATE.salvando) return;
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
     try {
       STATE.salvando = true;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -712,6 +735,7 @@ function wireForms() {
       }
 
       setConnectionState("salvando");
+
       await salvarRecebimento();
 
       setMsg(
@@ -725,9 +749,14 @@ function wireForms() {
     } catch (error) {
       console.error("Erro ao salvar recebimento:", error);
       setConnectionState("erro");
-      setMsg($("msgRecebimento"), "bad", error.message || "Erro ao salvar recebimento.");
+      setMsg(
+        $("msgRecebimento"),
+        "bad",
+        error.message || "Erro ao salvar recebimento."
+      );
     } finally {
       STATE.salvando = false;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = false;
@@ -738,11 +767,13 @@ function wireForms() {
 
   $("formFinalTurno")?.addEventListener("submit", async (e) => {
     e.preventDefault();
+
     if (STATE.salvando) return;
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
     try {
       STATE.salvando = true;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = true;
@@ -750,6 +781,7 @@ function wireForms() {
       }
 
       setConnectionState("salvando");
+
       await salvarFinalTurno();
 
       setMsg(
@@ -763,9 +795,14 @@ function wireForms() {
     } catch (error) {
       console.error("Erro ao salvar fechamento do turno:", error);
       setConnectionState("erro");
-      setMsg($("msgFinalTurno"), "bad", error.message || "Erro ao salvar fechamento do turno.");
+      setMsg(
+        $("msgFinalTurno"),
+        "bad",
+        error.message || "Erro ao salvar fechamento do turno."
+      );
     } finally {
       STATE.salvando = false;
+
       const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = false;
