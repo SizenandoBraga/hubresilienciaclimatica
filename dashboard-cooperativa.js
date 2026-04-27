@@ -82,7 +82,9 @@ const MATERIAL_META = [
     logo: "img/logos/oleo.svg",
     isSpecial: true
   }
-];\n\nconst MATERIAL_OLEO = {
+];
+
+const MATERIAL_OLEO = {
   key: "oleoKg",
   label: "Óleo de cozinha",
   price: 1.5,
