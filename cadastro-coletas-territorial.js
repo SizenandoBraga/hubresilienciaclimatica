@@ -252,9 +252,6 @@ async function compressImageFile(file, options = {}) {
 
 async function compressManyImages(files, options = {}) {
   const validFiles = Array.from(files || []).filter(Boolean);
-  if (!validFiles.length) {
-    throw new Error("Pelo menos uma foto é obrigatória.");
-  }
 
   const result = [];
   for (const file of validFiles) {
@@ -527,13 +524,21 @@ async function salvarRecebimento() {
     throw new Error("Preencha todos os campos obrigatórios do recebimento.");
   }
 
-  ensureImageFile(fotoResiduoFile, "foto do resíduo");
-  ensureImageFile(fotoNaoComercializadoFile, "foto do não comercializado");
+  let fotoResiduo = null;
+  let fotoNaoComercializado = null;
 
-  const [fotoResiduo, fotoNaoComercializado] = await Promise.all([
-    compressImageFile(fotoResiduoFile),
-    compressImageFile(fotoNaoComercializadoFile)
-  ]);
+  if (fotoResiduoFile) {
+    fotoResiduo = await compressImageFile(fotoResiduoFile);
+  }
+
+  if (fotoNaoComercializadoFile) {
+    fotoNaoComercializado = await compressImageFile(fotoNaoComercializadoFile);
+  }
+
+  const recebimentoPhotos = [
+    fotoResiduo?.dataUrl || null,
+    fotoNaoComercializado?.dataUrl || null
+  ].filter(Boolean);
 
   const payload = {
     createdAt: serverTimestamp(),
@@ -552,8 +557,8 @@ async function salvarRecebimento() {
     observacao: STATE.operacao.opNotes || null,
     familyCode,
 
-    photoUrl: fotoResiduo.dataUrl,
-    photos: [fotoResiduo.dataUrl, fotoNaoComercializado.dataUrl],
+    photoUrl: fotoResiduo?.dataUrl || null,
+    photos: recebimentoPhotos,
 
     recebimento: {
       pesoResiduoSecoKg,
@@ -562,10 +567,10 @@ async function salvarRecebimento() {
       pesoRejeitoKg,
       pesoNaoComercializadoKg,
 
-      fotoResiduoUrl: fotoResiduo.dataUrl,
-      fotoNaoComercializadoUrl: fotoNaoComercializado.dataUrl,
+      fotoResiduoUrl: fotoResiduo?.dataUrl || null,
+      fotoNaoComercializadoUrl: fotoNaoComercializado?.dataUrl || null,
 
-      photos: [fotoResiduo.dataUrl, fotoNaoComercializado.dataUrl],
+      photos: recebimentoPhotos,
 
       uploads: {
         fotoResiduo: fotoResiduo,
@@ -604,13 +609,15 @@ async function salvarFinalTurno() {
     throw new Error("Preencha o peso do rejeito geral.");
   }
 
-  if (!fotosFinalTurno.length) {
-    throw new Error("Pelo menos uma foto do final do turno é obrigatória.");
-  }
-
   const extras = getExtras();
-  const uploadedPhotos = await compressManyImages(fotosFinalTurno);
-  const photoUrls = uploadedPhotos.map((item) => item.dataUrl);
+
+  let uploadedPhotos = [];
+  let photoUrls = [];
+
+  if (fotosFinalTurno.length) {
+    uploadedPhotos = await compressManyImages(fotosFinalTurno);
+    photoUrls = uploadedPhotos.map((item) => item.dataUrl);
+  }
 
   const payload = {
     createdAt: serverTimestamp(),
@@ -629,7 +636,7 @@ async function salvarFinalTurno() {
     observacao: STATE.operacao.opNotes || null,
     condCode,
 
-    photoUrl: photoUrls[0],
+    photoUrl: photoUrls[0] || null,
     photos: photoUrls,
 
     finalTurno: {
