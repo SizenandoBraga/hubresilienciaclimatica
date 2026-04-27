@@ -72,15 +72,24 @@ const MATERIAL_META = [
     icon: "foam-cube",
     color: "#00ACC1",
     logo: "img/logos/isopor.svg"
+  },
+  {
+    key: "oleoKg",
+    label: "Óleo de cozinha",
+    price: 1.5,
+    icon: "oil-drop",
+    color: "#C79200",
+    logo: "img/logos/oleo.svg",
+    isSpecial: true
   }
-];
-const MATERIAL_OLEO = {
+];\n\nconst MATERIAL_OLEO = {
   key: "oleoKg",
   label: "Óleo de cozinha",
   price: 1.5,
   icon: "oil-drop",
   color: "#C79200",
-  logo: "img/logos/oleo.svg"
+  logo: "img/logos/oleo.svg",
+  isSpecial: true
 };
 
 const CHART_COLORS = {
@@ -1363,7 +1372,7 @@ function computeExpandedMetrics(items) {
     materialTotals,
     reciclavelKg,
     rejeitoKg,
-    naoComercializadoKg,
+        naoComercializadoKg,
     reciclavelPct,
     rejeitoPct,
     receitaTotal,
@@ -1378,7 +1387,7 @@ function computeExpandedMetrics(items) {
 
 function renderExpandedPanel(items) {
   const m = computeExpandedMetrics(items);
-    const allDates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
+  const allDates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
   const projectStart = allDates.length ? formatDateBR(allDates[0]) : "—";
 
   if (els.k_totalDiasProjeto) els.k_totalDiasProjeto.textContent = String(m.totalDiasProjeto);
@@ -1413,7 +1422,7 @@ function renderExpandedPanel(items) {
       const receita = kg * mat.price;
 
       return `
-        <article class="material-card professional-card" style="--material-color:${mat.color}">
+        <article class="material-card professional-card ${mat.isSpecial ? "special-flow-card" : ""}" style="--material-color:${mat.color}">
           <div class="material-top">
             <div class="icon-group">
               <div class="mat-icon professional-icon">
@@ -1421,14 +1430,14 @@ function renderExpandedPanel(items) {
               </div>
               ${materialLogoMarkup(mat)}
             </div>
-            <div class="mat-pct">${formatNumber(pct)}%</div>
+            <div class="mat-pct">${mat.isSpecial ? "Fluxo especial" : `${formatNumber(pct)}%`}</div>
           </div>
 
           <div class="mat-name">${escapeHtml(mat.label)}</div>
           <div class="mat-kg">${formatNumber(kg)} kg</div>
 
           <div class="material-progress" aria-hidden="true">
-            <span style="width:${Math.min(pct, 100)}%"></span>
+            <span style="width:${mat.isSpecial ? 100 : Math.min(pct, 100)}%"></span>
           </div>
 
           <div class="mat-sub">Receita estimada ≈ ${formatMoneyBR(receita)}</div>
