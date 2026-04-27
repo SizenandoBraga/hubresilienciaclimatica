@@ -1,45 +1,3 @@
-/*
-===============================================================================
-NSRU • Dashboard de Coletas da Cooperativa
-Arquivo: dashboard-cooperativa.js
-
-Objetivo do arquivo
-- Autenticar o usuário.
-- Carregar coletas e participantes do Firestore por território.
-- Aplicar filtros gerais e filtros da tabela.
-- Calcular KPIs, cards, gráficos e relatórios.
-- Renderizar mapa e rota dos pontos de coleta.
-- Permitir edição segura dos registros, incluindo frações de resíduos.
-
-Política de cálculo das KPIs
-1) Apenas registros com status diferente de "cancelado" entram nos indicadores.
-2) "Resíduo seco / Reciclável" é calculado assim:
-   - Se o registro for final_turno: soma das frações em MATERIAL_META.
-   - Se for recebimento: usa soma das frações quando houver; se não houver,
-     usa pesoResiduoSecoKg.
-3) "Rejeito" é o peso declarado nos campos:
-   - recebimento.pesoRejeitoKg
-   - finalTurno.pesoRejeitoKg
-   - recebimento.rejeitoKg
-   - finalTurno.rejeitoKg
-   - pesoRejeitoKg
-   - rejeitoKg
-4) "Não comercializado" fica separado de rejeito. Ele aparece na seção de
-   tipos de rejeitos e no Excel, mas não soma no KPI principal "Rejeito total".
-   Caso a regra de negócio mude, basta alterar computeExpandedMetrics() e
-   renderKpis() para somar rejeito + não comercializado.
-
-Boas práticas aplicadas
-- Funções pequenas e nomeadas por responsabilidade.
-- Leitura defensiva de campos opcionais do Firestore.
-- Normalização de território para evitar divergências entre vila-pinto e
-  crgr_vila_pinto.
-- Sanitização de HTML em textos renderizados.
-- Separação entre:
-  dados brutos -> filtros -> cálculos -> renderização.
-===============================================================================
-*/
-
 import { auth, db } from "./firebase-init.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
@@ -58,6 +16,11 @@ import {
    CONFIG
 ========================= */
 
+/*
+  Materiais recicláveis secos.
+  IMPORTANTE: óleo de cozinha NÃO entra nesta lista, porque não é resíduo seco.
+  Esta lista alimenta os KPIs de resíduo seco, reciclável total, percentuais e gráficos de materiais secos.
+*/
 const MATERIAL_META = [
   { key: "plasticoKg", label: "Plástico", price: 1.92, icon: "🧴" },
   { key: "vidroKg", label: "Vidro", price: 0.08, icon: "🍾" },
@@ -65,9 +28,18 @@ const MATERIAL_META = [
   { key: "sacariaKg", label: "Sacaria", price: 0.12, icon: "🧵" },
   { key: "papelMistoKg", label: "Papel misto", price: 0.66, icon: "📄" },
   { key: "papelaoKg", label: "Papelão", price: 0.52, icon: "📦" },
-  { key: "isoporKg", label: "Isopor", price: 0.4, icon: "🧊" },
-  { key: "oleoKg", label: "Óleo de cozinha", price: 1.5, icon: "🛢️" }
+  { key: "isoporKg", label: "Isopor", price: 0.4, icon: "🧊" }
 ];
+
+/*
+  Fluxo especial: óleo de cozinha.
+  Ele continua sendo editado, exportado e considerado na receita estimada,
+  mas fica fora dos cálculos de resíduo seco/reciclável seco.
+*/
+const OIL_META = { key: "oleoKg", label: "Óleo de cozinha", price: 1.5, icon: "🛢️" };
+
+/* Lista usada em detalhes e exportações, onde o óleo deve aparecer separado. */
+const ALL_MATERIAL_META = [...MATERIAL_META, OIL_META];
 
 const CHART_COLORS = {
   blue: "#53ACDE",
@@ -372,16 +344,6 @@ function inferTerritorio(item) {
   return item.territoryLabel || coopProfile?.territoryLabel || pageTerritoryId || "Território";
 }
 
-/**
- * Retorna o peso base de resíduo seco salvo no registro.
- *
- * Observação:
- * Esta função NÃO soma as frações. Ela apenas busca o peso bruto/base salvo.
- * A decisão de usar frações ou peso base acontece em:
- * - inferTotalReciclavelRegistro()
- * - renderKpis()
- * - computeExpandedMetrics()
- */
 function inferResiduoSeco(item) {
   return Number(
     item.recebimento?.pesoResiduoSecoKg ??
@@ -391,21 +353,6 @@ function inferResiduoSeco(item) {
   );
 }
 
-/**
- * Retorna o peso de rejeito do registro.
- *
- * O rejeito pode estar salvo em estruturas diferentes conforme o fluxo:
- * - recebimento.pesoRejeitoKg
- * - finalTurno.pesoRejeitoKg
- * - recebimento.rejeitoKg
- * - finalTurno.rejeitoKg
- * - pesoRejeitoKg
- * - rejeitoKg
- *
- * Importante:
- * "Não comercializado" NÃO entra aqui. Ele é tratado separadamente por
- * inferNaoComercializado().
- */
 function inferRejeito(item) {
   return Number(
     item.recebimento?.pesoRejeitoKg ??
@@ -418,13 +365,6 @@ function inferRejeito(item) {
   );
 }
 
-/**
- * Retorna o peso de material não comercializado.
- *
- * No dashboard atual, esse valor é separado do rejeito.
- * Ele aparece nos cards de rejeitos e no Excel, mas não entra no KPI principal
- * "Rejeito total", a menos que você altere a regra de negócio.
- */
 function inferNaoComercializado(item) {
   return Number(
     item.recebimento?.pesoNaoComercializadoKg ??
@@ -432,6 +372,11 @@ function inferNaoComercializado(item) {
     item.pesoNaoComercializadoKg ??
     0
   );
+}
+
+/* Óleo é fluxo especial: não entra como resíduo seco, mas entra em exportações e receita. */
+function inferOleoKg(item) {
+  return Number(getMaterialValue(item, OIL_META.key) || 0);
 }
 
 function inferObservacao(item) {
@@ -452,19 +397,6 @@ function getStatus(item) {
   return String(item.status || "ativo").toLowerCase();
 }
 
-/**
- * Busca o valor de uma fração de resíduo.
- *
- * A mesma fração pode estar salva em locais diferentes do documento:
- * - item.materiais
- * - item.recebimento.materiais
- * - item.finalTurno.materiais
- * - item.recebimento
- * - item.finalTurno
- * - item raiz
- *
- * Essa leitura flexível evita que registros antigos fiquem fora dos cálculos.
- */
 function getMaterialValue(item, key) {
   const fontes = [
     item.materiais,
@@ -498,14 +430,6 @@ function getExportBaseItems() {
     : filteredColetas;
 }
 
-/**
- * Calcula o total reciclável de UM registro.
- *
- * Regra:
- * - final_turno: usa a soma das frações cadastradas no fechamento.
- * - recebimento: usa a soma das frações quando existirem; se não existirem,
- *   usa o peso base de resíduo seco.
- */
 function inferTotalReciclavelRegistro(item) {
   const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
   return isFinalTurno(item)
@@ -533,7 +457,7 @@ function getExportRows(items) {
       observacao: inferObservacao(item) || ""
     };
 
-    MATERIAL_META.forEach((mat) => {
+    ALL_MATERIAL_META.forEach((mat) => {
       row[mat.key] = Number(getMaterialValue(item, mat.key) || 0);
     });
 
@@ -1209,25 +1133,19 @@ function clearFilters() {
   if (els.fSearchType) els.fSearchType.value = "all";
   if (els.quickParticipantPreview) els.quickParticipantPreview.classList.add("hidden");
   applyFilters();
-}/* =========================
+}
+
+/* =========================
    KPIs E MATERIAIS
+
+   REGRA DE CÁLCULO:
+   - MATERIAL_META = apenas resíduos recicláveis secos.
+   - OIL_META = óleo de cozinha, fluxo especial separado.
+   - Rejeito = pesoRejeitoKg/rejeitoKg salvo em recebimento, finalTurno ou raiz do documento.
+   - Não comercializado = campo separado; não soma no KPI principal de rejeito.
+   - Registros cancelados não entram nos indicadores.
 ========================= */
 
-/**
- * Calcula e renderiza as KPIs principais do topo do dashboard.
- *
- * Entram no cálculo:
- * - somente registros não cancelados;
- * - somente registros dentro dos filtros ativos;
- * - participantes únicos pelo código do participante.
- *
- * KPIs:
- * - total de coletas: quantidade de registros ativos;
- * - participantes únicos: códigos distintos;
- * - resíduo seco: reciclável calculado por frações ou peso base;
- * - rejeito: pesoRejeitoKg/rejeitoKg;
- * - final de turno: quantidade de registros flowType === "final_turno".
- */
 function renderKpis(items) {
   const ativos = items.filter((item) => getStatus(item) !== "cancelado");
   const participantIds = new Set();
@@ -1275,17 +1193,6 @@ function sumMaterials(items) {
   return totals;
 }
 
-/**
- * Consolida os indicadores das seções analíticas.
- *
- * Essa função alimenta:
- * - resumo do projeto;
- * - total reciclável;
- * - percentual reciclável;
- * - rejeito total;
- * - não comercializado;
- * - receita estimada por material.
- */
 function computeExpandedMetrics(items) {
   const ativos = items.filter((item) => getStatus(item) !== "cancelado");
   const materialTotals = sumMaterials(ativos);
@@ -1293,6 +1200,7 @@ function computeExpandedMetrics(items) {
   let reciclavelKg = 0;
   let rejeitoKg = 0;
   let naoComercializadoKg = 0;
+  let oleoKg = 0;
 
   const uniqueDays = new Set();
   const participantSet = new Set();
@@ -1313,6 +1221,7 @@ function computeExpandedMetrics(items) {
 
     rejeitoKg += inferRejeito(item);
     naoComercializadoKg += inferNaoComercializado(item);
+    oleoKg += inferOleoKg(item);
 
     const d = inferDateISO(item);
     if (d) uniqueDays.add(d);
@@ -1332,11 +1241,15 @@ function computeExpandedMetrics(items) {
     receitaTotal += (materialTotals[mat.key] || 0) * mat.price;
   });
 
+  // Óleo fica fora do reciclável seco, mas pode compor a receita estimada como fluxo especial.
+  receitaTotal += oleoKg * OIL_META.price;
+
   return {
     materialTotals,
     reciclavelKg,
     rejeitoKg,
     naoComercializadoKg,
+    oleoKg,
     reciclavelPct,
     rejeitoPct,
     receitaTotal,
@@ -1380,7 +1293,7 @@ function renderExpandedPanel(items) {
   if (els.materialCards) {
     const totalMateriais = Object.values(m.materialTotals).reduce((acc, v) => acc + v, 0);
 
-    els.materialCards.innerHTML = MATERIAL_META.map((mat) => {
+    const dryCardsHtml = MATERIAL_META.map((mat) => {
       const kg = m.materialTotals[mat.key] || 0;
       const pct = totalMateriais ? (kg / totalMateriais) * 100 : 0;
       const receita = kg * mat.price;
@@ -1397,6 +1310,22 @@ function renderExpandedPanel(items) {
         </article>
       `;
     }).join("");
+
+    const oilCardHtml = m.oleoKg > 0
+      ? `
+        <article class="material-card material-card-special">
+          <div class="material-top">
+            <div class="mat-icon">${OIL_META.icon}</div>
+            <div class="mat-pct">Especial</div>
+          </div>
+          <div class="mat-name">${escapeHtml(OIL_META.label)}</div>
+          <div class="mat-kg">${formatNumber(m.oleoKg)} kg</div>
+          <div class="mat-sub">Fluxo separado do resíduo seco • Receita estimada ≈ ${formatMoneyBR(m.oleoKg * OIL_META.price)}</div>
+        </article>
+      `
+      : "";
+
+    els.materialCards.innerHTML = dryCardsHtml + oilCardHtml;
   }
 }/* =========================
    GRÁFICOS
@@ -1595,7 +1524,6 @@ function renderCharts(items) {
     });
   }
 }
-
 /* =========================
    MAPA E ROTA
 ========================= */
@@ -1762,17 +1690,6 @@ function clearFullCollectionRoute() {
   - destino: pontos filtrados da tabela/dashboard
   - formato OSRM: longitude,latitude
 */
-/**
- * Calcula e desenha a rota geral de coleta.
- *
- * Fluxo:
- * 1. Valida coordenadas dos participantes.
- * 2. Remove pontos duplicados.
- * 3. Limita a quantidade de pontos para evitar travamento no OSRM público.
- * 4. Ordena os pontos por vizinho mais próximo.
- * 5. Envia a rota para OSRM usando o formato longitude,latitude.
- * 6. Desenha a geometria retornada no Leaflet.
- */
 async function drawFullCollectionRoute(points) {
   if (!routeMap || typeof L === "undefined") return;
 
@@ -2044,7 +1961,7 @@ function openCollectionDetailsModal(itemId) {
   const participant = resolveParticipant(item);
   const photos = getColetaPhotoUrls(item);
 
-  const materialsHtml = MATERIAL_META
+  const materialsHtml = ALL_MATERIAL_META
     .map((mat) => {
       const value = getMaterialValue(item, mat.key);
       if (!value) return "";
@@ -2177,7 +2094,7 @@ function applyTableFilters() {
       inferObservacao(item),
       inferEntrega(item),
       inferFluxo(item),
-      ...MATERIAL_META.map((m) => m.label)
+      ...ALL_MATERIAL_META.map((m) => m.label)
     ].join(" "));
 
     if (search && !haystack.includes(search)) return false;
