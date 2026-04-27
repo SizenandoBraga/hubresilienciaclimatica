@@ -355,13 +355,17 @@ function getStatus(item) {
 }
 
 function inferResiduoSeco(item) {
-  return Number(
+  const directValue =
     item.recebimento?.pesoResiduoSecoKg ??
     item.finalTurno?.pesoResiduoSecoKg ??
     item.pesoResiduoSecoKg ??
-    item.residuoSecoKg ??
-    0
-  );
+    item.residuoSecoKg;
+
+  if (directValue !== undefined && directValue !== null && directValue !== "") {
+    return Number(directValue || 0);
+  }
+
+  return MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
 }
 
 /*
@@ -372,10 +376,12 @@ function inferResiduoSeco(item) {
 */
 function inferRejeito(item) {
   return Number(
-    item.recebimento?.pesoRejeitoKg ??
+    item.finalTurno?.pesoRejeitoGeralKg ??
     item.finalTurno?.pesoRejeitoKg ??
+    item.recebimento?.pesoRejeitoKg ??
     item.recebimento?.rejeitoKg ??
     item.finalTurno?.rejeitoKg ??
+    item.pesoRejeitoGeralKg ??
     item.pesoRejeitoKg ??
     item.rejeitoKg ??
     0
@@ -498,17 +504,25 @@ function getExportRows(items) {
 function loadScriptOnce(src) {
   return new Promise((resolve, reject) => {
     const existing = document.querySelector(`script[src="${src}"]`);
+
     if (existing) {
+      if (existing.dataset.loaded === "true") {
+        resolve();
+        return;
+      }
+
       existing.addEventListener("load", () => resolve(), { once: true });
       existing.addEventListener("error", () => reject(new Error(`Falha ao carregar ${src}`)), { once: true });
-      resolve();
       return;
     }
 
     const script = document.createElement("script");
     script.src = src;
     script.async = true;
-    script.onload = () => resolve();
+    script.onload = () => {
+      script.dataset.loaded = "true";
+      resolve();
+    };
     script.onerror = () => reject(new Error(`Falha ao carregar ${src}`));
     document.head.appendChild(script);
   });
@@ -1314,7 +1328,6 @@ function renderExpandedPanel(items) {
     els.materialCards.innerHTML = materialCards + oleoCard;
   }
 }
-
 /* =========================
    GRÁFICOS
 ========================= */
@@ -2339,6 +2352,7 @@ async function saveEdit() {
     payload["finalTurno.observacao"] = els.editObs?.value?.trim?.() || "";
     payload["finalTurno.pesoResiduoSecoKg"] = Number(els.editPesoBase?.value || 0);
     payload["finalTurno.qualidadeNota"] = qualityValue;
+    payload["finalTurno.pesoRejeitoGeralKg"] = Number(els.editRejeito?.value || 0);
     payload["finalTurno.pesoRejeitoKg"] = Number(els.editRejeito?.value || 0);
     payload["finalTurno.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado?.value || 0);
     payload["finalTurno.materiais"] = materiaisPayload;
