@@ -1587,3 +1587,109 @@ body.modal-open {
     grid-template-columns: repeat(3, 1fr);
   }
 }
+
+/* =========================================================
+   AJUSTE PROFISSIONAL - ÍCONES SVG + LOGOS DOS RESÍDUOS
+   ---------------------------------------------------------
+   Mantém o visual atual dos cards e adiciona suporte para:
+   - grupo com ícone SVG + logo do resíduo;
+   - caixa do logo;
+   - fallback visual quando não houver imagem;
+   - responsividade melhor no card.
+   ========================================================= */
+
+.icon-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+/* Caixa reservada para inserir o logo institucional ou símbolo do resíduo */
+.mat-logo {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  overflow: hidden;
+  border: 1px solid rgba(60, 58, 57, 0.10);
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.82));
+  box-shadow:
+    0 8px 18px rgba(60, 58, 57, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.85);
+  transition:
+    transform var(--transition-fast),
+    box-shadow var(--transition-base),
+    border-color var(--transition-base);
+}
+
+.mat-logo img {
+  width: 74%;
+  height: 74%;
+  object-fit: contain;
+}
+
+/* Caso o card tenha logo e ícone, ambos ficam destacados sem apertar o percentual */
+.material-top .icon-group + .mat-pct {
+  margin-left: auto;
+}
+
+/* Hover integrado com o card profissional */
+.professional-card:hover .mat-logo {
+  transform: scale(1.06);
+  border-color: color-mix(in srgb, var(--material-color) 26%, rgba(60, 58, 57, 0.10));
+  box-shadow:
+    0 12px 24px color-mix(in srgb, var(--material-color) 16%, rgba(60, 58, 57, 0.10)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Melhora a leitura do SVG dentro do ícone colorido */
+.professional-icon svg {
+  color: var(--material-color);
+  filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.16));
+}
+
+/* Deixa o card mais robusto quando usa ícone + logo */
+.material-card.professional-card {
+  isolation: isolate;
+}
+
+.material-card.professional-card::after {
+  content: "";
+  position: absolute;
+  right: -34px;
+  bottom: -34px;
+  z-index: -1;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--material-color) 10%, transparent);
+}
+
+/* Ajuste para telas pequenas: logo e ícone continuam lado a lado */
+@media (max-width: 640px) {
+  .icon-group {
+    gap: 8px;
+  }
+
+  .mat-logo {
+    width: 42px;
+    height: 42px;
+    flex-basis: 42px;
+    border-radius: 12px;
+  }
+
+  .professional-icon {
+    width: 58px;
+    height: 58px;
+  }
+
+  .professional-icon svg {
+    width: 38px;
+    height: 38px;
+  }
+}
+
