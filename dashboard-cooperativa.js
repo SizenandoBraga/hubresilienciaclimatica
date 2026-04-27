@@ -40,55 +40,13 @@ import {
   - Não comercializado NÃO entra aqui porque é separado.
 */
 const MATERIAL_META = [
-  {
-    key: "plasticoKg",
-    label: "Plástico",
-    price: 1.92,
-    icon: "plastic-bottle",
-    color: "#2E7D32"
-  },
-  {
-    key: "vidroKg",
-    label: "Vidro",
-    price: 0.08,
-    icon: "glass-bottle",
-    color: "#0288D1"
-  },
-  {
-    key: "aluminioMetalKg",
-    label: "Metal / Alumínio",
-    price: 2.9,
-    icon: "metal-can",
-    color: "#757575"
-  },
-  {
-    key: "sacariaKg",
-    label: "Sacaria",
-    price: 0.12,
-    icon: "bag-waste",
-    color: "#8D6E63"
-  },
-  {
-    key: "papelMistoKg",
-    label: "Papel misto",
-    price: 0.66,
-    icon: "paper-sheet",
-    color: "#1565C0"
-  },
-  {
-    key: "papelaoKg",
-    label: "Papelão",
-    price: 0.52,
-    icon: "cardboard-box",
-    color: "#A65A2A"
-  },
-  {
-    key: "isoporKg",
-    label: "Isopor",
-    price: 0.4,
-    icon: "foam-cube",
-    color: "#00ACC1"
-  }
+  { key: "plasticoKg", label: "Plástico", price: 1.92, icon: "🧴" },
+  { key: "vidroKg", label: "Vidro", price: 0.08, icon: "🍾" },
+  { key: "aluminioMetalKg", label: "Metal / Alumínio", price: 2.9, icon: "🥫" },
+  { key: "sacariaKg", label: "Sacaria", price: 0.12, icon: "🧵" },
+  { key: "papelMistoKg", label: "Papel misto", price: 0.66, icon: "📄" },
+  { key: "papelaoKg", label: "Papelão", price: 0.52, icon: "📦" },
+  { key: "isoporKg", label: "Isopor", price: 0.4, icon: "🧊" }
 ];
 
 /*
@@ -102,8 +60,7 @@ const MATERIAL_OLEO = {
   key: "oleoKg",
   label: "Óleo de cozinha",
   price: 1.5,
-  icon: "oil-drop",
-  color: "#C79200"
+  icon: "🛢️"
 };
 
 const ALL_MATERIAL_META = [...MATERIAL_META, MATERIAL_OLEO];
@@ -315,81 +272,6 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function materialSvgIcon(iconId, label = "Material") {
-  const safeLabel = escapeHtml(label);
-
-  const icons = {
-    "plastic-bottle": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M26 5h12v8l-3 4v5h-6v-5l-3-4V5Z" fill="rgba(255,255,255,.92)"/>
-        <path d="M22 22h20c4 0 7 3 7 7v24c0 4-3 7-7 7H22c-4 0-7-3-7-7V29c0-4 3-7 7-7Z" fill="rgba(255,255,255,.82)"/>
-        <path d="M21 34h22v15H21V34Z" fill="currentColor" opacity=".95"/>
-        <path d="M27 42c3-6 9-6 12-2m-2-5 2 5-5 1" fill="none" stroke="rgba(255,255,255,.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `,
-    "glass-bottle": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M26 5h12v13l5 8v25c0 6-5 9-11 9s-11-3-11-9V26l5-8V5Z" fill="rgba(255,255,255,.86)"/>
-        <path d="M25 30h14v22c0 3-3 5-7 5s-7-2-7-5V30Z" fill="currentColor" opacity=".92"/>
-        <path d="M28 9h8M27 17h10" stroke="rgba(255,255,255,.95)" stroke-width="3" stroke-linecap="round"/>
-        <path d="M32 34v15" stroke="rgba(255,255,255,.92)" stroke-width="3" stroke-linecap="round" opacity=".8"/>
-      </svg>
-    `,
-    "metal-can": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <ellipse cx="32" cy="13" rx="17" ry="7" fill="rgba(255,255,255,.9)"/>
-        <path d="M15 13v38c0 4 8 8 17 8s17-4 17-8V13" fill="rgba(255,255,255,.72)"/>
-        <path d="M15 27c0 4 8 7 17 7s17-3 17-7M15 42c0 4 8 7 17 7s17-3 17-7" fill="none" stroke="currentColor" stroke-width="4" opacity=".95"/>
-        <ellipse cx="32" cy="13" rx="17" ry="7" fill="none" stroke="currentColor" stroke-width="4"/>
-      </svg>
-    `,
-    "bag-waste": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M23 17c2-8 16-8 18 0" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="5" stroke-linecap="round"/>
-        <path d="M17 22h30l5 31c1 4-2 7-7 7H19c-5 0-8-3-7-7l5-31Z" fill="rgba(255,255,255,.82)"/>
-        <path d="M22 30h20M24 40h16M26 50h12" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-      </svg>
-    `,
-    "paper-sheet": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M16 6h24l10 10v42H16V6Z" fill="rgba(255,255,255,.88)"/>
-        <path d="M40 6v14h14" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-        <path d="M23 28h18M23 38h24M23 48h20" stroke="currentColor" stroke-width="4" stroke-linecap="round"/>
-      </svg>
-    `,
-    "cardboard-box": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M10 22 32 10l22 12-22 12L10 22Z" fill="rgba(255,255,255,.9)"/>
-        <path d="M10 22v25l22 12V34L10 22Z" fill="rgba(255,255,255,.76)"/>
-        <path d="M54 22v25L32 59V34l22-12Z" fill="rgba(255,255,255,.62)"/>
-        <path d="M10 22 32 34l22-12M32 34v25M21 16l22 12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-      </svg>
-    `,
-    "foam-cube": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M13 21 32 10l19 11-19 11-19-11Z" fill="rgba(255,255,255,.9)"/>
-        <path d="M13 21v22l19 11V32L13 21Z" fill="rgba(255,255,255,.72)"/>
-        <path d="M51 21v22L32 54V32l19-11Z" fill="rgba(255,255,255,.62)"/>
-        <circle cx="23" cy="26" r="2.5" fill="currentColor"/>
-        <circle cx="35" cy="21" r="2.5" fill="currentColor"/>
-        <circle cx="41" cy="36" r="2.5" fill="currentColor"/>
-        <circle cx="26" cy="43" r="2.5" fill="currentColor"/>
-        <path d="M32 32v22M13 21l19 11 19-11" fill="none" stroke="currentColor" stroke-width="3" opacity=".75"/>
-      </svg>
-    `,
-    "oil-drop": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M32 5s18 22 18 36c0 11-8 19-18 19s-18-8-18-19C14 27 32 5 32 5Z" fill="rgba(255,255,255,.86)"/>
-        <path d="M25 43c0 5 4 9 9 9" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-        <path d="M32 16s9 13 9 23c0 5-4 9-9 9s-9-4-9-9c0-10 9-23 9-23Z" fill="currentColor" opacity=".92"/>
-      </svg>
-    `
-  };
-
-  return icons[iconId] || icons["plastic-bottle"];
-}
-
-
 function normalizeText(value) {
   return String(value || "")
     .normalize("NFD")
@@ -490,12 +372,10 @@ function inferResiduoSeco(item) {
 */
 function inferRejeito(item) {
   return Number(
-    item.finalTurno?.pesoRejeitoGeralKg ??
-    item.finalTurno?.pesoRejeitoKg ??
     item.recebimento?.pesoRejeitoKg ??
+    item.finalTurno?.pesoRejeitoKg ??
     item.recebimento?.rejeitoKg ??
     item.finalTurno?.rejeitoKg ??
-    item.pesoRejeitoGeralKg ??
     item.pesoRejeitoKg ??
     item.rejeitoKg ??
     0
@@ -1405,21 +1285,13 @@ function renderExpandedPanel(items) {
       const receita = kg * mat.price;
 
       return `
-        <article class="material-card professional-card" style="--material-color:${mat.color}">
+        <article class="material-card">
           <div class="material-top">
-            <div class="mat-icon professional-icon">
-              ${materialSvgIcon(mat.icon, mat.label)}
-            </div>
+            <div class="mat-icon">${mat.icon}</div>
             <div class="mat-pct">${formatNumber(pct)}%</div>
           </div>
-
           <div class="mat-name">${escapeHtml(mat.label)}</div>
           <div class="mat-kg">${formatNumber(kg)} kg</div>
-
-          <div class="material-progress" aria-hidden="true">
-            <span style="width:${Math.min(pct, 100)}%"></span>
-          </div>
-
           <div class="mat-sub">Receita estimada ≈ ${formatMoneyBR(receita)}</div>
         </article>
       `;
@@ -1427,24 +1299,14 @@ function renderExpandedPanel(items) {
 
     const oleoCard = m.oleoKg > 0
       ? `
-        <article class="material-card professional-card special-flow-card" style="--material-color:${MATERIAL_OLEO.color}">
+        <article class="material-card material-card-special">
           <div class="material-top">
-            <div class="mat-icon professional-icon">
-              ${materialSvgIcon(MATERIAL_OLEO.icon, MATERIAL_OLEO.label)}
-            </div>
-            <div class="mat-pct">Fluxo especial</div>
+            <div class="mat-icon">${MATERIAL_OLEO.icon}</div>
+            <div class="mat-pct">fluxo especial</div>
           </div>
-
           <div class="mat-name">${escapeHtml(MATERIAL_OLEO.label)}</div>
           <div class="mat-kg">${formatNumber(m.oleoKg)} kg</div>
-
-          <div class="material-progress" aria-hidden="true">
-            <span style="width:100%"></span>
-          </div>
-
-          <div class="mat-sub">
-            Não compõe resíduo seco • Receita estimada ≈ ${formatMoneyBR(m.oleoKg * MATERIAL_OLEO.price)}
-          </div>
+          <div class="mat-sub">Não compõe resíduo seco • Receita estimada ≈ ${formatMoneyBR(m.oleoKg * MATERIAL_OLEO.price)}</div>
         </article>
       `
       : "";
@@ -1452,6 +1314,7 @@ function renderExpandedPanel(items) {
     els.materialCards.innerHTML = materialCards + oleoCard;
   }
 }
+
 /* =========================
    GRÁFICOS
 ========================= */
@@ -2476,7 +2339,6 @@ async function saveEdit() {
     payload["finalTurno.observacao"] = els.editObs?.value?.trim?.() || "";
     payload["finalTurno.pesoResiduoSecoKg"] = Number(els.editPesoBase?.value || 0);
     payload["finalTurno.qualidadeNota"] = qualityValue;
-    payload["finalTurno.pesoRejeitoGeralKg"] = Number(els.editRejeito?.value || 0);
     payload["finalTurno.pesoRejeitoKg"] = Number(els.editRejeito?.value || 0);
     payload["finalTurno.pesoNaoComercializadoKg"] = Number(els.editNaoComercializado?.value || 0);
     payload["finalTurno.materiais"] = materiaisPayload;
