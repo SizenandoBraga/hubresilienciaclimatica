@@ -328,10 +328,17 @@
           <div class="panel-head">
             <div class="hgroup">
               <h2>Seção 2 • Tipos de materiais</h2>
-              <p>Materiais recicláveis com cards visuais, peso e participação percentual.</p>
+              <p>Materiais recicláveis e fluxos especiais exibidos juntos em cards visuais, com peso e identificação por material.</p>
             </div>
           </div>
           <div class="material-cards enhanced" id="materialCards"></div>
+
+          <!-- IDs técnicos para compatibilidade com o JS.
+               O óleo deve aparecer visualmente junto nos cards de materiais. -->
+          <div class="hidden" aria-hidden="true">
+            <span id="k_oleoKg">0 kg</span>
+            <span id="k_oleoPct">—</span>
+          </div>
         </div>
       </section>
 
@@ -345,33 +352,18 @@
           </div>
 
           <div class="reject-grid">
+            <div class="reject-card">
+              <div class="reject-name">Não reciclável</div>
+              <div class="reject-value"><span id="k_rejeitoNaoReciclavelPct">0%</span></div>
+              <div class="reject-kg" id="k_rejeitoNaoReciclavelKg">0 kg</div>
+            </div>
 
-  <div class="reject-card">
-    <div class="reject-name">Não reciclável</div>
-    <div class="reject-value">
-      <span id="k_rejeitoNaoReciclavelPct">0%</span>
-    </div>
-    <div class="reject-kg" id="k_rejeitoNaoReciclavelKg">0 kg</div>
-  </div>
-
-  <div class="reject-card">
-    <div class="reject-name">Não comercializado</div>
-    <div class="reject-value">
-      <span id="k_naoComercializadoPct">0%</span>
-    </div>
-    <div class="reject-kg" id="k_naoComercializadoKg">0 kg</div>
-  </div>
-
-  <!-- 🔥 NOVO BLOCO DO ÓLEO -->
-  <div class="reject-card">
-    <div class="reject-name">Óleo de cozinha</div>
-    <div class="reject-value">
-      <span id="k_oleoPct">fluxo especial</span>
-    </div>
-    <div class="reject-kg" id="k_oleoKg">0 kg</div>
-  </div>
-
-</div>
+            <div class="reject-card">
+              <div class="reject-name">Não comercializado</div>
+              <div class="reject-value"><span id="k_naoComercializadoPct">0%</span></div>
+              <div class="reject-kg" id="k_naoComercializadoKg">0 kg</div>
+            </div>
+          </div>
         </div>
       </section>
 
