@@ -1589,15 +1589,17 @@ body.modal-open {
 }
 
 /* =========================================================
-   AJUSTE PROFISSIONAL - ÍCONES SVG + LOGOS DOS RESÍDUOS
+   AJUSTE FINAL - ÍCONES SVG + LOGOS DOS RESÍDUOS
    ---------------------------------------------------------
-   Mantém o visual atual dos cards e adiciona suporte para:
-   - grupo com ícone SVG + logo do resíduo;
-   - caixa do logo;
-   - fallback visual quando não houver imagem;
-   - responsividade melhor no card.
+   Compatível com o JS que renderiza:
+   - .professional-card
+   - .icon-group
+   - .professional-icon
+   - .mat-logo
+   - .special-flow-card para óleo de cozinha
    ========================================================= */
 
+/* Grupo que mantém o ícone SVG e o logo do material lado a lado */
 .icon-group {
   display: flex;
   align-items: center;
@@ -1605,7 +1607,7 @@ body.modal-open {
   min-width: 0;
 }
 
-/* Caixa reservada para inserir o logo institucional ou símbolo do resíduo */
+/* Caixa do logo do material/resíduo */
 .mat-logo {
   display: grid;
   place-items: center;
@@ -1627,36 +1629,28 @@ body.modal-open {
 }
 
 .mat-logo img {
-  width: 74%;
-  height: 74%;
+  width: 76%;
+  height: 76%;
   object-fit: contain;
 }
 
-/* Caso o card tenha logo e ícone, ambos ficam destacados sem apertar o percentual */
+/* Mantém o percentual alinhado à direita mesmo com ícone + logo */
 .material-top .icon-group + .mat-pct {
   margin-left: auto;
 }
 
-/* Hover integrado com o card profissional */
-.professional-card:hover .mat-logo {
-  transform: scale(1.06);
-  border-color: color-mix(in srgb, var(--material-color) 26%, rgba(60, 58, 57, 0.10));
-  box-shadow:
-    0 12px 24px color-mix(in srgb, var(--material-color) 16%, rgba(60, 58, 57, 0.10)),
-    inset 0 1px 0 rgba(255, 255, 255, 0.9);
-}
-
-/* Melhora a leitura do SVG dentro do ícone colorido */
+/* Melhora a leitura do SVG colorido */
 .professional-icon svg {
   color: var(--material-color);
   filter: drop-shadow(0 2px 2px rgba(0, 0, 0, 0.16));
 }
 
-/* Deixa o card mais robusto quando usa ícone + logo */
+/* Deixa o card mais robusto quando tem ícone + logo */
 .material-card.professional-card {
   isolation: isolate;
 }
 
+/* Marca visual sutil no canto do card */
 .material-card.professional-card::after {
   content: "";
   position: absolute;
@@ -1669,7 +1663,38 @@ body.modal-open {
   background: color-mix(in srgb, var(--material-color) 10%, transparent);
 }
 
-/* Ajuste para telas pequenas: logo e ícone continuam lado a lado */
+/* Hover integrado com o card */
+.professional-card:hover .mat-logo {
+  transform: scale(1.06);
+  border-color: color-mix(in srgb, var(--material-color) 26%, rgba(60, 58, 57, 0.10));
+  box-shadow:
+    0 12px 24px color-mix(in srgb, var(--material-color) 16%, rgba(60, 58, 57, 0.10)),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* Óleo de cozinha quando renderizado junto com MATERIAL_META */
+.special-flow-card {
+  border-style: dashed;
+}
+
+.special-flow-card .mat-pct {
+  min-width: max-content;
+  color: #7a5400;
+  background: rgba(199, 146, 0, 0.14);
+}
+
+/* Barra do óleo/fluxo especial aparece completa sem parecer percentual de reciclável */
+.special-flow-card .material-progress span {
+  width: 100% !important;
+  background:
+    repeating-linear-gradient(
+      45deg,
+      var(--material-color) 0 10px,
+      color-mix(in srgb, var(--material-color) 72%, #ffffff) 10px 20px
+    );
+}
+
+/* Ajuste para telas pequenas: ícone e logo continuam lado a lado */
 @media (max-width: 640px) {
   .icon-group {
     gap: 8px;
