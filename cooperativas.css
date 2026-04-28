@@ -84,7 +84,13 @@ img {
 .app-shell {
   min-height: 100vh;
   display: grid;
-  grid-template-columns: var(--sidebar-w) minmax(0, 1fr);
+  grid-template-columns: var(--sidebar-w) 1fr;
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    display: block;
+  }
 }
 
 .content-area {
@@ -1667,5 +1673,506 @@ img {
 
   #territoryMap {
     height: 310px;
+  }
+}
+
+/* =========================================================
+   AJUSTES FINAIS DE RESPONSIVIDADE - MENU LATERAL VISÍVEL
+   Cole este bloco no final do CSS ou use este arquivo completo.
+========================================================= */
+
+html,
+body {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+.app-shell,
+.content-area,
+.coop-main,
+.dashboard-section,
+.coop-hero,
+.panel-card,
+.side-card,
+.territory-main,
+.territory-side,
+.territory-map-canvas,
+.territory-map-sidebar {
+  min-width: 0;
+}
+
+.topbar {
+  min-height: 72px;
+}
+
+.menu-btn {
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 22px rgba(95, 141, 25, 0.22);
+}
+
+.menu-btn:focus-visible,
+.nav-link:focus-visible,
+.territory-tab:focus-visible,
+.map-ghost-btn:focus-visible,
+.participants-add-btn:focus-visible {
+  outline: 4px solid rgba(83, 172, 222, 0.28);
+  outline-offset: 3px;
+}
+
+.sidebar {
+  -webkit-overflow-scrolling: touch;
+}
+
+.sidebar-nav,
+.sidebar-top,
+.sidebar-help {
+  width: 100%;
+}
+
+.nav-link {
+  min-height: 50px;
+  width: 100%;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+}
+
+.nav-link.active,
+.nav-link:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.mobile-overlay {
+  backdrop-filter: blur(2px);
+}
+
+body.menu-open {
+  overflow: hidden;
+}
+
+@media (max-width: 1180px) {
+  .app-shell {
+    display: block !important;
+    grid-template-columns: 1fr !important;
+  }
+
+  .content-area {
+    width: 100%;
+  }
+
+  .topbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 1100;
+    padding: 12px 18px;
+  }
+
+  .menu-btn {
+    display: inline-flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    position: relative;
+    z-index: 1201;
+    width: 48px;
+    height: 48px;
+    min-width: 48px;
+    border-radius: 15px;
+    background: var(--green);
+    color: #fff;
+    font-size: 26px;
+    line-height: 1;
+  }
+
+  .menu-btn::before {
+    content: "☰";
+    display: block;
+    font-weight: 900;
+  }
+
+  .menu-btn i,
+  .menu-btn span,
+  .menu-btn svg {
+    pointer-events: none;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(86vw, 360px);
+    max-width: 360px;
+    height: 100dvh;
+    padding: 22px 18px;
+    transform: translate3d(-105%, 0, 0);
+    transition: transform 0.28s ease, box-shadow 0.28s ease;
+    z-index: 1200;
+    box-shadow: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.22);
+  }
+
+  .sidebar.open,
+  .sidebar.show,
+  body.menu-open .sidebar {
+    transform: translate3d(0, 0, 0) !important;
+    box-shadow: 22px 0 46px rgba(0, 0, 0, 0.22);
+  }
+
+  .mobile-overlay {
+    display: block;
+    z-index: 1150;
+  }
+
+  .mobile-overlay.show,
+  body.menu-open .mobile-overlay {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .topbar-left {
+    width: 100%;
+  }
+
+  .topbar-brand-copy strong {
+    max-width: 42vw;
+  }
+
+  .quick-grid,
+  .quick-grid.quick-grid-three,
+  .panel-grid.two-cols,
+  .territory-panel-grid,
+  .territory-map-layout {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .territory-panel-grid,
+  .territory-map-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .territory-side {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 10px 14px;
+  }
+
+  .topbar-left {
+    display: grid;
+    grid-template-columns: 48px minmax(0, 1fr);
+    align-items: center;
+    gap: 10px;
+  }
+
+  .topbar-brand {
+    min-width: 0;
+  }
+
+  .topbar-brand-copy strong {
+    max-width: 100%;
+    font-size: 16px;
+  }
+
+  .topbar-brand-copy span {
+    font-size: 13px;
+  }
+
+  .topbar-right {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .topbar-pill {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .coop-main {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .coop-hero,
+  .dashboard-section {
+    border-radius: 24px;
+  }
+
+  .section-head,
+  .territory-topbar,
+  .territory-main-head,
+  .participants-toolbar,
+  .territory-map-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .section-head h2,
+  .territory-main-head h3 {
+    word-break: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .participants-kpis,
+  .territory-side,
+  .panel-grid.two-cols,
+  .quick-grid,
+  .quick-grid.quick-grid-three {
+    grid-template-columns: 1fr;
+  }
+
+  .territory-tabs {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 8px;
+    padding: 2px 0 8px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .territory-tab {
+    flex: 0 0 auto;
+    white-space: nowrap;
+    scroll-snap-align: start;
+  }
+
+  .territory-map-filters,
+  .map-editor-actions {
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .territory-map-filters > *,
+  .map-editor-actions > *,
+  .participants-add-btn {
+    width: 100%;
+  }
+
+  .territory-map-canvas {
+    padding: 8px;
+  }
+
+  #territoryMap {
+    height: 430px;
+  }
+}
+
+@media (max-width: 640px) {
+  :root {
+    --radius-lg: 22px;
+    --radius-xl: 24px;
+  }
+
+  .topbar {
+    padding: 10px 12px;
+  }
+
+  .topbar-left {
+    grid-template-columns: 46px minmax(0, 1fr);
+  }
+
+  .menu-btn {
+    width: 46px;
+    height: 46px;
+    min-width: 46px;
+    border-radius: 14px;
+  }
+
+  .topbar-brand-mark {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+  }
+
+  .topbar-brand-mark img {
+    width: 29px;
+  }
+
+  .topbar-brand-copy strong {
+    font-size: 15px;
+    line-height: 1.1;
+  }
+
+  .topbar-brand-copy span {
+    display: block;
+    font-size: 12px;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-right {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-pill {
+    min-height: 36px;
+    font-size: 14px;
+    padding: 0 12px;
+  }
+
+  .sidebar {
+    width: min(92vw, 330px);
+    padding: 18px 14px;
+  }
+
+  .brand-mark {
+    width: 125px;
+  }
+
+  .sidebar-title {
+    font-size: 12px;
+  }
+
+  .nav-link {
+    min-height: 52px;
+    padding: 14px 15px;
+    font-size: 16px;
+    border-radius: 16px;
+  }
+
+  .nav-ico {
+    font-size: 19px;
+  }
+
+  .coop-main {
+    padding: 12px;
+    gap: 14px;
+  }
+
+  .coop-hero,
+  .dashboard-section,
+  .panel-card,
+  .side-card,
+  .quick-card {
+    padding: 16px;
+    border-radius: 20px;
+  }
+
+  .coop-hero h1 {
+    font-size: clamp(28px, 10vw, 36px);
+    line-height: 1;
+  }
+
+  .coop-hero p,
+  .section-head p,
+  .territory-main-head p,
+  .territory-map-toolbar p {
+    font-size: 15px;
+  }
+
+  .section-head h2 {
+    font-size: 25px;
+  }
+
+  .quick-card h3,
+  .panel-card-head h3,
+  .side-card h4 {
+    font-size: 22px;
+  }
+
+  .info-item,
+  .summary-row,
+  .participant-row,
+  .territory-main-head,
+  .territory-map-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .info-meta,
+  .participant-meta {
+    align-self: flex-start;
+  }
+
+  .participant-main {
+    width: 100%;
+    align-items: flex-start;
+  }
+
+  .participant-meta {
+    align-items: flex-start;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .indicator-mini-grid,
+  .participants-kpis,
+  .territory-side,
+  .quick-grid,
+  .quick-grid.quick-grid-three {
+    grid-template-columns: 1fr;
+  }
+
+  #territoryMap {
+    height: 360px;
+    border-radius: 16px;
+  }
+
+  .map-points-list {
+    max-height: 245px;
+  }
+}
+
+@media (max-width: 390px) {
+  .topbar {
+    padding: 8px 10px;
+  }
+
+  .topbar-left {
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 8px;
+  }
+
+  .menu-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+
+  .topbar-brand-copy strong {
+    font-size: 14px;
+  }
+
+  .topbar-brand-copy span {
+    display: none;
+  }
+
+  .coop-main {
+    padding: 9px;
+  }
+
+  .coop-hero,
+  .dashboard-section,
+  .panel-card,
+  .side-card,
+  .quick-card {
+    padding: 14px;
+  }
+
+  .coop-hero h1 {
+    font-size: 27px;
+  }
+
+  .section-head h2 {
+    font-size: 23px;
+  }
+
+  #territoryMap {
+    height: 315px;
   }
 }
