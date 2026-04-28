@@ -1339,3 +1339,499 @@ th {
     height: 300px;
   }
 }
+
+/* =========================================================
+   AJUSTE FINAL RESPONSIVO - PÁGINA USUÁRIOS
+   Menu lateral estilo cooperativa + mobile off-canvas
+   Cole este bloco no final do CSS caso não substitua o arquivo completo.
+========================================================= */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+body.sidebar-open {
+  overflow: hidden;
+}
+
+.app-shell {
+  width: 100%;
+  min-height: 100vh;
+}
+
+.main {
+  min-width: 0;
+}
+
+/* Botões de menu compatíveis com nomes diferentes usados no HTML */
+.menu-btn,
+.sidebar-toggle,
+.mobile-menu-btn,
+#menuBtn,
+#sidebarToggle,
+#mobileMenuBtn {
+  display: none;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--green);
+  color: #fff;
+  cursor: pointer;
+  font-size: 24px;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: 0 10px 22px rgba(129, 185, 42, .28);
+  transition: .2s ease;
+}
+
+.menu-btn:hover,
+.sidebar-toggle:hover,
+.mobile-menu-btn:hover,
+#menuBtn:hover,
+#sidebarToggle:hover,
+#mobileMenuBtn:hover {
+  background: var(--green-dark);
+  transform: translateY(-1px);
+}
+
+/* Overlay para fechar o menu no mobile */
+.mobile-overlay,
+.sidebar-overlay,
+#mobileOverlay,
+#sidebarOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999;
+  background: rgba(37, 49, 29, .48);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .22s ease;
+}
+
+.mobile-overlay.show,
+.mobile-overlay.is-active,
+.sidebar-overlay.show,
+.sidebar-overlay.is-active,
+#mobileOverlay.show,
+#mobileOverlay.is-active,
+#sidebarOverlay.show,
+#sidebarOverlay.is-active,
+body.sidebar-open .mobile-overlay,
+body.sidebar-open .sidebar-overlay,
+body.sidebar-open #mobileOverlay,
+body.sidebar-open #sidebarOverlay {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Botão de fechar dentro da sidebar, se existir no HTML */
+.sidebar-close,
+.close-sidebar,
+#sidebarClose {
+  display: none;
+}
+
+/* Desktop */
+@media (min-width: 1181px) {
+  .app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-w, 290px) minmax(0, 1fr);
+  }
+
+  .sidebar {
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    transform: none !important;
+  }
+
+  .mobile-overlay,
+  .sidebar-overlay,
+  #mobileOverlay,
+  #sidebarOverlay {
+    display: none !important;
+  }
+}
+
+/* Notebook */
+@media (max-width: 1366px) {
+  :root {
+    --sidebar-w: 270px;
+  }
+
+  .sidebar {
+    padding: 22px 16px;
+  }
+
+  .brand-logo {
+    max-width: 138px;
+  }
+
+  .nav-link,
+  .nav-button {
+    min-height: 48px;
+    padding: 13px 14px;
+    font-size: 15px;
+  }
+
+  .main {
+    padding: 22px;
+  }
+
+  .topbar {
+    margin: -22px -22px 0;
+    padding: 16px 22px;
+  }
+}
+
+/* Tablet / mobile: sidebar vira menu lateral */
+@media (max-width: 1180px) {
+  .app-shell {
+    display: block;
+    min-height: 100vh;
+  }
+
+  .menu-btn,
+  .sidebar-toggle,
+  .mobile-menu-btn,
+  #menuBtn,
+  #sidebarToggle,
+  #mobileMenuBtn {
+    display: inline-grid !important;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0;
+    width: var(--sidebar-mobile-w, min(88vw, 330px));
+    max-width: 330px;
+    height: 100dvh;
+    max-height: 100dvh;
+    padding: 22px 16px;
+    transform: translateX(-112%);
+    transition: transform .25s ease;
+    z-index: 1000;
+    overflow-y: auto;
+    box-shadow: 20px 0 50px rgba(16, 20, 13, .22);
+  }
+
+  .sidebar.open,
+  .sidebar.is-open,
+  .sidebar.active,
+  body.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+
+  .sidebar-close,
+  .close-sidebar,
+  #sidebarClose {
+    display: grid;
+    place-items: center;
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 38px;
+    height: 38px;
+    border: 0;
+    border-radius: 12px;
+    background: rgba(255,255,255,.16);
+    color: #fff;
+    font-size: 22px;
+    cursor: pointer;
+  }
+
+  .brand-wrap {
+    padding-right: 42px;
+  }
+
+  .main {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .topbar {
+    align-items: center;
+  }
+
+  .content-grid,
+  .coop-users-layout {
+    grid-template-columns: 1fr !important;
+  }
+
+  .filters-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .kpi-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .permissions-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  table {
+    min-width: 900px;
+  }
+}
+
+/* Tablet vertical */
+@media (max-width: 900px) {
+  .topbar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .topbar > :first-child,
+  .topbar-left {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .topbar-right {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    gap: 8px;
+  }
+
+  .status-pill {
+    width: 100%;
+    min-width: 0;
+    justify-content: flex-start;
+    box-shadow: none;
+  }
+
+  .hero-card h1 {
+    font-size: clamp(30px, 7vw, 36px);
+    line-height: 1;
+  }
+
+  .panel-head {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .panel-actions {
+    width: 100%;
+  }
+
+  .panel-actions .btn {
+    flex: 1 1 180px;
+  }
+
+  .modal-grid,
+  .modal-grid-3 {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-dialog {
+    width: min(940px, calc(100vw - 24px));
+    margin: 12px auto;
+    max-height: calc(100dvh - 24px);
+  }
+}
+
+/* Celular */
+@media (max-width: 680px) {
+  :root {
+    --radius: 18px;
+    --sidebar-mobile-w: min(92vw, 320px);
+  }
+
+  .main {
+    padding: 14px;
+    gap: 14px;
+  }
+
+  .topbar {
+    margin: -14px -14px 0;
+    padding: 12px 14px;
+  }
+
+  .menu-btn,
+  .sidebar-toggle,
+  .mobile-menu-btn,
+  #menuBtn,
+  #sidebarToggle,
+  #mobileMenuBtn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+    border-radius: 13px;
+  }
+
+  .sidebar {
+    padding: 20px 15px;
+  }
+
+  .brand-logo {
+    max-width: 124px;
+  }
+
+  .nav-label {
+    font-size: 11px;
+  }
+
+  .nav-link,
+  .nav-button {
+    min-height: 48px;
+    border-radius: 16px;
+    font-size: 15px;
+  }
+
+  .hero-card,
+  .notice-banner,
+  .panel-card,
+  .filters-card,
+  .kpi-card {
+    padding: 16px;
+    border-radius: 18px;
+  }
+
+  .kpi-grid,
+  .filters-grid,
+  .map-stats,
+  .permissions-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-right {
+    grid-template-columns: 1fr;
+  }
+
+  .status-pill {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .hero-card h1 {
+    font-size: 28px;
+  }
+
+  .hero-card p,
+  .notice-banner,
+  .field label,
+  .field input,
+  .field select,
+  .field textarea {
+    font-size: 15px;
+  }
+
+  .panel-head h2 {
+    font-size: 24px;
+  }
+
+  .kpi-value {
+    font-size: 34px;
+  }
+
+  .user-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-main strong,
+  .coop-user-card-top strong {
+    font-size: 20px;
+  }
+
+  .user-actions,
+  .table-actions,
+  .modal-actions,
+  .modal-actions-left,
+  .modal-actions-right {
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .user-actions .btn,
+  .table-actions .btn,
+  .modal-actions-left .btn,
+  .modal-actions-right .btn,
+  .field-btn,
+  .field-btn .btn {
+    width: 100%;
+  }
+
+  #usersMap {
+    height: 330px;
+  }
+
+  .table-wrap {
+    border-radius: 16px;
+  }
+
+  table {
+    min-width: 760px;
+  }
+
+  th,
+  td {
+    padding: 12px 10px;
+  }
+
+  .modal-head {
+    padding: 16px 16px 0;
+  }
+
+  .modal-body {
+    padding: 16px;
+  }
+
+  .modal-actions {
+    padding: 0 16px 16px;
+  }
+
+  .modal-head h3 {
+    font-size: 24px;
+  }
+}
+
+/* Celular pequeno */
+@media (max-width: 390px) {
+  .main {
+    padding: 10px;
+  }
+
+  .topbar {
+    margin: -10px -10px 0;
+    padding: 10px;
+  }
+
+  .hero-card,
+  .notice-banner,
+  .panel-card,
+  .filters-card,
+  .kpi-card {
+    padding: 14px;
+  }
+
+  .hero-card h1 {
+    font-size: 25px;
+  }
+
+  .panel-head h2 {
+    font-size: 22px;
+  }
+
+  .btn {
+    padding: 11px 13px;
+  }
+
+  #usersMap {
+    height: 300px;
+  }
+}

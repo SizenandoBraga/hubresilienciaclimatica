@@ -141,8 +141,6 @@ function toNumberOrNull(value) {
 
   if (!Number.isFinite(n)) return null;
 
-  // Corrige latitude/longitude salvas sem ponto decimal.
-  // Exemplo: -5113316456181438 vira -51.13316456181438
   if (Math.abs(n) > 180) {
     const sign = n < 0 ? -1 : 1;
     const digits = String(Math.abs(Math.trunc(n)));
@@ -289,7 +287,6 @@ function routeShiftLabel(value) {
 
 function getTerritoryPageUrl(user) {
   const territory = normalizeTerritory(user?.territoryId || getMyTerritoryId());
-
   const code = encodeURIComponent(user?.code || user?.participantCode || "");
 
   if (territory === "vila-pinto") {
@@ -389,10 +386,9 @@ function ensureTableHeaderForLabels() {
 }
 
 function loadQRCodeLib() {
-  // Mantido por compatibilidade com chamadas antigas.
-  // A etiqueta usa QRCode via URL de imagem, sem depender de biblioteca externa.
   return Promise.resolve();
 }
+
 function generateLabelHtml(user, qrUrl, targetUrl) {
   return `
     <section class="label-card">
@@ -1636,6 +1632,7 @@ async function upsertParticipantFromApprovedRequest(user) {
 
   await setDoc(doc(db, "participants", participantId), payload, { merge: true });
 }
+
 async function approveUser(userId) {
   if (!canManageApprovals()) {
     alert("Seu perfil não tem permissão para aprovar participantes.");
@@ -1989,10 +1986,40 @@ function renderAll() {
 }
 
 /* =========================
+MENU LATERAL RESPONSIVO
+========================= */
+
+function openSidebarMenu() {
+  document.querySelector(".sidebar")?.classList.add("open");
+  document.getElementById("mobileOverlay")?.classList.add("show");
+  document.body.classList.add("sidebar-open");
+}
+
+function closeSidebarMenu() {
+  document.querySelector(".sidebar")?.classList.remove("open");
+  document.getElementById("mobileOverlay")?.classList.remove("show");
+  document.body.classList.remove("sidebar-open");
+}
+
+/* =========================
 EVENTOS
 ========================= */
 
 function bindEvents() {
+  document.getElementById("menuBtn")?.addEventListener("click", openSidebarMenu);
+  document.getElementById("sidebarClose")?.addEventListener("click", closeSidebarMenu);
+  document.getElementById("mobileOverlay")?.addEventListener("click", closeSidebarMenu);
+
+  document.querySelectorAll(".sidebar .nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 1180) closeSidebarMenu();
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 1180) closeSidebarMenu();
+  });
+
   els.searchInput?.addEventListener("input", applyFilters);
   els.statusFilter?.addEventListener("change", applyFilters);
   els.operationFilter?.addEventListener("change", applyFilters);
@@ -2069,6 +2096,13 @@ function bindEvents() {
   els.coopUserForm?.addEventListener("submit", async (event) => {
     event.preventDefault();
     await createCoopUserRecord();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeSidebarMenu();
+      closeUserModal();
+    }
   });
 }
 
