@@ -2,5 +2,8 @@
   "dependencies": {
     "firebase-admin": "^13.8.0",
     "leaflet": "^1.9.4"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.2.4"
   }
 }
