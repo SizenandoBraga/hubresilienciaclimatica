@@ -1718,3 +1718,930 @@ body.modal-open {
   }
 }
 
+
+/* =========================================================
+   RESPONSIVO FINAL REFORÇADO - DASHBOARD COOPERATIVA
+   ---------------------------------------------------------
+   Mantém o visual original e melhora adaptação em:
+   - notebooks
+   - tablets
+   - celulares
+   - tabelas largas
+   - mapas e gráficos
+   ========================================================= */
+
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.shell,
+.main,
+.sidebar,
+.top,
+.panel,
+.panel-inner,
+.side-inner,
+.table-section-pro,
+.table-with-label-layout,
+.table-only-layout,
+.route-map-wrap,
+.canvas-wrap,
+.chart-card {
+  min-width: 0;
+}
+
+/* Evita estouro horizontal causado por textos, cards e pills */
+.title,
+.hgroup,
+.summary-card-copy,
+.material-card,
+.point-card,
+.route-summary-card,
+.read-box,
+.pill,
+.btn,
+.mini-btn,
+.action-btn,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+.title h1,
+.hgroup h2,
+.brand strong,
+.mat-name,
+.reject-name,
+.other-title,
+.point-card h4 {
+  overflow-wrap: anywhere;
+}
+
+/* Botão laranja usado no HTML */
+.btn-orange {
+  color: #fff;
+  background: linear-gradient(135deg, var(--orange), #f49a62);
+  box-shadow: 0 16px 30px rgba(239, 107, 34, .24);
+}
+
+.btn-orange:hover {
+  box-shadow: 0 18px 34px rgba(239, 107, 34, .28);
+}
+
+.mini-btn-green {
+  color: #fff;
+  background: linear-gradient(135deg, var(--green), #96ca44);
+  box-shadow: 0 16px 30px rgba(129, 185, 42, .24);
+}
+
+.pill-orange {
+  border-color: rgba(239, 107, 34, .22);
+  background: rgba(239, 107, 34, .10);
+  color: var(--orange);
+}
+
+.pill-orange .b {
+  background: var(--orange);
+  box-shadow: 0 0 0 5px rgba(239, 107, 34, .16);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chip-orange {
+  color: var(--orange);
+  background: rgba(239, 107, 34, .10);
+  border: 1px solid rgba(239, 107, 34, .18);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* =========================
+   DESKTOP INTERMEDIÁRIO
+========================= */
+
+@media (max-width: 1600px) {
+  .shell {
+    grid-template-columns: 315px minmax(0, 1fr);
+    gap: 20px;
+    padding: 20px;
+  }
+
+  .title h1 {
+    font-size: 42px;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .project-summary-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .material-cards {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .route-layout {
+    grid-template-columns: minmax(0, 1.3fr) 360px;
+  }
+}
+
+@media (max-width: 1360px) {
+  .shell {
+    grid-template-columns: 290px minmax(0, 1fr);
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .side-inner,
+  .panel-inner {
+    padding: 14px;
+  }
+
+  .top-inner {
+    padding: 20px 20px 12px;
+  }
+
+  .kpis {
+    padding: 0 20px 20px;
+  }
+
+  .title h1 {
+    font-size: 38px;
+  }
+
+  .project-summary-grid,
+  .material-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .summary-card.wide {
+    grid-column: span 2;
+  }
+
+  .charts-grid-2x2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .route-layout {
+    grid-template-columns: 1fr;
+  }
+
+  #collectionRouteMap {
+    min-height: 500px;
+  }
+
+  .collection-points-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-height: none;
+  }
+}
+
+/* =========================
+   TABLET / NOTEBOOK PEQUENO
+========================= */
+
+@media (max-width: 1180px) {
+  body {
+    background:
+      radial-gradient(850px 520px at 15% 5%, rgba(83, 172, 222, .10), transparent 58%),
+      radial-gradient(760px 500px at 85% 10%, rgba(129, 185, 42, .09), transparent 58%),
+      linear-gradient(180deg, #fcfcfb 0%, var(--bg) 100%);
+  }
+
+  .shell {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 18px;
+    padding: 18px;
+  }
+
+  .sidebar {
+    position: relative;
+    top: auto;
+    max-height: none;
+    overflow: visible;
+    order: 1;
+  }
+
+  .main {
+    order: 2;
+  }
+
+  .side-inner {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+  }
+
+  .top-inner {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .title {
+    min-width: 0;
+  }
+
+  .top-actions {
+    width: 100%;
+  }
+
+  .top-actions > * {
+    flex: 1 1 180px;
+    justify-content: center;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .charts-grid-2x2,
+  .reject-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .table-filters-pro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .table-filter-field.search,
+  .table-filter-actions {
+    grid-column: 1 / -1;
+  }
+
+  .table-filter-field.search {
+    min-width: 0;
+  }
+
+  .table-filter-actions .btn {
+    flex: 1 1 180px;
+  }
+
+  #collectionRouteMap {
+    min-height: 460px;
+  }
+}
+
+/* =========================
+   TABLET VERTICAL
+========================= */
+
+@media (max-width: 900px) {
+  .bg-grid {
+    opacity: .08;
+  }
+
+  .noise,
+  .cursor-glow {
+    display: none;
+  }
+
+  .shell {
+    gap: 16px;
+    padding: 14px;
+  }
+
+  .sidebar,
+  .top,
+  .panel {
+    border-radius: 22px;
+  }
+
+  .side-inner {
+    grid-template-columns: 1fr;
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .side-section {
+    margin-top: 0;
+  }
+
+  .brand {
+    padding: 12px;
+  }
+
+  .brand-logo-wrap {
+    width: 52px;
+    height: 52px;
+  }
+
+  .brand strong {
+    font-size: 18px;
+  }
+
+  .top-inner {
+    padding: 18px 18px 10px;
+  }
+
+  .title h1 {
+    font-size: 34px;
+  }
+
+  .title p {
+    font-size: 13.5px;
+    line-height: 1.6;
+  }
+
+  .top-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .top-actions > *,
+  .pill,
+  .mini-btn {
+    width: 100%;
+  }
+
+  .kpis {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 0 18px 18px;
+  }
+
+  .kpi {
+    min-height: auto;
+    padding: 16px;
+  }
+
+  .kvalue {
+    font-size: 34px;
+  }
+
+  .panel-inner {
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .panel-head {
+    align-items: flex-start;
+  }
+
+  .hgroup h2 {
+    font-size: 27px;
+  }
+
+  .project-summary-grid,
+  .material-cards,
+  .table-summary-cards,
+  .collection-points-grid,
+  .materials-edit-grid,
+  .collection-details-fields {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card.wide {
+    grid-column: auto;
+  }
+
+  .summary-card {
+    min-height: auto;
+  }
+
+  .summary-card-value {
+    font-size: 36px;
+  }
+
+  .material-card {
+    min-height: 205px;
+  }
+
+  .reject-card,
+  .other-card {
+    padding: 18px;
+  }
+
+  .reject-value {
+    font-size: 38px;
+  }
+
+  .reject-kg,
+  .other-value {
+    font-size: 24px;
+  }
+
+  .canvas-wrap,
+  .canvas-wrap.medium {
+    min-height: 300px;
+    padding: 10px;
+  }
+
+  .canvas-wrap canvas,
+  .canvas-wrap.medium canvas {
+    height: 260px !important;
+  }
+
+  #collectionRouteMap {
+    min-height: 410px;
+  }
+
+  .table-filters-pro {
+    grid-template-columns: 1fr;
+  }
+
+  .table-filter-field.search,
+  .table-filter-actions {
+    grid-column: auto;
+  }
+
+  .table-filter-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .table-wrap-pro {
+    border-radius: 18px;
+  }
+
+  .table-pro {
+    min-width: 760px;
+  }
+
+  .modal-card,
+  .modal-photo,
+  .modal-card-collection-details {
+    width: calc(100vw - 24px);
+    max-height: calc(100vh - 24px);
+    margin: 12px auto;
+  }
+}
+
+/* =========================
+   CELULAR
+========================= */
+
+@media (max-width: 640px) {
+  body {
+    background: #f8f8f4;
+  }
+
+  .shell {
+    gap: 12px;
+    padding: 10px;
+  }
+
+  .sidebar,
+  .top,
+  .panel {
+    border-radius: 18px;
+    box-shadow: 0 10px 24px rgba(60, 58, 57, .06);
+  }
+
+  .sidebar::before,
+  .top::before,
+  .panel::before {
+    opacity: .45;
+  }
+
+  .side-inner,
+  .panel-inner {
+    padding: 12px;
+  }
+
+  .brand {
+    align-items: flex-start;
+    border-radius: 16px;
+  }
+
+  .brand-logo-wrap {
+    width: 46px;
+    height: 46px;
+  }
+
+  .brand strong {
+    font-size: 16px;
+  }
+
+  .brand span {
+    font-size: 11.5px;
+  }
+
+  .side-section {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .side-section h3 {
+    align-items: flex-start;
+    font-size: 13.5px;
+  }
+
+  .field {
+    margin-top: 9px;
+  }
+
+  input,
+  select,
+  textarea,
+  .read-box {
+    padding: 11px 12px;
+    font-size: 13px;
+  }
+
+  .row2,
+  .quick-participant-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .btn,
+  .mini-btn,
+  .action-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .top-inner {
+    padding: 14px 14px 8px;
+  }
+
+  .eyebrow {
+    font-size: 11px;
+  }
+
+  .title h1 {
+    font-size: 29px;
+    line-height: 1;
+  }
+
+  .title p {
+    font-size: 13px;
+  }
+
+  .top-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .pill {
+    justify-content: center;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .kpis {
+    grid-template-columns: 1fr;
+    padding: 0 14px 14px;
+  }
+
+  .kpi {
+    border-radius: 18px;
+  }
+
+  .kpi-head {
+    align-items: flex-start;
+  }
+
+  .klabel {
+    line-height: 1.25;
+  }
+
+  .kvalue {
+    font-size: 32px;
+  }
+
+  .hgroup h2 {
+    font-size: 24px;
+  }
+
+  .hgroup p {
+    font-size: 13px;
+  }
+
+  .summary-card {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr);
+    gap: 12px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .summary-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 14px;
+    font-size: 20px;
+  }
+
+  .summary-card-label {
+    font-size: 11.5px;
+  }
+
+  .summary-card-value {
+    font-size: 31px;
+  }
+
+  .summary-card-sub {
+    font-size: 12.5px;
+  }
+
+  .material-cards {
+    gap: 12px;
+  }
+
+  .material-card {
+    min-height: 190px;
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .material-top {
+    align-items: flex-start;
+  }
+
+  .professional-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 16px;
+  }
+
+  .professional-icon svg {
+    width: 34px;
+    height: 34px;
+  }
+
+  .mat-logo {
+    width: 38px;
+    height: 38px;
+    flex-basis: 38px;
+  }
+
+  .mat-name {
+    font-size: 23px;
+  }
+
+  .mat-kg {
+    font-size: 20px;
+  }
+
+  .mat-pct {
+    max-width: none;
+    font-size: 12px;
+    padding: 6px 8px;
+  }
+
+  .reject-grid {
+    gap: 12px;
+  }
+
+  .reject-name,
+  .other-title {
+    font-size: 22px;
+  }
+
+  .reject-value {
+    font-size: 34px;
+  }
+
+  .chart-card {
+    padding: 12px;
+    border-radius: 18px;
+  }
+
+  .chart-title {
+    font-size: 21px;
+  }
+
+  .canvas-wrap,
+  .canvas-wrap.medium {
+    min-height: 260px;
+  }
+
+  .canvas-wrap canvas,
+  .canvas-wrap.medium canvas {
+    height: 230px !important;
+  }
+
+  #collectionRouteMap {
+    min-height: 340px;
+    border-radius: 18px;
+  }
+
+  .route-summary-card,
+  .point-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .route-summary-title,
+  .point-card h4 {
+    font-size: 21px;
+  }
+
+  .point-meta {
+    gap: 6px;
+  }
+
+  .point-chip {
+    font-size: 11.5px;
+  }
+
+  .mini-summary-card {
+    padding: 13px;
+    border-radius: 16px;
+  }
+
+  .mini-summary-card strong {
+    font-size: 25px;
+  }
+
+  .table-filters-pro {
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .table-pro {
+    min-width: 680px;
+  }
+
+  .table-pro thead th,
+  .table-pro tbody td {
+    padding: 11px 10px;
+    font-size: 12px;
+  }
+
+  .status-badge {
+    min-width: 76px;
+    padding: 5px 8px;
+    font-size: 11.5px;
+  }
+
+  .modal-card,
+  .modal-photo,
+  .modal-card-collection-details {
+    width: calc(100vw - 16px);
+    max-height: calc(100vh - 16px);
+    margin: 8px auto;
+    border-radius: 18px;
+  }
+
+  .modal-head,
+  .modal-body,
+  .modal-form {
+    padding: 14px;
+  }
+
+  .modal-head h3 {
+    font-size: 24px;
+    padding-right: 38px;
+  }
+
+  .modal-close {
+    top: 8px;
+    right: 8px;
+    width: 34px;
+    height: 34px;
+  }
+
+  .modal-body-scroll {
+    max-height: calc(100vh - 140px);
+    padding: 14px;
+  }
+
+  .foot {
+    padding: 8px 4px;
+    font-size: 11.5px;
+  }
+}
+
+/* =========================
+   CELULAR PEQUENO
+========================= */
+
+@media (max-width: 420px) {
+  .shell {
+    padding: 8px;
+  }
+
+  .sidebar,
+  .top,
+  .panel {
+    border-radius: 16px;
+  }
+
+  .side-inner,
+  .panel-inner {
+    padding: 10px;
+  }
+
+  .brand {
+    gap: 9px;
+    padding: 10px;
+  }
+
+  .brand-logo-wrap {
+    width: 42px;
+    height: 42px;
+  }
+
+  .brand strong {
+    font-size: 15px;
+  }
+
+  .brand span {
+    display: none;
+  }
+
+  .side-section {
+    padding: 10px;
+  }
+
+  .top-inner {
+    padding: 12px 12px 8px;
+  }
+
+  .title h1 {
+    font-size: 26px;
+  }
+
+  .title p {
+    font-size: 12.5px;
+  }
+
+  .kpis {
+    padding: 0 12px 12px;
+  }
+
+  .kpi {
+    padding: 13px;
+  }
+
+  .kvalue {
+    font-size: 29px;
+  }
+
+  .hgroup h2 {
+    font-size: 22px;
+  }
+
+  .summary-card {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card-icon {
+    width: 42px;
+    height: 42px;
+  }
+
+  .summary-card-value {
+    font-size: 29px;
+  }
+
+  .material-card {
+    min-height: 180px;
+  }
+
+  .material-top {
+    flex-wrap: wrap;
+  }
+
+  .material-top .icon-group + .mat-pct {
+    margin-left: 0;
+  }
+
+  .mat-pct {
+    width: 100%;
+  }
+
+  .canvas-wrap,
+  .canvas-wrap.medium {
+    min-height: 230px;
+    padding: 8px;
+  }
+
+  .canvas-wrap canvas,
+  .canvas-wrap.medium canvas {
+    height: 205px !important;
+  }
+
+  #collectionRouteMap {
+    min-height: 300px;
+  }
+
+  .table-pro {
+    min-width: 620px;
+  }
+}
