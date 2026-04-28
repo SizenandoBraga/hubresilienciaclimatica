@@ -9,7 +9,41 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            archivo: ['Archivo Condensed', 'sans-serif']
+          },
+          colors: {
+            nsru: {
+              green: '#81B92A',
+              greenDark: '#5f8d19',
+              greenSoft: '#edf6df',
+              orange: '#EF6B22',
+              orangeDark: '#c95518',
+              orangeSoft: '#fff0e7',
+              blue: '#53ACDE',
+              blueDark: '#2f88ba',
+              blueSoft: '#eaf6fc',
+              black: '#3C3A39',
+              black2: '#575351',
+              soft: '#6c6764',
+              bg: '#f5f6f0'
+            }
+          },
+          boxShadow: {
+            soft: '0 8px 24px rgba(60, 58, 57, 0.08)',
+            strong: '0 18px 40px rgba(60, 58, 57, 0.10)'
+          }
+        }
+      }
+    }
+  </script>
 
   <link
     rel="stylesheet"
@@ -18,9 +52,52 @@
     crossorigin=""
   />
 
-  <link rel="stylesheet" href="cooperativas.css" />
+  <style>
+    html { scroll-behavior: smooth; }
+    body { font-family: 'Archivo Condensed', sans-serif; -webkit-text-size-adjust: 100%; }
+    .mobile-overlay.show { opacity: 1; pointer-events: auto; }
+    .sidebar.open { transform: translateX(0); }
+    .access-banner.show { display: block; }
+    .territory-tab-content { display: none; }
+    .territory-tab-content.active { display: block; }
+    .territory-tab.active { background: #81B92A; color: #fff; border-color: #81B92A; }
+    .territory-tab-special.active { background: #EF6B22; border-color: #EF6B22; }
+    #territoryMap { width: 100%; height: clamp(280px, 50vh, 520px); border-radius: 18px; overflow: hidden; }
+    @media (max-width: 720px) { #territoryMap { height: 350px; } }
+    @media (max-width: 390px) { #territoryMap { height: 310px; } }
+
+    /* Compatibilidade para elementos criados dinamicamente pelo cooperativas-territorio.js */
+    .hidden { display: none !important; }
+    .info-list, .territory-list, .participants-list, .map-points-list { display: grid; gap: 12px; }
+    .info-item { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; border:1px solid rgba(60,58,57,.08); border-radius:18px; background:#fafaf8; padding:14px; }
+    .info-copy { display:flex; flex-direction:column; gap:4px; }
+    .info-copy strong { font-size:18px; }
+    .info-copy span { font-size:.95rem; line-height:1.5; color:#6c6764; }
+    .info-meta { flex-shrink:0; font-size:13px; font-weight:800; color:#2f88ba; background:#eaf6fc; padding:6px 10px; border-radius:999px; }
+    .participant-row { display:flex; align-items:center; justify-content:space-between; gap:16px; background:#fff; border:1px solid rgba(60,58,57,.08); border-radius:20px; padding:16px; }
+    .participant-main { display:flex; align-items:center; gap:14px; min-width:0; }
+    .participant-avatar { width:48px; height:48px; border-radius:16px; background:#edf6df; display:grid; place-items:center; font-size:22px; flex-shrink:0; }
+    .participant-copy { display:flex; flex-direction:column; gap:4px; min-width:0; }
+    .participant-copy strong { font-size:18px; }
+    .participant-copy span { font-size:.95rem; line-height:1.5; color:#6c6764; overflow-wrap:anywhere; }
+    .participant-meta { display:flex; flex-direction:column; gap:8px; align-items:flex-end; flex-shrink:0; }
+    .participant-tag, .participant-subtag { display:inline-flex; align-items:center; min-height:28px; padding:0 10px; border-radius:999px; font-size:13px; font-weight:800; }
+    .participant-tag { background:#edf6df; color:#5f8d19; }
+    .participant-subtag { background:#eaf6fc; color:#2f88ba; }
+    .participants-empty { padding:18px; border-radius:18px; background:#fafaf8; border:1px dashed rgba(60,58,57,.14); color:#6c6764; font-size:16px; }
+    .map-point-card { border:1px solid rgba(60,58,57,.08); border-radius:16px; background:#fafaf8; padding:12px; display:grid; gap:6px; }
+    .map-point-card strong { font-size:16px; }
+    .map-point-card span { font-size:14px; color:#6c6764; line-height:1.35; }
+    .map-point-card-actions { display:flex; gap:8px; margin-top:4px; }
+    .map-mini-btn { min-height:34px; padding:0 12px; border:0; border-radius:12px; cursor:pointer; font-weight:800; }
+    .map-mini-btn.green { background:#edf6df; color:#5f8d19; }
+    .map-mini-btn.orange { background:#fff0e7; color:#c95518; }
+    .coop-nav-btn-update.is-loading { opacity:.7; pointer-events:none; }
+    @media (max-width:720px){ .info-item,.participant-row{ flex-direction:column; align-items:flex-start; } .participant-main{ align-items:flex-start; width:100%; } .participant-meta{ align-items:flex-start; flex-direction:row; flex-wrap:wrap; } }
+  </style>
 </head>
 <body
+  class="bg-nsru-bg text-nsru-black overflow-x-hidden"
   data-territory-id="crgr_vila_pinto"
   data-territory-label="Centro de Triagem Vila Pinto"
   data-cooperative-name="Vila Pinto"
@@ -30,429 +107,292 @@
   data-map-lng="-51.15652604283108"
   data-map-zoom="15"
 >
-  <div class="coop-bg"></div>
-  <div class="coop-noise"></div>
-  <div class="mobile-overlay" id="mobileOverlay"></div>
+  <div class="mobile-overlay fixed inset-0 z-[999] bg-nsru-black/40 opacity-0 pointer-events-none transition duration-200" id="mobileOverlay"></div>
 
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-top">
-        <a class="brand" href="index.html" aria-label="Ir para a página inicial">
-          <div class="brand-mark">
-            <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
-          </div>
-        </a>
-
-        
-      </div>
-
-      <nav class="sidebar-nav">
-        <div class="nav-label">Menu</div>
-
-        <a class="nav-link active" href="cooperativa-vila-pinto.html">
-          <span class="nav-ico">🏠</span>
-          <span>Painel inicial</span>
-        </a>
-
-        <a class="nav-link admin-only" href="usuarios.html">
-          <span class="nav-ico">👥</span>
-          <span>Gestão de Participantes</span>
-        </a>
-         <a class="nav-link admin-only" href="user-cooperativa.html">
-          <span class="nav-ico">👥</span>
-          <span>Gestão de Usuários</span>
-        </a>
-
-        <a class="nav-link" href="cadastro-coletas-vila-pinto.html">
-          <span class="nav-ico">♻️</span>
-          <span>Registro de coletas</span>
-        </a>
-
-        <a class="nav-link" href="dashboard-cooperativa.html">
-          <span class="nav-ico">📊</span>
-          <span>Dashboard da cooperativa</span>
-        </a>
-
-        <a class="nav-link" href="conteudos.html">
-          <span class="nav-ico">📚</span>
-          <span>Conteúdos</span>
-        </a>
-
-        <a class="nav-link" href="documentos.html">
-          <span class="nav-ico">📄</span>
-          <span>Documentos</span>
-        </a>
-
-        <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
-          Atualizar indicadores da cooperativa
-        </button>
-
-        <div class="coop-sync-box">
-          <span class="coop-sync-label">Indicadores públicos da cooperativa</span>
-          <small id="syncCoopDashboardStatus">Aguardando verificação...</small>
-        </div>
-
-        <div class="nav-label nav-label-space">Sessão</div>
-
-        <a class="nav-link" href="index.html" id="logoutLink">
-          <span class="nav-ico">↩</span>
-          <span>Sair</span>
-        </a>
-      </nav>
-
-      <div class="sidebar-help">
-        <p id="sidebarHelpText">
-          Área vinculada à cooperativa logada. Os dados são filtrados automaticamente conforme o perfil do usuário.
-        </p>
-      </div>
-    </aside>
-
-    <div class="content-area">
-      <header class="topbar">
-        <div class="topbar-left">
-          <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
-
-          <a class="topbar-brand" href="index.html">
-            <div class="topbar-brand-mark">
-              <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
-            </div>
-            <div class="topbar-brand-copy">
-              <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-              <span>Plataforma • Cooperativas</span>
+  <div class="min-h-screen lg:grid lg:grid-cols-[270px_minmax(0,1fr)] 2xl:grid-cols-[290px_minmax(0,1fr)]">
+    <aside id="sidebar" class="sidebar fixed inset-y-0 left-0 z-[1000] flex h-screen w-[min(92vw,320px)] -translate-x-[110%] flex-col justify-between overflow-y-auto bg-nsru-green px-4 py-5 text-white transition-transform duration-300 lg:sticky lg:top-0 lg:w-auto lg:translate-x-0 lg:px-4 lg:py-6 2xl:px-5">
+      <div>
+        <div class="flex flex-col items-center gap-5 pb-3">
+          <a class="brand flex justify-center" href="index.html" aria-label="Ir para a página inicial">
+            <div class="brand-mark w-[120px] lg:w-[135px] 2xl:w-[160px]">
+              <img class="h-auto w-full object-contain" src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
             </div>
           </a>
         </div>
 
-        <div class="topbar-right">
-          <div class="topbar-pill topbar-territory">
-            <span class="dot"></span>
-            <span id="territoryNameTop">Vila Pinto</span>
+        <nav class="sidebar-nav mt-3 flex flex-col gap-3">
+          <div class="mx-2 mt-1 text-xs font-extrabold uppercase tracking-wider text-white/80">Menu</div>
+
+          <a class="nav-link active flex min-h-[46px] items-center gap-3 rounded-[18px] bg-white/25 px-4 py-3 text-sm font-bold text-white shadow-inner transition hover:-translate-y-0.5 hover:bg-white/25 lg:text-[15px] 2xl:text-base" href="cooperativa-vila-pinto.html">
+            <span class="w-6 shrink-0 text-center text-lg">🏠</span><span>Painel inicial</span>
+          </a>
+
+          <a class="nav-link admin-only flex min-h-[46px] items-center gap-3 rounded-[18px] bg-nsru-orange px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-nsru-orangeDark lg:text-[15px] 2xl:text-base" href="usuarios.html">
+            <span class="w-6 shrink-0 text-center text-lg">👥</span><span>Gestão de Participantes</span>
+          </a>
+
+          <a class="nav-link admin-only flex min-h-[46px] items-center gap-3 rounded-[18px] bg-nsru-orange px-4 py-3 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:bg-nsru-orangeDark lg:text-[15px] 2xl:text-base" href="user-cooperativa.html">
+            <span class="w-6 shrink-0 text-center text-lg">👥</span><span>Gestão de Usuários</span>
+          </a>
+
+          <a class="nav-link flex min-h-[46px] items-center gap-3 rounded-[18px] bg-white/15 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/25 lg:text-[15px] 2xl:text-base" href="cadastro-coletas-vila-pinto.html">
+            <span class="w-6 shrink-0 text-center text-lg">♻️</span><span>Registro de coletas</span>
+          </a>
+
+          <a class="nav-link flex min-h-[46px] items-center gap-3 rounded-[18px] bg-white/15 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/25 lg:text-[15px] 2xl:text-base" href="dashboard-cooperativa.html">
+            <span class="w-6 shrink-0 text-center text-lg">📊</span><span>Dashboard da cooperativa</span>
+          </a>
+
+          <a class="nav-link flex min-h-[46px] items-center gap-3 rounded-[18px] bg-white/15 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/25 lg:text-[15px] 2xl:text-base" href="conteudos.html">
+            <span class="w-6 shrink-0 text-center text-lg">📚</span><span>Conteúdos</span>
+          </a>
+
+          <a class="nav-link flex min-h-[46px] items-center gap-3 rounded-[18px] bg-white/15 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/25 lg:text-[15px] 2xl:text-base" href="documentos.html">
+            <span class="w-6 shrink-0 text-center text-lg">📄</span><span>Documentos</span>
+          </a>
+
+          <button class="coop-nav-btn coop-nav-btn-update min-h-[46px] w-full rounded-2xl border-0 bg-[#62B32F] px-4 font-extrabold text-white transition hover:brightness-95" id="syncCoopDashboardBtn" type="button">
+            Atualizar indicadores da cooperativa
+          </button>
+
+          <div class="rounded-2xl border border-white/20 bg-black/10 px-4 py-3">
+            <span class="block text-xs font-extrabold uppercase tracking-wide text-white/90">Indicadores públicos da cooperativa</span>
+            <small id="syncCoopDashboardStatus" class="mt-1 block text-xs leading-snug text-white/90">Aguardando verificação...</small>
           </div>
 
-          <div class="topbar-pill coop-pill">
-            <span>🏭</span>
-            <span id="cooperativeNameTop">Vila Pinto</span>
-          </div>
+          <div class="mx-2 mt-3 text-xs font-extrabold uppercase tracking-wider text-white/80">Sessão</div>
 
-          <div class="topbar-pill role-pill" id="rolePill">
-            <span>🔐</span>
-            <span id="roleNameTop">Perfil</span>
-          </div>
+          <a class="nav-link flex min-h-[46px] items-center gap-3 rounded-[18px] bg-white/15 px-4 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:bg-white/25 lg:text-[15px] 2xl:text-base" href="index.html" id="logoutLink">
+            <span class="w-6 shrink-0 text-center text-lg">↩</span><span>Sair</span>
+          </a>
+        </nav>
+      </div>
 
-          <div class="topbar-pill user-pill">
-            <span class="user-icon">👤</span>
-            <span id="userNameTop">Usuário</span>
+      <div class="mt-5 rounded-[18px] bg-black/15 p-4 text-[15px] leading-snug text-white">
+        <p id="sidebarHelpText" class="m-0">Área vinculada à cooperativa logada. Os dados são filtrados automaticamente conforme o perfil do usuário.</p>
+      </div>
+    </aside>
+
+    <div class="min-w-0">
+      <header class="sticky top-0 z-[900] flex flex-col gap-3 border-b border-black/10 bg-white/95 px-4 py-3 backdrop-blur lg:flex-row lg:items-center lg:justify-between lg:px-6">
+        <div class="flex min-w-0 items-center justify-between gap-3 lg:justify-start">
+          <button class="menu-btn grid h-10 w-10 shrink-0 place-items-center rounded-xl border-0 bg-nsru-green text-xl font-extrabold text-white lg:hidden" id="menuBtn" aria-label="Abrir menu">☰</button>
+
+          <a class="flex min-w-0 items-center gap-3" href="index.html">
+            <div class="grid h-10 w-10 shrink-0 place-items-center overflow-hidden rounded-2xl bg-nsru-greenSoft md:h-12 md:w-12">
+              <img class="w-7 md:w-9" src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
+            </div>
+            <div class="min-w-0 flex-col gap-0.5 hidden xs:flex sm:flex">
+              <strong class="block max-w-[180px] truncate text-[15px] leading-none sm:max-w-none sm:text-lg">Núcleo de Soluções para Resíduos Urbanos</strong>
+              <span class="hidden text-sm text-nsru-soft md:block">Plataforma • Cooperativas</span>
+            </div>
+          </a>
+        </div>
+
+        <div class="grid w-full grid-cols-1 gap-2 sm:grid-cols-2 lg:flex lg:w-auto lg:flex-wrap lg:items-center lg:justify-end">
+          <div class="inline-flex min-h-10 items-center gap-2 rounded-full border border-black/10 bg-nsru-greenSoft px-4 text-[15px] font-bold text-nsru-greenDark">
+            <span class="h-2.5 w-2.5 rounded-full bg-nsru-green"></span><span id="territoryNameTop">Vila Pinto</span>
+          </div>
+          <div class="inline-flex min-h-10 items-center gap-2 rounded-full border border-black/10 bg-nsru-blueSoft px-4 text-[15px] font-bold text-nsru-blueDark">
+            <span>🏭</span><span id="cooperativeNameTop">Vila Pinto</span>
+          </div>
+          <div class="inline-flex min-h-10 items-center gap-2 rounded-full border border-black/10 bg-nsru-orangeSoft px-4 text-[15px] font-bold text-nsru-orangeDark" id="rolePill">
+            <span>🔐</span><span id="roleNameTop">Perfil</span>
+          </div>
+          <div class="inline-flex min-h-10 items-center gap-2 rounded-full border border-black/10 bg-[#f2f2f0] px-4 text-[15px] font-bold text-nsru-black">
+            <span>👤</span><span id="userNameTop">Usuário</span>
           </div>
         </div>
       </header>
 
-      <main class="coop-main" id="painel-inicial">
-        <section class="access-banner" id="accessBanner"></section>
+      <main class="mx-auto grid w-full max-w-[1360px] gap-4 p-3 sm:p-4 md:gap-5 md:p-5 xl:p-6 2xl:p-8" id="painel-inicial">
+        <section class="access-banner hidden rounded-[18px] border border-black/10 p-4 text-[17px] font-bold leading-snug" id="accessBanner"></section>
 
-        <section class="coop-hero">
-          <div class="hero-badge">Área logada da cooperativa</div>
-          <h1>Bem-vinda(o) ao painel da Vila Pinto</h1>
-          <p>
-            Seu espaço para acessar conteúdos, acompanhar ações da cooperativa, registrar coletas realizadas
-            e visualizar indicadores operacionais do território.
+        <section class="rounded-[24px] border border-nsru-green/20 bg-nsru-greenSoft p-5 shadow-strong sm:rounded-[28px] md:p-8 lg:rounded-[36px]">
+          <div class="inline-flex min-h-[30px] items-center rounded-full bg-nsru-blue px-3 text-xs font-extrabold uppercase tracking-wide text-white">Área logada da cooperativa</div>
+          <h1 class="mt-4 text-[30px] font-bold leading-none sm:text-4xl lg:text-[44px]">Bem-vinda(o) ao painel da Vila Pinto</h1>
+          <p class="mt-3 max-w-4xl text-[15px] leading-relaxed text-nsru-black2 sm:text-base">
+            Seu espaço para acessar conteúdos, acompanhar ações da cooperativa, registrar coletas realizadas e visualizar indicadores operacionais do território.
           </p>
         </section>
 
-        <section class="dashboard-section">
-          <div class="section-head">
+        <section class="rounded-[24px] border border-black/10 bg-white p-4 shadow-soft sm:rounded-[28px] md:p-6">
+          <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <span class="section-tag">Painel da cooperativa</span>
-              <h2>Acessos e materiais da cooperativa</h2>
+              <span class="inline-flex min-h-[30px] items-center rounded-full bg-nsru-green px-3 text-xs font-extrabold uppercase tracking-wide text-white">Painel da cooperativa</span>
+              <h2 class="mt-3 text-[25px] font-bold leading-none sm:text-3xl lg:text-[34px]">Acessos e materiais da cooperativa</h2>
             </div>
-            <p>
-              Espaço para conteúdos, documentos, avisos importantes e acesso rápido ao registro de coletas.
-            </p>
+            <p class="max-w-md text-[15px] leading-relaxed text-nsru-soft">Espaço para conteúdos, documentos, avisos importantes e acesso rápido ao registro de coletas.</p>
           </div>
 
-          <div class="quick-grid quick-grid-three">
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📘</span>
-              </div>
-              <h3>Conteúdos</h3>
-              <p>Cartilhas, vídeos, materiais operacionais e referências por tema.</p>
-              <a href="conteudos.html">Acessar conteúdos →</a>
+          <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <article class="rounded-[22px] border border-black/10 border-t-8 border-t-nsru-green bg-nsru-greenSoft p-4 shadow-soft md:p-5">
+              <div class="flex items-center justify-between gap-3"><span class="rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold uppercase">Acesso rápido</span><span class="text-2xl">📘</span></div>
+              <h3 class="mt-3 text-2xl font-bold leading-none">Conteúdos</h3>
+              <p class="mt-2 text-[15px] leading-relaxed text-nsru-soft">Cartilhas, vídeos, materiais operacionais e referências por tema.</p>
+              <a class="mt-4 inline-flex font-extrabold" href="conteudos.html">Acessar conteúdos →</a>
             </article>
 
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📄</span>
-              </div>
-              <h3>Documentos</h3>
-              <p>PDFs, atas, relatórios e arquivos institucionais.</p>
-              <a href="documentos.html">Abrir documentos →</a>
+            <article class="rounded-[22px] border border-black/10 border-t-8 border-t-nsru-blue bg-nsru-blueSoft p-4 shadow-soft md:p-5">
+              <div class="flex items-center justify-between gap-3"><span class="rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold uppercase">Acesso rápido</span><span class="text-2xl">📄</span></div>
+              <h3 class="mt-3 text-2xl font-bold leading-none">Documentos</h3>
+              <p class="mt-2 text-[15px] leading-relaxed text-nsru-soft">PDFs, atas, relatórios e arquivos institucionais.</p>
+              <a class="mt-4 inline-flex font-extrabold" href="documentos.html">Abrir documentos →</a>
             </article>
 
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Operação</span>
-                <span class="quick-icon">♻️</span>
-              </div>
-              <h3>Registro de coletas</h3>
-              <p>Lance as coletas realizadas e envie os números para o dashboard.</p>
-              <a href="cadastro-coletas-vila-pinto.html">Registrar coletas →</a>
+            <article class="rounded-[22px] border border-black/10 border-t-8 border-t-nsru-orange bg-nsru-orangeSoft p-4 shadow-soft md:p-5 md:col-span-2 xl:col-span-1">
+              <div class="flex items-center justify-between gap-3"><span class="rounded-full bg-white/70 px-3 py-1 text-xs font-extrabold uppercase">Operação</span><span class="text-2xl">♻️</span></div>
+              <h3 class="mt-3 text-2xl font-bold leading-none">Registro de coletas</h3>
+              <p class="mt-2 text-[15px] leading-relaxed text-nsru-soft">Lance as coletas realizadas e envie os números para o dashboard.</p>
+              <a class="mt-4 inline-flex font-extrabold" href="cadastro-coletas-vila-pinto.html">Registrar coletas →</a>
             </article>
           </div>
 
-          <div class="panel-grid">
-            <article class="panel-card">
-              <div class="panel-card-head">
-                <h3>📢 Avisos importantes</h3>
-              </div>
+          <div class="mt-5 grid gap-4">
+            <article class="rounded-[22px] border border-black/10 bg-white p-4 shadow-soft md:p-5">
+              <div><h3 class="mb-4 text-2xl font-bold leading-none">📢 Avisos importantes</h3></div>
               <div class="info-list" id="noticesList"></div>
             </article>
           </div>
         </section>
 
-        <section class="dashboard-section participants-section-shell">
-          <div class="section-head participants-head">
+        <section class="participants-section-shell rounded-[24px] border border-black/10 border-t-8 border-t-nsru-green bg-white p-4 shadow-soft sm:rounded-[28px] md:p-6">
+          <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
             <div>
-              <span class="section-tag">Cadastro da cooperativa</span>
-              <h2>Participantes cadastrados</h2>
+              <span class="inline-flex min-h-[30px] items-center rounded-full bg-nsru-green px-3 text-xs font-extrabold uppercase tracking-wide text-white">Cadastro da cooperativa</span>
+              <h2 class="mt-3 text-[25px] font-bold leading-none sm:text-3xl lg:text-[34px]">Participantes cadastrados</h2>
             </div>
-            <p id="participantsSectionText">
-              Gerencie moradores, famílias, condomínios e outros participantes vinculados à cooperativa.
-            </p>
+            <p id="participantsSectionText" class="max-w-md text-[15px] leading-relaxed text-nsru-soft">Gerencie moradores, famílias, condomínios e outros participantes vinculados à cooperativa.</p>
           </div>
 
-          <div class="participants-toolbar">
-            <div class="participants-search">
-              <input
-                type="text"
-                id="participantSearchInput"
-                placeholder="Buscar por nome, código, bairro ou endereço..."
-              />
-            </div>
-
-            <a class="participants-add-btn" href="cadastro-colaboradores-vila-pinto.html" id="newParticipantBtn">
-              + Novo participante
-            </a>
+          <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div class="flex-1"><input class="min-h-12 w-full rounded-2xl border border-black/15 px-4 text-base outline-none focus:border-nsru-blue focus:ring-4 focus:ring-nsru-blue/10" type="text" id="participantSearchInput" placeholder="Buscar por nome, código, bairro ou endereço..." /></div>
+            <a class="inline-flex min-h-12 items-center justify-center rounded-full bg-nsru-orange px-5 font-extrabold text-white" href="cadastro-colaboradores-vila-pinto.html" id="newParticipantBtn">+ Novo participante</a>
           </div>
 
-          <div class="participants-kpis">
-            <article class="participants-kpi-card">
-              <span>Total cadastrados</span>
-              <strong id="participantsTotalCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Famílias / moradores</span>
-              <strong id="participantsPeopleCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Condomínios</span>
-              <strong id="participantsCondoCount">0</strong>
-            </article>
+          <div class="mb-5 grid gap-3 md:grid-cols-3">
+            <article class="rounded-[20px] border border-black/10 bg-[#fafaf8] p-4"><span class="block text-[15px] text-nsru-soft">Total cadastrados</span><strong class="mt-2 block text-[32px] leading-none" id="participantsTotalCount">0</strong></article>
+            <article class="rounded-[20px] border border-black/10 bg-[#fafaf8] p-4"><span class="block text-[15px] text-nsru-soft">Famílias / moradores</span><strong class="mt-2 block text-[32px] leading-none" id="participantsPeopleCount">0</strong></article>
+            <article class="rounded-[20px] border border-black/10 bg-[#fafaf8] p-4"><span class="block text-[15px] text-nsru-soft">Condomínios</span><strong class="mt-2 block text-[32px] leading-none" id="participantsCondoCount">0</strong></article>
           </div>
 
           <div class="participants-list" id="participantsList"></div>
         </section>
 
-        <section class="dashboard-section territory-panel-shell">
-          <div class="territory-topbar">
-            <span class="section-tag territory-tag">Painel da cooperativa</span>
+        <section class="rounded-[24px] border border-black/10 border-t-8 border-t-nsru-blue bg-white p-4 shadow-soft sm:rounded-[28px] md:p-6">
+          <div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <span class="inline-flex min-h-[30px] w-max items-center rounded-full bg-nsru-green px-3 text-xs font-extrabold uppercase tracking-wide text-white">Painel da cooperativa</span>
 
-            <div class="territory-tabs" id="territoryTabs">
-              <button class="territory-tab active" data-tab="comunicados">📋 Comunicados</button>
-              <button class="territory-tab" data-tab="servicos">🛠 Serviços</button>
-              <button class="territory-tab" data-tab="mapa">🗺 Mapa</button>
-              <button class="territory-tab" data-tab="calendario">🗓 Calendário</button>
-              <button class="territory-tab" data-tab="treinamentos">🎓 Capacitações</button>
-              <button class="territory-tab territory-tab-special" data-tab="coleta">🚚 Coleta especial</button>
-              <button class="territory-tab" data-tab="ouvidoria">🗣 Ouvidoria</button>
+            <div class="flex gap-2 overflow-x-auto pb-2 lg:flex-wrap lg:overflow-visible lg:pb-0" id="territoryTabs">
+              <button class="territory-tab active min-h-10 shrink-0 rounded-full border border-black/10 bg-white px-4 font-extrabold" data-tab="comunicados">📋 Comunicados</button>
+              <button class="territory-tab min-h-10 shrink-0 rounded-full border border-black/10 bg-white px-4 font-extrabold" data-tab="servicos">🛠 Serviços</button>
+              <button class="territory-tab min-h-10 shrink-0 rounded-full border border-black/10 bg-white px-4 font-extrabold" data-tab="mapa">🗺 Mapa</button>
+              <button class="territory-tab min-h-10 shrink-0 rounded-full border border-black/10 bg-white px-4 font-extrabold" data-tab="calendario">🗓 Calendário</button>
+              <button class="territory-tab min-h-10 shrink-0 rounded-full border border-black/10 bg-white px-4 font-extrabold" data-tab="treinamentos">🎓 Capacitações</button>
+              <button class="territory-tab territory-tab-special min-h-10 shrink-0 rounded-full border border-black/10 bg-white px-4 font-extrabold" data-tab="coleta">🚚 Coleta especial</button>
+              <button class="territory-tab min-h-10 shrink-0 rounded-full border border-black/10 bg-white px-4 font-extrabold" data-tab="ouvidoria">🗣 Ouvidoria</button>
             </div>
           </div>
 
-          <div class="territory-panel-grid">
-            <div class="territory-main">
-              <div class="territory-main-head">
+          <div class="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_320px] 2xl:grid-cols-[minmax(0,1.55fr)_340px]">
+            <div class="min-w-0">
+              <div class="mb-5 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div>
-                  <h3 id="territoryPanelTitle">Comunicados da cooperativa</h3>
-                  <p id="territoryPanelSubtitle">Avisos, atualizações e orientações da cooperativa.</p>
+                  <h3 class="text-3xl font-bold leading-none" id="territoryPanelTitle">Comunicados da cooperativa</h3>
+                  <p class="mt-2 text-base leading-snug text-nsru-soft" id="territoryPanelSubtitle">Avisos, atualizações e orientações da cooperativa.</p>
                 </div>
 
-                <div class="territory-head-actions">
-                  <button class="pill-state pill-state-active" type="button">Atual</button>
-                  <button class="pill-state" type="button">Timeline</button>
+                <div class="flex gap-2">
+                  <button class="min-h-9 rounded-full border border-black/10 bg-nsru-blueSoft px-3 font-extrabold text-nsru-blueDark" type="button">Atual</button>
+                  <button class="min-h-9 rounded-full border border-black/10 bg-white px-3 font-extrabold" type="button">Timeline</button>
                 </div>
               </div>
 
-              <div class="territory-tab-content active" id="tab-comunicados">
-                <div class="territory-list" id="territoryCommunications"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-servicos">
-                <div class="territory-list" id="territoryServices"></div>
-              </div>
+              <div class="territory-tab-content active" id="tab-comunicados"><div class="territory-list" id="territoryCommunications"></div></div>
+              <div class="territory-tab-content" id="tab-servicos"><div class="territory-list" id="territoryServices"></div></div>
 
               <div class="territory-tab-content" id="tab-mapa">
-                <section class="territory-map-section">
-                  <div class="territory-map-toolbar">
+                <section class="grid gap-4">
+                  <div class="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                     <div>
-                      <h4>Mapa de pontos de coleta</h4>
-                      <p>
-                        Veja no mapa os pontos fixos da cooperativa e os endereços cadastrados pelos participantes.
-                      </p>
+                      <h4 class="text-2xl font-bold">Mapa de pontos de coleta</h4>
+                      <p class="mt-1 text-[15px] leading-snug text-nsru-soft">Veja no mapa os pontos fixos da cooperativa e os endereços cadastrados pelos participantes.</p>
                     </div>
 
-                    <div class="territory-map-filters">
-                      <select id="mapTypeFilter" class="map-select">
-                        <option value="all">Todos os tipos</option>
-                        <option value="seletiva">Coleta seletiva</option>
-                        <option value="papel">Papel</option>
-                        <option value="plastico">Plástico</option>
-                        <option value="vidro">Vidro</option>
-                        <option value="metal">Metal</option>
-                        <option value="eletronicos">Eletrônicos</option>
-                        <option value="oleo">Óleo</option>
-                        <option value="participante">Pontos de participantes</option>
+                    <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap lg:justify-end">
+                      <select id="mapTypeFilter" class="min-h-11 rounded-2xl border border-black/15 bg-white px-4 outline-none">
+                        <option value="all">Todos os tipos</option><option value="seletiva">Coleta seletiva</option><option value="papel">Papel</option><option value="plastico">Plástico</option><option value="vidro">Vidro</option><option value="metal">Metal</option><option value="eletronicos">Eletrônicos</option><option value="oleo">Óleo</option><option value="participante">Pontos de participantes</option>
                       </select>
-
-                      <button id="btnLoadParticipantPoints" class="map-ghost-btn" type="button">
-                        ➕ Carregar pontos por endereço
-                      </button>
-
-                      <button id="btnNearMe" class="map-ghost-btn" type="button">
-                        📍 Perto de mim
-                      </button>
+                      <button id="btnLoadParticipantPoints" class="min-h-11 rounded-2xl border border-black/15 bg-white px-4 font-extrabold" type="button">➕ Carregar pontos por endereço</button>
+                      <button id="btnNearMe" class="min-h-11 rounded-2xl border border-black/15 bg-white px-4 font-extrabold" type="button">📍 Perto de mim</button>
                     </div>
                   </div>
 
-                  <div class="territory-map-layout">
-                    <div class="territory-map-canvas">
-                      <div id="territoryMap"></div>
-                    </div>
+                  <div class="grid gap-4 xl:grid-cols-[minmax(0,1fr)_300px]">
+                    <div class="rounded-[24px] border border-black/10 bg-white p-3 shadow-soft"><div id="territoryMap"></div></div>
 
-                    <aside class="territory-map-sidebar">
-                      <div class="map-sidebar-head">
-                        <h5>Lista de pontos</h5>
-                        <span id="mapPointsCount">0</span>
-                      </div>
+                    <aside class="grid content-start gap-4 rounded-[24px] border border-black/10 bg-white p-4 shadow-soft">
+                      <div class="flex items-center justify-between gap-3"><h5 class="text-xl font-bold">Lista de pontos</h5><span class="grid h-7 min-w-7 place-items-center rounded-full bg-nsru-greenSoft px-2 font-extrabold text-nsru-greenDark" id="mapPointsCount">0</span></div>
+                      <div id="mapPointsList" class="map-points-list max-h-80 overflow-y-auto pr-1"></div>
 
-                      <div id="mapPointsList" class="map-points-list"></div>
-
-                      <div class="map-editor-box" id="mapEditorBox">
-                        <h6>Editar ponto selecionado</h6>
-                        <div class="map-editor-fields">
-                          <input type="text" id="editPointName" placeholder="Nome do ponto" />
-                          <input type="text" id="editPointAddress" placeholder="Endereço do ponto" />
-                          <input type="text" id="editPointType" placeholder="Tipo (seletiva, papel, plástico...)" />
-                          <input type="number" step="any" id="editPointLat" placeholder="Latitude" />
-                          <input type="number" step="any" id="editPointLng" placeholder="Longitude" />
+                      <div class="grid gap-3 border-t border-black/10 pt-3" id="mapEditorBox">
+                        <h6 class="text-[17px] font-bold">Editar ponto selecionado</h6>
+                        <div class="grid gap-2">
+                          <input class="min-h-11 rounded-2xl border border-black/15 px-4 outline-none" type="text" id="editPointName" placeholder="Nome do ponto" />
+                          <input class="min-h-11 rounded-2xl border border-black/15 px-4 outline-none" type="text" id="editPointAddress" placeholder="Endereço do ponto" />
+                          <input class="min-h-11 rounded-2xl border border-black/15 px-4 outline-none" type="text" id="editPointType" placeholder="Tipo (seletiva, papel, plástico...)" />
+                          <input class="min-h-11 rounded-2xl border border-black/15 px-4 outline-none" type="number" step="any" id="editPointLat" placeholder="Latitude" />
+                          <input class="min-h-11 rounded-2xl border border-black/15 px-4 outline-none" type="number" step="any" id="editPointLng" placeholder="Longitude" />
                         </div>
-
-                        <div class="map-editor-actions">
-                          <button type="button" class="map-ghost-btn" id="btnApplyPointEdit">Salvar posição</button>
-                          <button type="button" class="map-ghost-btn" id="btnCancelPointEdit">Cancelar</button>
-                        </div>
+                        <div class="flex flex-wrap gap-2"><button type="button" class="min-h-11 rounded-2xl border border-black/15 bg-white px-4 font-extrabold" id="btnApplyPointEdit">Salvar posição</button><button type="button" class="min-h-11 rounded-2xl border border-black/15 bg-white px-4 font-extrabold" id="btnCancelPointEdit">Cancelar</button></div>
                       </div>
                     </aside>
                   </div>
                 </section>
               </div>
 
-              <div class="territory-tab-content" id="tab-calendario">
-                <div class="territory-list" id="territoryCalendar"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-treinamentos">
-                <div class="territory-list" id="territoryTrainings"></div>
-              </div>
+              <div class="territory-tab-content" id="tab-calendario"><div class="territory-list" id="territoryCalendar"></div></div>
+              <div class="territory-tab-content" id="tab-treinamentos"><div class="territory-list" id="territoryTrainings"></div></div>
 
               <div class="territory-tab-content" id="tab-coleta">
-                <div class="territory-special-box">
-                  <strong>Coleta especial aberta</strong>
-                  <p>
-                    Registre coletas especiais, agendadas ou operacionais da cooperativa.
-                  </p>
-                  <a class="special-cta" href="cadastro-coletas-vila-pinto.html">♻️ Registrar coleta realizada</a>
-                </div>
+                <div class="rounded-[22px] border border-black/10 bg-[#fafaf8] p-5"><strong class="block text-[22px]">Coleta especial aberta</strong><p class="mt-2 text-base leading-snug text-nsru-soft">Registre coletas especiais, agendadas ou operacionais da cooperativa.</p><a class="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-nsru-orange px-4 font-extrabold text-white" href="cadastro-coletas-vila-pinto.html">♻️ Registrar coleta realizada</a></div>
               </div>
 
               <div class="territory-tab-content" id="tab-ouvidoria">
-                <div class="territory-special-box">
-                  <strong>Ouvidoria da cooperativa</strong>
-                  <p>
-                    Canal para dúvidas, sugestões, ocorrências e retorno da comunidade ligada à cooperativa.
-                  </p>
-                  <a class="panel-link" href="ouvidoria.html">Abrir ouvidoria →</a>
-                </div>
+                <div class="rounded-[22px] border border-black/10 bg-[#fafaf8] p-5"><strong class="block text-[22px]">Ouvidoria da cooperativa</strong><p class="mt-2 text-base leading-snug text-nsru-soft">Canal para dúvidas, sugestões, ocorrências e retorno da comunidade ligada à cooperativa.</p><a class="mt-4 inline-flex font-extrabold text-nsru-orangeDark" href="ouvidoria.html">Abrir ouvidoria →</a></div>
               </div>
             </div>
 
-            <aside class="territory-side">
-              <div class="side-card">
-                <h4>Resumo rápido</h4>
-
-                <div class="summary-list">
-                  <div class="summary-row">
-                    <span>Materiais aceitos</span>
-                    <strong id="summaryAccepted">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Não aceitos</span>
-                    <strong id="summaryRejected">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Pontos no mapa</span>
-                    <strong id="summaryPoints">0</strong>
-                  </div>
+            <aside class="grid min-w-0 gap-4 md:grid-cols-2 xl:grid-cols-1">
+              <div class="rounded-[24px] border border-black/10 bg-white p-5 shadow-soft">
+                <h4 class="mb-4 text-2xl font-bold leading-none">Resumo rápido</h4>
+                <div class="grid gap-2">
+                  <div class="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fafaf8] px-4 py-3"><span class="text-[15px] text-nsru-soft">Materiais aceitos</span><strong id="summaryAccepted">0</strong></div>
+                  <div class="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fafaf8] px-4 py-3"><span class="text-[15px] text-nsru-soft">Não aceitos</span><strong id="summaryRejected">0</strong></div>
+                  <div class="flex items-center justify-between gap-3 rounded-2xl border border-black/10 bg-[#fafaf8] px-4 py-3"><span class="text-[15px] text-nsru-soft">Pontos no mapa</span><strong id="summaryPoints">0</strong></div>
                 </div>
-
-                <div class="summary-actions">
-                  <a href="servicos.html" class="summary-btn">Serviços</a>
-                  <a href="dashboard-cooperativa.html" class="summary-btn">Mapa</a>
-                </div>
+                <div class="mt-4 grid gap-2"><a href="servicos.html" class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-black/10 bg-white px-4 font-extrabold">Serviços</a><a href="dashboard-cooperativa.html" class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-black/10 bg-white px-4 font-extrabold">Mapa</a></div>
               </div>
 
-              <div class="side-card quick-shortcuts">
-                <h4>Atalho rápido</h4>
-                <a class="special-cta" href="cadastro-coletas-vila-pinto.html">♻️ Registrar coleta</a>
+              <div class="rounded-[24px] border border-black/10 bg-white p-5 shadow-soft">
+                <h4 class="mb-4 text-2xl font-bold leading-none">Atalho rápido</h4>
+                <a class="inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-nsru-orange px-4 font-extrabold text-white" href="cadastro-coletas-vila-pinto.html">♻️ Registrar coleta</a>
               </div>
 
-              <div class="side-card small-grid">
-                <a href="calendario.html" class="summary-btn">Calendário</a>
-                <a href="ouvidoria.html" class="summary-btn">Ouvidoria</a>
+              <div class="grid gap-2 rounded-[24px] border border-black/10 bg-white p-5 shadow-soft">
+                <a href="calendario.html" class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-black/10 bg-white px-4 font-extrabold">Calendário</a>
+                <a href="ouvidoria.html" class="inline-flex min-h-11 items-center justify-center rounded-2xl border border-black/10 bg-white px-4 font-extrabold">Ouvidoria</a>
               </div>
 
-              <div class="side-card indicators-card">
-                <div class="indicators-head">
-                  <h4>Indicadores gerais</h4>
-                  <p id="indicatorCardText">
-                    Resumo consolidado da cooperativa, incluindo registros de coleta.
-                  </p>
+              <div class="indicators-card rounded-[24px] border border-black/10 bg-white p-5 shadow-soft md:col-span-2 xl:col-span-1">
+                <div><h4 class="text-2xl font-bold leading-none">Indicadores gerais</h4><p class="mt-2 text-[15px] leading-snug text-nsru-soft" id="indicatorCardText">Resumo consolidado da cooperativa, incluindo registros de coleta.</p></div>
+                <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                  <div class="rounded-2xl border border-black/10 bg-[#fafaf8] p-4"><span class="block text-sm text-nsru-soft">Coletas</span><strong class="mt-2 block text-[26px] leading-none" id="indicatorColetas">0</strong></div>
+                  <div class="rounded-2xl border border-black/10 bg-[#fafaf8] p-4"><span class="block text-sm text-nsru-soft">Participantes</span><strong class="mt-2 block text-[26px] leading-none" id="indicatorParticipants">0</strong></div>
+                  <div class="rounded-2xl border border-black/10 bg-[#fafaf8] p-4"><span class="block text-sm text-nsru-soft">Documentos</span><strong class="mt-2 block text-[26px] leading-none" id="indicatorDocs">0</strong></div>
+                  <div class="rounded-2xl border border-black/10 bg-[#fafaf8] p-4"><span class="block text-sm text-nsru-soft">Ações</span><strong class="mt-2 block text-[26px] leading-none" id="indicatorActions">0</strong></div>
                 </div>
-
-                <div class="indicator-mini-grid">
-                  <div class="indicator-mini">
-                    <span>Coletas</span>
-                    <strong id="indicatorColetas">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Participantes</span>
-                    <strong id="indicatorParticipants">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Documentos</span>
-                    <strong id="indicatorDocs">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Ações</span>
-                    <strong id="indicatorActions">0</strong>
-                  </div>
-                </div>
-
-                <a class="dashboard-cta" href="dashboard-cooperativa.html">
-                  📊 Acessar dashboard da cooperativa
-                </a>
+                <a class="mt-4 inline-flex min-h-11 w-full items-center justify-center rounded-2xl bg-nsru-green px-4 font-extrabold text-white" href="dashboard-cooperativa.html">📊 Acessar dashboard da cooperativa</a>
               </div>
             </aside>
           </div>
@@ -466,7 +406,6 @@
     integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
     crossorigin=""
   ></script>
-
   <script type="module" src="/cooperativas-territorio.js"></script>
 </body>
 </html>
