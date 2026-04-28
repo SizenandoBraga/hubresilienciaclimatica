@@ -174,64 +174,52 @@
     </aside>
 
     <div class="min-w-0">
-      <header class="w-full sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-gray-200">
+      <header class="sticky top-0 z-[900] w-full max-lg:w-screen max-lg:ml-[calc(50%-50vw)] border-b border-black/10 bg-white/95 shadow-[0_4px_18px_rgba(60,58,57,0.07)] backdrop-blur-xl supports-[backdrop-filter]:bg-white/90">
+        <div class="w-full px-3 py-2 sm:px-4 lg:px-6">
+          <div class="flex w-full items-center justify-between gap-3 xl:gap-5">
+            <div class="flex min-w-0 flex-1 items-center gap-3">
+              <button class="menu-btn grid h-11 w-11 shrink-0 place-items-center rounded-2xl border-0 bg-nsru-green text-xl font-extrabold text-white shadow-soft transition hover:brightness-95 lg:hidden" id="menuBtn" aria-label="Abrir menu">☰</button>
 
-  <div class="w-full px-3 sm:px-4 md:px-6">
+              <a class="flex min-w-0 items-center gap-2 sm:gap-3" href="index.html">
+                <div class="grid h-11 w-11 shrink-0 place-items-center overflow-hidden rounded-2xl bg-nsru-greenSoft ring-1 ring-black/5 sm:h-12 sm:w-12">
+                  <img class="w-8 sm:w-9" src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
+                </div>
 
-    <!-- LINHA PRINCIPAL -->
-    <div class="flex items-center justify-between gap-3 py-3">
+                <div class="min-w-0 leading-tight">
+                  <strong class="block max-w-[170px] truncate text-[15px] font-extrabold leading-none text-nsru-black min-[420px]:max-w-[230px] sm:max-w-[390px] sm:text-lg xl:max-w-none">
+                    Núcleo de Soluções para Resíduos Urbanos
+                  </strong>
+                  <span class="mt-1 hidden text-sm leading-none text-nsru-soft sm:block">
+                    Plataforma • Cooperativas
+                  </span>
+                </div>
+              </a>
+            </div>
 
-      <!-- ESQUERDA -->
-      <div class="flex items-center gap-3 min-w-0">
-        <button id="menuBtn"
-          class="md:hidden flex items-center justify-center w-10 h-10 rounded-xl bg-green-600 text-white text-xl font-bold">
-          ☰
-        </button>
+            <div class="flex min-w-0 max-w-[48vw] shrink-0 gap-2 overflow-x-auto pb-1 xl:max-w-none xl:flex-wrap xl:justify-end xl:overflow-visible xl:pb-0 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div class="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-black/10 bg-nsru-greenSoft px-3 text-sm font-bold text-nsru-greenDark sm:min-h-10 sm:px-4 sm:text-[15px]">
+                <span class="h-2.5 w-2.5 rounded-full bg-nsru-green"></span>
+                <span id="territoryNameTop">Vila Pinto</span>
+              </div>
 
-        <a href="index.html" class="flex items-center gap-2 min-w-0">
-          <img src="img/NSRU - Logo-Preto.png" class="w-9 h-9 object-contain" />
+              <div class="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-black/10 bg-nsru-blueSoft px-3 text-sm font-bold text-nsru-blueDark sm:min-h-10 sm:px-4 sm:text-[15px]">
+                <span>🏭</span>
+                <span id="cooperativeNameTop">Vila Pinto</span>
+              </div>
 
-          <!-- some no mobile -->
-          <div class="hidden sm:flex flex-col leading-tight">
-            <strong class="text-sm md:text-base truncate">
-              Núcleo de Soluções
-            </strong>
-            <span class="text-xs text-gray-500 truncate">
-              Plataforma • Cooperativas
-            </span>
+              <div class="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-black/10 bg-nsru-orangeSoft px-3 text-sm font-bold text-nsru-orangeDark sm:min-h-10 sm:px-4 sm:text-[15px]" id="rolePill">
+                <span>🔐</span>
+                <span id="roleNameTop">Perfil</span>
+              </div>
+
+              <div class="inline-flex min-h-9 shrink-0 items-center gap-2 rounded-full border border-black/10 bg-[#f2f2f0] px-3 text-sm font-bold text-nsru-black sm:min-h-10 sm:px-4 sm:text-[15px]">
+                <span>👤</span>
+                <span id="userNameTop">Usuário</span>
+              </div>
+            </div>
           </div>
-        </a>
-      </div>
-
-      <!-- DIREITA (mobile = scroll horizontal) -->
-      <div class="flex items-center gap-2 overflow-x-auto no-scrollbar">
-
-        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 text-green-700 text-sm whitespace-nowrap">
-          <span class="w-2 h-2 bg-green-600 rounded-full"></span>
-          <span id="territoryNameTop">Vila Pinto</span>
         </div>
-
-        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 text-blue-700 text-sm whitespace-nowrap">
-          🏭
-          <span id="cooperativeNameTop">Vila Pinto</span>
-        </div>
-
-        <div id="rolePill"
-          class="flex items-center gap-2 px-3 py-1 rounded-full bg-orange-100 text-orange-700 text-sm whitespace-nowrap">
-          🔐
-          <span id="roleNameTop">Perfil</span>
-        </div>
-
-        <div class="flex items-center gap-2 px-3 py-1 rounded-full bg-gray-100 text-gray-700 text-sm whitespace-nowrap">
-          👤
-          <span id="userNameTop">Usuário</span>
-        </div>
-
-      </div>
-    </div>
-
-  </div>
-</header>
+      </header>
 
       <main class="mx-auto grid w-full max-w-[1360px] gap-4 p-3 sm:p-4 md:gap-5 md:p-5 xl:p-6 2xl:p-8" id="painel-inicial">
         <section class="access-banner hidden rounded-[18px] border border-black/10 p-4 text-[17px] font-bold leading-snug" id="accessBanner"></section>
