@@ -13,10 +13,11 @@
 
   <link rel="stylesheet" href="cadastro-coletas.css">
 </head>
+
 <body
   data-territory-id="vila-pinto"
   data-territory-label="Centro de Triagem Vila Pinto"
-  data-back-url="vila-pinto.html"
+  data-back-url="cooperativa-vila-pinto.html"
 >
   <div class="bg-grid"></div>
   <div class="noise"></div>
@@ -36,7 +37,7 @@
       </a>
 
       <div class="topbar-actions">
-        <a class="btn ghost" href="cooperativa-vila-pinto.html">Voltar a cooperativa</a>
+        <button type="button" class="btn ghost" id="btnBackCooperativa">Voltar à cooperativa</button>
         <button type="button" class="btn primary" id="btnNovaColetaTop">Registrar nova coleta</button>
       </div>
     </div>
@@ -200,7 +201,6 @@
           </div>
 
           <div class="form-actions span-2">
-            
             <button type="submit" class="btn primary">Salvar coleta de recebimento</button>
             <button type="button" class="btn ghost" id="btnNovaColetaRecebimento">Registrar nova coleta</button>
           </div>
@@ -260,7 +260,6 @@
           <div id="previewFinalTurno" class="preview-grid span-2"></div>
 
           <div class="form-actions span-2">
-            
             <button type="submit" class="btn primary">Salvar registro final do turno</button>
             <button type="button" class="btn ghost" id="btnNovaColetaFinalTurno">Registrar nova coleta</button>
           </div>
@@ -318,5 +317,16 @@
 
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
   <script type="module" src="cadastro-coletas-territorial.js"></script>
+
+  <script>
+    const btnBackCooperativa = document.getElementById("btnBackCooperativa");
+
+    if (btnBackCooperativa) {
+      btnBackCooperativa.addEventListener("click", () => {
+        const backUrl = document.body.dataset.backUrl || "cooperativa-vila-pinto.html";
+        window.location.href = backUrl;
+      });
+    }
+  </script>
 </body>
 </html>
