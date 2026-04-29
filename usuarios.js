@@ -776,44 +776,77 @@ function renderCoopUsersList() {
     `;
   }).join("");
 }
+async function createFirebaseAuthUser(email, password, displayName) {
+  const apiKey = auth.app.options.apiKey;
 
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        displayName,
+        returnSecureToken: false
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const message = data?.error?.message || "Erro ao criar usuário.";
+
+    if (message === "EMAIL_EXISTS") {
+      throw new Error("Este e-mail já está cadastrado.");
+    }
+
+    if (message.includes("WEAK_PASSWORD")) {
+      throw new Error("Senha precisa ter no mínimo 6 caracteres.");
+    }
+
+    if (message === "INVALID_EMAIL") {
+      throw new Error("E-mail inválido.");
+    }
+
+    throw new Error(message);
+  }
+
+  return {
+    uid: data.localId,
+    email: data.email
+  };
+}
 async function createCoopUserRecord() {
   if (!canManageCoopUsers()) {
-    alert("Seu perfil não tem permissão para criar usuários da cooperativa.");
+    alert("Sem permissão.");
     return;
   }
 
-  const name = els.coopUserName?.value?.trim();
-  const displayName = els.coopUserDisplayName?.value?.trim() || name;
-  const email = els.coopUserEmail?.value?.trim().toLowerCase();
-  const password = els.coopUserPassword?.value?.trim();
-  const role = els.coopUserRole?.value || "cooperativa";
+  const name = els.coopUserName.value.trim();
+  const displayName = els.coopUserDisplayName.value.trim() || name;
+  const email = els.coopUserEmail.value.trim().toLowerCase();
+  const password = els.coopUserPassword.value.trim();
+  const role = els.coopUserRole.value;
+
   const territoryId = canViewAllTerritories()
-    ? (els.coopUserTerritory?.value || getMyTerritoryId())
+    ? els.coopUserTerritory.value
     : getMyTerritoryId();
+
   const territoryLabel = getTerritoryLabelById(territoryId);
 
-  if (!name || !email || !password) {
-    alert("Preencha nome, e-mail e senha provisória.");
-    return;
-  }
-
   try {
-    if (els.btnCreateCoopUser) {
-      els.btnCreateCoopUser.disabled = true;
-      els.btnCreateCoopUser.textContent = "Criando...";
-    }
+    els.btnCreateCoopUser.disabled = true;
 
-    const existingQuery = query(collection(db, "users"), where("email", "==", email));
-    const existingSnap = await getDocs(existingQuery);
+    // 🔥 cria no auth
+    const authUser = await createFirebaseAuthUser(email, password, displayName);
 
-    if (!existingSnap.empty) {
-      throw new Error("Já existe um usuário cadastrado com este e-mail.");
-    }
-
-    const userDocRef = doc(collection(db, "users"));
-    const payload = {
-      uid: userDocRef.id,
+    // 🔥 salva no firestore
+    await setDoc(doc(db, "users", authUser.uid), {
+      uid: authUser.uid,
       name,
       displayName,
       email,
@@ -821,40 +854,19 @@ async function createCoopUserRecord() {
       status: "active",
       territoryId,
       territoryLabel,
-      onboardingCompleted: true,
       permissions: getCoopPermissionsPayload(),
       roles: getCoopRolesPayload(),
-      publicCode: `RB-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-      createdBy: STATE.authUser?.uid || null,
-      createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || "Administrador",
-      provisionalPassword: password
-    };
+      createdAt: serverTimestamp()
+    });
 
-    await setDoc(userDocRef, payload);
+    alert("Usuário criado com sucesso!");
+    els.coopUserForm.reset();
 
-    showToast("Usuário da cooperativa criado com sucesso.");
-    els.coopUserForm?.reset();
-
-    if (els.permDashboard) els.permDashboard.checked = true;
-    if (els.permColetas) els.permColetas.checked = true;
-    if (els.permParticipants) els.permParticipants.checked = true;
-    if (els.permConteudos) els.permConteudos.checked = true;
-    if (els.permDocumentos) els.permDocumentos.checked = true;
-    if (els.permMapa) els.permMapa.checked = true;
-
-    if (!canViewAllTerritories() && els.coopUserTerritory) {
-      els.coopUserTerritory.value = getMyTerritoryId() || "vila-pinto";
-    }
-  } catch (error) {
-    console.error("Erro ao criar usuário da cooperativa:", error);
-    alert(`Não foi possível criar o usuário.\n${error?.message || ""}`);
+  } catch (e) {
+    console.error(e);
+    alert(e.message);
   } finally {
-    if (els.btnCreateCoopUser) {
-      els.btnCreateCoopUser.disabled = false;
-      els.btnCreateCoopUser.textContent = "Criar usuário da cooperativa";
-    }
+    els.btnCreateCoopUser.disabled = false;
   }
 }
 
