@@ -1621,33 +1621,46 @@ async function upsertParticipantFromApprovedRequest(user) {
   const snapshot = user.raw?.payloadSnapshot || {};
   const isApproved = user.status === "aprovado";
 
-  const payload = {
-    name: user.name || snapshot.name || "Sem nome",
-    nameLower: String(user.name || snapshot.name || "").toLowerCase(),
-    participantCode: user.code || snapshot.participantCode || "—",
-    participantType: snapshot.participantType || "participante",
-    localType: snapshot.localType || user.raw?.localType || "casa",
-    phone: user.phone || snapshot.phone || null,
-    email: user.email || snapshot.email || null,
-    cpf: user.cpf || snapshot.cpf || null,
-    territoryId: user.territoryId || snapshot.territoryId || null,
-    territoryLabel: user.territoryLabel || snapshot.territoryLabel || "",
-    inTerritory: "sim",
-    inOperation: user.inOperation || (isApproved ? "sim" : "nao"),
-    schedule: user.routeShift || user.schedule || "A definir",
-    routeShift: user.routeShift || "",
-    status: user.status || "pendente",
-    approvalStatus: isApproved ? "approved" : "pending",
-    active: isApproved,
-    approvalRequestId: user.linkedApprovalRequestId || null,
-    source: user.raw?.source || "approval_request",
-    address: snapshot.address || null,
-    enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
-    lat: isValidCoord(user.lat, user.lng) ? user.lat : (toNumberOrNull(snapshot.lat) ?? null),
-    lng: isValidCoord(user.lat, user.lng) ? user.lng : (toNumberOrNull(snapshot.lng) ?? null),
-    updatedAt: serverTimestamp(),
-    updatedBy: STATE.authUser?.uid || null
-  };
+ const payload = {
+  uid: createdAuthUser.uid,
+  name,
+  nome: name,
+  displayName,
+  email,
+
+  role,
+  perfil: role,
+  profile: role,
+  tipo: role,
+  userType: role,
+
+  status: "active",
+  active: true,
+  approved: true,
+  isActive: true,
+  onboardingCompleted: true,
+
+  territoryId,
+  territoryLabel,
+  cooperativeId: territoryId,
+  cooperativeName: territoryLabel,
+
+  permissions: getCoopPermissionsPayload(),
+  roles: {
+    ...getCoopRolesPayload(),
+    [role]: true
+  },
+
+  publicCode: `RB-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+  createdBy: STATE.authUser?.uid || null,
+  createdByName:
+    STATE.userDoc?.name ||
+    STATE.userDoc?.displayName ||
+    "Administrador"
+};
 
   await setDoc(doc(db, "participants", participantId), payload, { merge: true });
 }
