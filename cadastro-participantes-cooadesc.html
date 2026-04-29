@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Language" content="pt-BR" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cadastro de Participantes • Vila Pinto</title>
+  <title>Cadastro de Participantes • COOADESC</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -13,6 +13,7 @@
 
   <link rel="stylesheet" href="cadastro-participantes.css">
 </head>
+
 <body
   data-territory-id="crgr_cooadesc"
   data-territory-label="COOADESC"
@@ -38,12 +39,12 @@
         <a class="site-login-btn" href="/cooadesc.html">Voltar ao território →</a>
       </div>
 
-      <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu">☰</button>
+      <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu" type="button">☰</button>
     </div>
 
     <div class="site-mobile-menu" id="mobileMenu">
       <a href="/index.html">Início</a>
-      <a href="/vila-pinto.html">Voltar ao território</a>
+      <a href="/cooadesc.html">Voltar ao território</a>
     </div>
   </header>
 
@@ -59,7 +60,7 @@
         <div class="wizard-meta">
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Território</span>
-            <strong id="territoryLabelView">Centro de Triagem Vila Pinto</strong>
+            <strong id="territoryLabelView">COOADESC</strong>
           </div>
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Acesso</span>
@@ -96,22 +97,31 @@
 
           <div class="consent-block">
             <h3>Dados pessoais • Declaro estar ciente e autorizo</h3>
-            <p>Selecione todos os itens para avançar.</p>
+            <p>
+              Para participar do projeto, é necessário concordar com todas as autorizações abaixo.
+              Elas são obrigatórias para avançar para a próxima etapa.
+            </p>
 
-            <label class="check-item">
-              <input type="checkbox" id="consentLgpd">
-              <span>Uso dos meus dados pessoais para fins de organização e gestão do projeto (LGPD).</span>
-            </label>
+            <div class="consent-summary">
+              <p>
+                Ao clicar no botão abaixo, você declara que concorda com:
+                <strong>uso dos dados pessoais para gestão do projeto</strong>,
+                <strong>comunicação via WhatsApp</strong> e
+                <strong>uso de imagem para divulgação do projeto</strong>.
+              </p>
 
-            <label class="check-item">
-              <input type="checkbox" id="consentWhatsapp">
-              <span>Envio de comunicações via WhatsApp (avisos e atividades).</span>
-            </label>
+              <input type="checkbox" id="consentLgpd" class="hidden" checked>
+              <input type="checkbox" id="consentWhatsapp" class="hidden" checked>
+              <input type="checkbox" id="consentImage" class="hidden" checked>
 
-            <label class="check-item">
-              <input type="checkbox" id="consentImage">
-              <span>Utilização da minha imagem para divulgação e promoção do projeto.</span>
-            </label>
+              <button type="button" class="btn-primary consent-accept-btn" id="btnAcceptAllConsents">
+                Concordo com todas as autorizações
+              </button>
+
+              <div class="consent-accepted-note hidden" id="consentAcceptedNote">
+                ✅ Você concordou com todas as autorizações obrigatórias.
+              </div>
+            </div>
           </div>
         </div>
 
@@ -144,15 +154,16 @@
             </div>
 
             <div class="field">
-              <label for="email">3) E-mail <span>*</span></label>
-              <input type="email" id="email" placeholder="Ex.: nome@email.com" required>
+              <label for="email">3) E-mail</label>
+              <input type="email" id="email" placeholder="Ex.: nome@email.com">
+              <small>Campo opcional.</small>
             </div>
 
             <div class="field">
               <label for="localType">4) Local para coleta <span>*</span></label>
               <div class="choice-grid choice-grid-4" id="localTypeGroup">
                 <button type="button" class="choice-card selected" data-local-type="casa">
-                  <strong>Casa</strong>
+                  <strong>Domicílio</strong>
                   <span>residência</span>
                 </button>
                 <button type="button" class="choice-card" data-local-type="condominio">
@@ -171,15 +182,15 @@
             </div>
 
             <div class="field field-full">
-              <label>5) Tipo de cadastro <span>*</span></label>
+              <label>5) Tipo de cadastro</label>
               <div class="choice-grid choice-grid-2" id="registerTypeGroup">
                 <button type="button" class="choice-card selected" data-register-type="participante">
                   <strong>Participante</strong>
-                  <span>gera código RB-XXXXXX</span>
+                  <span>gera código conforme cooperativa e tipo</span>
                 </button>
                 <button type="button" class="choice-card" data-register-type="condominio">
                   <strong>Condomínio</strong>
-                  <span>gera código COND-XXXXXX</span>
+                  <span>gera código específico de condomínio</span>
                 </button>
               </div>
             </div>
@@ -190,8 +201,9 @@
             </div>
 
             <div class="field">
-              <label for="cpf">7) CPF <span>*</span></label>
-              <input type="text" id="cpf" placeholder="Ex.: 000.000.000-00" required>
+              <label for="cpf">7) CPF</label>
+              <input type="text" id="cpf" placeholder="Ex.: 000.000.000-00">
+              <small>Campo opcional.</small>
             </div>
           </div>
         </div>
@@ -215,47 +227,48 @@
         <div class="step-card-inner">
           <div class="grid grid-2">
             <div class="field">
-              <label for="cep">8) CEP <span>*</span></label>
+              <label for="cep">8) CEP</label>
               <div class="inline-field">
-                <input type="text" id="cep" placeholder="Ex.: 90010-000" required>
+                <input type="text" id="cep" placeholder="Ex.: 90010-000">
                 <button type="button" class="btn-inline" id="btnBuscarCep">Buscar</button>
               </div>
+              <small>Campo opcional.</small>
             </div>
 
             <div class="field">
-              <label for="number">9) Número <span>*</span></label>
-              <input type="text" id="number" placeholder="Ex.: 123" required>
+              <label for="number">9) Número</label>
+              <input type="text" id="number" placeholder="Ex.: 123">
             </div>
 
             <div class="field">
-              <label for="street">10) Rua <span>*</span></label>
-              <input type="text" id="street" required>
+              <label for="street">10) Rua</label>
+              <input type="text" id="street">
             </div>
 
             <div class="field">
-              <label for="neighborhood">11) Bairro <span>*</span></label>
-              <input type="text" id="neighborhood" required>
+              <label for="neighborhood">11) Bairro</label>
+              <input type="text" id="neighborhood">
             </div>
 
             <div class="field">
-              <label for="city">12) Cidade <span>*</span></label>
-              <input type="text" id="city" required>
+              <label for="city">12) Cidade</label>
+              <input type="text" id="city">
             </div>
 
             <div class="field">
-              <label for="state">13) UF <span>*</span></label>
-              <input type="text" id="state" required>
+              <label for="state">13) UF</label>
+              <input type="text" id="state">
             </div>
 
             <div class="field field-full">
               <label for="referencePoint">14) Ponto de referência <span>*</span></label>
-              <input type="text" id="referencePoint" required>
+              <input type="text" id="referencePoint" placeholder="Ex.: próximo à escola, mercado, associação..." required>
             </div>
           </div>
 
           <div class="location-card">
             <strong>Localização para o dashboard</strong>
-            <p>Ao buscar o CEP e informar o número, o sistema tenta calcular latitude e longitude para uso no mapa e no dashboard territorial.</p>
+            <p>Se os dados de endereço forem informados, o sistema tenta calcular latitude e longitude para uso no mapa e no dashboard territorial.</p>
             <div class="geo-line">Geo: <span id="geoPreview">ainda não calculado</span></div>
             <div class="geo-line">Lat/Lng: <span id="latLngPreview">ainda não calculado</span></div>
           </div>
@@ -293,14 +306,40 @@
           </div>
 
           <div class="field field-full">
-            <label for="difficultyDetail">16) Se houver dificuldade, informe o que tem dificultado</label>
-            <textarea id="difficultyDetail" rows="4"></textarea>
+            <label for="householdMembers">16) Quantos integrantes tem na residência?</label>
+            <select id="householdMembers">
+              <option value="">Selecione uma opção</option>
+              <option value="1">1 integrante</option>
+              <option value="2">2 integrantes</option>
+              <option value="3">3 integrantes</option>
+              <option value="outro">Outro</option>
+            </select>
           </div>
 
-          <div class="field field-full">
-            <label for="projectSource">17) Como você ficou sabendo do projeto?</label>
-            <textarea id="projectSource" rows="4"></textarea>
-          </div>
+        <div class="field field-full">
+  <label for="projectSource">
+    17) Como você ficou sabendo do projeto?
+  </label>
+
+  <select id="projectSource">
+    <option value="">Selecione uma opção</option>
+    <option value="whatsapp">WhatsApp</option>
+    <option value="redes_sociais">Redes sociais</option>
+    <option value="indicacao">Indicação (vizinho, amigo, familiar)</option>
+    <option value="cooperativa">Equipe da cooperativa</option>
+    <option value="lideranca">Liderança comunitária</option>
+    <option value="evento">Evento ou reunião</option>
+    <option value="material_impresso">Material impresso</option>
+    <option value="outro">Outro</option>
+  </select>
+
+  <input 
+    type="text" 
+    id="projectSourceOther" 
+    placeholder="Se selecionou 'Outro', descreva aqui"
+    class="hidden"
+  >
+</div>
 
           <div class="final-message-card">
             <strong>Mensagem final</strong>
@@ -335,6 +374,6 @@
     </div>
   </div>
 
-  <script type="module" src="/cadastro-participantes-base.js"></script>
+  <script type="module" src="cadastro-participantes-base.js"></script>
 </body>
 </html>

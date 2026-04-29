@@ -2,11 +2,14 @@ import { db } from "./firebase-init.js";
 import {
   addDoc,
   collection,
-  serverTimestamp
+  serverTimestamp,
+  getDocs,
+  query,
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-   CONFIG DINAMICA
+   CONFIG DINÂMICA
 ========================= */
 
 const BODY = document.body;
@@ -20,21 +23,26 @@ const CONFIG = {
   nominatimBase: "https://nominatim.openstreetmap.org/search"
 };
 
-function getCanonicalTerritoryId() {
-  return CONFIG.territoryId;
-}
-
-function getCanonicalTerritoryLabel() {
-  return CONFIG.territoryLabel;
-}
-
-function assertRuntimeConfig() {
-  if (!CONFIG.territoryId || !CONFIG.territoryLabel) {
-    throw new Error(
-      "Configuração do território ausente. Verifique os atributos data-territory-id e data-territory-label no body."
-    );
+const CODE_CONFIG = {
+  "vila-pinto": {
+    casa: { prefix: "VPD", start: 300 },
+    condominio: { prefix: "VPCD", start: 10 },
+    comercio: { prefix: "VPCM", start: 10 },
+    outro: { prefix: "VPD", start: 300 }
+  },
+  "cooadesc": {
+    casa: { prefix: "COD", start: 1 },
+    condominio: { prefix: "COCD", start: 1 },
+    comercio: { prefix: "COCM", start: 1 },
+    outro: { prefix: "COD", start: 1 }
+  },
+  "padre-cacique": {
+    casa: { prefix: "PCD", start: 1 },
+    condominio: { prefix: "PCCD", start: 1 },
+    comercio: { prefix: "PCCM", start: 1 },
+    outro: { prefix: "PCD", start: 1 }
   }
-}
+};
 
 /* =========================
    STATE
@@ -46,6 +54,7 @@ const STATE = {
   localType: "casa",
   registerType: "participante",
   generatedCode: "",
+  consentAccepted: false,
   isSubmitting: false,
   geoRequestId: 0,
   geo: {
@@ -56,7 +65,7 @@ const STATE = {
 };
 
 /* =========================
-   HELPERS
+   ELEMENTOS
 ========================= */
 
 const $ = (id) => document.getElementById(id);
@@ -75,6 +84,8 @@ const els = {
   consentLgpd: $("consentLgpd"),
   consentWhatsapp: $("consentWhatsapp"),
   consentImage: $("consentImage"),
+  btnAcceptAllConsents: $("btnAcceptAllConsents"),
+  consentAcceptedNote: $("consentAcceptedNote"),
 
   fullName: $("fullName"),
   phone: $("phone"),
@@ -98,8 +109,9 @@ const els = {
   latLngPreview: $("latLngPreview"),
 
   difficultyGroup: $("difficultyGroup"),
-  difficultyDetail: $("difficultyDetail"),
+  householdMembers: $("householdMembers"),
   projectSource: $("projectSource"),
+  projectSourceOther: $("projectSourceOther"),
 
   successModal: $("successModal"),
   closeSuccessModal: $("closeSuccessModal"),
@@ -109,6 +121,10 @@ const els = {
 
   btnSubmitParticipant: $("btnSubmitParticipant")
 };
+
+/* =========================
+   HELPERS
+========================= */
 
 function onlyDigits(value = "") {
   return String(value).replace(/\D/g, "");
@@ -123,38 +139,6 @@ function slugify(value = "") {
     .replace(/\s+/g, "-");
 }
 
-function showMessage(message, type = "info") {
-  if (!els.formMessage) return;
-
-  els.formMessage.classList.remove("hidden", "error", "success", "info", "warning");
-  els.formMessage.classList.add(type);
-  els.formMessage.textContent = message;
-
-  window.scrollTo({ top: 0, behavior: "smooth" });
-}
-
-function clearMessage() {
-  if (!els.formMessage) return;
-  els.formMessage.classList.add("hidden");
-  els.formMessage.textContent = "";
-  els.formMessage.classList.remove("error", "success", "info", "warning");
-}
-
-function setLoading(button, isLoading, loadingText = "Salvando...") {
-  if (!button) return;
-
-  if (isLoading) {
-    if (!button.dataset.originalText) {
-      button.dataset.originalText = button.textContent;
-    }
-    button.disabled = true;
-    button.textContent = loadingText;
-  } else {
-    button.disabled = false;
-    button.textContent = button.dataset.originalText || "Salvar";
-  }
-}
-
 function normalizeName(name = "") {
   return String(name)
     .normalize("NFD")
@@ -167,6 +151,40 @@ function capitalizeWords(text = "") {
   return String(text)
     .toLowerCase()
     .replace(/\b\w/g, (m) => m.toUpperCase());
+}
+
+function showMessage(message, type = "info") {
+  if (!els.formMessage) return;
+
+  els.formMessage.classList.remove("hidden", "error", "success", "info", "warning");
+  els.formMessage.classList.add(type);
+  els.formMessage.textContent = message;
+
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function clearMessage() {
+  if (!els.formMessage) return;
+
+  els.formMessage.classList.add("hidden");
+  els.formMessage.textContent = "";
+  els.formMessage.classList.remove("error", "success", "info", "warning");
+}
+
+function setLoading(button, isLoading, loadingText = "Salvando...") {
+  if (!button) return;
+
+  if (isLoading) {
+    if (!button.dataset.originalText) {
+      button.dataset.originalText = button.textContent;
+    }
+
+    button.disabled = true;
+    button.textContent = loadingText;
+  } else {
+    button.disabled = false;
+    button.textContent = button.dataset.originalText || "Salvar";
+  }
 }
 
 function formatPhone(value = "") {
@@ -199,17 +217,26 @@ function isValidEmail(email = "") {
 function isValidCPF(cpf = "") {
   const digits = onlyDigits(cpf);
 
+  if (!digits) return true;
   if (digits.length !== 11) return false;
   if (/^(\d)\1+$/.test(digits)) return false;
 
   let sum = 0;
-  for (let i = 0; i < 9; i++) sum += Number(digits[i]) * (10 - i);
+
+  for (let i = 0; i < 9; i++) {
+    sum += Number(digits[i]) * (10 - i);
+  }
+
   let firstDigit = (sum * 10) % 11;
   if (firstDigit === 10) firstDigit = 0;
   if (firstDigit !== Number(digits[9])) return false;
 
   sum = 0;
-  for (let i = 0; i < 10; i++) sum += Number(digits[i]) * (11 - i);
+
+  for (let i = 0; i < 10; i++) {
+    sum += Number(digits[i]) * (11 - i);
+  }
+
   let secondDigit = (sum * 10) % 11;
   if (secondDigit === 10) secondDigit = 0;
   if (secondDigit !== Number(digits[10])) return false;
@@ -217,28 +244,95 @@ function isValidCPF(cpf = "") {
   return true;
 }
 
-function randomAlphaNum(length = 6) {
-  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let out = "";
+/* =========================
+   CONFIG AUXILIAR
+========================= */
 
-  for (let i = 0; i < length; i++) {
-    out += chars.charAt(Math.floor(Math.random() * chars.length));
+function getCanonicalTerritoryId() {
+  return CONFIG.territoryId;
+}
+
+function getCanonicalTerritoryLabel() {
+  return CONFIG.territoryLabel;
+}
+
+function getCodeTerritoryKey() {
+  return String(CONFIG.territorySlug || CONFIG.territoryId || "")
+    .toLowerCase()
+    .replace(/^crgr_/, "")
+    .replace(/_/g, "-")
+    .trim();
+}
+
+function getCodeLocalType() {
+  const localType = String(STATE.localType || "casa").trim();
+
+  if (localType === "condominio") return "condominio";
+  if (localType === "comercio") return "comercio";
+  if (localType === "outro") return "outro";
+
+  return "casa";
+}
+
+function assertRuntimeConfig() {
+  if (!CONFIG.territoryId || !CONFIG.territoryLabel) {
+    throw new Error(
+      "Configuração do território ausente. Verifique os atributos data-territory-id e data-territory-label no body."
+    );
+  }
+}
+
+/* =========================
+   CÓDIGO SEQUENCIAL
+========================= */
+
+async function generateSequentialCode() {
+  const territoryKey = getCodeTerritoryKey();
+  const localTypeKey = getCodeLocalType();
+
+  const config = CODE_CONFIG[territoryKey]?.[localTypeKey];
+
+  if (!config) {
+    throw new Error(`Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`);
   }
 
-  return out;
-}
+  const { prefix, start } = config;
 
-function generateParticipantCode() {
-  return `RB-${randomAlphaNum(6)}`;
-}
+  const q = query(
+    collection(db, "participants"),
+    where("territoryId", "==", getCanonicalTerritoryId()),
+    where("codeLocalType", "==", localTypeKey)
+  );
 
-function generateCondominiumCode() {
-  return `COND-${randomAlphaNum(6)}`;
+  const snapshot = await getDocs(q);
+
+  let maxNumber = 0;
+
+  snapshot.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const code = String(data.participantCode || "").trim();
+
+    if (!code.startsWith(`${prefix}-`)) return;
+
+    const numberPart = Number(code.split("-")[1]);
+
+    if (Number.isFinite(numberPart) && numberPart > maxNumber) {
+      maxNumber = numberPart;
+    }
+  });
+
+  const nextNumber = Math.max(start, maxNumber + 1);
+
+  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
 
 function getRegisterTypeByLocalType(localType) {
   return localType === "condominio" ? "condominio" : "participante";
 }
+
+/* =========================
+   GEO PREVIEW
+========================= */
 
 function updateGeoPreview() {
   if (els.geoPreview) {
@@ -260,8 +354,13 @@ function resetGeo() {
     lng: null,
     addressLabel: ""
   };
+
   updateGeoPreview();
 }
+
+/* =========================
+   TIPO DE LOCAL / CÓDIGO
+========================= */
 
 function syncRegisterTypeUI() {
   const buttons = els.registerTypeGroup?.querySelectorAll("[data-register-type]") || [];
@@ -269,6 +368,7 @@ function syncRegisterTypeUI() {
   buttons.forEach((btn) => {
     const registerType = btn.dataset.registerType;
     const isSelected = registerType === STATE.registerType;
+
     const shouldBeDisabled =
       STATE.localType === "condominio"
         ? registerType !== "condominio"
@@ -280,14 +380,11 @@ function syncRegisterTypeUI() {
   });
 }
 
-function setRegisterType(registerType, regenerate = true) {
+async function setRegisterType(registerType, regenerate = true) {
   STATE.registerType = registerType;
 
   if (regenerate || !STATE.generatedCode) {
-    STATE.generatedCode =
-      registerType === "condominio"
-        ? generateCondominiumCode()
-        : generateParticipantCode();
+    STATE.generatedCode = await generateSequentialCode();
   }
 
   if (els.generatedCode) {
@@ -297,10 +394,11 @@ function setRegisterType(registerType, regenerate = true) {
   syncRegisterTypeUI();
 }
 
-function setLocalType(localType) {
+async function setLocalType(localType) {
   STATE.localType = localType;
 
   const buttons = els.localTypeGroup?.querySelectorAll("[data-local-type]") || [];
+
   buttons.forEach((btn) => {
     const selected = btn.dataset.localType === localType;
     btn.classList.toggle("selected", selected);
@@ -308,8 +406,21 @@ function setLocalType(localType) {
   });
 
   const autoRegisterType = getRegisterTypeByLocalType(localType);
-  setRegisterType(autoRegisterType, true);
+
+  try {
+    await setRegisterType(autoRegisterType, true);
+  } catch (error) {
+    console.warn("Não foi possível gerar o código neste momento:", error);
+
+    if (els.generatedCode) {
+      els.generatedCode.value = "Será gerado ao concluir";
+    }
+  }
 }
+
+/* =========================
+   STEPS
+========================= */
 
 function getStepCards() {
   return Array.from(document.querySelectorAll(".step-card"));
@@ -340,19 +451,25 @@ function updateProgress() {
 
 function goToStep(step) {
   if (step < 1 || step > STATE.totalSteps) return;
+
   STATE.currentStep = step;
   updateProgress();
   clearMessage();
+
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/* VALIDACAO */
+/* =========================
+   VALIDAÇÃO
+========================= */
 
 function validateStep1() {
-  if (!els.consentLgpd?.checked || !els.consentWhatsapp?.checked || !els.consentImage?.checked) {
-    showMessage("Para continuar, é necessário marcar todos os consentimentos da página 1.", "error");
+  if (!STATE.consentAccepted) {
+    showMessage("Para continuar, clique em “Concordo com todas as autorizações”.", "error");
+    els.btnAcceptAllConsents?.focus();
     return false;
   }
+
   return true;
 }
 
@@ -374,20 +491,15 @@ function validateStep2() {
     return false;
   }
 
-  if (!email || !isValidEmail(email)) {
-    showMessage("Informe um e-mail válido.", "error");
+  if (email && !isValidEmail(email)) {
+    showMessage("O e-mail informado não é válido. Corrija ou deixe o campo em branco.", "error");
     els.email?.focus();
     return false;
   }
 
-  if (!cpf || !isValidCPF(cpf)) {
-    showMessage("Informe um CPF válido.", "error");
+  if (cpf && !isValidCPF(cpf)) {
+    showMessage("O CPF informado não é válido. Corrija ou deixe o campo em branco.", "error");
     els.cpf?.focus();
-    return false;
-  }
-
-  if (!STATE.generatedCode) {
-    showMessage("Não foi possível gerar o código do cadastro.", "error");
     return false;
   }
 
@@ -395,22 +507,11 @@ function validateStep2() {
 }
 
 function validateStep3() {
-  const cep = onlyDigits(els.cep?.value);
-  const number = String(els.number?.value || "").trim();
-  const street = String(els.street?.value || "").trim();
-  const neighborhood = String(els.neighborhood?.value || "").trim();
-  const city = String(els.city?.value || "").trim();
-  const state = String(els.state?.value || "").trim();
   const referencePoint = String(els.referencePoint?.value || "").trim();
 
-  if (cep.length !== 8) {
-    showMessage("Informe um CEP válido.", "error");
-    els.cep?.focus();
-    return false;
-  }
-
-  if (!number || !street || !neighborhood || !city || !state || !referencePoint) {
-    showMessage("Preencha todos os campos obrigatórios da página 3.", "error");
+  if (!referencePoint) {
+    showMessage("Informe o ponto de referência.", "error");
+    els.referencePoint?.focus();
     return false;
   }
 
@@ -423,27 +524,42 @@ function validateStep4() {
 
 function validateCurrentStep() {
   switch (STATE.currentStep) {
-    case 1: return validateStep1();
-    case 2: return validateStep2();
-    case 3: return validateStep3();
-    case 4: return validateStep4();
-    default: return true;
+    case 1:
+      return validateStep1();
+    case 2:
+      return validateStep2();
+    case 3:
+      return validateStep3();
+    case 4:
+      return validateStep4();
+    default:
+      return true;
   }
 }
 
-/* CEP + GEO */
+/* =========================
+   CEP + GEO
+========================= */
 
 async function fetchCEP(cep) {
   const cleanCep = onlyDigits(cep);
-  if (cleanCep.length !== 8) throw new Error("CEP inválido.");
+
+  if (cleanCep.length !== 8) {
+    throw new Error("CEP inválido.");
+  }
 
   const url = `${CONFIG.viacepBase}/${cleanCep}/json/`;
   const response = await fetch(url);
 
-  if (!response.ok) throw new Error("Falha ao consultar o CEP.");
+  if (!response.ok) {
+    throw new Error("Falha ao consultar o CEP.");
+  }
 
   const data = await response.json();
-  if (data.erro) throw new Error("CEP não encontrado.");
+
+  if (data.erro) {
+    throw new Error("CEP não encontrado.");
+  }
 
   return data;
 }
@@ -456,9 +572,12 @@ async function geocodeAddress() {
   const state = String(els.state?.value || "").trim();
   const cep = onlyDigits(els.cep?.value);
 
-  if (!street || !number || !city || !state) return null;
+  if (!street || !number || !city || !state) {
+    return null;
+  }
 
   const queryText = `${street}, ${number}, ${neighborhood}, ${city}, ${state}, Brasil, ${cep}`;
+
   const url = new URL(CONFIG.nominatimBase);
   url.searchParams.set("format", "jsonv2");
   url.searchParams.set("limit", "1");
@@ -471,10 +590,15 @@ async function geocodeAddress() {
     }
   });
 
-  if (!response.ok) throw new Error("Falha ao geocodificar endereço.");
+  if (!response.ok) {
+    throw new Error("Falha ao geocodificar endereço.");
+  }
 
   const results = await response.json();
-  if (!Array.isArray(results) || !results.length) return null;
+
+  if (!Array.isArray(results) || !results.length) {
+    return null;
+  }
 
   const result = results[0];
 
@@ -497,6 +621,7 @@ async function handleBuscarCep() {
     if (els.state) els.state.value = data.uf || "";
 
     showMessage("CEP encontrado com sucesso.", "success");
+
     await tryGeocodeWhenReady(true);
   } catch (error) {
     resetGeo();
@@ -520,9 +645,15 @@ async function tryGeocodeWhenReady(force = false) {
 
   try {
     const geo = await geocodeAddress();
+
     if (requestId !== STATE.geoRequestId) return;
 
-    STATE.geo = geo || { lat: null, lng: null, addressLabel: "" };
+    STATE.geo = geo || {
+      lat: null,
+      lng: null,
+      addressLabel: ""
+    };
+
     updateGeoPreview();
   } catch {
     if (requestId !== STATE.geoRequestId) return;
@@ -530,10 +661,40 @@ async function tryGeocodeWhenReady(force = false) {
   }
 }
 
-/* PAYLOAD */
+/* =========================
+   PAYLOAD
+========================= */
 
 function getSelectedDifficulty() {
   return els.difficultyGroup?.querySelector(".choice-card.selected")?.dataset?.difficulty || "sim";
+}
+
+function getProjectSourceLabel() {
+  if (!els.projectSource) return null;
+
+  const selectedOption = els.projectSource.options[els.projectSource.selectedIndex];
+
+  return selectedOption?.textContent?.trim() || null;
+}
+
+function buildAddressLabel() {
+  const cepDigits = onlyDigits(els.cep?.value || "");
+  const street = String(els.street?.value || "").trim();
+  const number = String(els.number?.value || "").trim();
+  const neighborhood = String(els.neighborhood?.value || "").trim();
+  const city = String(els.city?.value || "").trim();
+  const state = String(els.state?.value || "").trim().toUpperCase();
+  const referencePoint = String(els.referencePoint?.value || "").trim();
+
+  const enderecoCompleto = [
+    street && number ? `${street}, ${number}` : street || number,
+    neighborhood,
+    city || state ? `${city}${city && state ? ", " : ""}${state}` : "",
+    cepDigits ? `CEP ${formatCEP(cepDigits)}` : "",
+    "Brasil"
+  ].filter(Boolean).join(" - ");
+
+  return enderecoCompleto || referencePoint;
 }
 
 function buildParticipantPayload() {
@@ -554,11 +715,11 @@ function buildParticipantPayload() {
   const referencePoint = String(els.referencePoint?.value || "").trim();
 
   const difficulty = getSelectedDifficulty();
-  const difficultyDetail = String(els.difficultyDetail?.value || "").trim();
-  const projectSource = String(els.projectSource?.value || "").trim();
+  const householdMembers = String(els.householdMembers?.value || "").trim();
 
-  const enderecoCompleto =
-    `${street}, ${number} - ${neighborhood}, ${city}, ${state} - CEP ${formatCEP(cepDigits)} - Brasil`;
+  const projectSource = String(els.projectSource?.value || "").trim() || null;
+  const projectSourceLabel = getProjectSourceLabel();
+  const projectSourceOther = String(els.projectSourceOther?.value || "").trim() || null;
 
   return {
     name: fullName,
@@ -566,27 +727,28 @@ function buildParticipantPayload() {
     nameLower: slugify(fullName),
 
     phone: phoneDigits,
-    email,
-    cpf: cpfDigits,
+    email: email || null,
+    cpf: cpfDigits || null,
 
     localType: STATE.localType,
+    codeLocalType: getCodeLocalType(),
     registerType: STATE.registerType,
     participantType: STATE.registerType,
     participantCode: STATE.generatedCode,
 
-    cep: cepDigits,
-    rua: street,
-    street,
-    numero: number,
-    neighborhood,
-    bairro: neighborhood,
-    city,
-    cidade: city,
-    uf: state,
-    state,
+    cep: cepDigits || null,
+    rua: street || null,
+    street: street || null,
+    numero: number || null,
+    neighborhood: neighborhood || null,
+    bairro: neighborhood || null,
+    city: city || null,
+    cidade: city || null,
+    uf: state || null,
+    state: state || null,
     referencePoint,
-    enderecoCompleto,
-    address: enderecoCompleto,
+    enderecoCompleto: buildAddressLabel(),
+    address: buildAddressLabel(),
 
     territoryId,
     territoryLabel,
@@ -595,13 +757,16 @@ function buildParticipantPayload() {
     lng: STATE.geo.lng ?? null,
     geoAddressLabel: STATE.geo.addressLabel || "",
 
-    consentLgpd: !!els.consentLgpd?.checked,
-    consentWhatsapp: !!els.consentWhatsapp?.checked,
-    consentImage: !!els.consentImage?.checked,
+    consentLgpd: true,
+    consentWhatsapp: true,
+    consentImage: true,
+    consentAccepted: true,
 
     difficulty,
-    difficultyDetail,
+    householdMembers,
     projectSource,
+    projectSourceLabel,
+    projectSourceOther,
 
     status: "pending_approval",
     approvalStatus: "pending",
@@ -631,12 +796,13 @@ function buildApprovalRequestPayload(participantId, participantData) {
 
     participantCode: participantData.participantCode,
     participantName: participantData.name,
-    participantEmail: participantData.email,
+    participantEmail: participantData.email || null,
     participantPhone: participantData.phone,
-    participantCpf: participantData.cpf,
+    participantCpf: participantData.cpf || null,
 
     registerType: participantData.registerType,
     localType: participantData.localType,
+    codeLocalType: participantData.codeLocalType,
 
     status: "pending",
     decision: null,
@@ -650,17 +816,23 @@ function buildApprovalRequestPayload(participantId, participantData) {
 
     payloadSnapshot: {
       name: participantData.name,
-      email: participantData.email,
+      email: participantData.email || null,
       phone: participantData.phone,
-      cpf: participantData.cpf,
+      cpf: participantData.cpf || null,
       participantCode: participantData.participantCode,
       registerType: participantData.registerType,
       localType: participantData.localType,
+      codeLocalType: participantData.codeLocalType,
       territoryId,
       territoryLabel,
       enderecoCompleto: participantData.enderecoCompleto,
+      referencePoint: participantData.referencePoint,
       lat: participantData.lat ?? null,
-      lng: participantData.lng ?? null
+      lng: participantData.lng ?? null,
+      householdMembers: participantData.householdMembers,
+      projectSource: participantData.projectSource,
+      projectSourceLabel: participantData.projectSourceLabel,
+      projectSourceOther: participantData.projectSourceOther
     },
 
     createdAt: serverTimestamp(),
@@ -669,6 +841,14 @@ function buildApprovalRequestPayload(participantId, participantData) {
 }
 
 async function saveRegistration() {
+  if (!STATE.generatedCode || STATE.generatedCode === "Será gerado ao concluir") {
+    STATE.generatedCode = await generateSequentialCode();
+
+    if (els.generatedCode) {
+      els.generatedCode.value = STATE.generatedCode;
+    }
+  }
+
   const participantPayload = buildParticipantPayload();
   const participantRef = await addDoc(collection(db, "participants"), participantPayload);
 
@@ -686,10 +866,13 @@ async function saveRegistration() {
   };
 }
 
-/* MODAL */
+/* =========================
+   MODAL
+========================= */
 
 function openSuccessModal() {
   if (!els.successModal) return;
+
   els.successModal.classList.remove("hidden");
   els.successModal.setAttribute("aria-hidden", "false");
   document.body.style.overflow = "hidden";
@@ -697,13 +880,54 @@ function openSuccessModal() {
 
 function closeSuccessModal() {
   if (!els.successModal) return;
+
   els.successModal.classList.add("hidden");
   els.successModal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
   window.location.href = CONFIG.redirectAfterSuccess;
 }
 
-/* EVENTS */
+/* =========================
+   EVENTS
+========================= */
+
+function bindConsentButton() {
+  const btn = document.getElementById("btnAcceptAllConsents");
+  const note = document.getElementById("consentAcceptedNote");
+
+  btn?.addEventListener("click", () => {
+    STATE.consentAccepted = true;
+
+    if (els.consentLgpd) els.consentLgpd.checked = true;
+    if (els.consentWhatsapp) els.consentWhatsapp.checked = true;
+    if (els.consentImage) els.consentImage.checked = true;
+
+    btn.classList.add("is-accepted");
+    btn.innerHTML = "✅ Autorizações confirmadas";
+    btn.disabled = true;
+
+    if (note) {
+      note.classList.remove("hidden");
+      note.style.display = "flex";
+    }
+
+    clearMessage();
+  });
+}
+
+function bindProjectSourceSelect() {
+  els.projectSource?.addEventListener("change", () => {
+    if (!els.projectSourceOther) return;
+
+    if (els.projectSource.value === "outro") {
+      els.projectSourceOther.classList.remove("hidden");
+      els.projectSourceOther.focus();
+    } else {
+      els.projectSourceOther.classList.add("hidden");
+      els.projectSourceOther.value = "";
+    }
+  });
+}
 
 function bindStepNavigation() {
   document.querySelectorAll("[data-next-step]").forEach((button) => {
@@ -730,9 +954,10 @@ function bindStepNavigation() {
 
 function bindLocalTypeButtons() {
   const buttons = els.localTypeGroup?.querySelectorAll("[data-local-type]") || [];
+
   buttons.forEach((button) => {
-    button.addEventListener("click", () => {
-      setLocalType(button.dataset.localType);
+    button.addEventListener("click", async () => {
+      await setLocalType(button.dataset.localType);
       clearMessage();
     });
   });
@@ -740,10 +965,12 @@ function bindLocalTypeButtons() {
 
 function bindRegisterTypeButtons() {
   const buttons = els.registerTypeGroup?.querySelectorAll("[data-register-type]") || [];
+
   buttons.forEach((button) => {
-    button.addEventListener("click", () => {
+    button.addEventListener("click", async () => {
       if (button.classList.contains("is-disabled")) return;
-      setRegisterType(button.dataset.registerType, true);
+
+      await setRegisterType(button.dataset.registerType, true);
       clearMessage();
     });
   });
@@ -751,6 +978,7 @@ function bindRegisterTypeButtons() {
 
 function bindDifficultyButtons() {
   const buttons = els.difficultyGroup?.querySelectorAll("[data-difficulty]") || [];
+
   buttons.forEach((button) => {
     button.addEventListener("click", () => {
       buttons.forEach((btn) => btn.classList.remove("selected"));
@@ -760,16 +988,16 @@ function bindDifficultyButtons() {
 }
 
 function bindFormatters() {
-  els.phone?.addEventListener("input", (e) => {
-    e.target.value = formatPhone(e.target.value);
+  els.phone?.addEventListener("input", (event) => {
+    event.target.value = formatPhone(event.target.value);
   });
 
-  els.cpf?.addEventListener("input", (e) => {
-    e.target.value = formatCPF(e.target.value);
+  els.cpf?.addEventListener("input", (event) => {
+    event.target.value = formatCPF(event.target.value);
   });
 
-  els.cep?.addEventListener("input", (e) => {
-    e.target.value = formatCEP(e.target.value);
+  els.cep?.addEventListener("input", (event) => {
+    event.target.value = formatCEP(event.target.value);
   });
 }
 
@@ -778,6 +1006,7 @@ function bindGeoEvents() {
 
   ["number", "street", "neighborhood", "city", "state", "cep"].forEach((id) => {
     const el = $(id);
+
     if (!el) return;
 
     el.addEventListener("change", async () => {
@@ -792,13 +1021,17 @@ function bindGeoEvents() {
 
 function bindMenu() {
   els.menuToggle?.addEventListener("click", () => {
+    els.mobileMenu?.classList.toggle("show");
     els.mobileMenu?.classList.toggle("open");
   });
 }
 
 function bindSuccessModal() {
   els.closeSuccessModal?.addEventListener("click", closeSuccessModal);
-  els.successModal?.querySelector(".success-modal-backdrop")?.addEventListener("click", closeSuccessModal);
+
+  els.successModal
+    ?.querySelector(".success-modal-backdrop")
+    ?.addEventListener("click", closeSuccessModal);
 }
 
 function bindSubmit() {
@@ -818,6 +1051,7 @@ function bindSubmit() {
 
     try {
       await tryGeocodeWhenReady(true);
+
       const result = await saveRegistration();
 
       showMessage(
@@ -828,8 +1062,9 @@ function bindSubmit() {
       openSuccessModal();
     } catch (error) {
       console.error("Erro ao salvar cadastro:", error);
+
       showMessage(
-        "Não foi possível enviar o cadastro. Verifique as regras do Firestore para participants e approvalRequests.",
+        error?.message || "Não foi possível enviar o cadastro. Verifique as regras do Firestore para participants e approvalRequests.",
         "error"
       );
     } finally {
@@ -839,7 +1074,9 @@ function bindSubmit() {
   });
 }
 
-/* INIT */
+/* =========================
+   INIT
+========================= */
 
 function initStaticTexts() {
   if (els.territoryLabelView) {
@@ -851,26 +1088,53 @@ function initStaticTexts() {
   }
 }
 
-function initDefaults() {
-  setLocalType("casa");
+async function initDefaults() {
+  STATE.consentAccepted = false;
+
+  if (els.consentLgpd) els.consentLgpd.checked = true;
+  if (els.consentWhatsapp) els.consentWhatsapp.checked = true;
+  if (els.consentImage) els.consentImage.checked = true;
+
+  if (els.projectSourceOther) {
+    els.projectSourceOther.classList.add("hidden");
+  }
+
   updateGeoPreview();
   updateProgress();
+
+  try {
+    await setLocalType("casa");
+  } catch (error) {
+    console.warn("Não foi possível gerar o código inicial:", error);
+
+    if (els.generatedCode) {
+      els.generatedCode.value = "Será gerado ao concluir";
+    }
+  }
 }
 
-function init() {
-  assertRuntimeConfig();
-  initStaticTexts();
-  initDefaults();
+async function init() {
+  try {
+    assertRuntimeConfig();
+    initStaticTexts();
 
-  bindStepNavigation();
-  bindLocalTypeButtons();
-  bindRegisterTypeButtons();
-  bindDifficultyButtons();
-  bindFormatters();
-  bindGeoEvents();
-  bindMenu();
-  bindSuccessModal();
-  bindSubmit();
+    bindConsentButton();
+    bindStepNavigation();
+    bindLocalTypeButtons();
+    bindRegisterTypeButtons();
+    bindDifficultyButtons();
+    bindProjectSourceSelect();
+    bindFormatters();
+    bindGeoEvents();
+    bindMenu();
+    bindSuccessModal();
+    bindSubmit();
+
+    await initDefaults();
+  } catch (error) {
+    console.error("Erro ao iniciar formulário:", error);
+    showMessage(error?.message || "Não foi possível iniciar o formulário.", "error");
+  }
 }
 
 init();
