@@ -241,7 +241,15 @@ function canManageApprovals() {
 }
 
 function canManageCoopUsers() {
-  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
+  const role = roleName();
+  const permissions = STATE.userDoc?.permissions || {};
+  const roles = STATE.userDoc?.roles || {};
+
+  return (
+    ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(role) ||
+    permissions.gerenciarUsuarios === true ||
+    roles.gerenciarUsuarios === true
+  );
 }
 
 function getMyTerritoryId() {
@@ -653,10 +661,8 @@ function notifyNewRequest(user) {
 USUÁRIOS INTERNOS DA COOP
 ========================= */
 
-function getCoopRolesPayload() {
+function getCoopPermissionsPayload() {
   return {
-    user: true,
-    cooperativa: true,
     dashboard: !!els.permDashboard?.checked,
     coletas: !!els.permColetas?.checked,
     participants: !!els.permParticipants?.checked,
@@ -670,6 +676,7 @@ function getCoopRolesPayload() {
 
 function getCoopRolesPayload() {
   return {
+    user: true,
     cooperativa: true,
     dashboard: !!els.permDashboard?.checked,
     coletas: !!els.permColetas?.checked,
@@ -855,18 +862,23 @@ async function createCoopUserRecord() {
 
     // 🔥 salva no firestore
     await setDoc(doc(db, "users", authUser.uid), {
-      uid: authUser.uid,
-      name,
-      displayName,
-      email,
-      role,
-      status: "active",
-      territoryId,
-      territoryLabel,
-      permissions: getCoopPermissionsPayload(),
-      roles: getCoopRolesPayload(),
-      createdAt: serverTimestamp()
-    });
+  uid: authUser.uid,
+  name,
+  displayName,
+  email,
+  role,
+  status: "active",
+  territoryId,
+  territoryLabel,
+  onboardingCompleted: true,
+  permissions: getCoopPermissionsPayload(),
+  roles: getCoopRolesPayload(),
+  publicCode: `RB-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
+  createdAt: serverTimestamp(),
+  updatedAt: serverTimestamp(),
+  createdBy: STATE.authUser?.uid || null,
+  createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || "Administrador"
+});
 
     alert("Usuário criado com sucesso!");
     els.coopUserForm.reset();
