@@ -790,26 +790,32 @@ async function createFirebaseAuthUser(email, password, displayName) {
         email,
         password,
         displayName,
-        returnSecureToken: false
+        returnSecureToken: true
       })
     }
   );
 
   const data = await response.json();
 
+  console.log("RESPOSTA FIREBASE AUTH:", data);
+
   if (!response.ok) {
-    const message = data?.error?.message || "Erro ao criar usuário.";
+    const message = data?.error?.message || "Erro ao criar usuário no Firebase Authentication.";
 
     if (message === "EMAIL_EXISTS") {
-      throw new Error("Este e-mail já está cadastrado.");
+      throw new Error("Este e-mail já existe no Firebase Authentication.");
     }
 
     if (message.includes("WEAK_PASSWORD")) {
-      throw new Error("Senha precisa ter no mínimo 6 caracteres.");
+      throw new Error("A senha precisa ter pelo menos 6 caracteres.");
     }
 
     if (message === "INVALID_EMAIL") {
       throw new Error("E-mail inválido.");
+    }
+
+    if (message === "OPERATION_NOT_ALLOWED") {
+      throw new Error("Login por e-mail/senha não está ativado no Firebase Authentication.");
     }
 
     throw new Error(message);
@@ -817,7 +823,8 @@ async function createFirebaseAuthUser(email, password, displayName) {
 
   return {
     uid: data.localId,
-    email: data.email
+    email: data.email,
+    idToken: data.idToken
   };
 }
 async function createCoopUserRecord() {
