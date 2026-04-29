@@ -1,4 +1,4 @@
-import { auth } from "./firebase-init.js";
+import { auth, db } from "./firebase-init.js";
 
 import {
   signInWithEmailAndPassword,
@@ -10,56 +10,10 @@ import {
   signOut
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
-/* =============================
-   USUÁRIOS AUTORIZADOS
-============================= */
-const ACCESS_RULES = {
-  "governanca@teste.com": {
-    cooperativaId: null,
-    cooperativaNome: "Todas",
-    perfil: "governanca",
-    scope: "global"
-  },
-
-  "admin.vp@teste.com": {
-    cooperativaId: "crgr_vila_pinto",
-    cooperativaNome: "Vila Pinto",
-    perfil: "admin",
-    scope: "cooperativa"
-  },
-  "user.vp@teste.com": {
-    cooperativaId: "crgr_vila_pinto",
-    cooperativaNome: "Vila Pinto",
-    perfil: "cooperativa",
-    scope: "cooperativa"
-  },
-
-  "admin.cooadesc@teste.com": {
-    cooperativaId: "crgr_coadesc",
-    cooperativaNome: "COADESC",
-    perfil: "admin",
-    scope: "cooperativa"
-  },
-  "user.cooadesc@teste.com": {
-    cooperativaId: "crgr_coadesc",
-    cooperativaNome: "COADESC",
-    perfil: "cooperativa",
-    scope: "cooperativa"
-  },
-
-  "admin.pc@teste.com": {
-    cooperativaId: "crgr_padre_cacique",
-    cooperativaNome: "Padre Cacique",
-    perfil: "admin",
-    scope: "cooperativa"
-  },
-  "user.pc@teste.com": {
-    cooperativaId: "crgr_padre_cacique",
-    cooperativaNome: "Padre Cacique",
-    perfil: "cooperativa",
-    scope: "cooperativa"
-  }
-};
+import {
+  doc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =============================
    ROTAS
@@ -68,9 +22,20 @@ const PAGES = {
   governanca: "./governanca.html",
   login: "./login.html",
   cooperativas: {
-    crgr_vila_pinto: "./cooperativa-vila-pinto.html",
-    crgr_coadesc: "./cooperativa-cooadesc.html",
-    crgr_padre_cacique: "./cooperativa-padre-cacique.html"
+    "vila-pinto": "./cooperativa-vila-pinto.html",
+    "crgr-vila-pinto": "./cooperativa-vila-pinto.html",
+    "crgr_vila_pinto": "./cooperativa-vila-pinto.html",
+
+    "cooadesc": "./cooperativa-cooadesc.html",
+    "coadesc": "./cooperativa-cooadesc.html",
+    "crgr-cooadesc": "./cooperativa-cooadesc.html",
+    "crgr_cooadesc": "./cooperativa-cooadesc.html",
+    "crgr-coadesc": "./cooperativa-cooadesc.html",
+    "crgr_coadesc": "./cooperativa-cooadesc.html",
+
+    "padre-cacique": "./cooperativa-padre-cacique.html",
+    "crgr-padre-cacique": "./cooperativa-padre-cacique.html",
+    "crgr_padre_cacique": "./cooperativa-padre-cacique.html"
   }
 };
 
@@ -91,6 +56,7 @@ const loginPassword = document.getElementById("loginPassword");
    CURSOR GLOW
 ============================= */
 const glow = document.getElementById("cursorGlow");
+
 if (glow) {
   window.addEventListener(
     "pointermove",
@@ -111,6 +77,7 @@ if (glow) {
    REVEAL
 ============================= */
 const revealEls = document.querySelectorAll("[data-reveal]");
+
 if (revealEls.length && "IntersectionObserver" in window) {
   const io = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -130,6 +97,7 @@ if (revealEls.length && "IntersectionObserver" in window) {
 ============================= */
 function showMsg(el, type, text) {
   if (!el) return;
+
   el.classList.remove("is-error", "is-success");
   el.classList.add(type === "error" ? "is-error" : "is-success");
   el.textContent = text;
@@ -137,6 +105,7 @@ function showMsg(el, type, text) {
 
 function hideMsg(el) {
   if (!el) return;
+
   el.classList.remove("is-error", "is-success");
   el.textContent = "";
 }
@@ -161,34 +130,81 @@ function normalizeEmail(email) {
   return String(email || "").trim().toLowerCase();
 }
 
-function getAccessData(email) {
-  return ACCESS_RULES[normalizeEmail(email)] || null;
+function normalizeTerritory(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[_\s]+/g, "-")
+    .trim();
 }
 
-function isGovernancaAccess(access) {
-  return !!access && (
-    access.perfil === "governanca" ||
-    access.scope === "global"
+async function getUserProfile(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+
+  if (!snap.exists()) {
+    return null;
+  }
+
+  return {
+    id: snap.id,
+    ...snap.data()
+  };
+}
+
+function isUserActive(profile) {
+  return !!profile && (
+    profile.status === "active" ||
+    profile.status === "aprovado" ||
+    profile.active === true
   );
 }
 
-function getCooperativaPage(cooperativaId) {
-  return PAGES.cooperativas[cooperativaId] || null;
+function getUserRole(profile) {
+  return String(
+    profile?.role ||
+    profile?.perfil ||
+    profile?.profile ||
+    profile?.tipo ||
+    profile?.userType ||
+    ""
+  ).toLowerCase();
 }
 
-function getRedirectPage(access) {
-  if (!access) return PAGES.login;
+function getRedirectPage(profile) {
+  if (!profile) return PAGES.login;
 
-  if (isGovernancaAccess(access)) {
+  const role = getUserRole(profile);
+
+  if (
+    role === "governanca" ||
+    role === "gestor" ||
+    role === "superadmin" ||
+    role === "admin_master"
+  ) {
     return PAGES.governanca;
   }
 
-  const coopPage = getCooperativaPage(access.cooperativaId);
-  return coopPage || PAGES.login;
+  if (
+    role === "admin" ||
+    role === "cooperativa" ||
+    role === "operador" ||
+    role === "usuario"
+  ) {
+    const territoryId = normalizeTerritory(
+      profile.territoryId ||
+      profile.cooperativaId ||
+      profile.cooperativeId
+    );
+
+    return PAGES.cooperativas[territoryId] || PAGES.login;
+  }
+
+  return PAGES.login;
 }
 
-function redirectByAccess(access) {
-  const target = getRedirectPage(access);
+function redirectByProfile(profile) {
+  const target = getRedirectPage(profile);
 
   if (!target || target === PAGES.login) {
     showMsg(
@@ -202,81 +218,59 @@ function redirectByAccess(access) {
   window.location.href = target;
 }
 
-function describeAccess(access) {
-  if (!access) return "sem acesso";
+function describeAccess(profile) {
+  if (!profile) return "sem acesso";
 
-  if (isGovernancaAccess(access)) {
-    return "Governança • acesso à página de governança";
+  const role = getUserRole(profile);
+  const territory =
+    profile.territoryLabel ||
+    profile.cooperativaNome ||
+    profile.cooperativeName ||
+    profile.territoryId ||
+    "Sem território";
+
+  if (
+    role === "governanca" ||
+    role === "gestor" ||
+    role === "superadmin" ||
+    role === "admin_master"
+  ) {
+    return "Governança • acesso global";
   }
 
-  if (access.perfil === "admin") {
-    return `Administrador local • ${access.cooperativaNome}`;
+  if (role === "admin") {
+    return `Administrador local • ${territory}`;
   }
 
-  return `Usuário da cooperativa • ${access.cooperativaNome}`;
+  if (role === "cooperativa") {
+    return `Usuário da cooperativa • ${territory}`;
+  }
+
+  if (role === "operador") {
+    return `Operador • ${territory}`;
+  }
+
+  return `${role || "Usuário"} • ${territory}`;
 }
 
-/* =============================
-   JÁ LOGADO
-============================= */
-onAuthStateChanged(auth, async (user) => {
-  if (!user) {
-    if (authedActions) authedActions.style.display = "none";
-    return;
-  }
-
-  const email = normalizeEmail(user.email);
-  const access = getAccessData(email);
-
-  hideMsg(msgBox);
-
-  if (!access) {
-    showMsg(
-      msgBox,
-      "error",
-      `Sua conta (${email}) foi autenticada, mas não possui acesso liberado.`
-    );
-
-    if (!authedActions) return;
-    authedActions.innerHTML = "";
-    authedActions.style.display = "grid";
-
-    const logoutBtn = document.createElement("button");
-    logoutBtn.type = "button";
-    logoutBtn.className = "btn btn-secondary btn-block";
-    logoutBtn.textContent = "Sair desta conta";
-    logoutBtn.addEventListener("click", async () => {
-      try {
-        await signOut(auth);
-        window.location.reload();
-      } catch {
-        showMsg(msgBox, "error", "Não consegui sair. Tente novamente.");
-      }
-    });
-
-    authedActions.appendChild(logoutBtn);
-    return;
-  }
-
+async function renderLoggedUserActions(user, profile) {
   showMsg(
     msgBox,
     "success",
-    `Você já está conectado como ${email}. Perfil: ${describeAccess(access)}.`
+    `Você já está conectado como ${normalizeEmail(user.email)}. Perfil: ${describeAccess(profile)}.`
   );
 
   if (!authedActions) return;
+
   authedActions.innerHTML = "";
   authedActions.style.display = "grid";
 
   const continueBtn = document.createElement("button");
   continueBtn.type = "button";
   continueBtn.className = "btn btn-primary btn-block";
-  continueBtn.textContent = isGovernancaAccess(access)
-    ? "Ir para Governança"
-    : `Ir para ${access.cooperativaNome}`;
-
+  continueBtn.textContent = "Continuar para plataforma";
   continueBtn.addEventListener("click", () => {
-    redirectByAccess(access);
+    redirectByProfile(profile);
   });
 
   const logoutBtn = document.createElement("button");
@@ -294,6 +288,81 @@ onAuthStateChanged(auth, async (user) => {
 
   authedActions.appendChild(continueBtn);
   authedActions.appendChild(logoutBtn);
+}
+
+async function renderBlockedUserActions(user) {
+  showMsg(
+    msgBox,
+    "error",
+    `Sua conta (${normalizeEmail(user.email)}) foi autenticada, mas não possui acesso liberado.`
+  );
+
+  if (!authedActions) return;
+
+  authedActions.innerHTML = "";
+  authedActions.style.display = "grid";
+
+  const logoutBtn = document.createElement("button");
+  logoutBtn.type = "button";
+  logoutBtn.className = "btn btn-secondary btn-block";
+  logoutBtn.textContent = "Sair desta conta";
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      window.location.reload();
+    } catch {
+      showMsg(msgBox, "error", "Não consegui sair. Tente novamente.");
+    }
+  });
+
+  authedActions.appendChild(logoutBtn);
+}
+
+/* =============================
+   JÁ LOGADO
+============================= */
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    if (authedActions) authedActions.style.display = "none";
+    return;
+  }
+
+  hideMsg(msgBox);
+
+  try {
+    const profile = await getUserProfile(user.uid);
+
+    if (!profile || !isUserActive(profile)) {
+      await renderBlockedUserActions(user);
+      return;
+    }
+
+    await renderLoggedUserActions(user, profile);
+  } catch (error) {
+    console.error("AUTH STATE ERROR =>", error);
+
+    showMsg(
+      msgBox,
+      "error",
+      "Erro ao verificar permissões do usuário no Firestore."
+    );
+
+    if (!authedActions) return;
+
+    authedActions.innerHTML = "";
+    authedActions.style.display = "grid";
+
+    const logoutBtn = document.createElement("button");
+    logoutBtn.type = "button";
+    logoutBtn.className = "btn btn-secondary btn-block";
+    logoutBtn.textContent = "Sair desta conta";
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.reload();
+    });
+
+    authedActions.appendChild(logoutBtn);
+  }
 });
 
 /* =============================
@@ -301,6 +370,7 @@ onAuthStateChanged(auth, async (user) => {
 ============================= */
 loginForm?.addEventListener("submit", async (e) => {
   e.preventDefault();
+
   hideMsg(msgBox);
   setLoading(true);
 
@@ -314,20 +384,22 @@ loginForm?.addEventListener("submit", async (e) => {
     );
 
     const cred = await signInWithEmailAndPassword(auth, email, password);
-    const authEmail = normalizeEmail(cred.user.email);
-    const access = getAccessData(authEmail);
 
-    if (!access) {
+    const profile = await getUserProfile(cred.user.uid);
+
+    if (!profile || !isUserActive(profile)) {
       await signOut(auth);
+
       showMsg(
         msgBox,
         "error",
         "Login realizado, mas este usuário não possui permissão para acessar a plataforma."
       );
+
       return;
     }
 
-    redirectByAccess(access);
+    redirectByProfile(profile);
   } catch (err) {
     console.error("LOGIN ERROR =>", err);
 
@@ -350,6 +422,8 @@ loginForm?.addEventListener("submit", async (e) => {
       text = "API Key inválida no firebaseConfig.";
     } else if (code.includes("auth/invalid-email")) {
       text = "E-mail inválido.";
+    } else if (code.includes("permission-denied")) {
+      text = "Sem permissão para ler o perfil do usuário no Firestore.";
     } else {
       text = "Erro no login: " + niceError(err);
     }
@@ -365,9 +439,11 @@ loginForm?.addEventListener("submit", async (e) => {
 ============================= */
 resetPwdLink?.addEventListener("click", async (e) => {
   e.preventDefault();
+
   hideMsg(msgBox);
 
   const email = normalizeEmail(loginEmail?.value);
+
   if (!email) {
     showMsg(msgBox, "error", "Digite seu e-mail para recuperar a senha.");
     return;
