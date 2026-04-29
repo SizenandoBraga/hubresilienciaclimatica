@@ -653,8 +653,10 @@ function notifyNewRequest(user) {
 USUÁRIOS INTERNOS DA COOP
 ========================= */
 
-function getCoopPermissionsPayload() {
+function getCoopRolesPayload() {
   return {
+    user: true,
+    cooperativa: true,
     dashboard: !!els.permDashboard?.checked,
     coletas: !!els.permColetas?.checked,
     participants: !!els.permParticipants?.checked,
@@ -1621,45 +1623,23 @@ async function upsertParticipantFromApprovedRequest(user) {
   const snapshot = user.raw?.payloadSnapshot || {};
   const isApproved = user.status === "aprovado";
 
- const payload = {
+const payload = {
   uid: createdAuthUser.uid,
   name,
-  nome: name,
   displayName,
   email,
-
   role,
-  perfil: role,
-  profile: role,
-  tipo: role,
-  userType: role,
-
   status: "active",
-  active: true,
-  approved: true,
-  isActive: true,
-  onboardingCompleted: true,
-
   territoryId,
   territoryLabel,
-  cooperativeId: territoryId,
-  cooperativeName: territoryLabel,
-
+  onboardingCompleted: true,
   permissions: getCoopPermissionsPayload(),
-  roles: {
-    ...getCoopRolesPayload(),
-    [role]: true
-  },
-
+  roles: getCoopRolesPayload(),
   publicCode: `RB-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-
   createdAt: serverTimestamp(),
   updatedAt: serverTimestamp(),
   createdBy: STATE.authUser?.uid || null,
-  createdByName:
-    STATE.userDoc?.name ||
-    STATE.userDoc?.displayName ||
-    "Administrador"
+  createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || "Administrador"
 };
 
   await setDoc(doc(db, "participants", participantId), payload, { merge: true });
