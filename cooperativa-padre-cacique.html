@@ -5,462 +5,375 @@
   <meta http-equiv="Content-Language" content="pt-BR" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NSRU • Cooperativa • Padre Cacique</title>
+  <title>Cadastro de Participantes • Padre Cacique</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
-
-  <link rel="stylesheet" href="cooperativas.css" />
+  <link rel="stylesheet" href="cadastro-participantes.css">
 </head>
+
 <body
-  data-territory-id="padre-cacique"
-  data-territory-label="Cooperativa Padre Cacique"
-  data-cooperative-name="Padre Cacique"
-  data-participant-url="cadastro-colaboradores-padre-cacique.html"
-  data-coletas-url="cadastro-coletas-padre-cacique.html"
-  data-map-lat="-30.140122365657504"
-  data-map-lng="-51.1268772051727"
-  data-map-zoom="15"
+  data-territory-id="crgr_padre_cacique"
+  data-territory-label="Padre Cacique"
+  data-territory-slug="padre-cacique"
+  data-redirect-url="/padre-cacique.html"
 >
-  <div class="coop-bg"></div>
-  <div class="coop-noise"></div>
-  <div class="mobile-overlay" id="mobileOverlay"></div>
+  <div class="page-bg"></div>
+  <div class="page-noise"></div>
 
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
-      <div class="sidebar-top">
-        <a class="brand" href="index.html" aria-label="Ir para a página inicial">
-          <div class="brand-mark">
-            <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
-          </div>
-        </a>
+  <header class="site-header">
+    <div class="site-header-inner">
+      <a class="site-brand" href="/index.html" aria-label="Ir para o início">
+        <div class="site-brand-mark">
+          <img src="/img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos">
+        </div>
+        <div class="site-brand-copy">
+          <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
+          <span>Plataforma • Territórios & CRGR</span>
+        </div>
+      </a>
+
+      <div class="site-header-actions">
+        <a class="site-login-btn" href="/padre-cacique.html">Voltar ao território →</a>
       </div>
 
-      <nav class="sidebar-nav">
-        <div class="nav-label">Menu</div>
+      <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu" type="button">☰</button>
+    </div>
 
-        <a class="nav-link active" href="cooperativa-padre-cacique.html">
-          <span class="nav-ico">🏠</span>
-          <span>Painel inicial</span>
-        </a>
+  <div class="site-mobile-menu" id="mobileMenu">
+      <a href="/index.html">Início</a>
+      <a href="padre-cacique.html">Voltar ao território</a>
+    </div>
+  </header>
 
-        <a class="nav-link admin-only" href="usuarios.html">
-          <span class="nav-ico">👥</span>
-          <span>Gestão de Usuários</span>
-        </a>
-
-        <a class="nav-link" href="cadastro-coletas-padre-cacique.html">
-          <span class="nav-ico">♻️</span>
-          <span>Registro de coletas</span>
-        </a>
-
-        <a class="nav-link" href="dashboard-cooperativa.html">
-          <span class="nav-ico">📊</span>
-          <span>Dashboard da cooperativa</span>
-        </a>
-
-        <a class="nav-link" href="conteudos.html">
-          <span class="nav-ico">📚</span>
-          <span>Conteúdos</span>
-        </a>
-
-        <a class="nav-link" href="documentos.html">
-          <span class="nav-ico">📄</span>
-          <span>Documentos</span>
-        </a>
-
-        <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
-          Atualizar indicadores da cooperativa
-        </button>
-
-        <div class="coop-sync-box">
-          <span class="coop-sync-label">Indicadores públicos da cooperativa</span>
-          <small id="syncCoopDashboardStatus">Aguardando verificação...</small>
+<main class="page-shell">
+    <section class="wizard-header glass-card">
+      <div class="wizard-header-top">
+        <div>
+          <span class="page-badge">Cadastro territorial</span>
+          <h1>Cadastro de Participantes</h1>
+          <p>Preencha as etapas abaixo para cadastrar moradores, famílias, condomínios e participantes vinculados ao território da cooperativa.</p>
         </div>
 
-        <div class="nav-label nav-label-space">Sessão</div>
-
-        <a class="nav-link" href="index.html" id="logoutLink">
-          <span class="nav-ico">↩</span>
-          <span>Sair</span>
-        </a>
-      </nav>
-
-      <div class="sidebar-help">
-        <p id="sidebarHelpText">
-          Área vinculada à cooperativa logada. Os dados são filtrados automaticamente conforme o perfil do usuário.
-        </p>
+        <div class="wizard-meta">
+          <div class="wizard-meta-item">
+            <span class="wizard-meta-label">Território</span>
+            <strong id="territoryLabelView">Padre Cacique</strong>
+          </div>
+          <div class="wizard-meta-item">
+            <span class="wizard-meta-label">Acesso</span>
+            <strong id="userNameView">Cadastro público</strong>
+          </div>
+        </div>
       </div>
-    </aside>
 
-    <div class="content-area">
-      <header class="topbar">
-        <div class="topbar-left">
-          <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
+      <div class="progress-wrap">
+        <div class="progress-copy">
+          <span id="stepIndicator">Etapa 1 de 4</span>
+          <strong id="progressText">Progresso: 1/4</strong>
+        </div>
+        <div class="progress-bar">
+          <span id="progressBarFill" style="width:25%"></span>
+        </div>
+      </div>
+    </section>
 
-          <a class="topbar-brand" href="index.html">
-            <div class="topbar-brand-mark">
-              <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
-            </div>
-            <div class="topbar-brand-copy">
-              <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-              <span>Plataforma • Cooperativas</span>
-            </div>
-          </a>
+    <div id="formMessage" class="form-message hidden"></div>
+
+    <form id="participantWizardForm" class="wizard-shell">
+      <!-- página 1 -->
+      <section class="step-card glass-card is-active" data-step="1">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 1</span>
+            <h2>Consentimento e autorização</h2>
+          </div>
         </div>
 
-        <div class="topbar-right">
-          <div class="topbar-pill topbar-territory">
-            <span class="dot"></span>
-            <span id="territoryNameTop">Padre Cacique</span>
-          </div>
+        <div class="step-card-inner">
+          <div class="section-icon">✅</div>
 
-          <div class="topbar-pill coop-pill">
-            <span>🏭</span>
-            <span id="cooperativeNameTop">Padre Cacique</span>
-          </div>
-
-          <div class="topbar-pill role-pill" id="rolePill">
-            <span>🔐</span>
-            <span id="roleNameTop">Perfil</span>
-          </div>
-
-          <div class="topbar-pill user-pill">
-            <span class="user-icon">👤</span>
-            <span id="userNameTop">Usuário</span>
-          </div>
-        </div>
-      </header>
-
-      <main class="coop-main" id="painel-inicial">
-        <section class="access-banner" id="accessBanner"></section>
-
-        <section class="coop-hero">
-          <div class="hero-badge">Área logada da cooperativa</div>
-          <h1>Bem-vinda(o) ao painel da Padre Cacique</h1>
-          <p>
-            Seu espaço para acessar conteúdos, acompanhar ações da cooperativa, registrar coletas realizadas
-            e visualizar indicadores operacionais do território.
-          </p>
-        </section>
-
-        <section class="dashboard-section">
-          <div class="section-head">
-            <div>
-              <span class="section-tag">Painel da cooperativa</span>
-              <h2>Acessos e materiais da cooperativa</h2>
-            </div>
+          <div class="consent-block">
+            <h3>Dados pessoais • Declaro estar ciente e autorizo</h3>
             <p>
-              Espaço para conteúdos, documentos, avisos importantes e acesso rápido ao registro de coletas.
+              Para participar do projeto, é necessário concordar com todas as autorizações abaixo.
+              Elas são obrigatórias para avançar para a próxima etapa.
             </p>
-          </div>
 
-          <div class="quick-grid quick-grid-three">
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📘</span>
+            <div class="consent-summary">
+              <p>
+                Ao clicar no botão abaixo, você declara que concorda com:
+                <strong>uso dos dados pessoais para gestão do projeto</strong>,
+                <strong>comunicação via WhatsApp</strong> e
+                <strong>uso de imagem para divulgação do projeto</strong>.
+              </p>
+
+              <input type="checkbox" id="consentLgpd" class="hidden" checked>
+              <input type="checkbox" id="consentWhatsapp" class="hidden" checked>
+              <input type="checkbox" id="consentImage" class="hidden" checked>
+
+              <button type="button" class="btn-primary consent-accept-btn" id="btnAcceptAllConsents">
+                Concordo com todas as autorizações
+              </button>
+
+              <div class="consent-accepted-note hidden" id="consentAcceptedNote">
+                ✅ Você concordou com todas as autorizações obrigatórias.
               </div>
-              <h3>Conteúdos</h3>
-              <p>Cartilhas, vídeos, materiais operacionais e referências por tema.</p>
-              <a href="conteudos.html">Acessar conteúdos →</a>
-            </article>
-
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📄</span>
-              </div>
-              <h3>Documentos</h3>
-              <p>PDFs, atas, relatórios e arquivos institucionais.</p>
-              <a href="documentos.html">Abrir documentos →</a>
-            </article>
-
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Operação</span>
-                <span class="quick-icon">♻️</span>
-              </div>
-              <h3>Registro de coletas</h3>
-              <p>Lance as coletas realizadas e envie os números para o dashboard.</p>
-              <a href="cadastro-coletas-padre-cacique.html">Registrar coletas →</a>
-            </article>
-          </div>
-
-          <div class="panel-grid">
-            <article class="panel-card">
-              <div class="panel-card-head">
-                <h3>📢 Avisos importantes</h3>
-              </div>
-              <div class="info-list" id="noticesList"></div>
-            </article>
-          </div>
-        </section>
-
-        <section class="dashboard-section participants-section-shell">
-          <div class="section-head participants-head">
-            <div>
-              <span class="section-tag">Cadastro da cooperativa</span>
-              <h2>Participantes cadastrados</h2>
-            </div>
-            <p id="participantsSectionText">
-              Gerencie moradores, famílias, condomínios e outros participantes vinculados à cooperativa.
-            </p>
-          </div>
-
-          <div class="participants-toolbar">
-            <div class="participants-search">
-              <input
-                type="text"
-                id="participantSearchInput"
-                placeholder="Buscar por nome, código, bairro ou endereço..."
-              />
-            </div>
-
-            <a class="participants-add-btn" href="cadastro-colaboradores-padre-cacique.html" id="newParticipantBtn">
-              + Novo participante
-            </a>
-          </div>
-
-          <div class="participants-kpis">
-            <article class="participants-kpi-card">
-              <span>Total cadastrados</span>
-              <strong id="participantsTotalCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Famílias / moradores</span>
-              <strong id="participantsPeopleCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Condomínios</span>
-              <strong id="participantsCondoCount">0</strong>
-            </article>
-          </div>
-
-          <div class="participants-list" id="participantsList"></div>
-        </section>
-
-        <section class="dashboard-section territory-panel-shell">
-          <div class="territory-topbar">
-            <span class="section-tag territory-tag">Painel da cooperativa</span>
-
-            <div class="territory-tabs" id="territoryTabs">
-              <button class="territory-tab active" data-tab="comunicados">📋 Comunicados</button>
-              <button class="territory-tab" data-tab="servicos">🛠 Serviços</button>
-              <button class="territory-tab" data-tab="mapa">🗺 Mapa</button>
-              <button class="territory-tab" data-tab="calendario">🗓 Calendário</button>
-              <button class="territory-tab" data-tab="treinamentos">🎓 Capacitações</button>
-              <button class="territory-tab territory-tab-special" data-tab="coleta">🚚 Coleta especial</button>
-              <button class="territory-tab" data-tab="ouvidoria">🗣 Ouvidoria</button>
             </div>
           </div>
+        </div>
 
-          <div class="territory-panel-grid">
-            <div class="territory-main">
-              <div class="territory-main-head">
-                <div>
-                  <h3 id="territoryPanelTitle">Comunicados da cooperativa</h3>
-                  <p id="territoryPanelSubtitle">Avisos, atualizações e orientações da cooperativa.</p>
-                </div>
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" disabled>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="button" class="btn-primary" data-next-step>Próxima etapa</button>
+        </div>
+      </section>
 
-                <div class="territory-head-actions">
-                  <button class="pill-state pill-state-active" type="button">Atual</button>
-                  <button class="pill-state" type="button">Timeline</button>
-                </div>
-              </div>
+      <!-- página 2 -->
+      <section class="step-card glass-card hidden" data-step="2">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 2</span>
+            <h2>Informações principais</h2>
+          </div>
+        </div>
 
-              <div class="territory-tab-content active" id="tab-comunicados">
-                <div class="territory-list" id="territoryCommunications"></div>
-              </div>
+        <div class="step-card-inner">
+          <div class="grid grid-2">
+            <div class="field field-full">
+              <label for="fullName">1) Nome completo <span>*</span></label>
+              <input type="text" id="fullName" placeholder="Digite seu nome completo" required>
+            </div>
 
-              <div class="territory-tab-content" id="tab-servicos">
-                <div class="territory-list" id="territoryServices"></div>
-              </div>
+            <div class="field">
+              <label for="phone">2) Telefone / WhatsApp com DDD <span>*</span></label>
+              <input type="text" id="phone" placeholder="Ex.: 51999998888" required>
+            </div>
 
-              <div class="territory-tab-content" id="tab-mapa">
-                <section class="territory-map-section">
-                  <div class="territory-map-toolbar">
-                    <div>
-                      <h4>Mapa de pontos de coleta</h4>
-                      <p>
-                        Veja no mapa os pontos fixos da cooperativa e os endereços cadastrados pelos participantes.
-                      </p>
-                    </div>
+            <div class="field">
+              <label for="email">3) E-mail</label>
+              <input type="email" id="email" placeholder="Ex.: nome@email.com">
+              <small>Campo opcional.</small>
+            </div>
 
-                    <div class="territory-map-filters">
-                      <select id="mapTypeFilter" class="map-select">
-                        <option value="all">Todos os tipos</option>
-                        <option value="seletiva">Coleta seletiva</option>
-                        <option value="papel">Papel</option>
-                        <option value="plastico">Plástico</option>
-                        <option value="vidro">Vidro</option>
-                        <option value="metal">Metal</option>
-                        <option value="eletronicos">Eletrônicos</option>
-                        <option value="oleo">Óleo</option>
-                        <option value="participante">Pontos de participantes</option>
-                      </select>
-
-                      <button id="btnLoadParticipantPoints" class="map-ghost-btn" type="button">
-                        ➕ Carregar pontos por endereço
-                      </button>
-
-                      <button id="btnNearMe" class="map-ghost-btn" type="button">
-                        📍 Perto de mim
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="territory-map-layout">
-                    <div class="territory-map-canvas">
-                      <div id="territoryMap"></div>
-                    </div>
-
-                    <aside class="territory-map-sidebar">
-                      <div class="map-sidebar-head">
-                        <h5>Lista de pontos</h5>
-                        <span id="mapPointsCount">0</span>
-                      </div>
-
-                      <div id="mapPointsList" class="map-points-list"></div>
-
-                      <div class="map-editor-box" id="mapEditorBox">
-                        <h6>Editar ponto selecionado</h6>
-                        <div class="map-editor-fields">
-                          <input type="text" id="editPointName" placeholder="Nome do ponto" />
-                          <input type="text" id="editPointAddress" placeholder="Endereço do ponto" />
-                          <input type="text" id="editPointType" placeholder="Tipo (seletiva, papel, plástico...)" />
-                          <input type="number" step="any" id="editPointLat" placeholder="Latitude" />
-                          <input type="number" step="any" id="editPointLng" placeholder="Longitude" />
-                        </div>
-
-                        <div class="map-editor-actions">
-                          <button type="button" class="map-ghost-btn" id="btnApplyPointEdit">Salvar posição</button>
-                          <button type="button" class="map-ghost-btn" id="btnCancelPointEdit">Cancelar</button>
-                        </div>
-                      </div>
-                    </aside>
-                  </div>
-                </section>
-              </div>
-
-              <div class="territory-tab-content" id="tab-calendario">
-                <div class="territory-list" id="territoryCalendar"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-treinamentos">
-                <div class="territory-list" id="territoryTrainings"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-coleta">
-                <div class="territory-special-box">
-                  <strong>Coleta especial aberta</strong>
-                  <p>
-                    Registre coletas especiais, agendadas ou operacionais da cooperativa.
-                  </p>
-                  <a class="special-cta" href="cadastro-coletas-padre-cacique.html">♻️ Registrar coleta realizada</a>
-                </div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-ouvidoria">
-                <div class="territory-special-box">
-                  <strong>Ouvidoria da cooperativa</strong>
-                  <p>
-                    Canal para dúvidas, sugestões, ocorrências e retorno da comunidade ligada à cooperativa.
-                  </p>
-                  <a class="panel-link" href="ouvidoria.html">Abrir ouvidoria →</a>
-                </div>
+            <div class="field">
+              <label for="localType">4) Local para coleta <span>*</span></label>
+              <div class="choice-grid choice-grid-4" id="localTypeGroup">
+                <button type="button" class="choice-card selected" data-local-type="casa">
+                  <strong>Domicílio</strong>
+                  <span>residência</span>
+                </button>
+                <button type="button" class="choice-card" data-local-type="condominio">
+                  <strong>Condomínio</strong>
+                  <span>coletivo</span>
+                </button>
+                <button type="button" class="choice-card" data-local-type="comercio">
+                  <strong>Comércio</strong>
+                  <span>empresa / loja</span>
+                </button>
+                <button type="button" class="choice-card" data-local-type="outro">
+                  <strong>Outro</strong>
+                  <span>outras possibilidades</span>
+                </button>
               </div>
             </div>
 
-            <aside class="territory-side">
-              <div class="side-card">
-                <h4>Resumo rápido</h4>
-
-                <div class="summary-list">
-                  <div class="summary-row">
-                    <span>Materiais aceitos</span>
-                    <strong id="summaryAccepted">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Não aceitos</span>
-                    <strong id="summaryRejected">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Pontos no mapa</span>
-                    <strong id="summaryPoints">0</strong>
-                  </div>
-                </div>
-
-                <div class="summary-actions">
-                  <a href="servicos.html" class="summary-btn">Serviços</a>
-                  <a href="dashboard-cooperativa.html" class="summary-btn">Mapa</a>
-                </div>
+            <div class="field field-full">
+              <label>5) Tipo de cadastro</label>
+              <div class="choice-grid choice-grid-2" id="registerTypeGroup">
+                <button type="button" class="choice-card selected" data-register-type="participante">
+                  <strong>Participante</strong>
+                  <span>gera código conforme cooperativa e tipo</span>
+                </button>
+                <button type="button" class="choice-card" data-register-type="condominio">
+                  <strong>Condomínio</strong>
+                  <span>gera código específico de condomínio</span>
+                </button>
               </div>
+            </div>
 
-              <div class="side-card quick-shortcuts">
-                <h4>Atalho rápido</h4>
-                <a class="special-cta" href="cadastro-coletas-padre-cacique.html">♻️ Registrar coleta</a>
-              </div>
+            <div class="field">
+              <label for="generatedCode">6) Código gerado</label>
+              <input type="text" id="generatedCode" readonly>
+            </div>
 
-              <div class="side-card small-grid">
-                <a href="calendario.html" class="summary-btn">Calendário</a>
-                <a href="ouvidoria.html" class="summary-btn">Ouvidoria</a>
-              </div>
-
-              <div class="side-card indicators-card">
-                <div class="indicators-head">
-                  <h4>Indicadores gerais</h4>
-                  <p id="indicatorCardText">
-                    Resumo consolidado da cooperativa, incluindo registros de coleta.
-                  </p>
-                </div>
-
-                <div class="indicator-mini-grid">
-                  <div class="indicator-mini">
-                    <span>Coletas</span>
-                    <strong id="indicatorColetas">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Participantes</span>
-                    <strong id="indicatorParticipants">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Documentos</span>
-                    <strong id="indicatorDocs">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Ações</span>
-                    <strong id="indicatorActions">0</strong>
-                  </div>
-                </div>
-
-                <a class="dashboard-cta" href="dashboard-cooperativa.html">
-                  📊 Acessar dashboard da cooperativa
-                </a>
-              </div>
-            </aside>
+            <div class="field">
+              <label for="cpf">7) CPF</label>
+              <input type="text" id="cpf" placeholder="Ex.: 000.000.000-00">
+              <small>Campo opcional.</small>
+            </div>
           </div>
-        </section>
-      </main>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" data-prev-step>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="button" class="btn-primary" data-next-step>Próxima etapa</button>
+        </div>
+      </section>
+
+      <!-- página 3 -->
+      <section class="step-card glass-card hidden" data-step="3">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 3</span>
+            <h2>Endereço e localização</h2>
+          </div>
+        </div>
+
+        <div class="step-card-inner">
+          <div class="grid grid-2">
+            <div class="field">
+              <label for="cep">8) CEP</label>
+              <div class="inline-field">
+                <input type="text" id="cep" placeholder="Ex.: 90010-000">
+                <button type="button" class="btn-inline" id="btnBuscarCep">Buscar</button>
+              </div>
+              <small>Campo opcional.</small>
+            </div>
+
+            <div class="field">
+              <label for="number">9) Número</label>
+              <input type="text" id="number" placeholder="Ex.: 123">
+            </div>
+
+            <div class="field">
+              <label for="street">10) Rua</label>
+              <input type="text" id="street">
+            </div>
+
+            <div class="field">
+              <label for="neighborhood">11) Bairro</label>
+              <input type="text" id="neighborhood">
+            </div>
+
+            <div class="field">
+              <label for="city">12) Cidade</label>
+              <input type="text" id="city">
+            </div>
+
+            <div class="field">
+              <label for="state">13) UF</label>
+              <input type="text" id="state">
+            </div>
+
+            <div class="field field-full">
+              <label for="referencePoint">14) Ponto de referência <span>*</span></label>
+              <input type="text" id="referencePoint" placeholder="Ex.: próximo à escola, mercado, associação..." required>
+            </div>
+          </div>
+
+          <div class="location-card">
+            <strong>Localização para o dashboard</strong>
+            <p>Se os dados de endereço forem informados, o sistema tenta calcular latitude e longitude para uso no mapa e no dashboard territorial.</p>
+            <div class="geo-line">Geo: <span id="geoPreview">ainda não calculado</span></div>
+            <div class="geo-line">Lat/Lng: <span id="latLngPreview">ainda não calculado</span></div>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" data-prev-step>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="button" class="btn-primary" data-next-step>Próxima etapa</button>
+        </div>
+      </section>
+
+      <!-- página 4 -->
+      <section class="step-card glass-card hidden" data-step="4">
+        <div class="step-title-row">
+          <div>
+            <span class="step-badge">Página 4</span>
+            <h2>Perfil e finalização</h2>
+          </div>
+        </div>
+
+        <div class="step-card-inner">
+          <div class="question-block">
+            <label class="question-title">15) Você encontra dificuldades ao separar seu resíduo seco e orgânico?</label>
+            <div class="choice-grid choice-grid-2" id="difficultyGroup">
+              <button type="button" class="choice-card selected" data-difficulty="sim">
+                <strong>Sim</strong>
+                <span>tenho alguma dificuldade</span>
+              </button>
+              <button type="button" class="choice-card" data-difficulty="nao">
+                <strong>Não</strong>
+                <span>consigo separar sem dificuldade</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field field-full">
+            <label for="householdMembers">16) Quantos integrantes tem na residência?</label>
+            <select id="householdMembers">
+              <option value="">Selecione uma opção</option>
+              <option value="1">1 integrante</option>
+              <option value="2">2 integrantes</option>
+              <option value="3">3 integrantes</option>
+              <option value="outro">Outro</option>
+            </select>
+          </div>
+
+        <div class="field field-full">
+  <label for="projectSource">
+    17) Como você ficou sabendo do projeto?
+  </label>
+
+  <select id="projectSource">
+    <option value="">Selecione uma opção</option>
+    <option value="whatsapp">WhatsApp</option>
+    <option value="redes_sociais">Redes sociais</option>
+    <option value="indicacao">Indicação (vizinho, amigo, familiar)</option>
+    <option value="cooperativa">Equipe da cooperativa</option>
+    <option value="lideranca">Liderança comunitária</option>
+    <option value="evento">Evento ou reunião</option>
+    <option value="material_impresso">Material impresso</option>
+    <option value="outro">Outro</option>
+  </select>
+
+  <input 
+    type="text" 
+    id="projectSourceOther" 
+    placeholder="Se selecionou 'Outro', descreva aqui"
+    class="hidden"
+  >
+</div>
+
+          <div class="final-message-card">
+            <strong>Mensagem final</strong>
+            <p>Agradecemos por se cadastrar no projeto. Seu cadastro será enviado para análise da cooperativa. Após aprovação, nossa equipe poderá entrar em contato 💚♻️</p>
+          </div>
+        </div>
+
+        <div class="step-actions">
+          <button type="button" class="btn-secondary" data-prev-step>Voltar</button>
+          <button type="button" class="btn-secondary" disabled>Prévia</button>
+          <button type="submit" class="btn-primary" id="btnSubmitParticipant">Concluir cadastro</button>
+        </div>
+      </section>
+    </form>
+  </main>
+
+  <div id="successModal" class="success-modal hidden" aria-hidden="true">
+    <div class="success-modal-backdrop"></div>
+    <div class="success-modal-card" role="dialog" aria-modal="true" aria-labelledby="successModalTitle">
+      <div class="success-modal-icon">💚</div>
+      <h3 id="successModalTitle">Cadastro enviado com sucesso</h3>
+      <p>
+        Agradecemos pela sua inscrição no projeto.
+        Seu cadastro foi enviado para a cooperativa e ficará aguardando aprovação do administrador.
+        Em breve nossa equipe poderá entrar em contato.
+      </p>
+      <div class="success-modal-actions">
+        <button type="button" class="btn-primary" id="closeSuccessModal">
+          Fechar e voltar à página do território
+        </button>
+      </div>
     </div>
   </div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-
-  <script type="module" src="/cooperativas-territorio-pc.js"></script>
+  <script type="module" src="cadastro-participantes-base.js"></script>
 </body>
 </html>
