@@ -28,19 +28,19 @@ const CODE_CONFIG = {
     casa: { prefix: "VPD", start: 300 },
     condominio: { prefix: "VPCD", start: 10 },
     comercio: { prefix: "VPCM", start: 10 },
-    outro: { prefix: "VPD", start: 300 }
+    outro: { prefix: "VPO", start: 300 }
   },
   "cooadesc": {
     casa: { prefix: "COD", start: 1 },
     condominio: { prefix: "COCD", start: 1 },
     comercio: { prefix: "COCM", start: 1 },
-    outro: { prefix: "COD", start: 1 }
+    outro: { prefix: "COO", start: 1 }
   },
   "padre-cacique": {
     casa: { prefix: "PCD", start: 1 },
     condominio: { prefix: "PCCD", start: 1 },
     comercio: { prefix: "PCCM", start: 1 },
-    outro: { prefix: "PCD", start: 1 }
+    outro: { prefix: "PCO", start: 1 }
   }
 };
 
