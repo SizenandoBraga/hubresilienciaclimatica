@@ -111,7 +111,9 @@ const els = {
   permDocumentos: document.getElementById("permDocumentos"),
   permMapa: document.getElementById("permMapa"),
   permAprovarCadastros: document.getElementById("permAprovarCadastros"),
-  permGerenciarUsuarios: document.getElementById("permGerenciarUsuarios")
+  permGerenciarUsuarios: document.getElementById("permGerenciarUsuarios"),
+
+  cadastroParticipantesLink: document.getElementById("cadastroParticipantesLink")
 };
 
 let map = null;
@@ -2129,7 +2131,23 @@ function bindEvents() {
     }
   });
 }
+function getParticipantCadastroUrlByTerritory(territoryId) {
+  const territory = normalizeTerritory(territoryId);
 
+  if (territory === "vila-pinto" || territory === "crgr-vila-pinto") {
+    return "/cadastro-participantes-vila-pinto.html";
+  }
+
+  if (territory === "cooadesc" || territory === "coadesc" || territory === "crgr-cooadesc") {
+    return "/cadastro-participantes-cooadesc.html";
+  }
+
+  if (territory === "padre-cacique" || territory === "crgr-padre-cacique") {
+    return "/cadastro-participantes-padre-cacique.html";
+  }
+
+  return "/cadastro-participantes-vila-pinto.html";
+}
 /* =========================
 INIT
 ========================= */

@@ -9,7 +9,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-   CONFIG FIXA VILA PINTO
+   CONFIGURAÇÃO DA PÁGINA
 ========================= */
 
 const PAGE_TERRITORY = {
@@ -17,6 +17,9 @@ const PAGE_TERRITORY = {
   territoryLabel: "Centro de Triagem Vila Pinto",
   backUrl: "./login.html"
 };
+
+/* Código padrão para família quando o campo Código ficar vazio */
+const DEFAULT_FAMILY_CODE = "F000";
 
 /* =========================
    STATE GLOBAL
@@ -56,6 +59,11 @@ function parseNum(value) {
   if (value === null || value === undefined || value === "") return null;
   const n = Number(String(value).replace(",", "."));
   return Number.isFinite(n) ? n : null;
+}
+
+function getCodeOrDefault(value) {
+  const code = String(value || "").trim();
+  return code || DEFAULT_FAMILY_CODE;
 }
 
 function formatFlow(value) {
@@ -152,9 +160,7 @@ function ensureAuthenticatedUser() {
     STATE.userDoc?.active === true;
 
   if (!statusOk) {
-    throw new Error(
-      `Usuário sem permissão. Status atual em users: "${status || "vazio"}".`
-    );
+    throw new Error(`Usuário sem permissão. Status atual em users: "${status || "vazio"}".`);
   }
 
   const allowedCoopRoles = ["cooperativa", "operador", "usuario"];
@@ -177,6 +183,10 @@ function ensureAuthenticatedUser() {
     }
   }
 }
+
+/* =========================
+   IMAGENS
+========================= */
 
 function ensureImageFile(file, label = "foto") {
   if (!file) {
@@ -239,10 +249,8 @@ async function compressImageFile(file, options = {}) {
 
   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-  const compressedDataUrl = canvas.toDataURL(mimeType, quality);
-
   return {
-    dataUrl: compressedDataUrl,
+    dataUrl: canvas.toDataURL(mimeType, quality),
     originalName: file.name || "foto.jpg",
     originalType: file.type || "",
     originalSize: file.size || 0,
@@ -254,8 +262,8 @@ async function compressImageFile(file, options = {}) {
 
 async function compressManyImages(files, options = {}) {
   const validFiles = Array.from(files || []).filter(Boolean);
-
   const result = [];
+
   for (const file of validFiles) {
     result.push(await compressImageFile(file, options));
   }
@@ -318,7 +326,7 @@ async function loadCurrentUser() {
 }
 
 /* =========================
-   CHOICES
+   ESCOLHAS DA OPERAÇÃO
 ========================= */
 
 function activateGroup(selector, activeBtn, hiddenInputId, value) {
@@ -381,7 +389,7 @@ function wireChoices() {
 }
 
 /* =========================
-   EXTRAS
+   MATERIAIS EXTRAS
 ========================= */
 
 function buildExtraRow() {
@@ -420,7 +428,7 @@ function getExtras() {
 }
 
 /* =========================
-   FOTOS
+   FOTOS DO FINAL DO TURNO
 ========================= */
 
 const inputFotosFinalTurno = $("fotoFinalTurno");
@@ -513,7 +521,8 @@ async function salvarRecebimento() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  const participantCode = $("familyCode")?.value.trim() || null;
+  /* Se for família e o campo ficar em branco, salva automaticamente F000 */
+  const participantCode = getCodeOrDefault($("familyCode")?.value);
   const familyCode = participantCode;
 
   const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
@@ -527,10 +536,6 @@ async function salvarRecebimento() {
 
   if (!STATE.operacao) {
     throw new Error("Salve primeiro a etapa da operação.");
-  }
-
-  if (!participantCode) {
-    throw new Error("Informe o código do participante aprovado.");
   }
 
   if (
@@ -611,20 +616,12 @@ async function salvarFinalTurno() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  const participantCode = $("condCode")?.value.trim() || null;
+  /* Se for família e o campo ficar em branco, salva automaticamente F000 */
+  const participantCode = getCodeOrDefault($("condCode")?.value);
   const condCode = participantCode;
-  const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
 
   if (!STATE.operacao) {
     throw new Error("Salve primeiro a etapa da operação.");
-  }
-
-  if (!participantCode) {
-    throw new Error("Informe o código do participante/condomínio.");
-  }
-
-  if (pesoRejeitoGeralKg === null) {
-    throw new Error("Preencha o peso do rejeito geral.");
   }
 
   const extras = getExtras();
@@ -658,7 +655,7 @@ async function salvarFinalTurno() {
     photos: photoUrls,
 
     finalTurno: {
-      pesoRejeitoGeralKg,
+      /* Peso do rejeito geral removido de todos os perfis */
       plasticoKg: parseNum($("plasticoKg")?.value) || 0,
       papelMistoKg: parseNum($("papelMistoKg")?.value) || 0,
       papelaoKg: parseNum($("papelaoKg")?.value) || 0,
@@ -725,10 +722,11 @@ function wireForms() {
     if (STATE.salvando) return;
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
+    const submitBtn = e.target.querySelector("button[type='submit']");
+
     try {
       STATE.salvando = true;
 
-      const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = "Salvando coleta...";
@@ -757,7 +755,6 @@ function wireForms() {
     } finally {
       STATE.salvando = false;
 
-      const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "Salvar coleta de recebimento";
@@ -771,10 +768,11 @@ function wireForms() {
     if (STATE.salvando) return;
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
+    const submitBtn = e.target.querySelector("button[type='submit']");
+
     try {
       STATE.salvando = true;
 
-      const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = true;
         submitBtn.textContent = "Salvando fechamento...";
@@ -803,7 +801,6 @@ function wireForms() {
     } finally {
       STATE.salvando = false;
 
-      const submitBtn = e.target.querySelector("button[type='submit']");
       if (submitBtn) {
         submitBtn.disabled = false;
         submitBtn.textContent = "Salvar registro final do turno";
