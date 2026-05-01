@@ -334,14 +334,6 @@ function getRouteConfig(territoryId) {
   return TERRITORY_ROUTES[key] || TERRITORY_ROUTES["vila-pinto"];
 }
 
-function getTerritoryAliases(territoryId) {
-  const config = getRouteConfig(territoryId || getPageTerritoryId());
-
-  return [canonicalTerritoryId(territoryId), ...(config.aliases || [])]
-    .map(normalizeTerritory)
-    .filter(Boolean);
-}
-
 function getTerritoryLabelById(territoryId) {
   return getRouteConfig(territoryId).label || territoryId || "Território";
 }
@@ -1009,17 +1001,54 @@ function startUsersListener() {
 QUERIES
 ========================= */
 
+function getTerritoryAliases(territoryId) {
+  const config = getRouteConfig(territoryId || getPageTerritoryId());
+  const aliases = new Set();
+
+  const canonical = canonicalTerritoryId(territoryId);
+  if (canonical) aliases.add(canonical);
+
+  (config.aliases || []).forEach((alias) => {
+    if (alias) aliases.add(alias);
+  });
+
+  const normalized = normalizeTerritory(territoryId || getPageTerritoryId());
+
+  if (normalized === "cooadesc" || normalized === "coadesc" || normalized === "crgr-cooadesc" || normalized === "crgr_cooadesc") {
+    aliases.add("cooadesc");
+    aliases.add("coadesc");
+    aliases.add("crgr-cooadesc");
+    aliases.add("crgr_cooadesc");
+    aliases.add("crgr-coadesc");
+    aliases.add("crgr_coadesc");
+  }
+
+  if (normalized === "vila-pinto" || normalized === "crgr-vila-pinto" || normalized === "crgr_vila_pinto") {
+    aliases.add("vila-pinto");
+    aliases.add("crgr-vila-pinto");
+    aliases.add("crgr_vila_pinto");
+  }
+
+  if (normalized === "padre-cacique" || normalized === "crgr-padre-cacique" || normalized === "crgr_padre_cacique") {
+    aliases.add("padre-cacique");
+    aliases.add("crgr-padre-cacique");
+    aliases.add("crgr_padre_cacique");
+  }
+
+  return Array.from(aliases).filter(Boolean).slice(0, 10);
+}
+
 function participantsRef() {
   if (canViewAllTerritories()) {
     return collection(db, "participants");
   }
 
   const territoryId = getMyTerritoryId() || getPageTerritoryId();
-  const aliases = getTerritoryAliases(territoryId);
-
-  if (!aliases.length) {
+  if (!territoryId) {
     throw new Error("Usuário sem territoryId em /users.");
   }
+
+  const aliases = getTerritoryAliases(territoryId);
 
   return query(
     collection(db, "participants"),
@@ -1033,18 +1062,17 @@ function approvalRequestsRefs() {
   }
 
   const territoryId = getMyTerritoryId() || getPageTerritoryId();
-  const aliases = getTerritoryAliases(territoryId);
-
-  if (!aliases.length) {
+  if (!territoryId) {
     throw new Error("Usuário sem territoryId em /users.");
   }
+
+  const aliases = getTerritoryAliases(territoryId);
 
   return [
     query(collection(db, "approvalRequests"), where("territoryId", "in", aliases)),
     query(collection(db, "approvalRequests"), where("payloadSnapshot.territoryId", "in", aliases))
   ];
 }
-
 function dedupeApprovalDocs(docs) {
   const mapDocs = new Map();
 
