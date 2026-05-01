@@ -334,6 +334,14 @@ function getRouteConfig(territoryId) {
   return TERRITORY_ROUTES[key] || TERRITORY_ROUTES["vila-pinto"];
 }
 
+function getTerritoryAliases(territoryId) {
+  const config = getRouteConfig(territoryId || getPageTerritoryId());
+
+  return [canonicalTerritoryId(territoryId), ...(config.aliases || [])]
+    .map(normalizeTerritory)
+    .filter(Boolean);
+}
+
 function getTerritoryLabelById(territoryId) {
   return getRouteConfig(territoryId).label || territoryId || "Território";
 }
@@ -1006,12 +1014,17 @@ function participantsRef() {
     return collection(db, "participants");
   }
 
-  const territoryId = getMyTerritoryId();
-  if (!territoryId) {
+  const territoryId = getMyTerritoryId() || getPageTerritoryId();
+  const aliases = getTerritoryAliases(territoryId);
+
+  if (!aliases.length) {
     throw new Error("Usuário sem territoryId em /users.");
   }
 
-  return query(collection(db, "participants"), where("territoryId", "==", territoryId));
+  return query(
+    collection(db, "participants"),
+    where("territoryId", "in", aliases)
+  );
 }
 
 function approvalRequestsRefs() {
@@ -1019,14 +1032,16 @@ function approvalRequestsRefs() {
     return [collection(db, "approvalRequests")];
   }
 
-  const territoryId = getMyTerritoryId();
-  if (!territoryId) {
+  const territoryId = getMyTerritoryId() || getPageTerritoryId();
+  const aliases = getTerritoryAliases(territoryId);
+
+  if (!aliases.length) {
     throw new Error("Usuário sem territoryId em /users.");
   }
 
   return [
-    query(collection(db, "approvalRequests"), where("territoryId", "==", territoryId)),
-    query(collection(db, "approvalRequests"), where("payloadSnapshot.territoryId", "==", territoryId))
+    query(collection(db, "approvalRequests"), where("territoryId", "in", aliases)),
+    query(collection(db, "approvalRequests"), where("payloadSnapshot.territoryId", "in", aliases))
   ];
 }
 
