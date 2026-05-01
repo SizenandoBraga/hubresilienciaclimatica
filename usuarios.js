@@ -19,6 +19,56 @@ const DEFAULT_BASE = {
   lng: -51.15652604283108
 };
 
+const TERRITORY_ROUTES = {
+  "vila-pinto": {
+    label: "Centro de Triagem Vila Pinto",
+    aliases: ["vila-pinto", "crgr-vila-pinto", "crgr_vila_pinto"],
+    home: "cooperativa-vila-pinto.html",
+    usuarios: "usuarios-vila-pinto.html",
+    userCoop: "user-cooperativa.html",
+    coletas: "cadastro-coletas-vila-pinto.html",
+    cadastroParticipantes: "cadastro-participantes-vila-pinto.html",
+    dashboard: "dashboard-cooperativa.html",
+    base: {
+      label: "Centro de Triagem Vila Pinto",
+      lat: -30.048729170292532,
+      lng: -51.15652604283108
+    }
+  },
+
+  cooadesc: {
+    label: "COOADESC",
+    aliases: ["cooadesc", "coadesc", "crgr-cooadesc", "crgr_cooadesc", "crgr-coadesc", "crgr_coadesc"],
+    home: "cooperativa-cooadesc.html",
+    usuarios: "usuarios-cooadesc.html",
+    userCoop: "user-cooperativa.html",
+    coletas: "cadastro-coletas-cooadesc.html",
+    cadastroParticipantes: "cadastro-participantes-cooadesc.html",
+    dashboard: "dashboard-cooperativa-cooadesc.html",
+    base: {
+      label: "COOADESC",
+      lat: -30.003,
+      lng: -51.206
+    }
+  },
+
+  "padre-cacique": {
+    label: "Cooperativa Padre Cacique",
+    aliases: ["padre-cacique", "crgr-padre-cacique", "crgr_padre_cacique"],
+    home: "cooperativa-padre-cacique.html",
+    usuarios: "usuarios-padre-cacique.html",
+    userCoop: "user-cooperativa.html",
+    coletas: "cadastro-coletas-padre-cacique.html",
+    cadastroParticipantes: "cadastro-participantes-padre-cacique.html",
+    dashboard: "dashboard-cooperativa.html",
+    base: {
+      label: "Padre Cacique",
+      lat: -30.140122365657504,
+      lng: -51.1268772051727
+    }
+  }
+};
+
 const STATE = {
   authUser: null,
   userDoc: null,
@@ -255,7 +305,7 @@ function canManageCoopUsers() {
 }
 
 function getMyTerritoryId() {
-  return STATE.userDoc?.territoryId || null;
+  return normalizeTerritory(STATE.userDoc?.territoryId || document.body?.dataset?.territoryId || null);
 }
 
 function getMyTerritoryLabel() {
@@ -268,12 +318,24 @@ function canViewUserFromSameTerritory(targetUser) {
   return sameTerritory(getMyTerritoryId(), targetUser.territoryId);
 }
 
+function canonicalTerritoryId(value) {
+  const normalized = normalizeTerritory(value);
+
+  for (const [key, config] of Object.entries(TERRITORY_ROUTES)) {
+    const aliases = [key, ...(config.aliases || [])].map(normalizeTerritory);
+    if (aliases.includes(normalized)) return key;
+  }
+
+  return normalized || null;
+}
+
+function getRouteConfig(territoryId) {
+  const key = canonicalTerritoryId(territoryId || getPageTerritoryId());
+  return TERRITORY_ROUTES[key] || TERRITORY_ROUTES["vila-pinto"];
+}
+
 function getTerritoryLabelById(territoryId) {
-  const normalized = normalizeTerritory(territoryId);
-  if (normalized === "vila-pinto") return "Centro de Triagem Vila Pinto";
-  if (normalized === "cooadesc" || normalized === "coadesc") return "COOADESC";
-  if (normalized === "padre-cacique") return "Padre Cacique";
-  return territoryId || "Território";
+  return getRouteConfig(territoryId).label || territoryId || "Território";
 }
 
 function routeShiftLabel(value) {
@@ -296,22 +358,16 @@ function routeShiftLabel(value) {
 }
 
 function getTerritoryPageUrl(user) {
-  const territory = normalizeTerritory(user?.territoryId || getMyTerritoryId());
-  const code = encodeURIComponent(user?.code || user?.participantCode || "");
+  const territory = canonicalTerritoryId(user?.territoryId || getMyTerritoryId() || getPageTerritoryId());
+  const code = user?.code || user?.participantCode || "";
+  const page = getRouteConfig(territory).coletas;
+  const url = new URL(page, window.location.origin);
 
-  if (territory === "vila-pinto") {
-    return `${window.location.origin}/cadastro-coletas-vila-pinto.html?participantCode=${code}`;
+  if (code) {
+    url.searchParams.set("participantCode", code);
   }
 
-  if (territory === "cooadesc" || territory === "coadesc") {
-    return `${window.location.origin}/cadastro-coletas-cooadesc.html?participantCode=${code}`;
-  }
-
-  if (territory === "padre-cacique") {
-    return `${window.location.origin}/cadastro-coletas-padre-cacique.html?participantCode=${code}`;
-  }
-
-  return `${window.location.origin}/cadastro-coletas-vila-pinto.html?participantCode=${code}`;
+  return url.href;
 }
 
 function ensureBaseGeneralFilters() {
@@ -1636,25 +1692,36 @@ async function upsertParticipantFromApprovedRequest(user) {
 
   const snapshot = user.raw?.payloadSnapshot || {};
   const isApproved = user.status === "aprovado";
+  const territoryId = canonicalTerritoryId(user.territoryId || snapshot.territoryId || getMyTerritoryId() || getPageTerritoryId());
+  const routeShift = user.routeShift || snapshot.routeShift || snapshot.rota || "";
 
-const payload = {
-  uid: createdAuthUser.uid,
-  name,
-  displayName,
-  email,
-  role,
-  status: "active",
-  territoryId,
-  territoryLabel,
-  onboardingCompleted: true,
-  permissions: getCoopPermissionsPayload(),
-  roles: getCoopRolesPayload(),
-  publicCode: `RB-${Math.random().toString(36).slice(2, 8).toUpperCase()}`,
-  createdAt: serverTimestamp(),
-  updatedAt: serverTimestamp(),
-  createdBy: STATE.authUser?.uid || null,
-  createdByName: STATE.userDoc?.name || STATE.userDoc?.displayName || "Administrador"
-};
+  const payload = {
+    name: user.name || snapshot.name || "Sem nome",
+    nameLower: String(user.name || snapshot.name || "").toLowerCase(),
+    participantCode: user.code || snapshot.participantCode || "—",
+    participantType: snapshot.participantType || "participante",
+    localType: snapshot.localType || user.raw?.localType || "casa",
+    phone: user.phone || snapshot.phone || null,
+    email: user.email || snapshot.email || null,
+    cpf: user.cpf || snapshot.cpf || null,
+    territoryId,
+    territoryLabel: user.territoryLabel || snapshot.territoryLabel || getTerritoryLabelById(territoryId),
+    inTerritory: "sim",
+    inOperation: user.inOperation || (isApproved ? "sim" : "nao"),
+    schedule: routeShift || user.schedule || snapshot.schedule || "A definir",
+    routeShift,
+    status: user.status || "pendente",
+    approvalStatus: isApproved ? "approved" : "pending",
+    active: isApproved,
+    approvalRequestId: user.linkedApprovalRequestId || user.approvalRequestId || null,
+    source: user.raw?.source || "approval_request",
+    address: snapshot.address || null,
+    enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
+    lat: isValidCoord(user.lat, user.lng) ? user.lat : (toNumberOrNull(snapshot.lat) ?? null),
+    lng: isValidCoord(user.lat, user.lng) ? user.lng : (toNumberOrNull(snapshot.lng) ?? null),
+    updatedAt: serverTimestamp(),
+    updatedBy: STATE.authUser?.uid || null
+  };
 
   await setDoc(doc(db, "participants", participantId), payload, { merge: true });
 }
@@ -1957,6 +2024,7 @@ async function loadCurrentUser(uid) {
 async function loadTerritoryBase() {
   const userLat = toNumberOrNull(STATE.userDoc?.cooperativeBaseLat);
   const userLng = toNumberOrNull(STATE.userDoc?.cooperativeBaseLng);
+  const territoryBase = getRouteConfig(getMyTerritoryId() || getPageTerritoryId()).base;
 
   if (isValidCoord(userLat, userLng)) {
     STATE.territoryBase = {
@@ -1964,6 +2032,8 @@ async function loadTerritoryBase() {
       lat: userLat,
       lng: userLng
     };
+  } else if (territoryBase) {
+    STATE.territoryBase = territoryBase;
   } else {
     STATE.territoryBase = DEFAULT_BASE;
   }
@@ -2026,12 +2096,68 @@ function closeSidebarMenu() {
   document.getElementById("mobileOverlay")?.classList.remove("show");
   document.body.classList.remove("sidebar-open");
 }
+function getPageTerritoryId() {
+  return canonicalTerritoryId(
+    document.body?.dataset?.territoryId ||
+    STATE.userDoc?.territoryId ||
+    "cooadesc"
+  );
+}
+
+function getMenuRoutesByTerritory(territoryId) {
+  return getRouteConfig(territoryId || getPageTerritoryId());
+}
+
+function setHrefIfExists(id, href) {
+  const el = document.getElementById(id);
+  if (el && href) el.setAttribute("href", href);
+}
+
+function bindTerritoryNavigation() {
+  const territoryId = getPageTerritoryId();
+  const routes = getMenuRoutesByTerritory(territoryId);
+
+  setHrefIfExists("navCoopHome", routes.home);
+  setHrefIfExists("navUsuarios", routes.usuarios);
+  setHrefIfExists("navUserCooperativa", routes.userCoop);
+  setHrefIfExists("navColetas", routes.coletas);
+  setHrefIfExists("cadastroParticipantesLink", routes.cadastroParticipantes);
+
+  document.querySelectorAll('a[href="/cooperativa-vila-pinto.html"], a[href="cooperativa-vila-pinto.html"]').forEach((link) => {
+    link.setAttribute("href", routes.home);
+  });
+
+  document.querySelectorAll('a[href="/usuarios-vila-pinto.html"], a[href="usuarios-vila-pinto.html"]').forEach((link) => {
+    link.setAttribute("href", routes.usuarios);
+  });
+
+  document.querySelectorAll('a[href="/cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-vila-pinto.html"]').forEach((link) => {
+    link.setAttribute("href", routes.coletas);
+  });
+
+  document.querySelectorAll('a[href="/cadastro-participantes-vila-pinto.html"], a[href="cadastro-participantes-vila-pinto.html"]').forEach((link) => {
+    link.setAttribute("href", routes.cadastroParticipantes);
+  });
+
+  const dashboardLink = document.querySelector('a[href="/dashboard-cooperativa.html"], a[href="dashboard-cooperativa.html"], a[href="/dashboard-cooperativa-vila-pinto.html"], a[href="dashboard-cooperativa-vila-pinto.html"]');
+  if (dashboardLink && routes.dashboard) {
+    dashboardLink.setAttribute("href", routes.dashboard);
+  }
+
+  console.log("Menu aplicado:", {
+    territoryId,
+    participantesCadastrados: routes.usuarios,
+    registroColetas: routes.coletas,
+    cadastroParticipantes: routes.cadastroParticipantes
+  });
+}
 
 /* =========================
 EVENTOS
 ========================= */
 
 function bindEvents() {
+  bindTerritoryNavigation();
   document.getElementById("menuBtn")?.addEventListener("click", openSidebarMenu);
   document.getElementById("sidebarClose")?.addEventListener("click", closeSidebarMenu);
   document.getElementById("mobileOverlay")?.addEventListener("click", closeSidebarMenu);
@@ -2130,23 +2256,7 @@ function bindEvents() {
       closeUserModal();
     }
   });
-}
-function getParticipantCadastroUrlByTerritory(territoryId) {
-  const territory = normalizeTerritory(territoryId);
-
-  if (territory === "vila-pinto" || territory === "crgr-vila-pinto") {
-    return "/cadastro-participantes-vila-pinto.html";
-  }
-
-  if (territory === "cooadesc" || territory === "coadesc" || territory === "crgr-cooadesc") {
-    return "/cadastro-participantes-cooadesc.html";
-  }
-
-  if (territory === "padre-cacique" || territory === "crgr-padre-cacique") {
-    return "/cadastro-participantes-padre-cacique.html";
-  }
-
-  return "/cadastro-participantes-vila-pinto.html";
+  
 }
 /* =========================
 INIT
@@ -2164,6 +2274,7 @@ onAuthStateChanged(auth, async (user) => {
 
     STATE.authUser = user;
     STATE.userDoc = await loadCurrentUser(user.uid);
+    bindTerritoryNavigation();
 
     fillSidebar();
     applyCoopUserPermissionsUI();

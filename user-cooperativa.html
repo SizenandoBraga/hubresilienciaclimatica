@@ -11,17 +11,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700&display=swap"
-    rel="stylesheet"
-  />
-
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="usuarios.css" />
 </head>
@@ -31,9 +21,7 @@
 
   <div class="app-shell">
     <aside class="sidebar">
-      <button class="sidebar-close" id="sidebarClose" type="button" aria-label="Fechar menu">
-        ×
-      </button>
+      <button class="sidebar-close" id="sidebarClose" type="button" aria-label="Fechar menu">×</button>
 
       <div class="sidebar-top">
         <div class="brand-wrap">
@@ -79,7 +67,7 @@
         </button>
 
         <div class="sidebar-userbox">
-          <strong id="sidebarUserName">Carregando participante...</strong>
+          <strong id="sidebarUserName">Carregando usuário...</strong>
           <span id="sidebarTerritoryLabel">Carregando território...</span>
         </div>
       </div>
@@ -88,34 +76,26 @@
     <main class="main">
       <header class="topbar">
         <div class="topbar-left">
-          <button class="menu-btn" id="menuBtn" type="button" aria-label="Abrir menu">
-            ☰
-          </button>
+          <button class="menu-btn" id="menuBtn" type="button" aria-label="Abrir menu">☰</button>
         </div>
 
         <div class="topbar-right">
-          <span class="status-pill status-green">🟢 Todos os territórios</span>
-          <span class="status-pill status-lime">🏢 Todas as cooperativas</span>
-          <span class="status-pill status-orange">🔐 Administrador</span>
-          <span class="status-pill status-purple">👤 Admin Governança</span>
+          <span class="status-pill status-green" id="territoryPill">🟢 Carregando território</span>
+          <span class="status-pill status-lime" id="coopPill">🏢 Cooperativa</span>
+          <span class="status-pill status-orange" id="permissionPill">🔐 Gestão de usuários</span>
+          <span class="status-pill status-purple" id="rolePill">👤 Perfil</span>
         </div>
       </header>
 
       <section class="notice-banner">
-        <strong>Acesso administrativo ativo.</strong>
-        <span>
-          Você pode criar usuários internos da cooperativa e definir permissões de acesso
-          aos módulos da plataforma.
-        </span>
+        <strong>Gestão individual por território.</strong>
+        <span>Usuários comuns da cooperativa visualizam e gerenciam apenas os usuários cadastrados no seu próprio território.</span>
       </section>
 
       <section class="hero-card">
         <div class="hero-badge">Área de gestão da cooperativa</div>
-        <h1>Cadastro de usuários da cooperativa</h1>
-        <p>
-          Crie usuários internos da cooperativa, defina o território e libere permissões
-          por módulo da plataforma.
-        </p>
+        <h1>Usuários da cooperativa</h1>
+        <p>Crie, visualize, edite, exclua e baixe a lista de usuários internos cadastrados na sua cooperativa.</p>
       </section>
 
       <section class="content-grid coop-users-layout" id="coopUsersSection">
@@ -130,6 +110,8 @@
             </div>
 
             <form id="coopUserForm" class="coop-user-form" autocomplete="off">
+              <input type="hidden" id="editingUserId" />
+
               <div class="modal-grid">
                 <div class="field">
                   <label for="coopUserName">Nome completo</label>
@@ -148,7 +130,7 @@
                   <input id="coopUserEmail" type="email" placeholder="usuario@teste.com" required />
                 </div>
 
-                <div class="field">
+                <div class="field" id="passwordField">
                   <label for="coopUserPassword">Senha provisória</label>
                   <input id="coopUserPassword" type="password" minlength="6" placeholder="Mínimo 6 caracteres" required />
                 </div>
@@ -161,6 +143,7 @@
                     <option value="cooperativa">Cooperativa</option>
                     <option value="usuario">Usuário</option>
                     <option value="operador">Operador</option>
+                    <option value="admin">Administrador da cooperativa</option>
                   </select>
                 </div>
 
@@ -177,57 +160,25 @@
               <div class="permissions-box">
                 <div class="permissions-head">
                   <strong>Permissões de acesso</strong>
-                  <span>Defina os módulos liberados para este usuário.</span>
+                  <span>Essas permissões controlam quais módulos o usuário poderá acessar.</span>
                 </div>
 
                 <div class="permissions-grid">
-                  <label class="permission-item">
-                    <input type="checkbox" id="permDashboard" checked />
-                    <span>Dashboard</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permColetas" checked />
-                    <span>Registro de coletas</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permParticipants" checked />
-                    <span>Participantes</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permConteudos" checked />
-                    <span>Conteúdos</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permDocumentos" checked />
-                    <span>Documentos</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permMapa" checked />
-                    <span>Mapa / rotas</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permAprovarCadastros" />
-                    <span>Aprovar cadastros</span>
-                  </label>
-
-                  <label class="permission-item">
-                    <input type="checkbox" id="permGerenciarUsuarios" />
-                    <span>Gerenciar usuários</span>
-                  </label>
+                  <label class="permission-item"><input type="checkbox" id="permDashboard" checked /><span>Dashboard</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permColetas" checked /><span>Registro de coletas</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permParticipants" checked /><span>Participantes</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permConteudos" checked /><span>Conteúdos</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permDocumentos" checked /><span>Documentos</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permMapa" checked /><span>Mapa / rotas</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permAprovarCadastros" /><span>Aprovar cadastros</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permGerenciarUsuarios" /><span>Gerenciar usuários</span></label>
                 </div>
               </div>
 
               <div class="modal-actions modal-actions-inline">
+                <button class="btn btn-ghost" type="button" id="btnCancelEdit" style="display:none;">Cancelar edição</button>
                 <div class="modal-actions-right">
-                  <button class="btn btn-primary" type="submit" id="btnCreateCoopUser">
-                    Criar usuário da cooperativa
-                  </button>
+                  <button class="btn btn-primary" type="submit" id="btnCreateCoopUser">Criar usuário da cooperativa</button>
                 </div>
               </div>
             </form>
@@ -239,9 +190,28 @@
             <div class="panel-head">
               <div>
                 <span class="section-kicker">Usuários internos</span>
-                <h2>Usuários da cooperativa</h2>
+                <h2>Usuários cadastrados</h2>
               </div>
               <span class="panel-count" id="coopUsersCountLabel">0 itens</span>
+            </div>
+
+            <div class="filters-grid" style="margin-bottom:16px;">
+              <div class="field">
+                <label for="coopUsersSearch">Buscar usuário</label>
+                <input id="coopUsersSearch" type="text" placeholder="Nome, e-mail ou perfil" />
+              </div>
+              <div class="field">
+                <label for="coopUsersStatusFilter">Status</label>
+                <select id="coopUsersStatusFilter">
+                  <option value="all">Todos</option>
+                  <option value="active">Ativos</option>
+                  <option value="inactive">Inativos</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>&nbsp;</label>
+                <button class="btn btn-dark" type="button" id="btnDownloadCoopUsers">Baixar lista CSV</button>
+              </div>
             </div>
 
             <div class="panel-list" id="coopUsersList">
@@ -251,16 +221,28 @@
         </div>
       </section>
 
+      <div class="modal hidden" id="coopUserViewModal" aria-hidden="true">
+        <div class="modal-backdrop" id="coopUserViewBackdrop"></div>
+        <div class="modal-card">
+          <div class="modal-head">
+            <div>
+              <span class="section-kicker">Visualizar usuário</span>
+              <h2 id="viewUserName">Usuário</h2>
+            </div>
+            <button class="modal-close" type="button" id="closeViewModal">×</button>
+          </div>
+          <div class="modal-body" id="viewUserBody"></div>
+          <div class="modal-actions">
+            <button class="btn btn-ghost" type="button" id="viewEditBtn">Editar</button>
+            <button class="btn btn-danger" type="button" id="viewDeleteBtn">Excluir</button>
+          </div>
+        </div>
+      </div>
+
       <div class="debug-status hidden" id="debugStatus"></div>
     </main>
   </div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
-
-  <script type="module" src="usuarios.js"></script>
+  <script type="module" src="user-cooperativa.js"></script>
 </body>
 </html>

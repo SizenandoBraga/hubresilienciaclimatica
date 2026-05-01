@@ -25,7 +25,10 @@
   <link rel="stylesheet" href="usuarios.css" />
 </head>
 
-<body>
+<body
+  data-territory-id="cooadesc"
+  data-territory-label="COOADESC"
+>
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
   <div class="app-shell">
@@ -43,32 +46,32 @@
       <nav class="sidebar-nav">
         <p class="nav-label">Menu</p>
 
-        <a href="/cooperativa-cooadesc.html" class="nav-link">
+        <a href="cooperativa-cooadesc.html" class="nav-link" id="navCoopHome">
           <span class="nav-ico">🏠</span>
           <span>Painel inicial</span>
         </a>
 
-        <a href="/usuarios-cooadesc.html" class="nav-link active">
+        <a href="usuarios-cooadesc.html" class="nav-link active" id="navUsuarios">
           <span class="nav-ico">👥</span>
           <span>Participantes cadastrados</span>
         </a>
          
-        <a href="#" class="nav-link" id="cadastroParticipantesLink">
-  <span class="nav-ico">👥</span>
-  <span>Cadastrar Participantes</span>
+        <a href="cadastro-participantes-cooadesc.html" class="nav-link" id="cadastroParticipantesLink">
+  <span class="nav-ico">➕</span>
+          <span>Cadastrar participantes</span>
 </a>
 
-        <a href="/user-cooperativa-cooadesc.html" class="nav-link">
+        <a href="user-cooperativa-cooadesc.html" class="nav-link" id="navUserCooperativa">
           <span class="nav-ico">🧑‍💼</span>
           <span>Usuários da cooperativa</span>
         </a>
 
-        <a href="/cadastro-coletas-cooadesc.html" class="nav-link">
+        <a href="cadastro-coletas-cooadesc.html" class="nav-link" id="navColetas">
           <span class="nav-ico">♻️</span>
           <span>Registro de coletas</span>
         </a>
 
-        <a href="/dashboard-cooperativa-cooadesc.html" class="nav-link">
+        <a href="dashboard-cooperativa-cooadesc.html" class="nav-link" id="navDashboardCooperativa">
           <span class="nav-ico">📊</span>
           <span>Dashboard da cooperativa</span>
         </a>
@@ -413,6 +416,6 @@
     crossorigin=""
   ></script>
 
-  <script type="module" src="usuarios.js"></script>
+  <script type="module" src="usuarios.js?v=60"></script>
 </body>
 </html>
