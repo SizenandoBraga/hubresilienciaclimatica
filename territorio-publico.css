@@ -200,7 +200,7 @@ img {
 }
 
 .hero-copy h1 {
-  margin: 16px 0 12px;
+  margin: 14px 0 10px;
   font-size: clamp(48px, 7vw, 92px);
   line-height: 0.92;
   color: var(--black);
