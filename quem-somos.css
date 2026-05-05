@@ -1,78 +1,108 @@
 /* =========================================================
-   BASE
+   QUEM SOMOS - NSRU
+   Visual profissional, leve e responsivo
 ========================================================= */
 
 .public-page {
-  background: var(--bg-page);
-  padding-bottom: 40px;
+  background:
+    radial-gradient(circle at top left, rgba(129,185,42,.12), transparent 34%),
+    radial-gradient(circle at 85% 10%, rgba(40,119,166,.10), transparent 30%),
+    var(--bg-page);
+  padding-bottom: 56px;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
+/* HERO */
 
 .about-hero-shell {
-  background: #fff;
-  border: 1px solid var(--border);
+  margin-top: 24px;
+  position: relative;
+  overflow: hidden;
   border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-soft);
-  margin-top: 20px;
+  border: 1px solid rgba(0,0,0,.08);
+  background:
+    linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,255,255,.90)),
+    radial-gradient(circle at right top, rgba(129,185,42,.18), transparent 35%);
+  box-shadow: 0 24px 60px rgba(0,0,0,.10);
+}
+
+.about-hero-shell::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(129,185,42,.12), transparent 45%),
+    linear-gradient(180deg, transparent, rgba(0,0,0,.025));
+  pointer-events: none;
 }
 
 .about-hero-copy {
-  max-width: 980px;
+  position: relative;
+  max-width: 1060px;
   margin: 0 auto;
-  padding: clamp(32px, 5vw, 64px);
+  padding: clamp(36px, 6vw, 76px);
 }
-
-/* TÍTULO */
 
 .hero-title {
-  margin: 0;
-  line-height: 1.1;
+  margin: 18px 0 0;
+  max-width: 940px;
+  font-family: "Archivo Condensed", sans-serif;
+  font-size: clamp(38px, 6vw, 76px);
+  line-height: .95;
+  letter-spacing: -1.5px;
+  color: var(--black);
 }
 
-.hero-title-line {
+.hero-title-line,
+.hero-title-highlight {
   display: block;
 }
 
 .hero-title-highlight {
-  display: block;
   color: var(--green-primary);
+  text-shadow: 0 10px 30px rgba(129,185,42,.18);
 }
 
-/* TEXTO */
+.hero-text-grid {
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 30px;
+  align-items: start;
+  margin-top: 28px;
+}
 
 .hero-lead {
-  margin-top: 20px;
-  font-size: 20px;
-  line-height: 1.5;
+  margin: 0;
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.55;
   color: var(--black);
+  font-weight: 500;
 }
 
 .hero-lead strong {
   color: var(--orange-primary);
 }
 
-/* BLOCOS */
-
-.hero-block {
-  margin-top: 18px;
+.hero-story {
   display: grid;
-  gap: 10px;
+  gap: 12px;
 }
 
+.hero-story p,
 .hero-block p {
   margin: 0;
-  line-height: 1.7;
+  line-height: 1.75;
   color: var(--text-soft);
 }
 
 .hero-highlight {
-  padding: 14px 16px;
-  border-left: 5px solid var(--orange-primary);
-  background: rgba(239,107,34,0.08);
-  font-weight: 600;
+  margin-top: 28px;
+  padding: 18px 20px;
+  border-left: 6px solid var(--orange-primary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  background: linear-gradient(90deg, rgba(239,107,34,.13), rgba(239,107,34,.04));
+  color: var(--black);
+  font-weight: 700;
+  line-height: 1.6;
 }
 
 /* ORGANIZAÇÕES */
@@ -80,88 +110,123 @@
 .hero-orgs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px;
-  margin-top: 24px;
+  gap: 18px;
+  margin-top: 26px;
 }
 
 .hero-org-card {
+  position: relative;
+  overflow: hidden;
   background: #fff;
-  border: 1px solid var(--border);
+  border: 1px solid rgba(0,0,0,.08);
   border-radius: var(--radius-lg);
-  padding: 18px;
-  box-shadow: var(--shadow-card);
+  padding: 22px;
+  box-shadow: 0 14px 35px rgba(0,0,0,.08);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
+}
+
+.hero-org-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 5px;
+  background: linear-gradient(90deg, var(--green-primary), var(--blue-primary));
+}
+
+.hero-org-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(129,185,42,.45);
+  box-shadow: 0 20px 42px rgba(0,0,0,.12);
 }
 
 .hero-org-card strong {
   display: block;
+  margin-bottom: 8px;
   color: var(--green-primary);
-  margin-bottom: 6px;
+  font-size: 20px;
 }
 
 .hero-org-card span {
-  font-size: 15px;
+  display: block;
+  font-size: 15.5px;
+  line-height: 1.65;
   color: var(--text-soft);
 }
 
-/* FINAL */
-
 .hero-final {
-  margin-top: 24px;
-  padding: 22px;
-  background: var(--black);
+  margin-top: 28px;
+  padding: 26px;
+  background:
+    linear-gradient(135deg, rgba(0,0,0,.94), rgba(0,0,0,.82)),
+    radial-gradient(circle at top right, rgba(129,185,42,.28), transparent 36%);
   border-radius: var(--radius-lg);
+  box-shadow: 0 20px 45px rgba(0,0,0,.18);
 }
 
 .hero-final p {
+  margin: 0;
   color: #fff;
+  line-height: 1.75;
 }
 
-/* =========================================================
-   SECTION HEAD (CORREÇÃO DE QUEBRA)
-========================================================= */
+.hero-final strong {
+  color: var(--green-primary);
+}
+
+/* SEÇÕES */
 
 .section-head-balanced h2 {
-  max-width: 700px;
+  max-width: 760px;
 }
 
 .section-head-balanced p {
-  max-width: 600px;
-  margin-top: 10px;
-  line-height: 1.6;
+  max-width: 680px;
+  margin-top: 12px;
+  line-height: 1.7;
 }
 
-/* =========================================================
-   CARDS
-========================================================= */
+/* CARDS */
 
 .cards-grid {
-  gap: 18px;
+  gap: 20px;
 }
 
 .card {
+  position: relative;
+  overflow: hidden;
   border-radius: var(--radius-lg);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow-card);
-  padding: 18px;
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 12px 30px rgba(0,0,0,.07);
+  padding: 22px;
+  transition: transform .25s ease, box-shadow .25s ease;
 }
 
-/* CORES POR TIPO */
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 42px rgba(0,0,0,.12);
+}
+
+.card h3 {
+  margin-top: 10px;
+}
+
+.card p {
+  line-height: 1.7;
+}
 
 .about-card-green {
-  border-top: 6px solid var(--green-primary);
+  border-top: 7px solid var(--green-primary);
 }
 
 .about-card-blue {
-  border-top: 6px solid var(--blue-primary);
+  border-top: 7px solid var(--blue-primary);
 }
 
 .about-card-orange {
-  border-top: 6px solid var(--orange-primary);
+  border-top: 7px solid var(--orange-primary);
 }
 
-/* =========================================================
-   PARCEIROS
-========================================================= */
+/* PARCEIROS */
 
 .partner-grid {
   display: grid;
@@ -170,25 +235,42 @@
 }
 
 .logo-card {
+  min-height: 130px;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 120px;
+  padding: 22px;
+  background: #fff;
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(0,0,0,.08);
+  box-shadow: 0 12px 28px rgba(0,0,0,.07);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.logo-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 38px rgba(0,0,0,.11);
 }
 
 .partner-logo {
-  max-height: 80px;
+  max-width: 100%;
+  max-height: 82px;
   object-fit: contain;
+  filter: grayscale(15%);
+  transition: filter .25s ease, transform .25s ease;
 }
 
-/* =========================================================
-   ANIMAÇÃO
-========================================================= */
+.logo-card:hover .partner-logo {
+  filter: grayscale(0);
+  transform: scale(1.04);
+}
+
+/* ANIMAÇÃO */
 
 [data-reveal] {
   opacity: 0;
-  transform: translateY(20px);
-  transition: 0.6s ease;
+  transform: translateY(24px);
+  transition: opacity .7s ease, transform .7s ease;
 }
 
 [data-reveal].in {
@@ -196,12 +278,20 @@
   transform: none;
 }
 
-/* =========================================================
-   RESPONSIVO
-========================================================= */
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal],
+  .card,
+  .hero-org-card,
+  .logo-card,
+  .partner-logo {
+    transition: none;
+  }
+}
+
+/* RESPONSIVO */
 
 @media (max-width: 1024px) {
-
+  .hero-text-grid,
   .hero-orgs {
     grid-template-columns: 1fr;
   }
@@ -212,17 +302,12 @@
 }
 
 @media (max-width: 768px) {
-
   .about-hero-copy {
-    padding: 28px 20px;
+    padding: 32px 22px;
   }
 
-  .hero-lead {
-    font-size: 18px;
-  }
-
-  .hero-block p {
-    font-size: 15.5px;
+  .hero-title {
+    letter-spacing: -.8px;
   }
 
   .cards-grid.two,
@@ -232,13 +317,23 @@
 }
 
 @media (max-width: 480px) {
+  .about-hero-shell {
+    border-radius: var(--radius-lg);
+  }
 
   .hero-title {
-    font-size: 24px;
+    font-size: 34px;
   }
 
   .hero-lead {
-    font-size: 16px;
+    font-size: 17px;
+  }
+
+  .hero-highlight,
+  .hero-final,
+  .hero-org-card,
+  .card {
+    padding: 18px;
   }
 
   .partner-grid {
