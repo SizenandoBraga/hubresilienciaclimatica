@@ -155,7 +155,7 @@
           <div class="field">
             <label for="familyCode">Código</label>
             <input type="text" id="familyCode" placeholder="Ex.: 138">
-            <small>Se não houver, pode deixar em branco.</small>
+           <small>Se for família e não houver código, deixe em branco: o sistema salvará automaticamente como F000.</small>
           </div>
 
           <div class="field">
@@ -181,14 +181,9 @@
           </div>
 
           <div class="field">
-  <label for="pesoRejeitoKg">Peso do rejeito (kg) <small>(opcional)</small></label>
-  <input type="number" step="0.01" id="pesoRejeitoKg" placeholder="0">
-</div>
-
-<div class="field">
-  <label for="pesoNaoComercializadoKg">Peso não comercializado (kg) <small>(opcional)</small></label>
-  <input type="number" step="0.01" id="pesoNaoComercializadoKg" placeholder="0">
-</div>
+            <label for="pesoRejeitoKg">Peso do rejeito (kg) <span>*</span></label>
+            <input type="number" step="0.01" id="pesoRejeitoKg" placeholder="0" required>
+          </div>
 
           <div class="field">
             <label for="pesoNaoComercializadoKg">Peso não comercializado (kg) <span>*</span></label>
@@ -229,10 +224,7 @@
             <input type="text" id="condCode" placeholder="Ex.: C001">
           </div>
 
-          <div class="field">
-            <label for="pesoRejeitoGeralKg">Peso do rejeito geral (kg) <span>*</span></label>
-            <input type="number" step="0.01" id="pesoRejeitoGeralKg" placeholder="0" required>
-          </div>
+          
 
           <div class="field"><label for="plasticoKg">Plástico (kg)</label><input type="number" step="0.01" id="plasticoKg" placeholder="0"></div>
           <div class="field"><label for="papelMistoKg">Papel misto (kg)</label><input type="number" step="0.01" id="papelMistoKg" placeholder="0"></div>
@@ -321,14 +313,14 @@
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
-  <script type="module" src="cadastro-coletas-cooadesc.js"></script>
+  <script type="module" src="cadastro-coletas-territorial.js"></script>
 
   <script>
     const btnBackCooperativa = document.getElementById("btnBackCooperativa");
 
     if (btnBackCooperativa) {
       btnBackCooperativa.addEventListener("click", () => {
-        const backUrl = document.body.dataset.backUrl || "cooperativa-cooadesc.html";
+        const backUrl = document.body.dataset.backUrl || "cooperativa-vila-pinto.html";
         window.location.href = backUrl;
       });
     }
