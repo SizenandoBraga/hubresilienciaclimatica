@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Language" content="pt-BR" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NSRU • Cooperativa • COOADESC</title>
+  <title>NSRU • Cooperativa • Coadesc</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -18,14 +18,16 @@
     crossorigin=""
   />
 
-  <link rel="stylesheet" href="/cooperativas.css" />
+  <link rel="stylesheet" href="cooperativas.css" />
 </head>
 <body
-  data-territory-id="crgr_cooadesc"
+  data-territory-id="cooadesc"
   data-territory-label="COOADESC"
   data-cooperative-name="COOADESC"
   data-participant-url="cadastro-participantes-cooadesc.html"
   data-coletas-url="cadastro-coletas-cooadesc.html"
+  data-usuarios-url="usuarios-cooadesc.html"
+  data-user-coop-url="usuarios-cooperativa.html"
   data-map-lat="-30.003"
   data-map-lng="-51.206"
   data-map-zoom="15"
@@ -43,7 +45,7 @@
           </div>
         </a>
 
-        <button class="sidebar-close" id="sidebarClose" aria-label="Fechar menu">×</button>
+        
       </div>
 
       <nav class="sidebar-nav">
@@ -56,7 +58,11 @@
 
         <a class="nav-link admin-only" href="usuarios-cooadesc.html">
           <span class="nav-ico">👥</span>
-          <span>Usuários cadastrados</span>
+          <span>Gestão de Participantes</span>
+        </a>
+         <a class="nav-link admin-only" href="user-cooperativa.html">
+          <span class="nav-ico">👥</span>
+          <span>Gestão de Usuários</span>
         </a>
 
         <a class="nav-link" href="cadastro-coletas-cooadesc.html">
@@ -64,7 +70,7 @@
           <span>Registro de coletas</span>
         </a>
 
-        <a class="nav-link" href="dashboard-cooperativa.html">
+       <a class="nav-link" href="dashbooard-cooperativa-cooadesc.html">
           <span class="nav-ico">📊</span>
           <span>Dashboard da cooperativa</span>
         </a>
@@ -74,15 +80,19 @@
           <span>Conteúdos</span>
         </a>
 
-        <a class="nav-link" href="trilhas.html">
-          <span class="nav-ico">🎓</span>
-          <span>Trilhas formativas</span>
-        </a>
-
-        <a class="nav-link" href="documentos.html">
+        <a class="nav-link" href="conteudos.html">
           <span class="nav-ico">📄</span>
           <span>Documentos</span>
         </a>
+
+        <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
+          Atualizar indicadores da cooperativa
+        </button>
+
+        <div class="coop-sync-box">
+          <span class="coop-sync-label">Indicadores públicos da cooperativa</span>
+          <small id="syncCoopDashboardStatus">Aguardando verificação...</small>
+        </div>
 
         <div class="nav-label nav-label-space">Sessão</div>
 
@@ -118,12 +128,12 @@
         <div class="topbar-right">
           <div class="topbar-pill topbar-territory">
             <span class="dot"></span>
-            <span id="territoryNameTop">COOADESC</span>
+            <span id="territoryNameTop">Coadesc</span>
           </div>
 
           <div class="topbar-pill coop-pill">
             <span>🏭</span>
-            <span id="cooperativeNameTop">COOADESC</span>
+            <span id="cooperativeNameTop">Coadesc</span>
           </div>
 
           <div class="topbar-pill role-pill" id="rolePill">
@@ -143,7 +153,7 @@
 
         <section class="coop-hero">
           <div class="hero-badge">Área logada da cooperativa</div>
-          <h1>Bem-vinda(o) ao painel da COOADESC</h1>
+          <h1>Bem-vinda(o) ao painel da Coadesc</h1>
           <p>
             Seu espaço para acessar conteúdos, acompanhar ações da cooperativa, registrar coletas realizadas
             e visualizar indicadores operacionais do território.
@@ -154,14 +164,14 @@
           <div class="section-head">
             <div>
               <span class="section-tag">Painel da cooperativa</span>
-              <h2>Acessos, materiais e trilhas</h2>
+              <h2>Acessos e materiais da cooperativa</h2>
             </div>
             <p>
-              Espaço para conteúdos, trilhas, documentos, avisos importantes e acesso rápido ao registro de coletas.
+              Espaço para conteúdos, documentos, avisos importantes e acesso rápido ao registro de coletas.
             </p>
           </div>
 
-          <div class="quick-grid">
+          <div class="quick-grid quick-grid-three">
             <article class="quick-card">
               <div class="quick-card-top">
                 <span class="mini-badge">Acesso rápido</span>
@@ -175,21 +185,11 @@
             <article class="quick-card">
               <div class="quick-card-top">
                 <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">🎓</span>
-              </div>
-              <h3>Trilhas formativas</h3>
-              <p>Aprendizagem em etapas com acompanhamento e evolução.</p>
-              <a href="trilhas.html">Acessar trilhas →</a>
-            </article>
-
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
                 <span class="quick-icon">📄</span>
               </div>
               <h3>Documentos</h3>
               <p>PDFs, atas, relatórios e arquivos institucionais.</p>
-              <a href="documentos.html">Abrir documentos →</a>
+              <a href="conteudos.html">Abrir documentos →</a>
             </article>
 
             <article class="quick-card">
@@ -203,20 +203,12 @@
             </article>
           </div>
 
-          <div class="panel-grid two-cols">
+          <div class="panel-grid">
             <article class="panel-card">
               <div class="panel-card-head">
                 <h3>📢 Avisos importantes</h3>
               </div>
               <div class="info-list" id="noticesList"></div>
-            </article>
-
-            <article class="panel-card">
-              <div class="panel-card-head">
-                <h3>🧭 Trilhas em destaque</h3>
-              </div>
-              <div class="trail-list" id="featuredTrails"></div>
-              <a class="panel-link" href="trilhas.html">Ver todas as trilhas →</a>
             </article>
           </div>
         </section>
@@ -241,7 +233,7 @@
               />
             </div>
 
-            <a class="participants-add-btn" href="cadastro-participantes-cooadesc.html" id="newParticipantBtn">
+            <a class="participants-add-btn" href="cadastro-colaboradores-cooadesc.html" id="newParticipantBtn">
               + Novo participante
             </a>
           </div>
@@ -275,7 +267,7 @@
               <button class="territory-tab" data-tab="servicos">🛠 Serviços</button>
               <button class="territory-tab" data-tab="mapa">🗺 Mapa</button>
               <button class="territory-tab" data-tab="calendario">🗓 Calendário</button>
-              <button class="territory-tab" data-tab="treinamentos">🎓 Treinamentos</button>
+              <button class="territory-tab" data-tab="treinamentos">🎓 Capacitações</button>
               <button class="territory-tab territory-tab-special" data-tab="coleta">🚚 Coleta especial</button>
               <button class="territory-tab" data-tab="ouvidoria">🗣 Ouvidoria</button>
             </div>
@@ -393,7 +385,7 @@
                   <p>
                     Canal para dúvidas, sugestões, ocorrências e retorno da comunidade ligada à cooperativa.
                   </p>
-                  <a class="panel-link" href="ouvidoria.html">Abrir ouvidoria →</a>
+                  <a class="panel-link" href="#tab-ouvidoria">Abrir ouvidoria →</a>
                 </div>
               </div>
             </div>
@@ -418,8 +410,8 @@
                 </div>
 
                 <div class="summary-actions">
-                  <a href="servicos.html" class="summary-btn">Serviços</a>
-                  <a href="dashboard-cooperativa.html" class="summary-btn">Mapa</a>
+                  <a href="#tab-servicos" class="summary-btn">Serviços</a>
+                  <a href="dashbooard-cooperativa-cooadesc.html" class="summary-btn">Mapa</a>
                 </div>
               </div>
 
@@ -429,9 +421,8 @@
               </div>
 
               <div class="side-card small-grid">
-                <a href="calendario.html" class="summary-btn">Calendário</a>
-                <a href="ouvidoria.html" class="summary-btn">Ouvidoria</a>
-                <a href="trilhas.html" class="summary-btn full">Treinamentos</a>
+                <a href="#tab-calendario" class="summary-btn">Calendário</a>
+                <a href="#tab-ouvidoria" class="summary-btn">Ouvidoria</a>
               </div>
 
               <div class="side-card indicators-card">
@@ -461,9 +452,9 @@
                   </div>
                 </div>
 
-                <a class="dashboard-cta" href="dashboard-cooperativa.html">
-                  📊 Acessar dashboard da cooperativa
-                </a>
+               <a class="dashboard-cta" href="dashbooard-cooperativa-cooadesc.html">
+  📊 Acessar dashboard da cooperativa
+</a>
               </div>
             </aside>
           </div>
