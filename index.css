@@ -43,11 +43,13 @@
 
 .hero-split {
   display: grid;
-  grid-template-columns: 0.9fr 1.1fr; /* imagem maior */
+  grid-template-columns: 60% 40%;
+  align-items: stretch;
+  gap: 28px;
 }
-
 .hero-copy {
-  padding: 48px 36px 40px;
+  padding: 52px 42px 46px;
+  max-width: 680px;
 }
 
 /* CARROSSEL 100% AJUSTADO */
@@ -60,7 +62,22 @@
   max-width: 100%;
   max-height: 100%;
   object-fit: contain;
+
+  /* AJUSTE VISUAL */
+  filter: brightness(1.08) contrast(1.05);
 }
+.hero-carousel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(255,255,255,0.08),
+    rgba(0,0,0,0.15)
+  );
+  pointer-events: none;
+}
+
 .hero-slide.hero-photo img {
   width: 100%;
   height: 100%;
@@ -70,9 +87,12 @@
 .hero-carousel {
   width: 100%;
   height: 100%;
-  min-height: 520px; /* AUMENTADO */
-  max-height: 620px; /* limite elegante */
-  aspect-ratio: 4 / 3; /* mais largo = mais moderno */
+  min-height: 520px;
+  max-height: 640px;
+  border-radius: 22px;
+  overflow: hidden;
+  background: #2d2d2d;
+  box-shadow: 0 20px 48px rgba(0,0,0,.18);
 }
 
 .hero-carousel-track {
@@ -412,55 +432,78 @@
   object-fit: contain;
 }
 /* =========================================================
-   RESPONSIVO DO HERO / CARROSSEL
-   Carrossel maior, mas respeitando o container
+   RESPONSIVO HERO + CARROSSEL
 ========================================================= */
 
-/* NOTEBOOK */
+/* NOTEBOOK GRANDE */
 @media (max-width: 1180px) {
-  .container {
-    max-width: 1060px;
-    padding: 0 18px;
-  }
 
   .hero-split {
-    grid-template-columns: 0.95fr 1.05fr;
+    grid-template-columns: 58% 42%;
+    gap: 22px;
   }
 
   .hero-copy {
-    padding: 40px 30px;
+    padding: 42px 32px;
+  }
+
+  .hero-carousel {
+    min-height: 500px;
+    max-height: 580px;
+  }
+}
+
+
+/* NOTEBOOK MÉDIO */
+@media (max-width: 1024px) {
+
+  .hero-split {
+    grid-template-columns: 55% 45%;
+    gap: 20px;
+  }
+
+  .hero-copy {
+    padding: 36px 28px;
   }
 
   .hero-carousel {
     min-height: 460px;
-    max-height: 560px;
-    aspect-ratio: 4 / 3;
+    max-height: 540px;
   }
 }
 
-/* NOTEBOOK MENOR / TABLET HORIZONTAL */
+
+/* NOTEBOOK PEQUENO / TABLET HORIZONTAL */
 @media (max-width: 980px) {
+
   .hero-split {
     grid-template-columns: 1fr;
   }
 
   .hero-image {
     padding: 0 24px 28px;
+    display: flex;
     justify-content: center;
   }
 
   .hero-carousel {
     width: 100%;
     max-width: 680px;
-    min-height: 430px;
+    min-height: 420px;
     max-height: 520px;
     aspect-ratio: 4 / 3;
     margin: 0 auto;
   }
+
+  .hero-copy {
+    max-width: 100%;
+  }
 }
+
 
 /* TABLET */
 @media (max-width: 768px) {
+
   .container {
     padding: 0 16px;
   }
@@ -478,8 +521,7 @@
     line-height: 1.05;
   }
 
-  .hero-description,
-  .hero-bottom-note {
+  .hero-description {
     font-size: 16px;
     line-height: 1.65;
   }
@@ -507,8 +549,10 @@
   }
 }
 
+
 /* CELULAR */
 @media (max-width: 560px) {
+
   .container {
     padding: 0 12px;
   }
@@ -560,19 +604,21 @@
   }
 }
 
+
 /* CELULAR PEQUENO */
 @media (max-width: 380px) {
+
   .hero-copy {
     padding: 24px 14px 22px;
   }
 
   .hero-title {
-    font-size: 31px;
+    font-size: 30px;
   }
 
   .hero-carousel {
-    min-height: 280px;
-    max-height: 340px;
+    min-height: 260px;
+    max-height: 320px;
   }
 
   .carousel-btn {
