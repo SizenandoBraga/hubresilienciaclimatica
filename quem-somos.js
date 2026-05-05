@@ -1,19 +1,33 @@
+/* =========================================================
+   QUEM SOMOS - JS
+   Função: animação de entrada e acessibilidade
+========================================================= */
+
 document.addEventListener("DOMContentLoaded", () => {
   "use strict";
+
+  /* =========================
+     HELPERS
+  ========================= */
 
   const $$ = (selector, scope = document) =>
     Array.from(scope.querySelectorAll(selector));
 
-  function isReducedMotion() {
-    return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-  }
+  const prefersReducedMotion = () =>
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* =========================
+     REVEAL ANIMATION
+  ========================= */
 
   function initReveal() {
-    const revealEls = $$("[data-reveal]");
-    if (!revealEls.length) return;
+    const elements = $$("[data-reveal]");
 
-    if (!("IntersectionObserver" in window) || isReducedMotion()) {
-      revealEls.forEach((el) => el.classList.add("in"));
+    if (!elements.length) return;
+
+    // Se navegador não suporta ou usuário prefere menos animação
+    if (!("IntersectionObserver" in window) || prefersReducedMotion()) {
+      elements.forEach((el) => el.classList.add("in"));
       return;
     }
 
@@ -32,16 +46,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     );
 
-    revealEls.forEach((el) => observer.observe(el));
+    elements.forEach((el) => observer.observe(el));
   }
 
-  function initHeroStatic() {
-    const hero = document.querySelector(".about-hero-shell, .hero-copy");
-    if (!hero) return;
-
-    hero.classList.add("hero-ready");
-  }
+  /* =========================
+     INIT
+  ========================= */
 
   initReveal();
-  initHeroStatic();
 });
