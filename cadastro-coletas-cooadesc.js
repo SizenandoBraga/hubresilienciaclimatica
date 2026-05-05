@@ -512,8 +512,9 @@ async function salvarRecebimento() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  const participantCode = $("familyCode")?.value.trim() || null;
-  const familyCode = participantCode;
+  const familyCodeDigitado = $("familyCode")?.value.trim() || "";
+const familyCode = familyCodeDigitado || "F000";
+const participantCode = familyCode;
 
   const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
   const qualidadeNota = parseNum($("qualidadeNota")?.value);
@@ -528,9 +529,7 @@ async function salvarRecebimento() {
     throw new Error("Salve primeiro a etapa da operação.");
   }
 
-  if (!participantCode) {
-    throw new Error("Informe o código do participante aprovado.");
-  }
+  
 
   if (
   pesoResiduoSecoKg === null ||
@@ -566,12 +565,13 @@ async function salvarRecebimento() {
     createdByName: getCreatedByName(),
 
     opDate: STATE.operacao.opDate,
-    participantCode,
-    deliveryType: STATE.operacao.deliveryType,
-    flowType: "recebimento",
-    observacao: STATE.operacao.opNotes || null,
-    familyCode,
-
+   participantCode,
+deliveryType: STATE.operacao.deliveryType,
+flowType: "recebimento",
+observacao: STATE.operacao.opNotes || null,
+familyCode,
+codigoAutomatico: !familyCodeDigitado,
+tipoCodigo: familyCodeDigitado ? "informado" : "familia_automatico",
     photoUrl: fotoResiduo?.dataUrl || null,
     photos: recebimentoPhotos,
 
