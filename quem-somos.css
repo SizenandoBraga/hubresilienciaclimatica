@@ -11,18 +11,27 @@
 }
 
 /* =========================================================
-   HERO
+   HERO (SEM ALTERAR LAYOUT)
 ========================================================= */
 
-.about-hero-section {
-  margin-top: 24px;
+.about-hero-shell {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
+  margin-top: 20px;
 }
 
-/* TÍTULO */
+.about-hero-copy {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: clamp(32px, 5vw, 64px);
+}
+
+/* ===== TÍTULO ===== */
 
 .hero-title {
-  max-width: 860px;
-  margin-top: 12px;
+  margin: 0;
   font-family: "Archivo Condensed", sans-serif;
   font-size: clamp(38px, 5vw, 64px);
   line-height: .98;
@@ -40,80 +49,65 @@
   color: var(--green-primary);
 }
 
-/* SUBTITULO */
+/* ===== TEXTO ===== */
 
-.hero-subtitle {
-  max-width: 720px;
-  margin-top: 18px;
+.hero-subtitle,
+.hero-lead {
+  margin-top: 14px;
   font-family: "Inter", sans-serif;
   font-size: 18px;
-  line-height: 1.65;
+  line-height: 1.7;
   color: var(--text-soft);
 }
 
-/* CARD */
+/* destaque padrão */
 
-.about-hero-card {
-  margin-top: 30px;
-  padding: clamp(26px, 4vw, 40px);
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+.hero-subtitle strong,
+.hero-lead strong,
+.hero-story strong,
+.hero-highlight strong,
+.hero-final strong {
+  color: var(--green-primary);
+  font-weight: 800;
 }
 
 /* GRID */
 
 .hero-text-grid {
   display: grid;
-  grid-template-columns: .9fr 1.1fr;
-  gap: 40px;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+  margin-top: 24px;
 }
 
-/* BLOCO PRINCIPAL */
-
-.hero-lead {
-  padding: 22px;
-  background: rgba(129,185,42,0.08);
-  border-left: 5px solid var(--green-primary);
-  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-  font-family: "Inter", sans-serif;
-  font-size: 20px;
-  line-height: 1.6;
-  font-weight: 600;
-  color: var(--black);
-}
-
-.hero-lead strong,
-.hero-subtitle strong,
-.hero-final strong {
-  color: var(--green-primary);
-}
-
-/* TEXTO DIREITA */
+/* PARÁGRAFOS */
 
 .hero-story {
   display: grid;
-  gap: 18px;
+  gap: 16px;
 }
 
 .hero-story p {
+  margin: 0;
   font-family: "Inter", sans-serif;
   font-size: 16.5px;
-  line-height: 1.8;
+  line-height: 1.85;
   color: var(--text-soft);
 }
 
 /* DESTAQUE */
 
 .hero-highlight {
-  margin-top: 28px;
-  padding: 20px;
-  background: rgba(129,185,42,0.08);
+  margin-top: 22px;
+  padding: 18px 20px;
+  background: rgba(129,185,42,.08);
   border-left: 5px solid var(--green-primary);
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  font-family: "Inter", sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
   font-weight: 600;
-  line-height: 1.7;
+  color: var(--black);
 }
 
 /* ORGANIZAÇÕES */
@@ -121,27 +115,33 @@
 .hero-orgs {
   display: grid;
   grid-template-columns: repeat(2,1fr);
-  gap: 18px;
-  margin-top: 24px;
+  gap: 16px;
+  margin-top: 22px;
 }
 
 .hero-org-card {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  padding: 20px;
+  padding: 18px;
   box-shadow: var(--shadow-card);
-  transition: .25s;
+  transition: transform .25s ease;
 }
 
 .hero-org-card:hover {
-  transform: translateY(-4px);
+  transform: translateY(-3px);
 }
 
 .hero-org-card strong {
-  color: var(--green-primary);
   display: block;
   margin-bottom: 6px;
+  color: var(--green-primary);
+}
+
+.hero-org-card span {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-soft);
 }
 
 /* FINAL */
@@ -154,27 +154,161 @@
 }
 
 .hero-final p {
+  margin: 0;
+  font-family: "Inter", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.8;
   color: #fff;
-  line-height: 1.7;
+}
+
+/* =========================================================
+   SEÇÕES
+========================================================= */
+
+.section-head-balanced h2 {
+  max-width: 760px;
+}
+
+.section-head-balanced p {
+  max-width: 680px;
+  margin-top: 10px;
+  line-height: 1.6;
+}
+
+/* =========================================================
+   CARDS
+========================================================= */
+
+.cards-grid {
+  gap: 18px;
+}
+
+.card {
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  padding: 18px;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 35px rgba(0,0,0,.12);
+}
+
+.about-card-green {
+  border-top: 6px solid var(--green-primary);
+}
+
+.about-card-blue {
+  border-top: 6px solid var(--blue-primary);
+}
+
+.about-card-orange {
+  border-top: 6px solid var(--orange-primary);
+}
+
+/* =========================================================
+   PARCEIROS
+========================================================= */
+
+.partner-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.logo-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+  padding: 20px;
+  border-radius: var(--radius-lg);
+  background: #fff;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card);
+  transition: transform .25s ease;
+}
+
+.logo-card:hover {
+  transform: translateY(-3px);
+}
+
+.partner-logo {
+  max-height: 80px;
+  object-fit: contain;
+  transition: transform .25s ease;
+}
+
+.logo-card:hover .partner-logo {
+  transform: scale(1.05);
+}
+
+/* =========================================================
+   ANIMAÇÃO
+========================================================= */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: .6s ease;
+}
+
+[data-reveal].in {
+  opacity: 1;
+  transform: none;
 }
 
 /* =========================================================
    RESPONSIVO
 ========================================================= */
 
-@media (max-width: 900px) {
-  .hero-text-grid,
+@media (max-width: 1024px) {
+
   .hero-orgs {
+    grid-template-columns: 1fr;
+  }
+
+  .partner-grid {
+    grid-template-columns: repeat(2,1fr);
+  }
+}
+
+@media (max-width: 768px) {
+
+  .about-hero-copy {
+    padding: 28px 20px;
+  }
+
+  .hero-title {
+    font-size: 34px;
+  }
+
+  .hero-subtitle,
+  .hero-lead {
+    font-size: 16.5px;
+  }
+
+  .hero-story p,
+  .hero-final p {
+    font-size: 15.8px;
+  }
+
+  .cards-grid.two,
+  .cards-grid.four {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
+
   .hero-title {
-    font-size: 32px;
+    font-size: 30px;
+    line-height: 1.08;
   }
 
-  .hero-subtitle {
-    font-size: 16px;
+  .partner-grid {
+    grid-template-columns: 1fr;
   }
 }
