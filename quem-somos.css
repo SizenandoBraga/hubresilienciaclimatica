@@ -1,75 +1,63 @@
 /* =========================================================
    QUEM SOMOS - NSRU
-   Visual profissional, leve e responsivo
 ========================================================= */
 
 .public-page {
   background:
-    radial-gradient(circle at top left, rgba(129,185,42,.12), transparent 34%),
-    radial-gradient(circle at 85% 10%, rgba(40,119,166,.10), transparent 30%),
+    radial-gradient(circle at top left, rgba(129,185,42,.10), transparent 34%),
+    radial-gradient(circle at 85% 10%, rgba(40,119,166,.08), transparent 30%),
     var(--bg-page);
   padding-bottom: 56px;
 }
 
 /* =========================================================
-   HERO - QUEM SOMOS
+   HERO COMO SEÇÃO
 ========================================================= */
 
 .about-hero-section {
-  padding: 32px 0 0;
+  margin-top: 24px;
 }
-
-.about-hero-shell {
-  position: relative;
-  overflow: hidden;
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-soft);
-}
-
-.about-hero-copy {
-  max-width: 1080px;
-  margin: 0 auto;
-  padding: clamp(36px, 6vw, 72px);
-}
-
-/* TÍTULO */
 
 .hero-title {
-  max-width: 880px;
-  margin: 18px 0 0;
+  max-width: 820px;
+  margin: 14px 0 0;
   font-family: "Archivo Condensed", sans-serif;
-  font-size: clamp(34px, 5vw, 62px);
+  font-size: clamp(34px, 4.8vw, 58px);
   line-height: 1.02;
   letter-spacing: -0.8px;
   color: var(--black);
 }
 
-.hero-title-line,
-.hero-title-highlight {
-  display: inline;
+.hero-subtitle {
+  max-width: 680px;
+  margin-top: 14px;
+  font-size: 18px;
+  line-height: 1.6;
+  color: var(--text-soft);
 }
 
-.hero-title-highlight {
-  color: var(--green-primary);
+.about-hero-card {
+  margin-top: 28px;
+  padding: clamp(22px, 4vw, 34px);
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
 }
-
-/* TEXTO */
 
 .hero-text-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 28px;
-  margin-top: 28px;
+  align-items: start;
 }
 
 .hero-lead {
   margin: 0;
   font-size: clamp(18px, 2vw, 21px);
   line-height: 1.55;
-  color: var(--black);
   font-weight: 500;
+  color: var(--black);
 }
 
 .hero-lead strong {
@@ -87,10 +75,8 @@
   color: var(--text-soft);
 }
 
-/* DESTAQUE */
-
 .hero-highlight {
-  margin-top: 28px;
+  margin-top: 26px;
   padding: 18px 20px;
   background: rgba(239, 107, 34, 0.08);
   border-left: 5px solid var(--orange-primary);
@@ -100,64 +86,11 @@
   color: var(--black);
 }
 
-/* ORGANIZAÇÕES */
-
 .hero-orgs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 18px;
   margin-top: 24px;
-}
-
-.hero-org-card {
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  padding: 20px;
-  box-shadow: var(--shadow-card);
-}
-
-.hero-org-card strong {
-  display: block;
-  margin-bottom: 8px;
-  color: var(--green-primary);
-  font-size: 19px;
-}
-
-.hero-org-card span {
-  display: block;
-  font-size: 15px;
-  line-height: 1.65;
-  color: var(--text-soft);
-}
-
-/* CARD FINAL - AGORA INTEGRADO */
-
-.hero-final {
-  margin-top: 24px;
-  padding: 24px;
-  background: var(--black);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
-}
-
-.hero-final p {
-  margin: 0;
-  color: #fff;
-  line-height: 1.7;
-}
-
-.hero-final strong {
-  color: var(--green-primary);
-}
-
-/* ORGANIZAÇÕES */
-
-.hero-orgs {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 18px;
-  margin-top: 26px;
 }
 
 .hero-org-card {
@@ -200,8 +133,8 @@
 }
 
 .hero-final {
-  margin-top: 28px;
-  padding: 26px;
+  margin-top: 24px;
+  padding: 24px;
   background:
     linear-gradient(135deg, rgba(0,0,0,.94), rgba(0,0,0,.82)),
     radial-gradient(circle at top right, rgba(129,185,42,.28), transparent 36%);
@@ -219,7 +152,9 @@
   color: var(--green-primary);
 }
 
-/* SEÇÕES */
+/* =========================================================
+   SEÇÕES
+========================================================= */
 
 .section-head-balanced h2 {
   max-width: 760px;
@@ -231,7 +166,9 @@
   line-height: 1.7;
 }
 
-/* CARDS */
+/* =========================================================
+   CARDS
+========================================================= */
 
 .cards-grid {
   gap: 20px;
@@ -272,7 +209,9 @@
   border-top: 7px solid var(--orange-primary);
 }
 
-/* PARCEIROS */
+/* =========================================================
+   PARCEIROS
+========================================================= */
 
 .partner-grid {
   display: grid;
@@ -311,7 +250,9 @@
   transform: scale(1.04);
 }
 
-/* ANIMAÇÃO */
+/* =========================================================
+   ANIMAÇÃO
+========================================================= */
 
 [data-reveal] {
   opacity: 0;
@@ -334,7 +275,9 @@
   }
 }
 
-/* RESPONSIVO */
+/* =========================================================
+   RESPONSIVO
+========================================================= */
 
 @media (max-width: 1024px) {
   .hero-text-grid,
@@ -348,12 +291,9 @@
 }
 
 @media (max-width: 768px) {
-  .about-hero-copy {
-    padding: 32px 22px;
-  }
-
   .hero-title {
-    letter-spacing: -.8px;
+    max-width: 100%;
+    letter-spacing: -0.5px;
   }
 
   .cards-grid.two,
@@ -363,21 +303,23 @@
 }
 
 @media (max-width: 480px) {
-  .about-hero-shell {
-    border-radius: var(--radius-lg);
+  .about-hero-section {
+    margin-top: 18px;
   }
 
   .hero-title {
-    font-size: 34px;
+    font-size: 31px;
+    line-height: 1.08;
   }
 
-  .hero-lead {
-    font-size: 17px;
+  .hero-subtitle {
+    font-size: 16px;
   }
 
+  .about-hero-card,
   .hero-highlight,
-  .hero-final,
   .hero-org-card,
+  .hero-final,
   .card {
     padding: 18px;
   }
