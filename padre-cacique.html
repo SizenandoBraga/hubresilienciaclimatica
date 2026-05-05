@@ -2,249 +2,228 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR">
-  <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>Território Padre Cacique • Núcleo de Soluções para Resíduos Urbanos</title>
-  <meta name="description" content="Território Padre Cacique no Núcleo de Soluções para Resíduos Urbanos: indicadores, cooperativa, mapa territorial e acessos operacionais." />
-  <meta name="theme-color" content="#81B92A" />
+  <title>CRGR Padre Cacique • NSRU</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;700&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="territorio-publico.css" />
   <link rel="stylesheet" href="header-publico.css" />
   <link rel="stylesheet" href="footer-publico.css" />
-  <link rel="stylesheet" href="/territorio-publico.css">
 </head>
 
-<body
-data-territory-id="padre_cacique"
-  data-title="Associação de Catadores da Padre Cacique"
-  data-lead="Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem, operando como Unidade de Triagem conveniada ao DMLU no bairro Belém Velho."
-  data-label="Padre Cacique"
-  data-region="Restinga • Porto Alegre / RS"
-  data-profile="Associação de catadores com inserção produtiva e vínculo territorial"
-  data-focus="Coleta seletiva, triagem e fortalecimento da cadeia local de reciclagem"
-  data-coop-name="Associação de Catadores da Padre Cacique"
-  data-coop-description="Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem."
-  data-participant-url="cadastro-participantes-padre-cacique.html"
-  data-dashboard-url="dashboard-cooperativa.html"
-  data-coop-url="cooperativa.html"
-  data-users-url="usuarios.html"
-  data-cooperados="0"
-  data-coletas="0"
-  data-volume="0"
-  data-pontos="0"
-  data-map-center-lat="-30.140122365657504"
-  data-map-center-lng="-51.1268772051727"
-  data-map-zoom="14"
-  data-marker-lat="-30.140122365657504"
-  data-marker-lng="-51.1268772051727"
-  data-marker-popup="<div style='font-family:Archivo Condensed,sans-serif;'><strong>Padre Cacique</strong><br>Estrada do Rincão, 6781<br>Belém Velho<br>Porto Alegre • RS</div>"
->
-  <div class="bg-grid"></div>
-  <div class="bg-orb orb-1"></div>
-  <div class="bg-orb orb-2"></div>
-  <div class="noise"></div>
+<body>
 
-  <div id="site-header"></div>
+<div id="site-header"></div>
 
-  <main>
-    <section class="hero-territory">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <span class="eyebrow">CRGR • Território prioritário</span>
+<main>
 
-          <h1 id="territoryHeroTitle">Associação de Catadores da Padre Cacique</h1>
+<!-- HERO -->
+<section class="hero-territory">
+  <div class="container hero-grid">
 
-          <p class="hero-lead" id="territoryHeroLead">
-            Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem,
-            operando como Unidade de Triagem conveniada ao DMLU no bairro Belém Velho.
-          </p>
+    <div class="hero-copy">
+      <span class="eyebrow">CRGR • Território prioritário</span>
 
-          <div class="hero-tags">
-            <span class="tag">Gestão Territorial</span>
-            <span class="tag">Reciclagem</span>
-            <span class="tag">Economia Circular</span>
-          </div>
+      <h1>
+        Associação de Catadores da Padre Cacique
+      </h1>
 
-          <div class="hero-actions">
-            <a href="cadastro-participantes-padre-cacique.html" class="btn btn-primary" data-participant-link>Cadastrar participante</a>
-            <a href="dashboard-cooperativa.html" class="btn btn-secondary" data-dashboard-link>Ver dashboard</a>
-          </div>
+      <p class="hero-lead">
+        Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem,
+        operando como Unidade de Triagem conveniada ao DMLU.
+      </p>
+
+      <div class="hero-summary">
+        <p>
+          Com inserção produtiva e forte vínculo territorial, a associação conecta a gestão de resíduos
+          à realidade urbana, promovendo trabalho, renda e organização comunitária.
+        </p>
+
+        <a href="#sobre-territorio" class="hero-read-more">
+          Saiba mais sobre o território
+        </a>
+      </div>
+
+      <div class="hero-actions">
+        <a href="#sobre-territorio" class="btn btn-primary">
+          Saiba mais
+        </a>
+      </div>
+    </div>
+
+    <aside class="hero-panel">
+      <div class="hero-panel-card">
+
+        <div class="mini-top">
+          <span class="mini-badge">Território ativo</span>
+          <span class="mini-status"></span>
         </div>
 
-        <aside class="hero-panel">
-          <div class="hero-panel-card">
-            <div class="mini-top">
-              <span class="mini-badge">Território ativo</span>
-              <span class="mini-status"></span>
-            </div>
+        <h2>Resumo do território</h2>
 
-            <h2>Resumo do território</h2>
+        <ul class="territory-meta">
+          <li><strong>Nome:</strong> Associação de Catadores da Padre Cacique</li>
+          <li><strong>Região:</strong> Restinga • Porto Alegre / RS</li>
+          <li><strong>Perfil:</strong> Associação com inserção produtiva e vínculo territorial</li>
+          <li><strong>Foco:</strong> Coleta seletiva, triagem e reciclagem</li>
+        </ul>
 
-            <ul class="territory-meta">
-              <li>
-                <strong>Nome:</strong>
-                <span id="territoryLabelText">Associação de Catadores da Padre Cacique</span>
-              </li>
-              <li>
-                <strong>Região:</strong>
-                <span id="territoryRegionText">Restinga • Porto Alegre / RS</span>
-              </li>
-              <li>
-                <strong>Perfil:</strong>
-                <span id="territoryProfileText">Associação de catadores com inserção produtiva e vínculo territorial</span>
-              </li>
-              <li>
-                <strong>Foco:</strong>
-                <span id="territoryFocusText">Coleta seletiva, triagem e fortalecimento da cadeia local de reciclagem</span>
-              </li>
-            </ul>
-          </div>
-        </aside>
       </div>
-    </section>
+    </aside>
 
-    <section class="stats-section">
-      <div class="container">
-        <div class="stats-grid">
-          <article class="stat-card">
-            <span class="stat-label">Cooperados totais</span>
-            <strong class="stat-value" id="cooperadosValue">?</strong>
-            <p class="stat-note">Equipe vinculada ao território</p>
-          </article>
+  </div>
+</section>
 
-          <article class="stat-card">
-            <span class="stat-label">Coletas no território</span>
-            <strong class="stat-value" id="coletasValue">0</strong>
-            <p class="stat-note">Registros operacionais do território</p>
-          </article>
 
-          <article class="stat-card">
-            <span class="stat-label">Volume reciclado por mês</span>
-            <strong class="stat-value" id="volumeValue">?</strong>
-            <p class="stat-note">Soma das quantidades registradas</p>
-          </article>
+<!-- CARDS (MESMO PADRÃO VILA PINTO) -->
+<section id="sobre-territorio" class="details-section">
+  <div class="container details-grid two">
 
-          <article class="stat-card">
-            <span class="stat-label">Pontos de coleta</span>
-            <strong class="stat-value" id="pontosValue">0</strong>
-            <p class="stat-note">Pontos vinculados ao território</p>
-          </article>
+    <article class="detail-card">
+      <span class="section-kicker">Território estratégico</span>
+      <h3>Bairro Restinga</h3>
+      <p>
+        Com mais de 60 mil habitantes, a Restinga representa um território urbano de grande escala,
+        com desafios estruturais e forte presença de organização comunitária.
+      </p>
+    </article>
+
+    <article class="detail-card">
+      <span class="section-kicker">Impacto territorial</span>
+      <h3>Gestão de resíduos e inclusão produtiva</h3>
+      <p>
+        A atuação da associação fortalece a geração de renda, a organização local e a articulação
+        entre comunidade, poder público e cadeia da reciclagem.
+      </p>
+    </article>
+
+  </div>
+</section>
+
+
+<!-- TEXTO PRINCIPAL (COMPLETO) -->
+<section class="content-section">
+  <div class="container territory-layout">
+
+    <section class="panel panel-main">
+      <div class="panel-head">
+        <div>
+          <span class="section-kicker">Leitura territorial</span>
+          <h2>Atuação no território</h2>
         </div>
       </div>
-    </section>
 
-    <section class="content-section">
-      <div class="container territory-layout">
-        <section class="panel panel-main">
-          <div class="panel-head">
-            <div>
-              <span class="section-kicker">Mapa territorial</span>
-              <h2>Localização e presença no território</h2>
-            </div>
-          </div>
+      <div class="territory-text">
 
-          <div id="map" class="territory-map" aria-label="Mapa do território Padre Cacique"></div>
+        <p>
+          A Associação de Catadores da Padre Cacique opera na Estrada do Rincão, 6781,
+          como Unidade de Triagem conveniada ao DMLU, integrando o sistema municipal
+          de coleta seletiva com geração direta de trabalho e renda.
+        </p>
 
-          <div style="margin-top:16px;">
-            <a
-              href="https://maps.google.com/?q=-30.140122365657504,-51.1268772051727"
-              target="_blank"
-              rel="noopener noreferrer"
-              class="inline-link"
-            >
-              Abrir localização no Google Maps
-            </a>
-          </div>
-        </section>
+        <p>
+          Sua atuação envolve triagem, articulação comunitária e fortalecimento da cadeia local
+          de reciclagem, conectando o ciclo dos resíduos à realidade social do território.
+        </p>
 
-        <aside class="panel side-stack">
-          <div class="mini-panel">
-            <span class="section-kicker">Cooperativa</span>
-            <h3 id="coopNameText">Associação de Catadores da Padre Cacique</h3>
-            <p id="coopDescriptionText">
-              Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.
-            </p>
-            <a href="cooperativa.html" class="inline-link" data-coop-link>Acessar página da cooperativa</a>
-          </div>
+        <p>
+          O território de atuação se conecta diretamente com o bairro Restinga, que concentra
+          mais de 60 mil habitantes, representando 4,31% da população de Porto Alegre.
+          A região possui uma das maiores concentrações de população negra da cidade e apresenta
+          baixos rendimentos médios e desafios estruturais históricos.
+        </p>
 
-          <div class="mini-panel">
-            <span class="section-kicker">Ações rápidas</span>
-            <div class="quick-actions">
-              <a href="cadastro-participantes-padre-cacique.html" class="quick-btn" data-participant-link>Cadastro de participante</a>
-              <a href="dashboard-cooperativa.html" class="quick-btn" data-dashboard-link>Indicadores</a>
-              <a href="conteudos.html" class="quick-btn">Conteúdos</a>
-              <a href="usuarios.html" class="quick-btn" data-users-link>Usuários</a>
-            </div>
-          </div>
-        </aside>
-      </div>
-    </section>
+        <p>
+          Apesar disso, trata-se de um território com forte capacidade de mobilização e organização coletiva,
+          que ao longo das décadas conquistou importantes equipamentos públicos.
+        </p>
 
-    <section class="details-section">
-      <div class="container details-grid">
+        <p>
+          Nesse contexto, a presença da associação representa um ponto de ancoragem concreto
+          para articular gestão de resíduos, geração de renda e resposta comunitária.
+        </p>
 
-        <article class="panel detail-card">
-          <span class="section-kicker">Sobre a associação</span>
-          <h3>Associação de Catadores da Padre Cacique</h3>
-          <p>
-            A Associação de Catadores da Padre Cacique atua na triagem de resíduos, articulação comunitária e fortalecimento
-            da cadeia local de reciclagem, operando como Unidade de Triagem conveniada ao DMLU no bairro Belém Velho.
-          </p>
-          <p>
-            Sua atuação promove inserção produtiva, geração de renda e vínculo territorial, consolidando sua presença
-            como ponto estratégico dentro da economia circular urbana.
-          </p>
-        </article>
-
-        <article class="panel detail-card">
-          <span class="section-kicker">Território estratégico</span>
-          <h3>Bairro Restinga</h3>
-          <p>
-            Com mais de 60 mil habitantes, a Restinga representa 4,31% da população de Porto Alegre e está situada
-            a cerca de 20km do Centro Histórico, na zona sul da cidade.
-          </p>
-          <p>
-            O território concentra aproximadamente 23% da população autodeclarada preta da cidade e registra um dos
-            rendimentos nominais mensais mais baixos de Porto Alegre.
-          </p>
-          <p>
-            A taxa de analfabetismo era de 4% e o rendimento médio dos responsáveis por domicílio correspondia a
-            1,86 salários mínimos. Apesar da escala populacional, o território ainda acumula déficits históricos
-            em infraestrutura, mobilidade e acesso a serviços.
-          </p>
-        </article>
-
-        <article class="panel detail-card">
-          <span class="section-kicker">Padre Cacique como CRGR</span>
-          <h3>Centro de Referência em Gestão de Resíduos</h3>
-          <p>
-            A Associação de Catadores da Padre Cacique opera na Estrada do Rincão, 6781, como Unidade de Triagem
-            conveniada ao DMLU, integrando o sistema municipal de coleta seletiva com geração direta de trabalho e renda.
-          </p>
-          <p>
-            Como CRGR, assume um papel ampliado: atua como ponto de formação, articulação territorial e registro de dados,
-            tornando-se ponte entre o ciclo dos resíduos e a comunidade que o produz.
-          </p>
-          <p>
-            Sua presença representa um ponto de ancoragem concreto para articular gestão de resíduos, geração de renda
-            e resposta comunitária em um território onde a organização coletiva já demonstrou capacidade de conquistar
-            equipamentos públicos essenciais ao longo das décadas.
-          </p>
-        </article>
+        <p>
+          Como CRGR, a associação assume um papel ampliado: espaço de formação, articulação territorial
+          e produção de dados, tornando-se a ponte entre a gestão de resíduos e a comunidade.
+        </p>
 
       </div>
     </section>
-  </main>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="header-publico.js"></script>
-  <script src="footer-publico.js"></script>
-  <script type="module" src="/territorio-publico.js"></script>
+
+    <!-- LATERAL (IGUAL VILA PINTO) -->
+    <aside class="panel side-stack">
+
+      <div class="mini-panel">
+        <span class="section-kicker">Cooperativa</span>
+        <h3>Associação Padre Cacique</h3>
+        <p>
+          Unidade de triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.
+        </p>
+      </div>
+
+      <div class="mini-panel">
+        <span class="section-kicker">Ações rápidas</span>
+        <div class="quick-actions">
+          <a href="#" class="quick-btn">Participantes</a>
+          <a href="#" class="quick-btn">Indicadores</a>
+          <a href="conteudos.html" class="quick-btn">Conteúdos</a>
+          <a href="#" class="quick-btn">Usuários</a>
+        </div>
+      </div>
+
+    </aside>
+
+  </div>
+</section>
+
+
+<!-- MAPA -->
+<section class="content-section">
+  <div class="container territory-layout">
+
+    <section class="panel panel-main">
+      <div class="panel-head">
+        <div>
+          <span class="section-kicker">Mapa territorial</span>
+          <h2>Localização</h2>
+        </div>
+      </div>
+
+      <div id="map" class="territory-map"></div>
+    </section>
+
+    <aside class="panel side-stack">
+
+      <div class="mini-panel">
+        <span class="section-kicker">Território</span>
+        <h3>Restinga</h3>
+        <p>
+          Região de grande densidade populacional e forte organização comunitária.
+        </p>
+      </div>
+
+      <div class="mini-panel">
+        <span class="section-kicker">Atuação</span>
+        <h3>Resíduos e território</h3>
+        <p>
+          Integração entre coleta seletiva, triagem e desenvolvimento local.
+        </p>
+      </div>
+
+    </aside>
+
+  </div>
+</section>
+
+</main>
+
+<div id="site-footer"></div>
+
+<script src="header-publico.js"></script>
+<script src="footer-publico.js"></script>
+<script src="territorio-publico.js"></script>
+
 </body>
 </html>
