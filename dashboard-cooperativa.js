@@ -296,6 +296,43 @@ function formatNumber(value) {
   });
 }
 
+
+function toNumberBR(value) {
+  if (value === null || value === undefined || value === "") return 0;
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+
+  const cleaned = String(value)
+    .trim()
+    .replace(/\s/g, "")
+    .replace(/kg|l|litros?|r\$/gi, "")
+    .replace(/\./g, "")
+    .replace(",", ".");
+
+  const n = Number(cleaned);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function firstNumber(...values) {
+  for (const value of values) {
+    if (value !== null && value !== undefined && value !== "") {
+      const n = toNumberBR(value);
+      if (Number.isFinite(n)) return n;
+    }
+  }
+  return 0;
+}
+
+const MATERIAL_ALIASES = {
+  plasticoKg: ["plasticoKg", "plastico", "pesoPlasticoKg", "plasticoPesoKg"],
+  vidroKg: ["vidroKg", "vidro", "pesoVidroKg", "vidroPesoKg"],
+  aluminioMetalKg: ["aluminioMetalKg", "metalKg", "aluminioKg", "metalAluminioKg", "pesoMetalKg", "pesoAluminioKg"],
+  sacariaKg: ["sacariaKg", "sacaria", "pesoSacariaKg"],
+  papelMistoKg: ["papelMistoKg", "papelKg", "papelMisto", "pesoPapelMistoKg", "pesoPapelKg"],
+  papelaoKg: ["papelaoKg", "papelao", "papelãoKg", "pesoPapelaoKg"],
+  isoporKg: ["isoporKg", "isopor", "pesoIsoporKg"],
+  oleoKg: ["oleoKg", "oleo", "óleoKg", "oleoCozinhaKg", "oleoDeCozinhaKg", "litrosOleo", "oleoLitros"]
+};
+
 function formatMoneyBR(value) {
   return Number(value || 0).toLocaleString("pt-BR", {
     style: "currency",
@@ -425,8 +462,8 @@ function getTerritoryAliases(value) {
     return ["vila-pinto", "crgr-vila-pinto"];
   }
 
-  if (v === "cooadesc" || v === "crgr-cooadesc") {
-    return ["cooadesc", "crgr-cooadesc"];
+  if (v === "cooadesc" || v === "coadesc" || v === "crgr-cooadesc" || v === "crgr-coadesc") {
+    return ["cooadesc", "coadesc", "crgr-cooadesc", "crgr-coadesc"];
   }
 
   if (v === "padre-cacique" || v === "crgr-padre-cacique") {
@@ -446,13 +483,31 @@ function resolvePageTerritory(profile) {
   const bodyTerritory = normalizeTerritory(document.body?.dataset?.territoryId || "");
   const urlTerritory = normalizeTerritory(new URLSearchParams(window.location.search).get("territory") || "");
   const userTerritory = normalizeTerritory(profile?.territoryId || "");
-  const role = normalizeText(profile?.role);
 
-  if (role === "admin" || role === "governanca" || role === "gestor") {
-    return bodyTerritory || urlTerritory || userTerritory || "";
+  // Páginas separadas: o território da página deve prevalecer.
+  // Isso evita que o dashboard carregue dados de outra cooperativa por causa do perfil logado.
+  return bodyTerritory || urlTerritory || userTerritory || "";
+}
+
+function getCooperativaHomeUrl(territoryId) {
+  const aliases = getTerritoryAliases(territoryId);
+
+  if (aliases.includes("cooadesc") || aliases.includes("coadesc")) {
+    return "cooperativa-cooadesc.html";
   }
 
-  return userTerritory || bodyTerritory || urlTerritory || "";
+  if (aliases.includes("padre-cacique")) {
+    return "cooperativa-padre-cacique.html";
+  }
+
+  return "cooperativa-vila-pinto.html";
+}
+
+function updateDashboardLinks() {
+  const backToCoopBtn = document.getElementById("backToCoopBtn");
+  if (backToCoopBtn) {
+    backToCoopBtn.href = getCooperativaHomeUrl(pageTerritoryId);
+  }
 }
 
 function createdAtToISO(item) {
@@ -487,34 +542,61 @@ function inferTerritorio(item) {
   return item.territoryLabel || coopProfile?.territoryLabel || pageTerritoryId || "Território";
 }
 
-function inferResiduoSeco(item) {
-  return Number(
-    item.recebimento?.pesoResiduoSecoKg ??
-    item.finalTurno?.pesoResiduoSecoKg ??
-    item.pesoResiduoSecoKg ??
-    0
+function inferPesoResiduoSecoBruto(item) {
+  return firstNumber(
+    item.recebimento?.pesoResiduoSecoKg,
+    item.finalTurno?.pesoResiduoSecoKg,
+    item.pesoResiduoSecoKg,
+    item.recebimento?.residuoSecoKg,
+    item.finalTurno?.residuoSecoKg,
+    item.residuoSecoKg
   );
 }
 
-function inferRejeito(item) {
-  return Number(
-    item.recebimento?.pesoRejeitoKg ??
-    item.finalTurno?.pesoRejeitoKg ??
-    item.recebimento?.rejeitoKg ??
-    item.finalTurno?.rejeitoKg ??
-    item.pesoRejeitoKg ??
-    item.rejeitoKg ??
-    0
+function inferPesoRejeitoInformado(item) {
+  return firstNumber(
+    item.recebimento?.pesoRejeitoKg,
+    item.finalTurno?.pesoRejeitoKg,
+    item.recebimento?.rejeitoKg,
+    item.finalTurno?.rejeitoKg,
+    item.pesoRejeitoKg,
+    item.rejeitoKg,
+    item.naoReciclavelKg,
+    item.pesoNaoReciclavelKg
   );
 }
 
 function inferNaoComercializado(item) {
-  return Number(
-    item.recebimento?.pesoNaoComercializadoKg ??
-    item.finalTurno?.pesoNaoComercializadoKg ??
-    item.pesoNaoComercializadoKg ??
-    0
+  return firstNumber(
+    item.recebimento?.pesoNaoComercializadoKg,
+    item.finalTurno?.pesoNaoComercializadoKg,
+    item.recebimento?.naoComercializadoKg,
+    item.finalTurno?.naoComercializadoKg,
+    item.pesoNaoComercializadoKg,
+    item.naoComercializadoKg
   );
+}
+
+/*
+  Fórmulas operacionais ajustadas:
+  - Resíduo seco líquido = Peso do resíduo seco - Peso do rejeito - Peso do não comercializado
+  - Rejeito total = Peso do rejeito + Peso do não comercializado
+  - Peso não reciclável = Peso do rejeito - Peso do não comercializado
+*/
+function inferResiduoSeco(item) {
+  return Math.max(0, inferPesoResiduoSecoBruto(item) - inferPesoRejeitoInformado(item) - inferNaoComercializado(item));
+}
+
+function inferRejeitoNaoReciclavel(item) {
+  return Math.max(0, inferPesoRejeitoInformado(item) - inferNaoComercializado(item));
+}
+
+function inferRejeito(item) {
+  return inferPesoRejeitoInformado(item);
+}
+
+function inferTotalRejeitoRegistro(item) {
+  return inferPesoRejeitoInformado(item) + inferNaoComercializado(item);
 }
 
 function inferObservacao(item) {
@@ -536,6 +618,8 @@ function getStatus(item) {
 }
 
 function getMaterialValue(item, key) {
+  const aliases = MATERIAL_ALIASES[key] || [key];
+
   const fontes = [
     item.materiais,
     item.recebimento?.materiais,
@@ -546,12 +630,22 @@ function getMaterialValue(item, key) {
   ].filter(Boolean);
 
   for (const fonte of fontes) {
-    if (fonte[key] !== undefined && fonte[key] !== null && fonte[key] !== "") {
-      return Number(fonte[key] || 0);
+    for (const alias of aliases) {
+      if (fonte[alias] !== undefined && fonte[alias] !== null && fonte[alias] !== "") {
+        return toNumberBR(fonte[alias]);
+      }
     }
   }
 
   return 0;
+}
+
+function inferTotalMateriaisRegistro(item) {
+  return MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
+}
+
+function inferTotalReciclavelRegistro(item) {
+  return inferResiduoSeco(item);
 }
 
 function sortColetasLocally(items) {
@@ -568,13 +662,6 @@ function getExportBaseItems() {
     : filteredColetas;
 }
 
-function inferTotalReciclavelRegistro(item) {
-  const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
-  return isFinalTurno(item)
-    ? somaMateriais
-    : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
-}
-
 function getExportRows(items) {
   return items.map((item) => {
     const participant = resolveParticipant(item);
@@ -589,7 +676,8 @@ function getExportRows(items) {
       tipoCadastro: participant.type || "—",
       status: resolveHumanStatus(item),
       reciclavelKg: Number(inferTotalReciclavelRegistro(item) || 0),
-      rejeitoKg: Number(inferRejeito(item) || 0),
+      rejeitoKg: Number(inferTotalRejeitoRegistro(item) || 0),
+      naoReciclavelKg: Number(inferRejeitoNaoReciclavel(item) || 0),
       naoComercializadoKg: Number(inferNaoComercializado(item) || 0),
       qualidade: getQualidade(item) || "—",
       observacao: inferObservacao(item) || ""
@@ -854,7 +942,13 @@ function resolveParticipant(item) {
   const fromFamilyCode = familyCode ? participantsMap.get(String(familyCode)) : null;
 
   const matched = fromId || fromParticipantCode || fromFamilyCode || null;
-  const fallbackCode = participantCode || familyCode || "—";
+
+  /*
+    Regra para fechamento/final de turno de famílias:
+    quando não houver código informado no registro, o dashboard assume F000
+    para não deixar a listagem sem identificação.
+  */
+  const fallbackCode = participantCode || familyCode || (isFinalTurno(item) ? "F000" : "—");
 
   let address = "";
   if (matched) {
@@ -981,8 +1075,7 @@ async function publishPublicStats() {
     });
 
     const totalReciclavelKg = ativos.reduce((acc, item) => {
-      const somaMateriais = MATERIAL_META.reduce((sum, mat) => sum + getMaterialValue(item, mat.key), 0);
-      return acc + (isFinalTurno(item) ? somaMateriais : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item)));
+      return acc + inferTotalReciclavelRegistro(item);
     }, 0);
 
     const pontosSet = new Set();
@@ -1282,20 +1375,15 @@ function renderKpis(items) {
   const participantIds = new Set();
 
   let residuoSeco = 0;
-  let rejeito = 0;
+  let rejeitoTotal = 0;
   let finalTurno = 0;
 
   ativos.forEach((item) => {
     const p = resolveParticipant(item);
     if (p.code && p.code !== "—") participantIds.add(p.code);
 
-    const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
-
-    residuoSeco += isFinalTurno(item)
-      ? somaMateriais
-      : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
-
-    rejeito += inferRejeito(item);
+    residuoSeco += inferTotalReciclavelRegistro(item);
+    rejeitoTotal += inferTotalRejeitoRegistro(item);
 
     if (isFinalTurno(item)) finalTurno += 1;
   });
@@ -1303,7 +1391,7 @@ function renderKpis(items) {
   if (els.k_totalColetas) els.k_totalColetas.textContent = String(ativos.length);
   if (els.k_participantes) els.k_participantes.textContent = String(participantIds.size);
   if (els.k_residuoSeco) els.k_residuoSeco.textContent = formatNumber(residuoSeco);
-  if (els.k_rejeito) els.k_rejeito.textContent = formatNumber(rejeito);
+  if (els.k_rejeito) els.k_rejeito.textContent = formatNumber(rejeitoTotal);
   if (els.k_finalTurno) els.k_finalTurno.textContent = String(finalTurno);
 }
 
@@ -1329,7 +1417,7 @@ function computeExpandedMetrics(items) {
   const materialTotals = sumMaterials(ativos);
 
   let reciclavelKg = 0;
-  let rejeitoKg = 0;
+  let rejeitoNaoReciclavelKg = 0;
   let naoComercializadoKg = 0;
 
   const uniqueDays = new Set();
@@ -1343,13 +1431,8 @@ function computeExpandedMetrics(items) {
     const participant = resolveParticipant(item);
     const type = normalizeText(participant.type);
 
-    const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
-
-    reciclavelKg += isFinalTurno(item)
-      ? somaMateriais
-      : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
-
-    rejeitoKg += inferRejeito(item);
+    reciclavelKg += inferTotalReciclavelRegistro(item);
+    rejeitoNaoReciclavelKg += inferRejeitoNaoReciclavel(item);
     naoComercializadoKg += inferNaoComercializado(item);
 
     const d = inferDateISO(item);
@@ -1361,9 +1444,10 @@ function computeExpandedMetrics(items) {
     if (normalizeText(inferEntrega(item)).includes("volunt")) entregaVoluntaria += 1;
   });
 
-  const totalGeral = reciclavelKg + rejeitoKg;
+  const rejeitoTotalKg = rejeitoNaoReciclavelKg + naoComercializadoKg;
+  const totalGeral = reciclavelKg + rejeitoTotalKg;
   const reciclavelPct = totalGeral ? (reciclavelKg / totalGeral) * 100 : 0;
-  const rejeitoPct = totalGeral ? (rejeitoKg / totalGeral) * 100 : 0;
+  const rejeitoPct = totalGeral ? (rejeitoTotalKg / totalGeral) * 100 : 0;
 
   let receitaTotal = 0;
   MATERIAL_META.forEach((mat) => {
@@ -1373,8 +1457,9 @@ function computeExpandedMetrics(items) {
   return {
     materialTotals,
     reciclavelKg,
-    rejeitoKg,
-        naoComercializadoKg,
+    rejeitoKg: rejeitoTotalKg,
+    rejeitoNaoReciclavelKg,
+    naoComercializadoKg,
     reciclavelPct,
     rejeitoPct,
     receitaTotal,
@@ -1406,12 +1491,12 @@ function renderExpandedPanel(items) {
   if (els.k_totalRejeitoKg) els.k_totalRejeitoKg.textContent = formatNumber(m.rejeitoKg);
   if (els.k_totalRejeitoPct) els.k_totalRejeitoPct.textContent = `${formatNumber(m.rejeitoPct)}%`;
 
-  const rejeitoBase = m.rejeitoKg + m.naoComercializadoKg;
-  const pctNaoReciclavel = rejeitoBase ? (m.rejeitoKg / rejeitoBase) * 100 : 0;
+  const rejeitoBase = m.rejeitoKg;
+  const pctNaoReciclavel = rejeitoBase ? (m.rejeitoNaoReciclavelKg / rejeitoBase) * 100 : 0;
   const pctNaoComercializado = rejeitoBase ? (m.naoComercializadoKg / rejeitoBase) * 100 : 0;
 
   if (els.k_rejeitoNaoReciclavelPct) els.k_rejeitoNaoReciclavelPct.textContent = `${formatNumber(pctNaoReciclavel)}%`;
-  if (els.k_rejeitoNaoReciclavelKg) els.k_rejeitoNaoReciclavelKg.textContent = formatKg(m.rejeitoKg);
+  if (els.k_rejeitoNaoReciclavelKg) els.k_rejeitoNaoReciclavelKg.textContent = formatKg(m.rejeitoNaoReciclavelKg);
   if (els.k_naoComercializadoPct) els.k_naoComercializadoPct.textContent = `${formatNumber(pctNaoComercializado)}%`;
   if (els.k_naoComercializadoKg) els.k_naoComercializadoKg.textContent = formatKg(m.naoComercializadoKg);
 
@@ -1483,11 +1568,8 @@ function renderWeightTimeline(items) {
     .slice(-40);
 
   const labels = valid.map((item) => String(inferDateISO(item)).slice(5, 10));
-  const reciclavel = valid.map((item) => {
-    const somaMateriais = MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
-    return isFinalTurno(item) ? somaMateriais : (somaMateriais > 0 ? somaMateriais : inferResiduoSeco(item));
-  });
-  const rejeito = valid.map((item) => inferRejeito(item));
+  const reciclavel = valid.map((item) => inferTotalReciclavelRegistro(item));
+  const rejeito = valid.map((item) => inferTotalRejeitoRegistro(item));
 
   if (weightTimelineChart) weightTimelineChart.destroy();
 
@@ -2262,7 +2344,8 @@ async function exportToExcel() {
       "Papelão (kg)": row.papelaoKg,
       "Isopor (kg)": row.isoporKg,
       "Óleo de cozinha (kg)": row.oleoKg,
-      "Rejeito (kg)": row.rejeitoKg,
+      "Rejeito total (kg)": row.rejeitoKg,
+      "Peso não reciclável (kg)": row.naoReciclavelKg,
       "Não comercializado (kg)": row.naoComercializadoKg,
       "Qualidade": row.qualidade,
       "Observação": row.observacao
@@ -2350,7 +2433,7 @@ async function exportToPDF() {
       pdf.text("Fluxo", colX.fluxo, y);
       pdf.text("Entrega", colX.entrega, y);
       pdf.text("Reciclável", colX.reciclavel, y, { align: "right" });
-      pdf.text("Rejeito", colX.rejeito, y, { align: "right" });
+      pdf.text("Rejeito total", colX.rejeito, y, { align: "right" });
       pdf.text("Status", colX.status, y);
       y += 3;
 
@@ -2450,7 +2533,7 @@ function openEditModal(itemId) {
   if (els.editParticipantName) els.editParticipantName.textContent = `${participant.name} • ${participant.code}`;
   if (els.editFluxo) els.editFluxo.value = inferFluxo(item) === "—" ? "recebimento" : inferFluxo(item);
   if (els.editEntrega) els.editEntrega.value = inferEntrega(item) === "—" ? "" : inferEntrega(item);
-  if (els.editPesoBase) els.editPesoBase.value = String(inferResiduoSeco(item) || "");
+  if (els.editPesoBase) els.editPesoBase.value = String(inferPesoResiduoSecoBruto(item) || "");
   if (els.editQualidade) els.editQualidade.value = getQualidade(item);
   if (els.editRejeito) els.editRejeito.value = String(inferRejeito(item) || "");
   if (els.editNaoComercializado) els.editNaoComercializado.value = String(inferNaoComercializado(item) || "");
@@ -2683,6 +2766,7 @@ async function boot() {
         throw new Error("Território da página não definido.");
       }
 
+      updateDashboardLinks();
       fillUser(profile);
       loadParticipantsMap();
       listenColetas();
