@@ -1,39 +1,47 @@
+/* =========================================================
+   QUEM SOMOS - NSRU
+   Hero sem imagem + layout responsivo completo
+========================================================= */
+
 .public-page {
   background: var(--bg-page);
   padding-block: 0 34px;
 }
+
+/* =========================
+   HERO
+========================= */
 
 .about-hero-shell {
   background: #fff;
   border: 1px solid var(--border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-soft);
+  margin-top: 22px;
   overflow: hidden;
-  margin-top: 18px;
-}
-
-.about-hero-split {
-  display: grid;
-  grid-template-columns: 1fr;
-  align-items: center;
 }
 
 .about-hero-copy {
   max-width: 980px;
   margin: 0 auto;
-  padding: clamp(28px, 5vw, 64px);
+  padding: clamp(30px, 5vw, 68px);
 }
 
-.about-hero-image,
-.about-logo-panel,
-.about-logo-image {
-  display: none !important;
+.hero-title {
+  margin: 0;
 }
 
-/* Texto da hero */
+.hero-title-line,
+.hero-title-highlight {
+  display: block;
+}
+
+.hero-title-highlight {
+  color: var(--green-primary);
+}
 
 .hero-lead {
-  margin-top: 18px;
+  margin-top: 20px;
   font-size: clamp(18px, 2vw, 22px);
   line-height: 1.55;
   color: var(--black);
@@ -55,6 +63,10 @@
   font-size: 17px;
   line-height: 1.7;
   color: var(--text-soft);
+}
+
+.hero-block strong {
+  color: var(--black);
 }
 
 .hero-highlight {
@@ -111,7 +123,26 @@
   color: #fff;
 }
 
-/* Cards */
+/* remove qualquer estrutura antiga do carrossel */
+.hero-image,
+.hero-carousel,
+.hero-carousel-track,
+.hero-slide,
+.carousel-btn,
+.carousel-dots,
+.about-hero-image,
+.about-logo-panel,
+.about-logo-image {
+  display: none !important;
+}
+
+/* =========================
+   SEÇÕES
+========================= */
+
+.section-gap {
+  height: 28px;
+}
 
 .about-justify {
   text-align: justify;
@@ -155,7 +186,9 @@
   color: var(--text-soft);
 }
 
-/* Logos */
+/* =========================
+   LOGOS / PARCEIROS
+========================= */
 
 .logo-ruler-full {
   display: grid;
@@ -205,6 +238,27 @@
   align-self: stretch;
 }
 
+.partner-grid-logos {
+  align-items: stretch;
+}
+
+.logo-card {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 130px;
+}
+
+.partner-logo {
+  max-width: 100%;
+  max-height: 92px;
+  object-fit: contain;
+}
+
+/* =========================
+   FECHAMENTO
+========================= */
+
 .closing-box {
   margin-top: 20px;
   background: var(--black);
@@ -220,7 +274,34 @@
   line-height: 1.6;
 }
 
-/* Responsivo */
+/* =========================
+   ANIMAÇÃO REVEAL
+========================= */
+
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 0.6s ease,
+    transform 0.6s ease;
+}
+
+[data-reveal].in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
 
 @media (max-width: 1100px) {
   .cards-grid.three,
@@ -234,6 +315,11 @@
 }
 
 @media (max-width: 860px) {
+  .about-hero-shell {
+    margin-top: 16px;
+    border-radius: var(--radius-lg);
+  }
+
   .about-hero-copy {
     padding: 28px 22px;
   }
@@ -241,9 +327,21 @@
   .hero-orgs {
     grid-template-columns: 1fr;
   }
+
+  .hero-org-card {
+    padding: 18px;
+  }
+
+  .section-gap {
+    height: 22px;
+  }
 }
 
 @media (max-width: 560px) {
+  .about-hero-copy {
+    padding: 24px 18px;
+  }
+
   .hero-lead {
     font-size: 17px;
   }
@@ -253,6 +351,14 @@
     font-size: 15.5px;
   }
 
+  .hero-highlight {
+    padding: 12px 14px;
+  }
+
+  .hero-final {
+    padding: 18px;
+  }
+
   .about-card h3 {
     font-size: 24px;
   }
@@ -260,5 +366,28 @@
   .about-card p,
   .closing-box p {
     font-size: 16px;
+  }
+
+  .logo-items img,
+  .partner-logo {
+    max-height: 68px;
+  }
+}
+
+@media (max-width: 380px) {
+  .about-hero-copy {
+    padding: 22px 14px;
+  }
+
+  .hero-org-card {
+    padding: 16px;
+  }
+
+  .hero-org-card strong {
+    font-size: 18px;
+  }
+
+  .hero-org-card span {
+    font-size: 14.5px;
   }
 }
