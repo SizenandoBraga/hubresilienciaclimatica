@@ -42,9 +42,7 @@
   gap: 28px;
 }
 
-/* =========================================================
-   LOGO
-========================================================= */
+/* LOGO */
 
 .header-brand {
   display: flex;
@@ -55,9 +53,7 @@
   width: 150px;
 }
 
-/* =========================================================
-   NAV
-========================================================= */
+/* NAV */
 
 .header-main-nav {
   display: flex;
@@ -85,9 +81,7 @@
   transition: 0.2s ease;
 }
 
-/* =========================================================
-   HOVER (VERDE)
-========================================================= */
+/* HOVER VERDE */
 
 .header-nav-link:hover,
 .header-nav-dropdown-toggle:hover {
@@ -116,9 +110,7 @@
   width: 60%;
 }
 
-/* =========================================================
-   ACTIVE
-========================================================= */
+/* ACTIVE */
 
 .header-nav-link.is-active,
 .header-nav-dropdown-toggle.is-active,
@@ -128,9 +120,7 @@
   box-shadow: inset 0 0 0 1px rgba(129,185,42,.35);
 }
 
-/* =========================================================
-   CTA
-========================================================= */
+/* CTA */
 
 .header-public-actions {
   display: flex;
@@ -156,9 +146,7 @@
   transform: translateY(-1px);
 }
 
-/* =========================================================
-   DROPDOWN
-========================================================= */
+/* DROPDOWN */
 
 .header-nav-dropdown {
   position: relative;
@@ -193,19 +181,47 @@
   transition: 0.2s;
 }
 
-/* hover submenu verde */
-
 .header-nav-sublink:hover {
   background: rgba(129,185,42,.12);
   color: var(--green-dark);
   box-shadow: inset 0 0 0 1px rgba(129,185,42,.22);
 }
 
-/* active submenu */
-
 .header-nav-sublink.is-active {
   background: rgba(129,185,42,.18);
   color: var(--green-dark);
+}
+
+/* =========================================================
+   BADGE (BOTÃO INÍCIO)
+========================================================= */
+
+.section-badge,
+.badge-green {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border-radius: 999px;
+
+  background: rgba(129,185,42,0.18);
+  color: var(--green-dark);
+
+  border: 1px solid rgba(129,185,42,0.45);
+
+  font-size: 14px;
+  font-weight: 700;
+
+  transition: 0.25s ease;
+  cursor: pointer;
+}
+
+.section-badge:hover,
+.badge-green:hover {
+  background: var(--green-primary);
+  color: #fff;
+  border-color: var(--green-primary);
+  box-shadow: 0 6px 14px rgba(129,185,42,.35);
+  transform: translateY(-1px);
 }
 
 /* =========================================================
@@ -264,9 +280,19 @@
   }
 }
 
-/* =========================================================
-   BOTÃO MOBILE CTA
-========================================================= */
+@media (max-width: 560px) {
+  .header-brand-logo {
+    width: 110px;
+  }
+}
+
+@media (max-width: 380px) {
+  .header-brand-logo {
+    width: 95px;
+  }
+}
+
+/* CTA MOBILE */
 
 .header-mobile-cta {
   background: var(--orange-primary) !important;
@@ -276,227 +302,5 @@
 @media (min-width: 921px) {
   .header-mobile-cta {
     display: none !important;
-  }
-}
-/* =========================================================
-   RESPONSIVIDADE REFINADA DO HEADER
-========================================================= */
-
-/* NOTEBOOK MÉDIO */
-@media (max-width: 1180px) {
-  :root {
-    --header-height: 104px;
-  }
-
-  .header-public-container {
-    grid-template-columns: 200px 1fr auto;
-    gap: 18px;
-  }
-
-  .header-brand-logo {
-    width: 132px;
-  }
-
-  .header-main-nav {
-    gap: 6px;
-  }
-
-  .header-nav-link,
-  .header-nav-dropdown-toggle {
-    font-size: 14px;
-    padding: 0 10px;
-  }
-
-  .header-public-cta {
-    font-size: 13px;
-    padding: 0 16px;
-  }
-}
-
-/* NOTEBOOK PEQUENO / TABLET HORIZONTAL */
-@media (max-width: 1024px) {
-  .header-public-container {
-    width: min(100% - 24px, var(--header-container));
-    grid-template-columns: 170px 1fr auto;
-    gap: 14px;
-  }
-
-  .header-brand-logo {
-    width: 118px;
-  }
-
-  .header-nav-link,
-  .header-nav-dropdown-toggle {
-    font-size: 13.5px;
-    padding: 0 8px;
-  }
-
-  .header-public-cta {
-    padding: 0 14px;
-  }
-}
-
-/* TABLET E CELULAR */
-@media (max-width: 920px) {
-  :root {
-    --header-height: auto;
-  }
-
-  .site-header-public {
-    position: sticky;
-    top: 0;
-  }
-
-  .header-public-container {
-    width: min(100% - 24px, var(--header-container));
-    min-height: 78px;
-    grid-template-columns: 1fr auto;
-    gap: 12px;
-    padding: 12px 0;
-  }
-
-  .header-brand-logo {
-    width: 126px;
-  }
-
-  .header-menu-btn {
-    display: inline-grid;
-    place-items: center;
-    justify-self: end;
-    width: 44px;
-    height: 44px;
-    border: 0;
-    border-radius: 14px;
-    background: var(--green-primary);
-    color: #fff;
-    font-size: 22px;
-    font-weight: 800;
-    cursor: pointer;
-    box-shadow: 0 8px 16px rgba(129,185,42,.25);
-  }
-
-  .header-public-actions {
-    display: none;
-  }
-
-  .header-main-nav {
-    display: none;
-    grid-column: 1 / -1;
-    width: 100%;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    gap: 8px;
-    padding: 10px 0 4px;
-  }
-
-  .header-main-nav.is-open {
-    display: flex;
-  }
-
-  .header-nav-link,
-  .header-nav-dropdown-toggle {
-    width: 100%;
-    min-height: 46px;
-    justify-content: space-between;
-    padding: 0 14px;
-    border-radius: 14px;
-    background: #fff;
-    border: 1px solid var(--header-border);
-    font-size: 15px;
-  }
-
-  .header-nav-link::after,
-  .header-nav-dropdown-toggle::after {
-    display: none;
-  }
-
-  .header-nav-dropdown {
-    width: 100%;
-  }
-
-  .header-nav-submenu {
-    position: static;
-    min-width: 100%;
-    margin-top: 8px;
-    padding: 8px;
-    border-radius: 14px;
-    box-shadow: none;
-    background: #fff;
-  }
-
-  .header-nav-sublink {
-    min-height: 42px;
-    display: flex;
-    align-items: center;
-    padding: 0 14px;
-    border-radius: 12px;
-    background: #faf9f7;
-    border: 1px solid var(--header-border);
-    font-size: 14px;
-  }
-
-  .header-mobile-cta {
-    display: flex !important;
-    justify-content: center !important;
-    margin-top: 8px;
-    min-height: 48px;
-    border-radius: 14px;
-    background: var(--orange-primary) !important;
-    color: #fff !important;
-    font-weight: 900;
-    border: 0 !important;
-    box-shadow: 0 8px 16px rgba(239,107,34,.24);
-  }
-}
-
-/* CELULAR */
-@media (max-width: 560px) {
-  .header-public-container {
-    width: min(100% - 20px, var(--header-container));
-    min-height: 72px;
-  }
-
-  .header-brand-logo {
-    width: 112px;
-  }
-
-  .header-menu-btn {
-    width: 42px;
-    height: 42px;
-    border-radius: 12px;
-  }
-
-  .header-main-nav {
-    gap: 7px;
-  }
-
-  .header-nav-link,
-  .header-nav-dropdown-toggle {
-    min-height: 44px;
-    font-size: 14.5px;
-    padding: 0 13px;
-  }
-
-  .header-nav-sublink {
-    font-size: 13.8px;
-  }
-}
-
-/* CELULAR PEQUENO */
-@media (max-width: 380px) {
-  .header-brand-logo {
-    width: 100px;
-  }
-
-  .header-menu-btn {
-    width: 40px;
-    height: 40px;
-    font-size: 20px;
-  }
-
-  .header-nav-link,
-  .header-nav-dropdown-toggle {
-    font-size: 14px;
   }
 }
