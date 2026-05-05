@@ -11,14 +11,14 @@
 }
 
 /* =========================================================
-   HERO (SEÇÃO)
+   HERO
 ========================================================= */
 
 .about-hero-section {
   margin-top: 24px;
 }
 
-/* ===== TÍTULO ===== */
+/* TÍTULO */
 
 .hero-title {
   max-width: 860px;
@@ -40,7 +40,7 @@
   color: var(--green-primary);
 }
 
-/* ===== SUBTÍTULO ===== */
+/* SUBTITULO */
 
 .hero-subtitle {
   max-width: 720px;
@@ -51,7 +51,7 @@
   color: var(--text-soft);
 }
 
-/* ===== CARD PRINCIPAL ===== */
+/* CARD */
 
 .about-hero-card {
   margin-top: 30px;
@@ -62,229 +62,119 @@
   box-shadow: var(--shadow-card);
 }
 
-/* =========================================================
-   TEXTO DO HERO
-========================================================= */
+/* GRID */
 
-.hero-text-block {
-  max-width: 760px;
+.hero-text-grid {
   display: grid;
-  gap: 18px;
+  grid-template-columns: .9fr 1.1fr;
+  gap: 40px;
 }
 
-.hero-text-block p {
-  margin: 0;
-  font-family: "Inter", sans-serif;
-  font-size: 16.5px;
-  line-height: 1.85;
-  color: var(--text-soft);
-}
-
-/* PARÁGRAFO PRINCIPAL */
+/* BLOCO PRINCIPAL */
 
 .hero-lead {
-  font-size: 19px;
+  padding: 22px;
+  background: rgba(129,185,42,0.08);
+  border-left: 5px solid var(--green-primary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  font-family: "Inter", sans-serif;
+  font-size: 20px;
   line-height: 1.6;
-  font-weight: 500;
+  font-weight: 600;
   color: var(--black);
 }
 
-/* DESTAQUES */
-
-.hero-text-block strong,
+.hero-lead strong,
 .hero-subtitle strong,
 .hero-final strong {
   color: var(--green-primary);
-  font-weight: 700;
 }
 
-/* BLOCO ORGANIZAÇÕES */
+/* TEXTO DIREITA */
 
-.hero-org-highlight {
-  margin: 12px 0;
-  padding: 16px 18px;
-  background: rgba(129,185,42,0.08);
-  border-left: 4px solid var(--green-primary);
-  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-}
-
-.hero-org-highlight p {
-  font-size: 15.5px;
-  line-height: 1.7;
-}
-
-/* CONCLUSÃO */
-
-.hero-conclusion {
-  margin-top: 8px;
-  font-size: 17px;
-  line-height: 1.7;
-  color: var(--black);
-}
-
-/* =========================================================
-   SEÇÕES
-========================================================= */
-
-.section-head-balanced h2 {
-  max-width: 760px;
-}
-
-.section-head-balanced p {
-  max-width: 680px;
-  margin-top: 12px;
-  line-height: 1.7;
-}
-
-/* =========================================================
-   CARDS
-========================================================= */
-
-.cards-grid {
-  gap: 20px;
-}
-
-.card {
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(0,0,0,.08);
-  box-shadow: 0 12px 30px rgba(0,0,0,.07);
-  padding: 22px;
-  transition: transform .25s ease, box-shadow .25s ease;
-}
-
-.card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 42px rgba(0,0,0,.12);
-}
-
-.card h3 {
-  margin-top: 10px;
-}
-
-.card p {
-  line-height: 1.7;
-}
-
-.about-card-green {
-  border-top: 7px solid var(--green-primary);
-}
-
-.about-card-blue {
-  border-top: 7px solid var(--blue-primary);
-}
-
-.about-card-orange {
-  border-top: 7px solid var(--orange-primary);
-}
-
-/* =========================================================
-   PARCEIROS
-========================================================= */
-
-.partner-grid {
+.hero-story {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
   gap: 18px;
 }
 
-.logo-card {
-  min-height: 130px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 22px;
+.hero-story p {
+  font-family: "Inter", sans-serif;
+  font-size: 16.5px;
+  line-height: 1.8;
+  color: var(--text-soft);
+}
+
+/* DESTAQUE */
+
+.hero-highlight {
+  margin-top: 28px;
+  padding: 20px;
+  background: rgba(129,185,42,0.08);
+  border-left: 5px solid var(--green-primary);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+/* ORGANIZAÇÕES */
+
+.hero-orgs {
+  display: grid;
+  grid-template-columns: repeat(2,1fr);
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.hero-org-card {
   background: #fff;
+  border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  border: 1px solid rgba(0,0,0,.08);
-  box-shadow: 0 12px 28px rgba(0,0,0,.07);
-  transition: transform .25s ease, box-shadow .25s ease;
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+  transition: .25s;
 }
 
-.logo-card:hover {
+.hero-org-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 18px 38px rgba(0,0,0,.11);
 }
 
-.partner-logo {
-  max-width: 100%;
-  max-height: 82px;
-  object-fit: contain;
-  filter: grayscale(15%);
-  transition: filter .25s ease, transform .25s ease;
+.hero-org-card strong {
+  color: var(--green-primary);
+  display: block;
+  margin-bottom: 6px;
 }
 
-.logo-card:hover .partner-logo {
-  filter: grayscale(0);
-  transform: scale(1.04);
+/* FINAL */
+
+.hero-final {
+  margin-top: 24px;
+  padding: 22px;
+  background: var(--black);
+  border-radius: var(--radius-lg);
 }
 
-/* =========================================================
-   ANIMAÇÃO
-========================================================= */
-
-[data-reveal] {
-  opacity: 0;
-  transform: translateY(24px);
-  transition: opacity .7s ease, transform .7s ease;
-}
-
-[data-reveal].in {
-  opacity: 1;
-  transform: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  [data-reveal],
-  .card,
-  .logo-card {
-    transition: none;
-  }
+.hero-final p {
+  color: #fff;
+  line-height: 1.7;
 }
 
 /* =========================================================
    RESPONSIVO
 ========================================================= */
 
-@media (max-width: 1024px) {
-  .partner-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (max-width: 768px) {
-  .hero-title {
-    max-width: 100%;
-  }
-
-  .cards-grid.two,
-  .cards-grid.four {
+@media (max-width: 900px) {
+  .hero-text-grid,
+  .hero-orgs {
     grid-template-columns: 1fr;
   }
 }
 
 @media (max-width: 480px) {
-  .about-hero-section {
-    margin-top: 18px;
-  }
-
   .hero-title {
-    font-size: 30px;
-    line-height: 1.08;
+    font-size: 32px;
   }
 
   .hero-subtitle {
     font-size: 16px;
-  }
-
-  .about-hero-card,
-  .hero-org-highlight,
-  .card {
-    padding: 18px;
-  }
-
-  .partner-grid {
-    grid-template-columns: 1fr;
   }
 }
