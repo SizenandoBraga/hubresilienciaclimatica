@@ -11,68 +11,62 @@
   padding-bottom: 56px;
 }
 
-/* HERO */
+/* =========================================================
+   HERO - QUEM SOMOS
+========================================================= */
 
-.about-hero-shell {
-  margin-top: 24px;
-  position: relative;
-  overflow: hidden;
-  border-radius: var(--radius-xl);
-  border: 1px solid rgba(0,0,0,.08);
-  background:
-    linear-gradient(135deg, rgba(255,255,255,.98), rgba(255,255,255,.90)),
-    radial-gradient(circle at right top, rgba(129,185,42,.18), transparent 35%);
-  box-shadow: 0 24px 60px rgba(0,0,0,.10);
+.about-hero-section {
+  padding: 32px 0 0;
 }
 
-.about-hero-shell::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(90deg, rgba(129,185,42,.12), transparent 45%),
-    linear-gradient(180deg, transparent, rgba(0,0,0,.025));
-  pointer-events: none;
+.about-hero-shell {
+  position: relative;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-soft);
 }
 
 .about-hero-copy {
-  position: relative;
-  max-width: 1060px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: clamp(36px, 6vw, 76px);
+  padding: clamp(36px, 6vw, 72px);
 }
 
+/* TÍTULO */
+
 .hero-title {
+  max-width: 880px;
   margin: 18px 0 0;
-  max-width: 940px;
   font-family: "Archivo Condensed", sans-serif;
-  font-size: clamp(38px, 6vw, 76px);
-  line-height: .95;
-  letter-spacing: -1.5px;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.02;
+  letter-spacing: -0.8px;
   color: var(--black);
 }
 
 .hero-title-line,
 .hero-title-highlight {
-  display: block;
+  display: inline;
 }
 
 .hero-title-highlight {
   color: var(--green-primary);
-  text-shadow: 0 10px 30px rgba(129,185,42,.18);
 }
+
+/* TEXTO */
 
 .hero-text-grid {
   display: grid;
-  grid-template-columns: 1.1fr .9fr;
-  gap: 30px;
-  align-items: start;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
   margin-top: 28px;
 }
 
 .hero-lead {
   margin: 0;
-  font-size: clamp(18px, 2vw, 22px);
+  font-size: clamp(18px, 2vw, 21px);
   line-height: 1.55;
   color: var(--black);
   font-weight: 500;
@@ -87,22 +81,74 @@
   gap: 12px;
 }
 
-.hero-story p,
-.hero-block p {
+.hero-story p {
   margin: 0;
-  line-height: 1.75;
+  line-height: 1.7;
   color: var(--text-soft);
 }
+
+/* DESTAQUE */
 
 .hero-highlight {
   margin-top: 28px;
   padding: 18px 20px;
-  border-left: 6px solid var(--orange-primary);
+  background: rgba(239, 107, 34, 0.08);
+  border-left: 5px solid var(--orange-primary);
   border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
-  background: linear-gradient(90deg, rgba(239,107,34,.13), rgba(239,107,34,.04));
+  font-weight: 600;
+  line-height: 1.65;
   color: var(--black);
-  font-weight: 700;
-  line-height: 1.6;
+}
+
+/* ORGANIZAÇÕES */
+
+.hero-orgs {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 18px;
+  margin-top: 24px;
+}
+
+.hero-org-card {
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-card);
+}
+
+.hero-org-card strong {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--green-primary);
+  font-size: 19px;
+}
+
+.hero-org-card span {
+  display: block;
+  font-size: 15px;
+  line-height: 1.65;
+  color: var(--text-soft);
+}
+
+/* CARD FINAL - AGORA INTEGRADO */
+
+.hero-final {
+  margin-top: 24px;
+  padding: 24px;
+  background: var(--black);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.hero-final p {
+  margin: 0;
+  color: #fff;
+  line-height: 1.7;
+}
+
+.hero-final strong {
+  color: var(--green-primary);
 }
 
 /* ORGANIZAÇÕES */
