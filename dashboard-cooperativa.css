@@ -1832,10 +1832,129 @@ textarea {
   border-radius: 999px;
   background: currentColor;
 }
+/* =========================================================
+   RESPONSIVIDADE FINAL — DASHBOARD COOPERATIVA
+   Cole este bloco NO FINAL do dashboard-cooperativa.css
+   ========================================================= */
 
-/* =========================
-   DESKTOP INTERMEDIÁRIO
-========================= */
+html,
+body {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.shell,
+.main,
+.sidebar,
+.top,
+.panel,
+.side-inner,
+.panel-inner,
+.top-inner,
+.kpis,
+.project-summary-grid,
+.material-cards,
+.reject-grid,
+.charts-grid-2x2,
+.route-layout,
+.table-section-pro,
+.table-wrap-pro,
+.canvas-wrap,
+.chart-card,
+.route-map-wrap,
+.route-side,
+.collection-points-grid {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.title,
+.hgroup,
+.brand,
+.brand strong,
+.brand span,
+.kpi,
+.summary-card,
+.summary-card-copy,
+.material-card,
+.reject-card,
+.route-summary-card,
+.point-card,
+.read-box,
+.pill,
+.btn,
+.mini-btn,
+.action-btn,
+input,
+select,
+textarea {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+img,
+svg,
+canvas {
+  max-width: 100%;
+}
+
+/* Botões que estavam no HTML e precisam funcionar bem no mobile */
+.btn-orange {
+  color: #fff;
+  background: linear-gradient(135deg, var(--orange), #f49a62);
+  box-shadow: 0 16px 30px rgba(239, 107, 34, .24);
+}
+
+.mini-btn-green {
+  color: #fff;
+  background: linear-gradient(135deg, var(--green), #96ca44);
+  box-shadow: 0 16px 30px rgba(129, 185, 42, .24);
+}
+
+.pill-orange {
+  border-color: rgba(239, 107, 34, .22);
+  background: rgba(239, 107, 34, .10);
+  color: var(--orange);
+}
+
+.pill-orange .b {
+  background: var(--orange);
+  box-shadow: 0 0 0 5px rgba(239, 107, 34, .16);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.chip-orange {
+  color: var(--orange);
+  background: rgba(239, 107, 34, .10);
+  border: 1px solid rgba(239, 107, 34, .18);
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+/* =========================================================
+   NOTEBOOKS / TELAS MÉDIAS
+   ========================================================= */
 
 @media (max-width: 1600px) {
   .shell {
@@ -1845,23 +1964,20 @@ textarea {
   }
 
   .title h1 {
-    font-size: 42px;
+    font-size: clamp(36px, 3vw, 42px);
   }
 
   .kpis {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
-  .project-summary-grid {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
+  .project-summary-grid,
   .material-cards {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .route-layout {
-    grid-template-columns: minmax(0, 1.3fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 360px;
   }
 }
 
@@ -1885,10 +2001,6 @@ textarea {
     padding: 0 20px 20px;
   }
 
-  .title h1 {
-    font-size: 38px;
-  }
-
   .project-summary-grid,
   .material-cards {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1896,10 +2008,6 @@ textarea {
 
   .summary-card.wide {
     grid-column: span 2;
-  }
-
-  .charts-grid-2x2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .route-layout {
@@ -1913,21 +2021,15 @@ textarea {
   .collection-points-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-height: none;
+    overflow: visible;
   }
 }
 
-/* =========================
-   TABLET / NOTEBOOK PEQUENO
-========================= */
+/* =========================================================
+   TABLETS E NOTEBOOKS PEQUENOS
+   ========================================================= */
 
 @media (max-width: 1180px) {
-  body {
-    background:
-      radial-gradient(850px 520px at 15% 5%, rgba(83, 172, 222, .10), transparent 58%),
-      radial-gradient(760px 500px at 85% 10%, rgba(129, 185, 42, .09), transparent 58%),
-      linear-gradient(180deg, #fcfcfb 0%, var(--bg) 100%);
-  }
-
   .shell {
     display: grid;
     grid-template-columns: 1fr;
@@ -1938,9 +2040,9 @@ textarea {
   .sidebar {
     position: relative;
     top: auto;
+    order: 1;
     max-height: none;
     overflow: visible;
-    order: 1;
   }
 
   .main {
@@ -2005,9 +2107,9 @@ textarea {
   }
 }
 
-/* =========================
-   TABLET VERTICAL
-========================= */
+/* =========================================================
+   TABLETS VERTICAIS
+   ========================================================= */
 
 @media (max-width: 900px) {
   .bg-grid {
@@ -2016,7 +2118,7 @@ textarea {
 
   .noise,
   .cursor-glow {
-    display: none;
+    display: none !important;
   }
 
   .shell {
@@ -2058,7 +2160,7 @@ textarea {
   }
 
   .title h1 {
-    font-size: 34px;
+    font-size: clamp(31px, 7vw, 36px);
   }
 
   .title p {
@@ -2176,6 +2278,21 @@ textarea {
 
   .table-wrap-pro {
     border-radius: 18px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .table-wrap-pro::before {
+    content: "Arraste para o lado para ver toda a tabela";
+    display: block;
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    padding: 9px 12px;
+    background: rgba(83, 172, 222, .10);
+    color: var(--blue);
+    font-size: 12px;
+    font-weight: 800;
   }
 
   .table-pro {
@@ -2186,14 +2303,14 @@ textarea {
   .modal-photo,
   .modal-card-collection-details {
     width: calc(100vw - 24px);
-    max-height: calc(100vh - 24px);
+    max-height: calc(100dvh - 24px);
     margin: 12px auto;
   }
 }
 
-/* =========================
-   CELULAR
-========================= */
+/* =========================================================
+   CELULARES GRANDES E MÉDIOS
+   ========================================================= */
 
 @media (max-width: 640px) {
   body {
@@ -2215,7 +2332,7 @@ textarea {
   .sidebar::before,
   .top::before,
   .panel::before {
-    opacity: .45;
+    opacity: .35;
   }
 
   .side-inner,
@@ -2259,6 +2376,7 @@ textarea {
   select,
   textarea,
   .read-box {
+    min-height: 44px;
     padding: 11px 12px;
     font-size: 13px;
   }
@@ -2272,6 +2390,7 @@ textarea {
   .mini-btn,
   .action-btn {
     width: 100%;
+    min-height: 44px;
     justify-content: center;
   }
 
@@ -2284,7 +2403,7 @@ textarea {
   }
 
   .title h1 {
-    font-size: 29px;
+    font-size: clamp(27px, 8vw, 31px);
     line-height: 1;
   }
 
@@ -2493,7 +2612,7 @@ textarea {
   .modal-photo,
   .modal-card-collection-details {
     width: calc(100vw - 16px);
-    max-height: calc(100vh - 16px);
+    max-height: calc(100dvh - 16px);
     margin: 8px auto;
     border-radius: 18px;
   }
@@ -2517,7 +2636,7 @@ textarea {
   }
 
   .modal-body-scroll {
-    max-height: calc(100vh - 140px);
+    max-height: calc(100dvh - 140px);
     padding: 14px;
   }
 
@@ -2527,9 +2646,9 @@ textarea {
   }
 }
 
-/* =========================
-   CELULAR PEQUENO
-========================= */
+/* =========================================================
+   CELULARES PEQUENOS
+   ========================================================= */
 
 @media (max-width: 420px) {
   .shell {
@@ -2643,5 +2762,47 @@ textarea {
 
   .table-pro {
     min-width: 620px;
+  }
+}
+
+/* =========================================================
+   CELULARES MUITO ESTREITOS
+   ========================================================= */
+
+@media (max-width: 360px) {
+  .shell {
+    padding: 6px;
+  }
+
+  .side-inner,
+  .panel-inner {
+    padding: 8px;
+  }
+
+  .title h1 {
+    font-size: 24px;
+  }
+
+  .kvalue,
+  .summary-card-value {
+    font-size: 27px;
+  }
+
+  .top-actions,
+  .table-filter-actions {
+    gap: 6px;
+  }
+
+  .btn,
+  .mini-btn,
+  input,
+  select,
+  textarea,
+  .read-box {
+    font-size: 12.5px;
+  }
+
+  .table-pro {
+    min-width: 590px;
   }
 }
