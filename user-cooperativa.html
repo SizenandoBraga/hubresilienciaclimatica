@@ -32,27 +32,27 @@
       <nav class="sidebar-nav">
         <p class="nav-label">Menu</p>
 
-        <a href="/cooperativa-vila-pinto.html" class="nav-link">
+        <a href="cooperativa-vila-pinto.html" class="nav-link">
           <span class="nav-ico">🏠</span>
           <span>Painel inicial</span>
         </a>
 
-        <a href="/usuarios.html" class="nav-link">
+        <a href="usuarios-vila-pinto.html" class="nav-link">
           <span class="nav-ico">👥</span>
           <span>Participantes cadastrados</span>
         </a>
 
-        <a href="/user-cooperativa.html" class="nav-link active">
+        <a href="usuarios-cooperativa.html" class="nav-link active">
           <span class="nav-ico">🧑‍💼</span>
           <span>Usuários da cooperativa</span>
         </a>
 
-        <a href="/cadastro-coletas-vila-pinto.html" class="nav-link">
+        <a href="cadastro-coletas-vila-pinto.html" class="nav-link">
           <span class="nav-ico">♻️</span>
           <span>Registro de coletas</span>
         </a>
 
-        <a href="/dashboard-cooperativa.html" class="nav-link">
+        <a href="dashboard-cooperativa.html" class="nav-link">
           <span class="nav-ico">📊</span>
           <span>Dashboard da cooperativa</span>
         </a>
@@ -89,7 +89,7 @@
 
       <section class="notice-banner">
         <strong>Gestão individual por território.</strong>
-        <span>Usuários comuns da cooperativa visualizam e gerenciam apenas os usuários cadastrados no seu próprio território.</span>
+        <span>Cada cooperativa visualiza e gerencia apenas os usuários cadastrados no seu próprio território.</span>
       </section>
 
       <section class="hero-card">
@@ -104,7 +104,7 @@
             <div class="panel-head">
               <div>
                 <span class="section-kicker">Cadastro interno</span>
-                <h2>Criar usuário da cooperativa</h2>
+                <h2 id="formTitle">Criar usuário da cooperativa</h2>
               </div>
               <span class="panel-count" id="coopCreateStatusLabel">Permissões por módulo</span>
             </div>
@@ -186,7 +186,7 @@
         </div>
 
         <div class="right-column">
-          <article class="panel-card">
+          <article class="panel-card coop-list-panel">
             <div class="panel-head">
               <div>
                 <span class="section-kicker">Usuários internos</span>
@@ -195,11 +195,12 @@
               <span class="panel-count" id="coopUsersCountLabel">0 itens</span>
             </div>
 
-            <div class="filters-grid" style="margin-bottom:16px;">
+            <div class="filters-grid coop-users-filters">
               <div class="field">
                 <label for="coopUsersSearch">Buscar usuário</label>
                 <input id="coopUsersSearch" type="text" placeholder="Nome, e-mail ou perfil" />
               </div>
+
               <div class="field">
                 <label for="coopUsersStatusFilter">Status</label>
                 <select id="coopUsersStatusFilter">
@@ -208,9 +209,21 @@
                   <option value="inactive">Inativos</option>
                 </select>
               </div>
+
               <div class="field">
                 <label>&nbsp;</label>
-                <button class="btn btn-dark" type="button" id="btnDownloadCoopUsers">Baixar lista CSV</button>
+
+                <div class="download-actions">
+                  <button class="btn btn-download" type="button" id="btnDownloadCoopUsers">
+                    📊 CSV
+                    <small id="csvCountLabel">0 registros</small>
+                  </button>
+
+                  <button class="btn btn-download" type="button" id="btnDownloadPDF">
+                    📄 PDF
+                    <small id="pdfCountLabel">0 registros</small>
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -223,6 +236,7 @@
 
       <div class="modal hidden" id="coopUserViewModal" aria-hidden="true">
         <div class="modal-backdrop" id="coopUserViewBackdrop"></div>
+
         <div class="modal-card">
           <div class="modal-head">
             <div>
@@ -231,7 +245,9 @@
             </div>
             <button class="modal-close" type="button" id="closeViewModal">×</button>
           </div>
+
           <div class="modal-body" id="viewUserBody"></div>
+
           <div class="modal-actions">
             <button class="btn btn-ghost" type="button" id="viewEditBtn">Editar</button>
             <button class="btn btn-danger" type="button" id="viewDeleteBtn">Excluir</button>
@@ -243,6 +259,6 @@
     </main>
   </div>
 
-  <script type="module" src="usuarios.js"></script>
+  <script type="module" src="user-cooperativa.js"></script>
 </body>
 </html>
