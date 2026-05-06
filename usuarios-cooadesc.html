@@ -6,7 +6,7 @@
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>NSRU • Gestão de usuários-COOADESC</title>
+  <title>NSRU • Gestão de participantes</title>
   <meta name="theme-color" content="#81B92A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -25,9 +25,35 @@
   <link rel="stylesheet" href="usuarios.css" />
 </head>
 
-<body
+<!-- 
+  PARA VILA PINTO:
+  data-territory-id="vila-pinto"
+  data-territory-label="Centro de Triagem Vila Pinto"
+  data-coop-home="/cooperativa-vila-pinto.html"
+  data-coletas-url="/cadastro-coletas-vila-pinto.html"
+  data-user-coop-url="/user-cooperativa.html"
+
+  PARA COOADESC:
   data-territory-id="cooadesc"
   data-territory-label="COOADESC"
+  data-coop-home="/cooperativa-cooadesc.html"
+  data-coletas-url="/cadastro-coletas-cooadesc.html"
+  data-user-coop-url="/user-cooperativa.html"
+
+  PARA PADRE CACIQUE:
+  data-territory-id="padre-cacique"
+  data-territory-label="Cooperativa Padre Cacique"
+  data-coop-home="/cooperativa-padre-cacique.html"
+  data-coletas-url="/cadastro-coletas-padre-cacique.html"
+  data-user-coop-url="/user-cooperativa.html"
+-->
+
+<body
+data-territory-id="cooadesc"
+  data-territory-label="COOADESC"
+  data-coop-home="cooperativa-cooadesc.html"
+  data-coletas-url="cadastro-coletas-cooadesc.html"
+  data-user-coop-url="user-cooperativa.html"
 >
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
@@ -46,32 +72,27 @@
       <nav class="sidebar-nav">
         <p class="nav-label">Menu</p>
 
-        <a href="cooperativa-cooadesc.html" class="nav-link" id="navCoopHome">
+        <a href="#" class="nav-link" id="navCoopHome">
           <span class="nav-ico">🏠</span>
           <span>Painel inicial</span>
         </a>
 
-        <a href="usuarios-cooadesc.html" class="nav-link active" id="navUsuarios">
+        <a href="#" class="nav-link active" id="navUsuarios">
           <span class="nav-ico">👥</span>
           <span>Participantes cadastrados</span>
         </a>
-         
-        <a href="cadastro-participantes-cooadesc.html" class="nav-link" id="cadastroParticipantesLink">
-  <span class="nav-ico">➕</span>
-          <span>Cadastrar participantes</span>
-</a>
 
-        <a href="user-cooperativa-cooadesc.html" class="nav-link" id="navUserCooperativa">
+        <a href="#" class="nav-link" id="navUserCooperativa">
           <span class="nav-ico">🧑‍💼</span>
           <span>Usuários da cooperativa</span>
         </a>
 
-        <a href="cadastro-coletas-cooadesc.html" class="nav-link" id="navColetas">
+        <a href="#" class="nav-link" id="navColetas">
           <span class="nav-ico">♻️</span>
           <span>Registro de coletas</span>
         </a>
 
-        <a href="dashboard-cooperativa-cooadesc.html" class="nav-link" id="navDashboardCooperativa">
+        <a href="/dashboard-cooperativa.html" class="nav-link">
           <span class="nav-ico">📊</span>
           <span>Dashboard da cooperativa</span>
         </a>
@@ -86,7 +107,7 @@
         </button>
 
         <div class="sidebar-userbox">
-          <strong id="sidebarUserName">Carregando participante...</strong>
+          <strong id="sidebarUserName">Carregando usuário...</strong>
           <span id="sidebarTerritoryLabel">Carregando território...</span>
         </div>
       </div>
@@ -101,10 +122,10 @@
         </div>
 
         <div class="topbar-right">
-          <span class="status-pill status-green">🟢 Todos os territórios</span>
-          <span class="status-pill status-lime">🏢 Todas as cooperativas</span>
-          <span class="status-pill status-orange">🔐 Administrador</span>
-          <span class="status-pill status-purple">👤 Admin Governança</span>
+          <span class="status-pill status-green">🟢 Território</span>
+          <span class="status-pill status-lime">🏢 Cooperativa</span>
+          <span class="status-pill status-orange">🔐 Perfil</span>
+          <span class="status-pill status-purple">👤 Usuário</span>
         </div>
       </header>
 
@@ -118,7 +139,7 @@
 
       <section class="hero-card">
         <div class="hero-badge">Área de gestão da cooperativa</div>
-        <h1>Gestão de usuários, solicitações e rota de coleta</h1>
+        <h1>Gestão de participantes, solicitações e rota de coleta</h1>
         <p>
           Acompanhe participantes cadastrados, aprove pedidos pendentes, visualize
           os pontos de coleta no mapa e monte a rota da cooperativa até os locais.
@@ -264,7 +285,22 @@
             <span class="section-kicker">Base geral</span>
             <h2>Todos os participantes cadastrados</h2>
           </div>
-          <span class="panel-count" id="tableCountLabel">0 registros</span>
+
+          <div class="panel-head-actions">
+            <span class="panel-count" id="tableCountLabel">0 registros</span>
+
+            <div class="download-actions participants-download-actions" aria-label="Baixar participantes cadastrados">
+              <button class="btn-download" id="btnDownloadParticipantsCsv" type="button">
+                CSV
+                <small>Baixar planilha</small>
+              </button>
+
+              <button class="btn-download" id="btnDownloadParticipantsPdf" type="button">
+                PDF
+                <small>Baixar relatório</small>
+              </button>
+            </div>
+          </div>
         </div>
 
         <div class="table-wrap">
@@ -416,6 +452,9 @@
     crossorigin=""
   ></script>
 
-  <script type="module" src="usuarios.js?v=300"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
+
+  <script type="module" src="usuarios.js"></script>
 </body>
 </html>
