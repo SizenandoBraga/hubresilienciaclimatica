@@ -253,6 +253,51 @@ data-territory-id="cooadesc"
               <span class="info-pill" id="routeInfo">Rota: aguardando dados...</span>
             </div>
 
+           
+<div class="manual-route-card">
+  <div class="manual-route-head">
+    <div>
+      <span class="section-kicker">Rota manual</span>
+      <h3>Adicionar endereços à rota</h3>
+      <p>Digite um endereço ou clique diretamente no mapa para criar pontos manuais.</p>
+    </div>
+  </div>
+
+  <div class="manual-route-grid">
+    <div class="field">
+      <label for="manualRouteAddress">Endereço</label>
+      <input
+        id="manualRouteAddress"
+        type="text"
+        placeholder="Rua, número, bairro, cidade"
+      />
+    </div>
+
+    <button class="btn btn-primary" id="btnAddManualAddress" type="button">
+      Adicionar ponto
+    </button>
+
+    <button class="btn btn-dark" id="btnBuildOptimizedManualRoute" type="button">
+      Otimizar rota
+    </button>
+
+    <button class="btn btn-success" id="btnSaveManualRoute" type="button">
+      Salvar rota
+    </button>
+
+    <button class="btn btn-ghost" id="btnClearManualRoute" type="button">
+      Limpar
+    </button>
+  </div>
+
+  <div class="manual-route-tip">
+    No computador ou celular, clique no mapa para adicionar pontos manuais.
+  </div>
+
+  <div class="manual-points-list" id="manualPointsList">
+    <div class="empty-state">Nenhum ponto manual adicionado.</div>
+  </div>
+</div>
             <div id="usersMap"></div>
 
             <div class="map-stats">

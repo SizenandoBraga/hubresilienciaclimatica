@@ -2625,3 +2625,185 @@ onAuthStateChanged(auth, async (user) => {
     alert("Não foi possível carregar a página de gestão de usuários.");
   }
 });
+/* =========================
+ROTA MANUAL NO MAPA
+========================= */
+
+let manualMarker = null;
+let manualPoint = null;
+
+/* ===== BUSCAR ENDEREÇO ===== */
+async function findManualRoutePoint() {
+  const address = String(els.manualRouteAddress?.value || "").trim();
+
+  if (!address) {
+    alert("Digite um endereço.");
+    return;
+  }
+
+  try {
+    const queryText = `${address}, Porto Alegre, RS, Brasil`;
+
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}`
+    );
+
+    const data = await res.json();
+
+    if (!data.length) {
+      alert("Endereço não encontrado.");
+      return;
+    }
+
+    const result = data[0];
+
+    manualPoint = {
+      lat: Number(result.lat),
+      lng: Number(result.lon),
+      label: result.display_name
+    };
+
+    if (!isValidCoord(manualPoint.lat, manualPoint.lng)) {
+      alert("Coordenadas inválidas.");
+      return;
+    }
+
+    if (manualMarker) map.removeLayer(manualMarker);
+
+    manualMarker = L.marker([manualPoint.lat, manualPoint.lng], {
+      draggable: true
+    }).addTo(map);
+
+    manualMarker.bindPopup("<strong>Ponto manual</strong><br>Arraste para ajustar").openPopup();
+
+    manualMarker.on("dragend", () => {
+      const pos = manualMarker.getLatLng();
+      manualPoint.lat = pos.lat;
+      manualPoint.lng = pos.lng;
+      showToast("Ponto ajustado.");
+    });
+
+    map.setView([manualPoint.lat, manualPoint.lng], 16);
+
+    showToast("Endereço localizado.");
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao buscar endereço.");
+  }
+}
+
+/* ===== ROTA ATÉ PONTO ===== */
+async function buildRouteToManualPoint() {
+  if (!map) return;
+
+  const base = STATE.territoryBase || DEFAULT_BASE;
+
+  if (!manualPoint || !isValidCoord(manualPoint.lat, manualPoint.lng)) {
+    alert("Defina um ponto primeiro.");
+    return;
+  }
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  const coords = [
+    [base.lng, base.lat],
+    [manualPoint.lng, manualPoint.lat]
+  ];
+
+  try {
+    const url = `https://router.project-osrm.org/route/v1/driving/${coords
+      .map((p) => `${p[0]},${p[1]}`)
+      .join(";")}?overview=full&geometries=geojson`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (!data?.routes?.length) throw new Error();
+
+    const route = data.routes[0];
+    const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+
+    routePolyline = L.polyline(latlngs, {
+      weight: 5,
+      opacity: 0.9
+    }).addTo(map);
+
+    map.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+
+    if (els.routeDistance) els.routeDistance.textContent = formatDistanceKm(route.distance);
+    if (els.routeDuration) els.routeDuration.textContent = formatDuration(route.duration);
+
+    showToast("Rota criada com sucesso.");
+  } catch (e) {
+    console.error(e);
+    alert("Erro ao gerar rota.");
+  }
+}
+
+/* ===== LIMPAR ===== */
+function clearManualPoint() {
+  if (manualMarker) {
+    map.removeLayer(manualMarker);
+    manualMarker = null;
+  }
+
+  manualPoint = null;
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  if (els.routeDistance) els.routeDistance.textContent = "0 km";
+  if (els.routeDuration) els.routeDuration.textContent = "0 min";
+
+  showToast("Ponto removido.");
+}
+
+/* ===== CLIQUE NO MAPA ===== */
+function enableManualMapClick() {
+  if (!map) return;
+
+  map.on("click", (e) => {
+    if (!e.originalEvent.shiftKey) return;
+
+    const { lat, lng } = e.latlng;
+
+    manualPoint = { lat, lng, label: "Ponto manual" };
+
+    if (manualMarker) map.removeLayer(manualMarker);
+
+    manualMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
+
+    manualMarker.bindPopup("<strong>Ponto manual</strong>").openPopup();
+
+    manualMarker.on("dragend", () => {
+      const pos = manualMarker.getLatLng();
+      manualPoint.lat = pos.lat;
+      manualPoint.lng = pos.lng;
+    });
+
+    showToast("Ponto criado no mapa.");
+  });
+}
+
+/* ===== EVENTOS ===== */
+function bindManualRouteEvents() {
+  els.manualRouteAddress = document.getElementById("manualRouteAddress");
+  els.btnFindManualPoint = document.getElementById("btnFindManualPoint");
+  els.btnRouteManualPoint = document.getElementById("btnRouteManualPoint");
+  els.btnClearManualPoint = document.getElementById("btnClearManualPoint");
+
+  els.btnFindManualPoint?.addEventListener("click", findManualRoutePoint);
+  els.btnRouteManualPoint?.addEventListener("click", buildRouteToManualPoint);
+  els.btnClearManualPoint?.addEventListener("click", clearManualPoint);
+}
+
+/* ===== INIT ===== */
+setTimeout(() => {
+  bindManualRouteEvents();
+  enableManualMapClick();
+}, 800);

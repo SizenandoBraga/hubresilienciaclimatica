@@ -1562,3 +1562,136 @@ th {
     height: 300px;
   }
 }
+/* =========================
+   ROTA MANUAL AVANÇADA
+========================= */
+
+.manual-route-card {
+  margin: 16px 0;
+  padding: 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, #ffffff 0%, #f8fbf3 100%);
+  box-shadow: var(--shadow-sm);
+}
+
+.manual-route-head {
+  margin-bottom: 14px;
+}
+
+.manual-route-head h3 {
+  margin: 4px 0 4px;
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+.manual-route-head p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 15px;
+}
+
+.manual-route-grid {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) auto auto auto auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.manual-route-grid .field {
+  min-width: 0;
+}
+
+.manual-route-grid .btn {
+  white-space: nowrap;
+  min-height: 46px;
+}
+
+.manual-route-tip {
+  margin-top: 10px;
+  padding: 10px 12px;
+  border: 1px dashed var(--line-strong);
+  border-radius: var(--radius-sm);
+  background: #fbfdf7;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.manual-points-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.manual-point-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+}
+
+.manual-point-item strong {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 16px;
+  color: var(--text);
+}
+
+.manual-point-item span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.manual-point-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 1180px) {
+  .manual-route-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .manual-route-grid .field {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 680px) {
+  .manual-route-card {
+    padding: 14px;
+    border-radius: 18px;
+  }
+
+  .manual-route-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .manual-route-grid .btn {
+    width: 100%;
+  }
+
+  .manual-point-item {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .manual-point-actions {
+    width: 100%;
+  }
+
+  .manual-point-actions .btn {
+    flex: 1;
+  }
+}@media (max-width: 680px) {
+  .manual-point-actions .btn {
+    width: 100%;
+  }
+}
