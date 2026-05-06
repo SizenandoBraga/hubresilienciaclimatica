@@ -9,6 +9,7 @@ import {
   writeBatch,
   serverTimestamp,
   setDoc,
+  addDoc,
   query,
   where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
@@ -190,6 +191,12 @@ const els = {
   permDocumentos: document.getElementById("permDocumentos"),
   permMapa: document.getElementById("permMapa"),
   permAprovarCadastros: document.getElementById("permAprovarCadastros"),
+  manualRouteAddress: document.getElementById("manualRouteAddress"),
+btnAddManualAddress: document.getElementById("btnAddManualAddress"),
+btnBuildOptimizedManualRoute: document.getElementById("btnBuildOptimizedManualRoute"),
+btnSaveManualRoute: document.getElementById("btnSaveManualRoute"),
+btnClearManualRoute: document.getElementById("btnClearManualRoute"),
+manualPointsList: document.getElementById("manualPointsList"),
   permGerenciarUsuarios: document.getElementById("permGerenciarUsuarios")
 
   
@@ -200,6 +207,11 @@ let baseMarker = null;
 let userMarkers = [];
 let routePolyline = null;
 let toastEl = null;
+
+let manualMarkers = [];
+let manualPoints = [];
+let manualRouteBound = false;
+let lastManualRouteResult = null;
 
 /* =========================
 UTILS
@@ -298,8 +310,8 @@ function normalizeRouteKey(value) {
   return String(value || "")
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
-    .replace(/[_s]+/g, "-")
+    .replace(/[\u0300-\u036f]/g, "")
+.replace(/[\s_]+/g, "-")
     .trim();
 }
 
@@ -1699,6 +1711,7 @@ function initMap() {
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     attribution: "&copy; OpenStreetMap"
   }).addTo(map);
+  enableSimpleManualMapClick();
 }
 
 function clearMap() {
@@ -1873,6 +1886,421 @@ function focusUserOnMap(userId) {
     const pos = marker.getLatLng();
     if (Math.abs(pos.lat - user.lat) < 0.000001 && Math.abs(pos.lng - user.lng) < 0.000001) {
       marker.openPopup();
+    }
+  });
+}
+/* =========================
+ROTA MANUAL AVANÇADA
+========================= */
+
+function syncManualRouteElements() {
+  els.manualRouteAddress = document.getElementById("manualRouteAddress");
+  els.btnAddManualAddress = document.getElementById("btnAddManualAddress");
+  els.btnBuildOptimizedManualRoute = document.getElementById("btnBuildOptimizedManualRoute");
+  els.btnSaveManualRoute = document.getElementById("btnSaveManualRoute");
+  els.btnClearManualRoute = document.getElementById("btnClearManualRoute");
+  els.manualPointsList = document.getElementById("manualPointsList");
+}
+
+function renderManualPointsList() {
+  if (!els.manualPointsList) return;
+
+  if (!manualPoints.length) {
+    els.manualPointsList.innerHTML = `<div class="empty-state">Nenhum ponto manual adicionado.</div>`;
+    return;
+  }
+
+  els.manualPointsList.innerHTML = manualPoints.map((point, index) => `
+    <div class="manual-point-item">
+      <div>
+        <strong>${index + 1}. ${safeText(point.label, "Ponto manual")}</strong>
+        <span>${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</span>
+      </div>
+
+      <div class="manual-point-actions">
+        <button class="btn btn-ghost" data-action="focus-manual-point" data-index="${index}" type="button">
+          Ver
+        </button>
+
+        <button class="btn btn-danger" data-action="remove-manual-point" data-index="${index}" type="button">
+          Remover
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addManualPoint(lat, lng, label = "Ponto manual") {
+
+  if (!map || typeof L === "undefined") {
+    alert("Mapa ainda não carregado.");
+    return;
+  }
+
+  if (!isValidCoord(lat, lng)) {
+    alert("Coordenadas inválidas.");
+    return;
+  }
+
+  const point = {
+    id: `manual_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    lat,
+    lng,
+    label
+  };
+
+  const marker = L.marker([lat, lng], {
+    draggable: true
+  }).addTo(map);
+
+  marker.bindPopup(`
+    <strong>${safeText(label)}</strong><br>
+    Arraste para ajustar o ponto.
+  `);
+
+  marker.on("dragend", () => {
+    const pos = marker.getLatLng();
+    point.lat = pos.lat;
+    point.lng = pos.lng;
+    renderManualPointsList();
+    showToast("Ponto manual ajustado.");
+  });
+
+  manualPoints.push(point);
+  manualMarkers.push(marker);
+
+  renderManualPointsList();
+
+  map.setView([lat, lng], 16);
+
+  showToast("Ponto manual adicionado.");
+}
+
+async function addManualAddressPoint() {
+  syncManualRouteElements();
+
+  const address = String(els.manualRouteAddress?.value || "").trim();
+
+  if (!address) {
+    alert("Digite um endereço.");
+    return;
+  }
+
+  try {
+    const queryText = `${address}, Porto Alegre, Rio Grande do Sul, Brasil`;
+
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Buscando endereço...";
+    }
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=br&q=${encodeURIComponent(queryText)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao localizar endereço.");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      alert("Endereço não encontrado. Tente informar rua, número, bairro e cidade.");
+      if (els.routeStatus) els.routeStatus.textContent = "Endereço não encontrado.";
+      return;
+    }
+
+    const result = data[0];
+
+    const lat = Number(result.lat);
+    const lng = Number(result.lon);
+
+    if (!isValidCoord(lat, lng)) {
+      alert("O endereço foi localizado, mas as coordenadas são inválidas.");
+      return;
+    }
+
+    addManualPoint(lat, lng, result.display_name || address);
+
+    els.manualRouteAddress.value = "";
+
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Endereço adicionado à rota manual.";
+    }
+  } catch (error) {
+    console.error("Erro ao localizar endereço:", error);
+    alert("Erro ao localizar endereço. Verifique a conexão ou tente um endereço mais completo.");
+  }
+}
+
+function focusManualPoint(index) {
+
+  const point = manualPoints[index];
+  const marker = manualMarkers[index];
+
+  if (!point || !marker || !map) return;
+
+  map.setView([point.lat, point.lng], 17);
+
+  marker.openPopup();
+}
+
+function removeManualPoint(index) {
+
+  const marker = manualMarkers[index];
+
+  if (marker && map) {
+    map.removeLayer(marker);
+  }
+
+  manualPoints.splice(index, 1);
+  manualMarkers.splice(index, 1);
+
+  renderManualPointsList();
+
+  showToast("Ponto removido.");
+}
+
+function clearManualRoute() {
+
+  if (!map) return;
+
+  manualMarkers.forEach((marker) => {
+    map.removeLayer(marker);
+  });
+
+  manualMarkers = [];
+  manualPoints = [];
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  renderManualPointsList();
+
+  showToast("Rota limpa.");
+}
+
+function optimizeManualPointsByNearestNeighbor(base, points) {
+
+  const remaining = [...points];
+  const ordered = [];
+
+  let current = {
+    lat: base.lat,
+    lng: base.lng
+  };
+
+  while (remaining.length) {
+
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+
+    remaining.forEach((point, index) => {
+
+      const dx = current.lat - point.lat;
+      const dy = current.lng - point.lng;
+
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+
+    const next = remaining.splice(bestIndex, 1)[0];
+
+    ordered.push(next);
+
+    current = next;
+  }
+
+  return ordered;
+}
+
+async function buildOptimizedManualRoute() {
+
+  if (!map) return;
+
+  const base = STATE.territoryBase || DEFAULT_BASE;
+
+  if (!manualPoints.length) {
+    alert("Adicione pontos primeiro.");
+    return;
+  }
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  const ordered = optimizeManualPointsByNearestNeighbor(base, manualPoints);
+
+  const coords = [
+    [base.lng, base.lat],
+    ...ordered.map((point) => [point.lng, point.lat])
+  ];
+
+  try {
+
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Calculando rota...";
+    }
+
+    const url =
+      `https://router.project-osrm.org/route/v1/driving/${coords.map((p) => `${p[0]},${p[1]}`).join(";")}?overview=full&geometries=geojson`;
+
+    const response = await fetch(url);
+
+    const data = await response.json();
+
+    if (!response.ok || !data?.routes?.length) {
+      throw new Error("Erro rota.");
+    }
+
+    const route = data.routes[0];
+
+    const latlngs = route.geometry.coordinates.map(
+      ([lng, lat]) => [lat, lng]
+    );
+
+    routePolyline = L.polyline(latlngs, {
+      weight: 5,
+      opacity: 0.9
+    }).addTo(map);
+
+    map.fitBounds(routePolyline.getBounds(), {
+      padding: [30, 30]
+    });
+
+    lastManualRouteResult = {
+      ordered,
+      distance: route.distance,
+      duration: route.duration,
+      geometry: route.geometry
+    };
+
+    if (els.routeDistance) {
+      els.routeDistance.textContent =
+        formatDistanceKm(route.distance);
+    }
+
+    if (els.routeDuration) {
+      els.routeDuration.textContent =
+        formatDuration(route.duration);
+    }
+
+    if (els.routeInfo) {
+      els.routeInfo.textContent =
+        `Rota manual: ${ordered.length} ponto(s)`;
+    }
+
+    if (els.routeStatus) {
+      els.routeStatus.textContent =
+        "Rota otimizada.";
+    }
+
+    showToast("Rota otimizada.");
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Erro ao calcular rota.");
+  }
+}
+
+async function saveManualRouteToFirebase() {
+
+  if (!manualPoints.length) {
+    alert("Adicione pontos.");
+    return;
+  }
+
+  try {
+
+    const territoryId =
+      getMyTerritoryId() || getPageTerritoryId();
+
+    await addDoc(
+      collection(db, "manualRoutes"),
+      {
+        territoryId,
+        points: manualPoints,
+        createdAt: serverTimestamp(),
+        createdBy: STATE.authUser?.uid || null
+      }
+    );
+
+    showToast("Rota salva.");
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert("Erro ao salvar rota.");
+  }
+}
+
+function enableSimpleManualMapClick() {
+
+  if (!map || manualRouteBound) return;
+
+  manualRouteBound = true;
+
+  map.on("click", (event) => {
+
+    const { lat, lng } = event.latlng;
+
+    addManualPoint(
+      lat,
+      lng,
+      "Ponto criado no mapa"
+    );
+  });
+}
+
+function bindAdvancedManualRouteEvents() {
+
+  syncManualRouteElements();
+
+  els.btnAddManualAddress?.addEventListener(
+    "click",
+    addManualAddressPoint
+  );
+
+  els.btnBuildOptimizedManualRoute?.addEventListener(
+    "click",
+    buildOptimizedManualRoute
+  );
+
+  els.btnSaveManualRoute?.addEventListener(
+    "click",
+    saveManualRouteToFirebase
+  );
+
+  els.btnClearManualRoute?.addEventListener(
+    "click",
+    clearManualRoute
+  );
+
+  document.addEventListener("click", (event) => {
+
+    const button = event.target.closest("[data-action]");
+
+    if (!button) return;
+
+    const action = button.dataset.action;
+
+    const index = Number(button.dataset.index);
+
+    if (action === "focus-manual-point") {
+      focusManualPoint(index);
+    }
+
+    if (action === "remove-manual-point") {
+      removeManualPoint(index);
     }
   });
 }
@@ -2427,47 +2855,7 @@ EVENTOS
 ========================= */
 
 function bindEvents() {
- function bindTerritoryNavigation() {
-  const bodyData = document.body?.dataset || {};
-  const territoryId = canonicalTerritoryId(
-    bodyData.territoryId ||
-    STATE.userDoc?.territoryId ||
-    "cooadesc"
-  );
 
-  const routes = {
-    "vila-pinto": {
-      home: "cooperativa-vila-pinto.html",
-      usuarios: "usuarios-vila-pinto.html",
-      userCoop: "user-cooperativa.html",
-      coletas: "cadastro-coletas-vila-pinto.html"
-    },
-    cooadesc: {
-      home: "cooperativa-cooadesc.html",
-      usuarios: "usuarios-cooadesc.html",
-      userCoop: "user-cooperativa.html",
-      coletas: "cadastro-coletas-cooadesc.html"
-    },
-    "padre-cacique": {
-      home: "cooperativa-padre-cacique.html",
-      usuarios: "usuarios-padre-cacique.html",
-      userCoop: "user-cooperativa.html",
-      coletas: "cadastro-coletas-padre-cacique.html"
-    }
-  };
-
-  const current = routes[territoryId] || routes.cooadesc;
-
-  document.getElementById("navCoopHome")?.setAttribute("href", current.home);
-  document.getElementById("navUsuarios")?.setAttribute("href", current.usuarios);
-  document.getElementById("navUserCooperativa")?.setAttribute("href", current.userCoop);
-  document.getElementById("navColetas")?.setAttribute("href", current.coletas);
-
-  console.log("Menu aplicado:", {
-    territoryId,
-    coletas: current.coletas
-  });
-}
 
   document.getElementById("menuBtn")?.addEventListener("click", openSidebarMenu);
   document.getElementById("sidebarClose")?.addEventListener("click", closeSidebarMenu);
@@ -2485,7 +2873,8 @@ function bindEvents() {
 
   els.searchInput?.addEventListener("input", applyFilters);
   els.statusFilter?.addEventListener("change", applyFilters);
-  els.operationFilter?.addEventListener("change", applyFilters);
+  
+  bindAdvancedManualRouteEvents();
 
   els.routeMode?.addEventListener("change", async () => {
     renderMap();
@@ -2625,185 +3014,3 @@ onAuthStateChanged(auth, async (user) => {
     alert("Não foi possível carregar a página de gestão de usuários.");
   }
 });
-/* =========================
-ROTA MANUAL NO MAPA
-========================= */
-
-let manualMarker = null;
-let manualPoint = null;
-
-/* ===== BUSCAR ENDEREÇO ===== */
-async function findManualRoutePoint() {
-  const address = String(els.manualRouteAddress?.value || "").trim();
-
-  if (!address) {
-    alert("Digite um endereço.");
-    return;
-  }
-
-  try {
-    const queryText = `${address}, Porto Alegre, RS, Brasil`;
-
-    const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryText)}`
-    );
-
-    const data = await res.json();
-
-    if (!data.length) {
-      alert("Endereço não encontrado.");
-      return;
-    }
-
-    const result = data[0];
-
-    manualPoint = {
-      lat: Number(result.lat),
-      lng: Number(result.lon),
-      label: result.display_name
-    };
-
-    if (!isValidCoord(manualPoint.lat, manualPoint.lng)) {
-      alert("Coordenadas inválidas.");
-      return;
-    }
-
-    if (manualMarker) map.removeLayer(manualMarker);
-
-    manualMarker = L.marker([manualPoint.lat, manualPoint.lng], {
-      draggable: true
-    }).addTo(map);
-
-    manualMarker.bindPopup("<strong>Ponto manual</strong><br>Arraste para ajustar").openPopup();
-
-    manualMarker.on("dragend", () => {
-      const pos = manualMarker.getLatLng();
-      manualPoint.lat = pos.lat;
-      manualPoint.lng = pos.lng;
-      showToast("Ponto ajustado.");
-    });
-
-    map.setView([manualPoint.lat, manualPoint.lng], 16);
-
-    showToast("Endereço localizado.");
-  } catch (e) {
-    console.error(e);
-    alert("Erro ao buscar endereço.");
-  }
-}
-
-/* ===== ROTA ATÉ PONTO ===== */
-async function buildRouteToManualPoint() {
-  if (!map) return;
-
-  const base = STATE.territoryBase || DEFAULT_BASE;
-
-  if (!manualPoint || !isValidCoord(manualPoint.lat, manualPoint.lng)) {
-    alert("Defina um ponto primeiro.");
-    return;
-  }
-
-  if (routePolyline) {
-    map.removeLayer(routePolyline);
-    routePolyline = null;
-  }
-
-  const coords = [
-    [base.lng, base.lat],
-    [manualPoint.lng, manualPoint.lat]
-  ];
-
-  try {
-    const url = `https://router.project-osrm.org/route/v1/driving/${coords
-      .map((p) => `${p[0]},${p[1]}`)
-      .join(";")}?overview=full&geometries=geojson`;
-
-    const res = await fetch(url);
-    const data = await res.json();
-
-    if (!data?.routes?.length) throw new Error();
-
-    const route = data.routes[0];
-    const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
-
-    routePolyline = L.polyline(latlngs, {
-      weight: 5,
-      opacity: 0.9
-    }).addTo(map);
-
-    map.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
-
-    if (els.routeDistance) els.routeDistance.textContent = formatDistanceKm(route.distance);
-    if (els.routeDuration) els.routeDuration.textContent = formatDuration(route.duration);
-
-    showToast("Rota criada com sucesso.");
-  } catch (e) {
-    console.error(e);
-    alert("Erro ao gerar rota.");
-  }
-}
-
-/* ===== LIMPAR ===== */
-function clearManualPoint() {
-  if (manualMarker) {
-    map.removeLayer(manualMarker);
-    manualMarker = null;
-  }
-
-  manualPoint = null;
-
-  if (routePolyline) {
-    map.removeLayer(routePolyline);
-    routePolyline = null;
-  }
-
-  if (els.routeDistance) els.routeDistance.textContent = "0 km";
-  if (els.routeDuration) els.routeDuration.textContent = "0 min";
-
-  showToast("Ponto removido.");
-}
-
-/* ===== CLIQUE NO MAPA ===== */
-function enableManualMapClick() {
-  if (!map) return;
-
-  map.on("click", (e) => {
-    if (!e.originalEvent.shiftKey) return;
-
-    const { lat, lng } = e.latlng;
-
-    manualPoint = { lat, lng, label: "Ponto manual" };
-
-    if (manualMarker) map.removeLayer(manualMarker);
-
-    manualMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
-
-    manualMarker.bindPopup("<strong>Ponto manual</strong>").openPopup();
-
-    manualMarker.on("dragend", () => {
-      const pos = manualMarker.getLatLng();
-      manualPoint.lat = pos.lat;
-      manualPoint.lng = pos.lng;
-    });
-
-    showToast("Ponto criado no mapa.");
-  });
-}
-
-/* ===== EVENTOS ===== */
-function bindManualRouteEvents() {
-  els.manualRouteAddress = document.getElementById("manualRouteAddress");
-  els.btnFindManualPoint = document.getElementById("btnFindManualPoint");
-  els.btnRouteManualPoint = document.getElementById("btnRouteManualPoint");
-  els.btnClearManualPoint = document.getElementById("btnClearManualPoint");
-
-  els.btnFindManualPoint?.addEventListener("click", findManualRoutePoint);
-  els.btnRouteManualPoint?.addEventListener("click", buildRouteToManualPoint);
-  els.btnClearManualPoint?.addEventListener("click", clearManualPoint);
-}
-
-/* ===== INIT ===== */
-setTimeout(() => {
-  bindManualRouteEvents();
-  enableManualMapClick();
-}, 800);
