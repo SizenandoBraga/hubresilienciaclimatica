@@ -2378,7 +2378,40 @@ function isSameRequestIdentity(req, user) {
 
   return sameCode || (sameCpf && sameCpf !== "") || (samePhone && samePhone !== "");
 }
+async function geocodeAddress(address) {
 
+  try {
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(address)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro geocoding");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      return null;
+    }
+
+    return {
+      lat: Number(data[0].lat),
+      lng: Number(data[0].lon),
+      label: data[0].display_name || address
+    };
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao buscar coordenadas:",
+      error
+    );
+
+    return null;
+  }
+}
 async function upsertParticipantFromApprovedRequest(user) {
   const participantId =
     user.id && !String(user.id).startsWith("approval_")
@@ -2389,6 +2422,41 @@ async function upsertParticipantFromApprovedRequest(user) {
 
   const snapshot = user.raw?.payloadSnapshot || {};
   const isApproved = user.status === "aprovado";
+  let finalLat =
+  isValidCoord(user.lat, user.lng)
+    ? user.lat
+    : (toNumberOrNull(snapshot.lat) ?? null);
+
+let finalLng =
+  isValidCoord(user.lat, user.lng)
+    ? user.lng
+    : (toNumberOrNull(snapshot.lng) ?? null);
+
+const addressForGeocode =
+  user.address ||
+  snapshot.enderecoCompleto ||
+  snapshot.address?.addressLine ||
+  buildAddress(snapshot);
+
+if (
+  !isValidCoord(finalLat, finalLng) &&
+  addressForGeocode
+) {
+
+  const geo =
+    await geocodeAddress(
+      `${addressForGeocode}, Porto Alegre, RS, Brasil`
+    );
+
+  if (
+    geo &&
+    isValidCoord(geo.lat, geo.lng)
+  ) {
+
+    finalLat = geo.lat;
+    finalLng = geo.lng;
+  }
+}
 
   const payload = {
     name: user.name || snapshot.name || "Sem nome",
@@ -2412,8 +2480,8 @@ async function upsertParticipantFromApprovedRequest(user) {
     source: user.raw?.source || "approval_request",
     address: snapshot.address || null,
     enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
-    lat: isValidCoord(user.lat, user.lng) ? user.lat : (toNumberOrNull(snapshot.lat) ?? null),
-    lng: isValidCoord(user.lat, user.lng) ? user.lng : (toNumberOrNull(snapshot.lng) ?? null),
+ lat: finalLat,
+lng: finalLng,
     updatedAt: serverTimestamp(),
     updatedBy: STATE.authUser?.uid || null
   };
