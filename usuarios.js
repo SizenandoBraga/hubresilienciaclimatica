@@ -3090,20 +3090,59 @@ function bindEvents() {
     window.location.href = "login.html";
   });
 
-  document.addEventListener("click", async (event) => {
-    const button = event.target.closest("[data-action]");
-    if (!button) return;
+document.addEventListener("click", async (event) => {
+  const popupButton = event.target.closest("[data-popup-action]");
 
-    const action = button.dataset.action;
-    const userId = button.dataset.id;
-    if (!userId) return;
+  if (popupButton) {
+    const popupAction = popupButton.dataset.popupAction;
+    const userId = popupButton.dataset.id;
 
-    if (action === "approve") return approveUser(userId);
-    if (action === "reject") return rejectUser(userId);
-    if (action === "focus") return await focusUserOnMap(userId);
-    if (action === "open") return openUserModal(userId);
-    if (action === "print-label") return printParticipantLabel(userId);
-  });
+    if (popupAction === "add-route") {
+      const user = STATE.users.find((item) => item.id === userId);
+
+      if (!user) {
+        alert("Participante não encontrado.");
+        return;
+      }
+
+      if (!isValidCoord(user.lat, user.lng)) {
+        alert("Este participante ainda não possui coordenadas válidas.");
+        return;
+      }
+
+      addManualPoint(
+        user.lat,
+        user.lng,
+        `${safeText(user.name)} • ${safeText(user.code)}`
+      );
+
+      if (els.routeStatus) {
+        els.routeStatus.textContent = `${safeText(user.name)} adicionado à rota manual.`;
+      }
+
+      showToast("Participante adicionado à rota.");
+      return;
+    }
+
+    if (popupAction === "optimize-route") {
+      await buildOptimizedManualRoute();
+      return;
+    }
+  }
+
+  const button = event.target.closest("[data-action]");
+  if (!button) return;
+
+  const action = button.dataset.action;
+  const userId = button.dataset.id;
+  if (!userId) return;
+
+  if (action === "approve") return approveUser(userId);
+  if (action === "reject") return rejectUser(userId);
+  if (action === "focus") return await focusUserOnMap(userId);
+  if (action === "open") return openUserModal(userId);
+  if (action === "print-label") return printParticipantLabel(userId);
+});
 
   els.closeUserModal?.addEventListener("click", closeUserModal);
   els.modalCloseBtn?.addEventListener("click", closeUserModal);
