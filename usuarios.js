@@ -1874,20 +1874,136 @@ async function buildRoute() {
     if (els.routeStatus) els.routeStatus.textContent = "Rota real indisponível no momento. Exibindo traçado sequencial dos pontos.";
   }
 }
+async function geocodeAndUpdateParticipant(user) {
+  const address =
+    user.address ||
+    user.raw?.enderecoCompleto ||
+    user.raw?.payloadSnapshot?.enderecoCompleto ||
+    buildAddress(user.raw?.payloadSnapshot || user.raw || {});
 
-function focusUserOnMap(userId) {
+  if (!address || address === "—") {
+    alert("Este participante não possui endereço suficiente para buscar coordenadas.");
+    return null;
+  }
+
+  try {
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Buscando coordenadas do participante...";
+    }
+
+    const queryText = `${address}, Porto Alegre, RS, Brasil`;
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=br&q=${encodeURIComponent(queryText)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao consultar geolocalização.");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      alert("Não foi possível localizar este endereço no mapa.");
+      return null;
+    }
+
+    const lat = Number(data[0].lat);
+    const lng = Number(data[0].lon);
+
+    if (!isValidCoord(lat, lng)) {
+      alert("O endereço foi encontrado, mas as coordenadas são inválidas.");
+      return null;
+    }
+
+    if (user.id && !String(user.id).startsWith("approval_")) {
+      await setDoc(
+        doc(db, "participants", user.id),
+        {
+          lat,
+          lng,
+          geocodedAt: serverTimestamp(),
+          geocodedBy: STATE.authUser?.uid || null
+        },
+        { merge: true }
+      );
+    }
+
+    user.lat = lat;
+    user.lng = lng;
+
+    showToast("Coordenadas encontradas e salvas.");
+
+    return { lat, lng };
+  } catch (error) {
+    console.error("Erro ao buscar coordenadas:", error);
+    alert("Não foi possível buscar as coordenadas deste participante.");
+    return null;
+  }
+}
+async function focusUserOnMap(userId) {
   const user = STATE.users.find((item) => item.id === userId);
-  if (!user || !isValidCoord(user.lat, user.lng) || !map) return;
+
+  if (!user) return;
+
   if (!requireUserTerritoryAccess(user, "ver no mapa")) return;
 
-  map.setView([user.lat, user.lng], 16);
+  if (!isValidCoord(user.lat, user.lng)) {
+    const geo = await geocodeAndUpdateParticipant(user);
+
+    if (!geo) return;
+
+    await reloadAll();
+  }
+
+  const updatedUser = STATE.users.find((item) => item.id === userId) || user;
+
+  if (!isValidCoord(updatedUser.lat, updatedUser.lng) || !map) {
+    alert("Ainda não foi possível localizar este participante no mapa.");
+    return;
+  }
+
+  renderMap();
+
+  map.setView([updatedUser.lat, updatedUser.lng], 17);
+
+  let markerFound = null;
 
   userMarkers.forEach((marker) => {
     const pos = marker.getLatLng();
-    if (Math.abs(pos.lat - user.lat) < 0.000001 && Math.abs(pos.lng - user.lng) < 0.000001) {
-      marker.openPopup();
+
+    if (
+      Math.abs(pos.lat - updatedUser.lat) < 0.000001 &&
+      Math.abs(pos.lng - updatedUser.lng) < 0.000001
+    ) {
+      markerFound = marker;
     }
   });
+
+  const popupHtml = `
+    <strong>${safeText(updatedUser.name)}</strong><br>
+    Código: ${safeText(updatedUser.code)}<br>
+    Endereço: ${safeText(updatedUser.address)}<br>
+    Status: ${safeText(updatedUser.status)}<br><br>
+
+    <button class="btn btn-primary" data-popup-action="add-route" data-id="${updatedUser.id}" type="button">
+      Adicionar à rota
+    </button>
+
+    <button class="btn btn-dark" data-popup-action="optimize-route" type="button">
+      Otimizar rota
+    </button>
+  `;
+
+  if (markerFound) {
+    markerFound.bindPopup(popupHtml, { maxWidth: 320 }).openPopup();
+  } else {
+    const marker = L.marker([updatedUser.lat, updatedUser.lng]).addTo(map);
+    marker.bindPopup(popupHtml, { maxWidth: 320 }).openPopup();
+    userMarkers.push(marker);
+  }
+
+  showToast(`${safeText(updatedUser.name)} localizado no mapa.`);
 }
 /* =========================
 ROTA MANUAL AVANÇADA
@@ -2984,7 +3100,7 @@ function bindEvents() {
 
     if (action === "approve") return approveUser(userId);
     if (action === "reject") return rejectUser(userId);
-    if (action === "focus") return focusUserOnMap(userId);
+    if (action === "focus") return await focusUserOnMap(userId);
     if (action === "open") return openUserModal(userId);
     if (action === "print-label") return printParticipantLabel(userId);
   });
