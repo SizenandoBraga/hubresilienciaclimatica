@@ -80,7 +80,6 @@ const ROUTES = {
   }
 };
 
-// Compatibilidade com trechos antigos do arquivo: agora TERRITORIES é gerado a partir do roteamento centralizado.
 const TERRITORIES = Object.fromEntries(
   Object.entries(ROUTES).map(([key, config]) => [
     key,
@@ -130,6 +129,9 @@ const els = {
   btnReload: document.getElementById("btnReload"),
   btnDownloadParticipantsCsv: document.getElementById("btnDownloadParticipantsCsv"),
   btnDownloadParticipantsPdf: document.getElementById("btnDownloadParticipantsPdf"),
+  inputImportParticipants: document.getElementById("inputImportParticipants"),
+  btnExportParticipantsXlsx: document.getElementById("btnExportParticipantsXlsx"),
+  importParticipantsStatus: document.getElementById("importParticipantsStatus"),
   pendingList: document.getElementById("pendingList"),
   activeList: document.getElementById("activeList"),
   pendingCountLabel: document.getElementById("pendingCountLabel"),
@@ -191,15 +193,14 @@ const els = {
   permDocumentos: document.getElementById("permDocumentos"),
   permMapa: document.getElementById("permMapa"),
   permAprovarCadastros: document.getElementById("permAprovarCadastros"),
-  manualRouteAddress: document.getElementById("manualRouteAddress"),
-btnAddManualAddress: document.getElementById("btnAddManualAddress"),
-btnBuildOptimizedManualRoute: document.getElementById("btnBuildOptimizedManualRoute"),
-btnSaveManualRoute: document.getElementById("btnSaveManualRoute"),
-btnClearManualRoute: document.getElementById("btnClearManualRoute"),
-manualPointsList: document.getElementById("manualPointsList"),
-  permGerenciarUsuarios: document.getElementById("permGerenciarUsuarios")
+  permGerenciarUsuarios: document.getElementById("permGerenciarUsuarios"),
 
-  
+  manualRouteAddress: document.getElementById("manualRouteAddress"),
+  btnAddManualAddress: document.getElementById("btnAddManualAddress"),
+  btnBuildOptimizedManualRoute: document.getElementById("btnBuildOptimizedManualRoute"),
+  btnSaveManualRoute: document.getElementById("btnSaveManualRoute"),
+  btnClearManualRoute: document.getElementById("btnClearManualRoute"),
+  manualPointsList: document.getElementById("manualPointsList")
 };
 
 let map = null;
@@ -311,7 +312,7 @@ function normalizeRouteKey(value) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-.replace(/[\s_]+/g, "-")
+    .replace(/[\s_]+/g, "-")
     .trim();
 }
 
@@ -325,9 +326,7 @@ function canonicalTerritoryId(value) {
   for (const [key, config] of Object.entries(ROUTES)) {
     const aliases = [key, ...(config.aliases || [])].map(normalizeRouteKey);
 
-    if (aliases.includes(normalized)) {
-      return key;
-    }
+    if (aliases.includes(normalized)) return key;
   }
 
   return normalized || null;
@@ -402,15 +401,12 @@ function canManageCoopUsers() {
 }
 
 function getMyTerritoryId() {
-  if (STATE.userDoc) {
-    return canonicalTerritoryId(STATE.userDoc.territoryId);
-  }
-
+  if (STATE.userDoc) return canonicalTerritoryId(STATE.userDoc.territoryId);
   return getPageTerritoryId() || null;
 }
 
 function getMyTerritoryLabel() {
-  return STATE.userDoc?.territoryLabel || null;
+  return STATE.userDoc?.territoryLabel || getTerritoryLabelById(getMyTerritoryId());
 }
 
 function canViewUserFromSameTerritory(targetUser) {
@@ -483,6 +479,316 @@ function getTerritoryPageUrl(user) {
     participantCode: code
   });
 }
+
+/* =========================
+IMPORTAÇÃO / EXPORTAÇÃO EXCEL
+========================= */
+
+function normalizeExcelHeader(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+}
+
+function getExcelValue(row, aliases = []) {
+  const normalizedAliases = aliases.map(normalizeExcelHeader);
+  const keys = Object.keys(row || {});
+
+  for (const key of keys) {
+    const normalized = normalizeExcelHeader(key);
+
+    if (normalizedAliases.includes(normalized)) {
+      return row[key];
+    }
+  }
+
+  return null;
+}
+
+function setImportStatus(message, type = "info") {
+  if (!els.importParticipantsStatus) return;
+
+  els.importParticipantsStatus.classList.remove("hidden");
+  els.importParticipantsStatus.textContent = message;
+
+  if (type === "error") {
+    els.importParticipantsStatus.style.background = "#fee2e2";
+    els.importParticipantsStatus.style.color = "#991b1b";
+  } else if (type === "success") {
+    els.importParticipantsStatus.style.background = "#dcfce7";
+    els.importParticipantsStatus.style.color = "#166534";
+  } else {
+    els.importParticipantsStatus.style.background = "#f8fafc";
+    els.importParticipantsStatus.style.color = "#334155";
+  }
+}
+
+function buildImportedParticipant(row, index) {
+  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "vila-pinto";
+  const territoryLabel = getMyTerritoryLabel() || getTerritoryLabelById(territoryId);
+
+  const code = String(getExcelValue(row, [
+    "codigo",
+    "código",
+    "cod",
+    "participantCode",
+    "codigo participante",
+    "código participante"
+  ]) || "").trim();
+
+  const name = String(getExcelValue(row, [
+    "nome",
+    "name",
+    "participante",
+    "participantName",
+    "nome completo"
+  ]) || "").trim();
+
+  if (!name) return null;
+
+  const phone = onlyDigits(getExcelValue(row, [
+    "telefone",
+    "fone",
+    "celular",
+    "whatsapp",
+    "phone",
+    "participantPhone"
+  ]) || "");
+
+  const email = String(getExcelValue(row, [
+    "email",
+    "e-mail",
+    "participantEmail"
+  ]) || "").trim();
+
+  const cpf = onlyDigits(getExcelValue(row, [
+    "cpf",
+    "participantCpf"
+  ]) || "");
+
+  const address = String(getExcelValue(row, [
+    "endereco",
+    "endereço",
+    "endereco completo",
+    "endereço completo",
+    "logradouro",
+    "rua",
+    "address",
+    "enderecoCompleto"
+  ]) || "").trim();
+
+  const routeShift = String(getExcelValue(row, [
+    "rota",
+    "turno",
+    "routeShift",
+    "schedule"
+  ]) || "").trim();
+
+  const localType = String(getExcelValue(row, [
+    "tipo local",
+    "tipolocal",
+    "local",
+    "localType",
+    "codeLocalType"
+  ]) || "casa").trim();
+
+  const householdMembers = String(getExcelValue(row, [
+    "moradores",
+    "membros",
+    "householdMembers",
+    "quantidade moradores",
+    "quantidade de moradores"
+  ]) || "").trim();
+
+  const lat = toNumberOrNull(getExcelValue(row, [
+    "latitude",
+    "lat"
+  ]));
+
+  const lng = toNumberOrNull(getExcelValue(row, [
+    "longitude",
+    "lng",
+    "lon"
+  ]));
+
+  const generatedCode = `IMP-${String(index + 1).padStart(4, "0")}-${Date.now()}`;
+  const participantCode = code || generatedCode;
+
+  return {
+    id: participantCode.replace(/[^a-zA-Z0-9_-]/g, "_"),
+    data: {
+      name,
+      nameLower: name.toLowerCase(),
+      participantCode,
+      participantType: "participante",
+      phone: phone || null,
+      email: email || null,
+      cpf: cpf || null,
+      territoryId,
+      territoryLabel,
+      status: "aprovado",
+      approvalStatus: "approved",
+      decision: "approved",
+      inOperation: "sim",
+      inTerritory: "sim",
+      localType,
+      codeLocalType: localType,
+      householdMembers: householdMembers || null,
+      enderecoCompleto: address || null,
+      routeShift,
+      schedule: routeShift || "A definir",
+      lat: isValidCoord(lat, lng) ? lat : null,
+      lng: isValidCoord(lat, lng) ? lng : null,
+      source: "excel_import",
+      active: true,
+      importedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      updatedBy: STATE.authUser?.uid || null
+    }
+  };
+}
+
+function findExistingImportedParticipant(imported) {
+  const data = imported?.data || {};
+  const code = String(data.participantCode || "").trim().toLowerCase();
+  const cpf = onlyDigits(data.cpf || "");
+  const phone = onlyDigits(data.phone || "");
+
+  return STATE.participants.find((p) => {
+    const sameCode = code && String(p.code || "").trim().toLowerCase() === code;
+    const sameCpf = cpf && onlyDigits(p.cpf || "") === cpf;
+    const samePhone = phone && onlyDigits(p.phone || "") === phone;
+    return sameCode || sameCpf || samePhone;
+  });
+}
+
+async function importParticipantsExcel(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (typeof XLSX === "undefined") {
+    alert("Biblioteca XLSX não carregada. Verifique se o script XLSX foi adicionado no HTML.");
+    return;
+  }
+
+  if (!canManageApprovals()) {
+    alert("Seu perfil não tem permissão para importar participantes.");
+    event.target.value = "";
+    return;
+  }
+
+  try {
+    setImportStatus("Lendo planilha...");
+
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+
+    if (!rows.length) {
+      setImportStatus("A planilha está vazia.", "error");
+      return;
+    }
+
+    const importedParticipants = rows
+      .map((row, index) => buildImportedParticipant(row, index))
+      .filter(Boolean);
+
+    if (!importedParticipants.length) {
+      setImportStatus("Nenhum participante válido encontrado. Verifique se existe a coluna Nome.", "error");
+      return;
+    }
+
+    setImportStatus(`Importando ${importedParticipants.length} participante(s)...`);
+
+    let created = 0;
+    let updated = 0;
+    let ignored = 0;
+
+    for (const imported of importedParticipants) {
+      try {
+        const existing = findExistingImportedParticipant(imported);
+        const docId = existing?.id || imported.id;
+
+        await setDoc(
+          doc(db, "participants", docId),
+          {
+            ...imported.data,
+            createdAt: existing?.raw?.createdAt || serverTimestamp(),
+            createdBy: existing?.raw?.createdBy || STATE.authUser?.uid || null
+          },
+          { merge: true }
+        );
+
+        if (existing) updated++;
+        else created++;
+      } catch (lineError) {
+        console.error("Erro ao importar linha:", imported, lineError);
+        ignored++;
+      }
+    }
+
+    setImportStatus(
+      `Importação concluída. Novos: ${created} • Atualizados: ${updated} • Ignorados: ${ignored}`,
+      "success"
+    );
+
+    showToast("Participantes importados com sucesso.");
+    await reloadAll();
+  } catch (error) {
+    console.error("Erro ao importar planilha:", error);
+    setImportStatus(`Erro ao importar planilha: ${error?.message || "erro desconhecido"}`, "error");
+    alert("Erro ao importar planilha.");
+  } finally {
+    if (els.inputImportParticipants) {
+      els.inputImportParticipants.value = "";
+    }
+  }
+}
+
+function exportParticipantsExcel() {
+  const rows = getParticipantsExportRows();
+
+  if (!rows.length) {
+    alert("Nenhum participante encontrado.");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    alert("Biblioteca XLSX não carregada. Verifique se o script XLSX foi adicionado no HTML.");
+    return;
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(
+    rows.map((row) => ({
+      Nome: row.nome,
+      Código: row.codigo,
+      Telefone: row.telefone,
+      Email: row.email,
+      CPF: row.cpf,
+      Status: row.status,
+      Operação: row.operacao,
+      Rota: row.rota,
+      Território: row.territorio,
+      Endereço: row.endereco,
+      Latitude: row.latitude,
+      Longitude: row.longitude
+    }))
+  );
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Participantes");
+  XLSX.writeFile(workbook, `participantes_${formatDateFileName()}.xlsx`);
+
+  showToast("Excel exportado.");
+}
+
+/* =========================
+FILTROS E ETIQUETAS
+========================= */
 
 function ensureBaseGeneralFilters() {
   const table = els.usersTableBody?.closest("table");
@@ -957,6 +1263,7 @@ function renderCoopUsersList() {
     `;
   }).join("");
 }
+
 async function createFirebaseAuthUser(email, password, displayName) {
   const apiKey = auth.app.options.apiKey;
 
@@ -981,17 +1288,9 @@ async function createFirebaseAuthUser(email, password, displayName) {
   if (!response.ok) {
     const message = data?.error?.message || "Erro ao criar usuário.";
 
-    if (message === "EMAIL_EXISTS") {
-      throw new Error("Este e-mail já está cadastrado.");
-    }
-
-    if (message.includes("WEAK_PASSWORD")) {
-      throw new Error("Senha precisa ter no mínimo 6 caracteres.");
-    }
-
-    if (message === "INVALID_EMAIL") {
-      throw new Error("E-mail inválido.");
-    }
+    if (message === "EMAIL_EXISTS") throw new Error("Este e-mail já está cadastrado.");
+    if (message.includes("WEAK_PASSWORD")) throw new Error("Senha precisa ter no mínimo 6 caracteres.");
+    if (message === "INVALID_EMAIL") throw new Error("E-mail inválido.");
 
     throw new Error(message);
   }
@@ -1001,6 +1300,7 @@ async function createFirebaseAuthUser(email, password, displayName) {
     email: data.email
   };
 }
+
 async function createCoopUserRecord() {
   if (!canManageCoopUsers()) {
     alert("Sem permissão.");
@@ -1022,10 +1322,8 @@ async function createCoopUserRecord() {
   try {
     els.btnCreateCoopUser.disabled = true;
 
-    // 🔥 cria no auth
     const authUser = await createFirebaseAuthUser(email, password, displayName);
 
-    // 🔥 salva no firestore
     await setDoc(doc(db, "users", authUser.uid), {
       uid: authUser.uid,
       name,
@@ -1042,7 +1340,6 @@ async function createCoopUserRecord() {
 
     alert("Usuário criado com sucesso!");
     els.coopUserForm.reset();
-
   } catch (e) {
     console.error(e);
     alert(e.message);
@@ -1292,9 +1589,7 @@ function mergeUsers() {
 
   allItems.forEach((item) => {
     const key = identityKey(item);
-    if (!grouped.has(key)) {
-      grouped.set(key, []);
-    }
+    if (!grouped.has(key)) grouped.set(key, []);
     grouped.get(key).push(item);
   });
 
@@ -1304,7 +1599,7 @@ function mergeUsers() {
     const approved = items.find((i) => i.status === "aprovado");
     if (approved) {
       finalUsers.push(approved);
-            return;
+      return;
     }
 
     const pending = items.filter((i) => i.status === "pendente");
@@ -1321,9 +1616,7 @@ function mergeUsers() {
     }
 
     const inactive = items.find((i) => i.status === "inativo");
-    if (inactive) {
-      finalUsers.push(inactive);
-    }
+    if (inactive) finalUsers.push(inactive);
   });
 
   const scopedUsers = canViewAllTerritories()
@@ -1380,7 +1673,6 @@ function applyFilters() {
 
   renderAll();
 }
-
 /* =========================
 RENDER
 ========================= */
@@ -1529,7 +1821,6 @@ function renderTable() {
     </tr>
   `).join("");
 }
-
 
 function formatDateFileName() {
   const now = new Date();
@@ -1685,7 +1976,7 @@ function downloadParticipantsPdf() {
       6: { cellWidth: 100 }
     },
     margin: { left: 14, right: 14 },
-    didDrawPage: function (data) {
+    didDrawPage: function () {
       const pageSize = doc.internal.pageSize;
       const pageHeight = pageSize.height || pageSize.getHeight();
       const pageWidth = pageSize.width || pageSize.getWidth();
@@ -1874,6 +2165,7 @@ async function buildRoute() {
     if (els.routeStatus) els.routeStatus.textContent = "Rota real indisponível no momento. Exibindo traçado sequencial dos pontos.";
   }
 }
+
 async function geocodeAndUpdateParticipant(user) {
   const address =
     user.address ||
@@ -1933,7 +2225,6 @@ async function geocodeAndUpdateParticipant(user) {
     user.lng = lng;
 
     showToast("Coordenadas encontradas e salvas.");
-
     return { lat, lng };
   } catch (error) {
     console.error("Erro ao buscar coordenadas:", error);
@@ -1941,18 +2232,17 @@ async function geocodeAndUpdateParticipant(user) {
     return null;
   }
 }
+
 async function focusUserOnMap(userId) {
   const user = STATE.users.find((item) => item.id === userId);
 
   if (!user) return;
-
   if (!requireUserTerritoryAccess(user, "ver no mapa")) return;
 
   if (!isValidCoord(user.lat, user.lng)) {
     const geo = await geocodeAndUpdateParticipant(user);
 
     if (!geo) return;
-
     await reloadAll();
   }
 
@@ -1964,7 +2254,6 @@ async function focusUserOnMap(userId) {
   }
 
   renderMap();
-
   map.setView([updatedUser.lat, updatedUser.lng], 17);
 
   let markerFound = null;
@@ -2005,6 +2294,7 @@ async function focusUserOnMap(userId) {
 
   showToast(`${safeText(updatedUser.name)} localizado no mapa.`);
 }
+
 /* =========================
 ROTA MANUAL AVANÇADA
 ========================= */
@@ -2047,7 +2337,6 @@ function renderManualPointsList() {
 }
 
 function addManualPoint(lat, lng, label = "Ponto manual") {
-
   if (!map || typeof L === "undefined") {
     alert("Mapa ainda não carregado.");
     return;
@@ -2086,7 +2375,6 @@ function addManualPoint(lat, lng, label = "Ponto manual") {
   manualMarkers.push(marker);
 
   renderManualPointsList();
-
   map.setView([lat, lng], 16);
 
   showToast("Ponto manual adicionado.");
@@ -2126,7 +2414,6 @@ async function addManualAddressPoint() {
     }
 
     const result = data[0];
-
     const lat = Number(result.lat);
     const lng = Number(result.lon);
 
@@ -2136,7 +2423,6 @@ async function addManualAddressPoint() {
     }
 
     addManualPoint(lat, lng, result.display_name || address);
-
     els.manualRouteAddress.value = "";
 
     if (els.routeStatus) {
@@ -2149,19 +2435,16 @@ async function addManualAddressPoint() {
 }
 
 function focusManualPoint(index) {
-
   const point = manualPoints[index];
   const marker = manualMarkers[index];
 
   if (!point || !marker || !map) return;
 
   map.setView([point.lat, point.lng], 17);
-
   marker.openPopup();
 }
 
 function removeManualPoint(index) {
-
   const marker = manualMarkers[index];
 
   if (marker && map) {
@@ -2172,12 +2455,10 @@ function removeManualPoint(index) {
   manualMarkers.splice(index, 1);
 
   renderManualPointsList();
-
   showToast("Ponto removido.");
 }
 
 function clearManualRoute() {
-
   if (!map) return;
 
   manualMarkers.forEach((marker) => {
@@ -2193,12 +2474,10 @@ function clearManualRoute() {
   }
 
   renderManualPointsList();
-
   showToast("Rota limpa.");
 }
 
 function optimizeManualPointsByNearestNeighbor(base, points) {
-
   const remaining = [...points];
   const ordered = [];
 
@@ -2208,15 +2487,12 @@ function optimizeManualPointsByNearestNeighbor(base, points) {
   };
 
   while (remaining.length) {
-
     let bestIndex = 0;
     let bestDistance = Infinity;
 
     remaining.forEach((point, index) => {
-
       const dx = current.lat - point.lat;
       const dy = current.lng - point.lng;
-
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance < bestDistance) {
@@ -2226,9 +2502,7 @@ function optimizeManualPointsByNearestNeighbor(base, points) {
     });
 
     const next = remaining.splice(bestIndex, 1)[0];
-
     ordered.push(next);
-
     current = next;
   }
 
@@ -2236,7 +2510,6 @@ function optimizeManualPointsByNearestNeighbor(base, points) {
 }
 
 async function buildOptimizedManualRoute() {
-
   if (!map) return;
 
   const base = STATE.territoryBase || DEFAULT_BASE;
@@ -2259,7 +2532,6 @@ async function buildOptimizedManualRoute() {
   ];
 
   try {
-
     if (els.routeStatus) {
       els.routeStatus.textContent = "Calculando rota...";
     }
@@ -2268,7 +2540,6 @@ async function buildOptimizedManualRoute() {
       `https://router.project-osrm.org/route/v1/driving/${coords.map((p) => `${p[0]},${p[1]}`).join(";")}?overview=full&geometries=geojson`;
 
     const response = await fetch(url);
-
     const data = await response.json();
 
     if (!response.ok || !data?.routes?.length) {
@@ -2276,10 +2547,7 @@ async function buildOptimizedManualRoute() {
     }
 
     const route = data.routes[0];
-
-    const latlngs = route.geometry.coordinates.map(
-      ([lng, lat]) => [lat, lng]
-    );
+    const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
 
     routePolyline = L.polyline(latlngs, {
       weight: 5,
@@ -2298,46 +2566,36 @@ async function buildOptimizedManualRoute() {
     };
 
     if (els.routeDistance) {
-      els.routeDistance.textContent =
-        formatDistanceKm(route.distance);
+      els.routeDistance.textContent = formatDistanceKm(route.distance);
     }
 
     if (els.routeDuration) {
-      els.routeDuration.textContent =
-        formatDuration(route.duration);
+      els.routeDuration.textContent = formatDuration(route.duration);
     }
 
     if (els.routeInfo) {
-      els.routeInfo.textContent =
-        `Rota manual: ${ordered.length} ponto(s)`;
+      els.routeInfo.textContent = `Rota manual: ${ordered.length} ponto(s)`;
     }
 
     if (els.routeStatus) {
-      els.routeStatus.textContent =
-        "Rota otimizada.";
+      els.routeStatus.textContent = "Rota otimizada.";
     }
 
     showToast("Rota otimizada.");
-
   } catch (error) {
-
     console.error(error);
-
     alert("Erro ao calcular rota.");
   }
 }
 
 async function saveManualRouteToFirebase() {
-
   if (!manualPoints.length) {
     alert("Adicione pontos.");
     return;
   }
 
   try {
-
-    const territoryId =
-      getMyTerritoryId() || getPageTerritoryId();
+    const territoryId = getMyTerritoryId() || getPageTerritoryId();
 
     await addDoc(
       collection(db, "manualRoutes"),
@@ -2350,65 +2608,36 @@ async function saveManualRouteToFirebase() {
     );
 
     showToast("Rota salva.");
-
   } catch (error) {
-
     console.error(error);
-
     alert("Erro ao salvar rota.");
   }
 }
 
 function enableSimpleManualMapClick() {
-
   if (!map || manualRouteBound) return;
 
   manualRouteBound = true;
 
   map.on("click", (event) => {
-
     const { lat, lng } = event.latlng;
-
-    addManualPoint(
-      lat,
-      lng,
-      "Ponto criado no mapa"
-    );
+    addManualPoint(lat, lng, "Ponto criado no mapa");
   });
 }
 
 function bindAdvancedManualRouteEvents() {
-
   syncManualRouteElements();
 
-  els.btnAddManualAddress?.addEventListener(
-    "click",
-    addManualAddressPoint
-  );
-
-  els.btnBuildOptimizedManualRoute?.addEventListener(
-    "click",
-    buildOptimizedManualRoute
-  );
-
-  els.btnSaveManualRoute?.addEventListener(
-    "click",
-    saveManualRouteToFirebase
-  );
-
-  els.btnClearManualRoute?.addEventListener(
-    "click",
-    clearManualRoute
-  );
+  els.btnAddManualAddress?.addEventListener("click", addManualAddressPoint);
+  els.btnBuildOptimizedManualRoute?.addEventListener("click", buildOptimizedManualRoute);
+  els.btnSaveManualRoute?.addEventListener("click", saveManualRouteToFirebase);
+  els.btnClearManualRoute?.addEventListener("click", clearManualRoute);
 
   document.addEventListener("click", (event) => {
-
     const button = event.target.closest("[data-action]");
-
     if (!button) return;
 
     const action = button.dataset.action;
-
     const index = Number(button.dataset.index);
 
     if (action === "focus-manual-point") {
@@ -2441,9 +2670,7 @@ function openUserModal(userId) {
   if (els.modalAddress) els.modalAddress.value = user.address || "";
   if (els.modalLat) els.modalLat.value = user.lat ?? "";
   if (els.modalLng) els.modalLng.value = user.lng ?? "";
-  if (els.modalRouteShift) {
-    els.modalRouteShift.value = user.routeShift || "";
-  }
+  if (els.modalRouteShift) els.modalRouteShift.value = user.routeShift || "";
 
   if (els.modalRequestInfo) {
     els.modalRequestInfo.textContent = user.linkedApprovalRequestId
@@ -2494,10 +2721,9 @@ function isSameRequestIdentity(req, user) {
 
   return sameCode || (sameCpf && sameCpf !== "") || (samePhone && samePhone !== "");
 }
+
 async function geocodeAddress(address) {
-
   try {
-
     const response = await fetch(
       `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(address)}`
     );
@@ -2517,17 +2743,12 @@ async function geocodeAddress(address) {
       lng: Number(data[0].lon),
       label: data[0].display_name || address
     };
-
   } catch (error) {
-
-    console.error(
-      "Erro ao buscar coordenadas:",
-      error
-    );
-
+    console.error("Erro ao buscar coordenadas:", error);
     return null;
   }
 }
+
 async function upsertParticipantFromApprovedRequest(user) {
   const participantId =
     user.id && !String(user.id).startsWith("approval_")
@@ -2538,41 +2759,31 @@ async function upsertParticipantFromApprovedRequest(user) {
 
   const snapshot = user.raw?.payloadSnapshot || {};
   const isApproved = user.status === "aprovado";
+
   let finalLat =
-  isValidCoord(user.lat, user.lng)
-    ? user.lat
-    : (toNumberOrNull(snapshot.lat) ?? null);
+    isValidCoord(user.lat, user.lng)
+      ? user.lat
+      : (toNumberOrNull(snapshot.lat) ?? null);
 
-let finalLng =
-  isValidCoord(user.lat, user.lng)
-    ? user.lng
-    : (toNumberOrNull(snapshot.lng) ?? null);
+  let finalLng =
+    isValidCoord(user.lat, user.lng)
+      ? user.lng
+      : (toNumberOrNull(snapshot.lng) ?? null);
 
-const addressForGeocode =
-  user.address ||
-  snapshot.enderecoCompleto ||
-  snapshot.address?.addressLine ||
-  buildAddress(snapshot);
+  const addressForGeocode =
+    user.address ||
+    snapshot.enderecoCompleto ||
+    snapshot.address?.addressLine ||
+    buildAddress(snapshot);
 
-if (
-  !isValidCoord(finalLat, finalLng) &&
-  addressForGeocode
-) {
+  if (!isValidCoord(finalLat, finalLng) && addressForGeocode) {
+    const geo = await geocodeAddress(`${addressForGeocode}, Porto Alegre, RS, Brasil`);
 
-  const geo =
-    await geocodeAddress(
-      `${addressForGeocode}, Porto Alegre, RS, Brasil`
-    );
-
-  if (
-    geo &&
-    isValidCoord(geo.lat, geo.lng)
-  ) {
-
-    finalLat = geo.lat;
-    finalLng = geo.lng;
+    if (geo && isValidCoord(geo.lat, geo.lng)) {
+      finalLat = geo.lat;
+      finalLng = geo.lng;
+    }
   }
-}
 
   const payload = {
     name: user.name || snapshot.name || "Sem nome",
@@ -2596,8 +2807,8 @@ if (
     source: user.raw?.source || "approval_request",
     address: snapshot.address || null,
     enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
- lat: finalLat,
-lng: finalLng,
+    lat: finalLat,
+    lng: finalLng,
     updatedAt: serverTimestamp(),
     updatedBy: STATE.authUser?.uid || null
   };
@@ -2617,7 +2828,6 @@ async function approveUser(userId) {
 
   try {
     const batch = writeBatch(db);
-
     const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
 
     sameRequests.forEach((req) => {
@@ -2664,7 +2874,6 @@ async function rejectUser(userId) {
 
   try {
     const batch = writeBatch(db);
-
     const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
 
     sameRequests.forEach((req) => {
@@ -2735,7 +2944,6 @@ async function saveModalUserChanges() {
 
     if (chosenStatus === "aprovado") {
       const batch = writeBatch(db);
-
       const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
 
       sameRequests.forEach((req) => {
@@ -3039,8 +3247,6 @@ EVENTOS
 ========================= */
 
 function bindEvents() {
-
-
   document.getElementById("menuBtn")?.addEventListener("click", openSidebarMenu);
   document.getElementById("sidebarClose")?.addEventListener("click", closeSidebarMenu);
   document.getElementById("mobileOverlay")?.addEventListener("click", closeSidebarMenu);
@@ -3057,7 +3263,7 @@ function bindEvents() {
 
   els.searchInput?.addEventListener("input", applyFilters);
   els.statusFilter?.addEventListener("change", applyFilters);
-  
+
   bindAdvancedManualRouteEvents();
 
   els.routeMode?.addEventListener("change", async () => {
@@ -3073,6 +3279,8 @@ function bindEvents() {
 
   els.btnDownloadParticipantsCsv?.addEventListener("click", downloadParticipantsCsv);
   els.btnDownloadParticipantsPdf?.addEventListener("click", downloadParticipantsPdf);
+  els.inputImportParticipants?.addEventListener("change", importParticipantsExcel);
+  els.btnExportParticipantsXlsx?.addEventListener("click", exportParticipantsExcel);
 
   els.btnCenterBase?.addEventListener("click", () => {
     const base = STATE.territoryBase || DEFAULT_BASE;
@@ -3090,59 +3298,61 @@ function bindEvents() {
     window.location.href = "login.html";
   });
 
-document.addEventListener("click", async (event) => {
-  const popupButton = event.target.closest("[data-popup-action]");
+  document.addEventListener("click", async (event) => {
+    const popupButton = event.target.closest("[data-popup-action]");
 
-  if (popupButton) {
-    const popupAction = popupButton.dataset.popupAction;
-    const userId = popupButton.dataset.id;
+    if (popupButton) {
+      const popupAction = popupButton.dataset.popupAction;
+      const userId = popupButton.dataset.id;
 
-    if (popupAction === "add-route") {
-      const user = STATE.users.find((item) => item.id === userId);
+      if (popupAction === "add-route") {
+        const user = STATE.users.find((item) => item.id === userId);
 
-      if (!user) {
-        alert("Participante não encontrado.");
+        if (!user) {
+          alert("Participante não encontrado.");
+          return;
+        }
+
+        if (!isValidCoord(user.lat, user.lng)) {
+          alert("Este participante ainda não possui coordenadas válidas.");
+          return;
+        }
+
+        addManualPoint(
+          user.lat,
+          user.lng,
+          `${safeText(user.name)} • ${safeText(user.code)}`
+        );
+
+        if (els.routeStatus) {
+          els.routeStatus.textContent = `${safeText(user.name)} adicionado à rota manual.`;
+        }
+
+        showToast("Participante adicionado à rota.");
         return;
       }
 
-      if (!isValidCoord(user.lat, user.lng)) {
-        alert("Este participante ainda não possui coordenadas válidas.");
+      if (popupAction === "optimize-route") {
+        await buildOptimizedManualRoute();
         return;
       }
-
-      addManualPoint(
-        user.lat,
-        user.lng,
-        `${safeText(user.name)} • ${safeText(user.code)}`
-      );
-
-      if (els.routeStatus) {
-        els.routeStatus.textContent = `${safeText(user.name)} adicionado à rota manual.`;
-      }
-
-      showToast("Participante adicionado à rota.");
-      return;
     }
 
-    if (popupAction === "optimize-route") {
-      await buildOptimizedManualRoute();
-      return;
-    }
-  }
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
 
-  const button = event.target.closest("[data-action]");
-  if (!button) return;
+    const action = button.dataset.action;
+    const userId = button.dataset.id;
 
-  const action = button.dataset.action;
-  const userId = button.dataset.id;
-  if (!userId) return;
+    if (action === "focus-manual-point" || action === "remove-manual-point") return;
+    if (!userId) return;
 
-  if (action === "approve") return approveUser(userId);
-  if (action === "reject") return rejectUser(userId);
-  if (action === "focus") return await focusUserOnMap(userId);
-  if (action === "open") return openUserModal(userId);
-  if (action === "print-label") return printParticipantLabel(userId);
-});
+    if (action === "approve") return approveUser(userId);
+    if (action === "reject") return rejectUser(userId);
+    if (action === "focus") return await focusUserOnMap(userId);
+    if (action === "open") return openUserModal(userId);
+    if (action === "print-label") return printParticipantLabel(userId);
+  });
 
   els.closeUserModal?.addEventListener("click", closeUserModal);
   els.modalCloseBtn?.addEventListener("click", closeUserModal);
@@ -3202,9 +3412,11 @@ onAuthStateChanged(auth, async (user) => {
     STATE.userDoc = await loadCurrentUser(user.uid);
 
     if (!enforcePageTerritoryAccess()) return;
+
     bindTerritoryNavigation();
     fillSidebar();
     applyCoopUserPermissionsUI();
+
     await loadTerritoryBase();
     await maybeRequestNotificationPermission();
 
