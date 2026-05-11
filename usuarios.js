@@ -110,6 +110,9 @@ const STATE = {
   unsubCoopUsers: null,
   lastPendingIds: new Set(),
   notificationPermissionAsked: false
+  pendingPage: 1,
+activePage: 1,
+pageSize: 5,
 };
 
 const els = {
@@ -1651,6 +1654,9 @@ function emitPendingNotifications() {
 }
 
 function applyFilters() {
+  STATE.pendingPage = 1;
+STATE.activePage = 1;
+
   const term = String(els.searchInput?.value || "").trim().toLowerCase();
   const status = String(els.statusFilter?.value || "all");
   const operation = String(els.operationFilter?.value || "all");
@@ -1696,58 +1702,90 @@ function computeKpis() {
 function renderApprovedList() {
   if (!els.activeList) return;
 
-  const active = STATE.filteredUsers.filter((u) => u.status === "aprovado");
+  const active = STATE.filteredUsers
+    .filter((u) => u.status === "aprovado")
+    .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "pt-BR"));
 
   if (!active.length) {
     els.activeList.innerHTML = `<div class="empty-state">Nenhum usuário aprovado encontrado.</div>`;
     return;
   }
 
-  els.activeList.innerHTML = active.map((user) => `
-    <article class="user-item">
-      <div class="user-main">
-        <strong>${safeText(user.name)}</strong>
-        <span>Código: ${safeText(user.code)}</span>
-        <span>Telefone: ${safeText(user.phone)}</span>
-        <span>${safeText(user.address)}</span>
-      </div>
+  const limit = STATE.activePage * STATE.pageSize;
+  const visible = active.slice(0, limit);
+  const hasMore = active.length > visible.length;
 
-      <div class="user-actions">
-        <span class="${badgeClass(user.status)}">Aprovado</span>
-        <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
-        <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
+  els.activeList.innerHTML = `
+    ${visible.map((user) => `
+      <article class="user-item">
+        <div class="user-main">
+          <strong>${safeText(user.name)}</strong>
+          <span>Código: ${safeText(user.code)}</span>
+          <span>Telefone: ${safeText(user.phone)}</span>
+          <span>${safeText(user.address)}</span>
+        </div>
+
+        <div class="user-actions">
+          <span class="${badgeClass(user.status)}">Aprovado</span>
+          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
+          <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
+        </div>
+      </article>
+    `).join("")}
+
+    ${hasMore ? `
+      <div class="list-load-more">
+        <button class="btn btn-primary" data-action="load-more-active" type="button">
+          Mostrar próximos 5
+        </button>
       </div>
-    </article>
-  `).join("");
+    ` : ""}
+  `;
 }
 
 function renderPendingList() {
   if (!els.pendingList) return;
 
-  const pending = STATE.filteredUsers.filter((u) => u.status === "pendente");
+  const pending = STATE.filteredUsers
+    .filter((u) => u.status === "pendente")
+    .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "pt-BR"));
 
   if (!pending.length) {
     els.pendingList.innerHTML = `<div class="empty-state">Nenhum usuário pendente de aprovação.</div>`;
     return;
   }
 
-  els.pendingList.innerHTML = pending.map((user) => `
-    <article class="user-item">
-      <div class="user-main">
-        <strong>${safeText(user.name)}</strong>
-        <span>Código: ${safeText(user.code)}</span>
-        <span>Telefone: ${safeText(user.phone)}</span>
-        <span>${safeText(user.address)}</span>
-      </div>
+  const limit = STATE.pendingPage * STATE.pageSize;
+  const visible = pending.slice(0, limit);
+  const hasMore = pending.length > visible.length;
 
-      <div class="user-actions">
-        <span class="${badgeClass(user.status)}">Pendente</span>
-        ${canManageApprovals() ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
-        ${canManageApprovals() ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
-        <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
+  els.pendingList.innerHTML = `
+    ${visible.map((user) => `
+      <article class="user-item">
+        <div class="user-main">
+          <strong>${safeText(user.name)}</strong>
+          <span>Código: ${safeText(user.code)}</span>
+          <span>Telefone: ${safeText(user.phone)}</span>
+          <span>${safeText(user.address)}</span>
+        </div>
+
+        <div class="user-actions">
+          <span class="${badgeClass(user.status)}">Pendente</span>
+          ${canManageApprovals() ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
+          ${canManageApprovals() ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
+          <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
+        </div>
+      </article>
+    `).join("")}
+
+    ${hasMore ? `
+      <div class="list-load-more">
+        <button class="btn btn-primary" data-action="load-more-pending" type="button">
+          Mostrar próximos 5
+        </button>
       </div>
-    </article>
-  `).join("");
+    ` : ""}
+  `;
 }
 
 function getTableFilteredUsers() {
@@ -3345,6 +3383,17 @@ function bindEvents() {
     const userId = button.dataset.id;
 
     if (action === "focus-manual-point" || action === "remove-manual-point") return;
+   if (action === "load-more-active") {
+  STATE.activePage++;
+  renderApprovedList();
+  return;
+}
+
+if (action === "load-more-pending") {
+  STATE.pendingPage++;
+  renderPendingList();
+  return;
+}
     if (!userId) return;
 
     if (action === "approve") return approveUser(userId);
