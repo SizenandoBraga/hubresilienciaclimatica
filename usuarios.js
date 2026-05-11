@@ -109,7 +109,7 @@ const STATE = {
   unsubApprovals: null,
   unsubCoopUsers: null,
   lastPendingIds: new Set(),
-  notificationPermissionAsked: false
+  notificationPermissionAsked: false,
   pendingPage: 1,
 activePage: 1,
 pageSize: 5,
