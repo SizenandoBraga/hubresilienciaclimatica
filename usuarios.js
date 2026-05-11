@@ -110,9 +110,10 @@ const STATE = {
   unsubCoopUsers: null,
   lastPendingIds: new Set(),
   notificationPermissionAsked: false,
-  pendingPage: 1,
-activePage: 1,
-pageSize: 5,
+ pendingPage: 0,
+activePage: 0,
+tablePage: 0,
+pageSize: 5
 };
 
 const els = {
@@ -1654,8 +1655,9 @@ function emitPendingNotifications() {
 }
 
 function applyFilters() {
-  STATE.pendingPage = 1;
-STATE.activePage = 1;
+  STATE.pendingPage = 0;
+STATE.activePage = 0;
+STATE.tablePage = 0;
 
   const term = String(els.searchInput?.value || "").trim().toLowerCase();
   const status = String(els.statusFilter?.value || "all");
@@ -1711,9 +1713,10 @@ function renderApprovedList() {
     return;
   }
 
-  const limit = STATE.activePage * STATE.pageSize;
-  const visible = active.slice(0, limit);
-  const hasMore = active.length > visible.length;
+  const start = STATE.activePage * STATE.pageSize;
+  const end = start + STATE.pageSize;
+  const visible = active.slice(start, end);
+  const totalPages = Math.ceil(active.length / STATE.pageSize);
 
   els.activeList.innerHTML = `
     ${visible.map((user) => `
@@ -1733,13 +1736,17 @@ function renderApprovedList() {
       </article>
     `).join("")}
 
-    ${hasMore ? `
-      <div class="list-load-more">
-        <button class="btn btn-primary" data-action="load-more-active" type="button">
-          Mostrar próximos 5
-        </button>
-      </div>
-    ` : ""}
+    <div class="list-pagination">
+      <button class="btn btn-ghost" data-action="prev-active-page" type="button" ${STATE.activePage === 0 ? "disabled" : ""}>
+        Anteriores
+      </button>
+
+      <span>Página ${STATE.activePage + 1} de ${totalPages}</span>
+
+      <button class="btn btn-primary" data-action="next-active-page" type="button" ${STATE.activePage >= totalPages - 1 ? "disabled" : ""}>
+        Próximos
+      </button>
+    </div>
   `;
 }
 
@@ -1755,9 +1762,10 @@ function renderPendingList() {
     return;
   }
 
-  const limit = STATE.pendingPage * STATE.pageSize;
-  const visible = pending.slice(0, limit);
-  const hasMore = pending.length > visible.length;
+  const start = STATE.pendingPage * STATE.pageSize;
+  const end = start + STATE.pageSize;
+  const visible = pending.slice(start, end);
+  const totalPages = Math.ceil(pending.length / STATE.pageSize);
 
   els.pendingList.innerHTML = `
     ${visible.map((user) => `
@@ -1778,16 +1786,19 @@ function renderPendingList() {
       </article>
     `).join("")}
 
-    ${hasMore ? `
-      <div class="list-load-more">
-        <button class="btn btn-primary" data-action="load-more-pending" type="button">
-          Mostrar próximos 5
-        </button>
-      </div>
-    ` : ""}
+    <div class="list-pagination">
+      <button class="btn btn-ghost" data-action="prev-pending-page" type="button" ${STATE.pendingPage === 0 ? "disabled" : ""}>
+        Anteriores
+      </button>
+
+      <span>Página ${STATE.pendingPage + 1} de ${totalPages}</span>
+
+      <button class="btn btn-primary" data-action="next-pending-page" type="button" ${STATE.pendingPage >= totalPages - 1 ? "disabled" : ""}>
+        Próximos
+      </button>
+    </div>
   `;
 }
-
 function getTableFilteredUsers() {
   const statusFilter = String(els.labelStatusFilter?.value || "all");
   const routeFilter = String(els.labelRouteFilter?.value ?? "all");
@@ -1830,13 +1841,17 @@ function renderTable() {
   ensureTableHeaderForLabels();
 
   const allUsers = getTableFilteredUsers();
+  const totalPages = Math.ceil(allUsers.length / STATE.pageSize);
+const start = STATE.tablePage * STATE.pageSize;
+const end = start + STATE.pageSize;
+const visibleUsers = allUsers.slice(start, end);
 
   if (!allUsers.length) {
     els.usersTableBody.innerHTML = `<tr><td colspan="6">Nenhum participante encontrado.</td></tr>`;
     return;
   }
 
-  els.usersTableBody.innerHTML = allUsers.map((user) => `
+ els.usersTableBody.innerHTML = visibleUsers.map((user) => `
     <tr>
       <td>
         <strong>${safeText(user.name)}</strong><br>
@@ -1858,6 +1873,29 @@ function renderTable() {
       </td>
     </tr>
   `).join("");
+  const tableWrap = els.usersTableBody.closest(".table-wrap");
+let pagination = document.getElementById("tablePagination");
+
+if (!pagination && tableWrap) {
+  pagination = document.createElement("div");
+  pagination.id = "tablePagination";
+  pagination.className = "list-pagination";
+  tableWrap.appendChild(pagination);
+}
+
+if (pagination) {
+  pagination.innerHTML = `
+    <button class="btn btn-ghost" data-action="prev-table-page" type="button" ${STATE.tablePage === 0 ? "disabled" : ""}>
+      Anteriores
+    </button>
+
+    <span>Página ${STATE.tablePage + 1} de ${totalPages || 1}</span>
+
+    <button class="btn btn-primary" data-action="next-table-page" type="button" ${STATE.tablePage >= totalPages - 1 ? "disabled" : ""}>
+      Próximos
+    </button>
+  `;
+}
 }
 
 function formatDateFileName() {
@@ -3383,9 +3421,39 @@ function bindEvents() {
     const userId = button.dataset.id;
 
     if (action === "focus-manual-point" || action === "remove-manual-point") return;
-   if (action === "load-more-active") {
+if (action === "next-active-page") {
   STATE.activePage++;
   renderApprovedList();
+  return;
+}
+
+if (action === "prev-active-page") {
+  STATE.activePage = Math.max(0, STATE.activePage - 1);
+  renderApprovedList();
+  return;
+}
+
+if (action === "next-pending-page") {
+  STATE.pendingPage++;
+  renderPendingList();
+  return;
+}
+
+if (action === "prev-pending-page") {
+  STATE.pendingPage = Math.max(0, STATE.pendingPage - 1);
+  renderPendingList();
+  return;
+}
+
+if (action === "next-table-page") {
+  STATE.tablePage++;
+  renderTable();
+  return;
+}
+
+if (action === "prev-table-page") {
+  STATE.tablePage = Math.max(0, STATE.tablePage - 1);
+  renderTable();
   return;
 }
 
