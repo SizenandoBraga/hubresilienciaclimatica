@@ -28,7 +28,7 @@ const ROUTES = {
       home: "cooperativa-vila-pinto.html",
       usuarios: "usuarios-vila-pinto.html",
       coletas: "cadastro-coletas-vila-pinto.html",
-      usuariosCooperativa: "usuarios-cooperativa.html",
+      usuariosCooperativa: "usuario-cooperativa-vila-pinto.html",
       dashboard: "dashboard-cooperativa.html"
     },
     base: {
@@ -52,8 +52,8 @@ const ROUTES = {
       home: "cooperativa-cooadesc.html",
       usuarios: "usuarios-cooadesc.html",
       coletas: "cadastro-coletas-cooadesc.html",
-      usuariosCooperativa: "usuarios-cooperativa.html",
-      dashboard: "dashboard-cooperativa.html"
+      usuariosCooperativa: "usuario-cooperativa-cooadesc.html",
+      dashboard: "dashboard-cooperativa-cooadesc.html"
     },
     base: {
       label: "COOADESC",
@@ -69,8 +69,8 @@ const ROUTES = {
       home: "cooperativa-padre-cacique.html",
       usuarios: "usuarios-padre-cacique.html",
       coletas: "cadastro-coletas-padre-cacique.html",
-      usuariosCooperativa: "usuarios-cooperativa.html",
-      dashboard: "dashboard-cooperativa.html"
+      usuariosCooperativa: "usuario-cooperativa-padre-cacique.html",
+      dashboard: "dashboard-cooperativa-padre-cacique.html"
     },
     base: {
       label: "Padre Cacique",
