@@ -246,7 +246,7 @@ body.sidebar-open #sidebarOverlay {
 .nav-link:hover,
 .nav-button:hover {
   transform: translateY(-1px);
-  background: rgba(255, 255, 255, 0.22);
+  background: var(--orange);
   border-color: rgba(255, 255, 255, 0.22);
 }
 
