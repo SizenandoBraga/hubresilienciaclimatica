@@ -55,86 +55,241 @@
     <section class="hero hero-premium" data-reveal>
       
     </section>
+<!-- =========================================================
+ HERO PREMIUM + INDICADORES
+========================================================= -->
+
 <section class="hero hero-premium" data-reveal>
- <div class="container hero-shell">
-        <div class="hero-split">
-          <div class="hero-copy">
-            
 
-            <h1 class="hero-title">
-              <span class="hero-title-line">Um ponto de encontro para fortalecer a</span>
-              <span class="hero-title-highlight">Resiliência Climática</span>
-              <span class="hero-title-line">nos centros urbanos</span>
-            </h1>
+  <!-- HERO -->
+  <div class="container hero-shell">
 
-            <p class="hero-description">
-              O Núcleo de Soluções para Resíduos Urbanos é uma plataforma digital e presencial
-              que conecta cooperativas, comunidades, técnicos e gestores públicos.
-               Uma plataforma construída para integrar pessoas, dados, cooperativas e territórios
-              em torno de soluções urbanas mais justas, regenerativas e resilientes.
-            </p>
+    <div class="hero-split">
 
-          </div>
+      <!-- TEXTO -->
+      <div class="hero-copy">
 
-          <div class="hero-image">
-            <div class="hero-carousel" id="heroCarousel">
-              <div class="hero-carousel-track">
-                <div class="hero-slide is-active">
-                  <img src="img/BANNER-SITE-GUARDIOES-D.png" alt="Guardiões Urbanos" />
-                </div>
-                <div class="hero-slide">
-                  <img src="img/BANNER-SITE-GUARDIOES-E.png" alt="Logotipo NSRU" />
-                </div>
-               
-              </div>
+        <h1 class="hero-title">
 
-              <button class="carousel-btn carousel-prev" id="carouselPrev" type="button" aria-label="Imagem anterior">‹</button>
-              <button class="carousel-btn carousel-next" id="carouselNext" type="button" aria-label="Próxima imagem">›</button>
+          <span class="hero-title-line">
+            Um ponto de encontro para fortalecer a
+          </span>
 
-              <div class="carousel-dots" id="carouselDots">
-                <button class="carousel-dot is-active" type="button" data-slide="0" aria-label="Ir para slide 1"></button>
-                <button class="carousel-dot" type="button" data-slide="1" aria-label="Ir para slide 2"></button>
-                
-              </div>
-            </div>
-          </div>
+          <span class="hero-title-highlight">
+            Resiliência Climática
+          </span>
+
+          <span class="hero-title-line">
+            nos centros urbanos
+          </span>
+
+        </h1>
+
+        <p class="hero-description">
+          O Núcleo de Soluções para Resíduos Urbanos é uma plataforma digital e presencial
+          que conecta cooperativas, comunidades, técnicos e gestores públicos.
+          Uma plataforma construída para integrar pessoas, dados, cooperativas e territórios
+          em torno de soluções urbanas mais justas, regenerativas e resilientes.
+        </p>
+
+        <div class="hero-bottom-note">
+          O projeto promove integração territorial, fortalecimento das cooperativas,
+          monitoramento climático e gestão inteligente de resíduos urbanos.
         </div>
-      
 
-  <div class="container hero-indicators">
-    <div class="cards-grid five metrics-grid-custom">
-      <div class="metric-card metric-green">
-        <div class="metric-label">Cadastrados</div>
-        <div class="metric-value"><span class="kcount" id="metricUsers">0</span></div>
-        <div class="metric-hint">Total de usuários cadastrados em todos os territórios.</div>
       </div>
 
-      <div class="metric-card metric-blue">
-        <div class="metric-label">Coletas</div>
-        <div class="metric-value"><span class="kcount" id="metricColetas">0</span></div>
-        <div class="metric-hint">Registros de coletas cadastrados na plataforma.</div>
+      <!-- CARROSSEL -->
+      <div class="hero-image">
+
+        <div class="hero-carousel" id="heroCarousel">
+
+          <div class="hero-carousel-track">
+
+            <!-- SLIDE 1 -->
+            <div class="hero-slide is-active">
+              <img
+                src="img/BANNER-SITE-GUARDIOES-D.png"
+                alt="Guardiões Urbanos"
+                loading="eager"
+              />
+            </div>
+
+            <!-- SLIDE 2 -->
+            <div class="hero-slide">
+              <img
+                src="img/BANNER-SITE-GUARDIOES-E.png"
+                alt="Logotipo NSRU"
+                loading="lazy"
+              />
+            </div>
+
+          </div>
+
+          <!-- BOTÕES -->
+          <button
+            class="carousel-btn carousel-prev"
+            id="carouselPrev"
+            type="button"
+            aria-label="Imagem anterior"
+          >
+            ‹
+          </button>
+
+          <button
+            class="carousel-btn carousel-next"
+            id="carouselNext"
+            type="button"
+            aria-label="Próxima imagem"
+          >
+            ›
+          </button>
+
+          <!-- DOTS -->
+          <div class="carousel-dots" id="carouselDots">
+
+            <button
+              class="carousel-dot is-active"
+              type="button"
+              data-slide="0"
+              aria-label="Ir para slide 1"
+            ></button>
+
+            <button
+              class="carousel-dot"
+              type="button"
+              data-slide="1"
+              aria-label="Ir para slide 2"
+            ></button>
+
+          </div>
+
+        </div>
+
       </div>
 
-      <div class="metric-card metric-orange">
-        <div class="metric-label">Planos ativos</div>
-        <div class="metric-value"><span class="kcount" id="metricApprovals">0</span></div>
-        <div class="metric-hint">Planos e fluxos ativos em andamento.</div>
-      </div>
-
-      <div class="metric-card metric-dark">
-        <div class="metric-label">CRGRs ativas</div>
-        <div class="metric-value"><span class="kcount" id="metricCrgrs">0</span></div>
-        <div class="metric-hint">Centros ativos na rede territorial.</div>
-      </div>
-
-      <div class="metric-card metric-alert">
-        <div class="metric-label">Alertas</div>
-        <div class="metric-value"><span class="kcount" id="metricAlerts">0</span></div>
-        <div class="metric-hint">Alertas cadastrados e monitorados na plataforma.</div>
-      </div>
     </div>
+
   </div>
+
+  <!-- INDICADORES -->
+  <div class="container hero-indicators">
+
+    <div class="section-shell-content">
+
+      <!-- TÍTULO -->
+      <div class="section-head">
+
+        <div>
+
+          <h2>
+            Panorama geral dos territórios
+          </h2>
+
+          <p>
+            Indicadores consolidados de cadastrados, coletas, planos,
+            CRGRs e alertas considerando todos os territórios
+            integrados à plataforma.
+          </p>
+
+        </div>
+
+      </div>
+
+      <!-- GRID -->
+      <div class="cards-grid five metrics-grid-custom">
+
+        <!-- CARD -->
+        <div class="metric-card metric-green">
+
+          <div class="metric-label">
+            Cadastrados
+          </div>
+
+          <div class="metric-value">
+            <span class="kcount" id="metricUsers">0</span>
+          </div>
+
+          <div class="metric-hint">
+            Total de usuários cadastrados em todos os territórios.
+          </div>
+
+        </div>
+
+        <!-- CARD -->
+        <div class="metric-card metric-blue">
+
+          <div class="metric-label">
+            Coletas
+          </div>
+
+          <div class="metric-value">
+            <span class="kcount" id="metricColetas">0</span>
+          </div>
+
+          <div class="metric-hint">
+            Registros de coletas cadastrados na plataforma.
+          </div>
+
+        </div>
+
+        <!-- CARD -->
+        <div class="metric-card metric-orange">
+
+          <div class="metric-label">
+            Planos ativos
+          </div>
+
+          <div class="metric-value">
+            <span class="kcount" id="metricApprovals">0</span>
+          </div>
+
+          <div class="metric-hint">
+            Planos e fluxos ativos em andamento.
+          </div>
+
+        </div>
+
+        <!-- CARD -->
+        <div class="metric-card metric-dark">
+
+          <div class="metric-label">
+            CRGRs ativas
+          </div>
+
+          <div class="metric-value">
+            <span class="kcount" id="metricCrgrs">0</span>
+          </div>
+
+          <div class="metric-hint">
+            Centros ativos na rede territorial.
+          </div>
+
+        </div>
+
+        <!-- CARD -->
+        <div class="metric-card metric-alert">
+
+          <div class="metric-label">
+            Alertas
+          </div>
+
+          <div class="metric-value">
+            <span class="kcount" id="metricAlerts">0</span>
+          </div>
+
+          <div class="metric-hint">
+            Alertas cadastrados e monitorados na plataforma.
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
   </div>
+
 </section>
     <div class="section-gap"></div>
 
