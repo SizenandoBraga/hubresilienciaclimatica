@@ -31,15 +31,21 @@
 }
 
 #crgr {
-  background: linear-gradient(135deg, #f4f4ef 0%, #ffffff 100%);
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255,255,255,.14), transparent 34%),
+    linear-gradient(135deg, #ef6b22 0%, #f2853d 100%);
 }
 
 #faq {
-  background: linear-gradient(135deg, #2FA8D8 0%, #1f92bf 100%);
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255,255,255,.14), transparent 34%),
+    linear-gradient(135deg, #2FA8D8 0%, #1f92bf 100%);
 }
 
 #parcerias {
-  background: linear-gradient(135deg, #3c3a39 0%, #1f1e1d 100%);
+  background:
+    radial-gradient(circle at 12% 12%, rgba(255,255,255,.14), transparent 34%),
+    linear-gradient(135deg, #3c3a39 0%, #1f1e1d 100%);
 }
 
 /* =========================================================
@@ -279,6 +285,9 @@
 .metric-value {
   font-size: clamp(26px,2.8vw,36px);
   font-weight: 900;
+  color: #ffffff;
+  line-height: 1;
+  letter-spacing: -1px;
 }
 
 .metric-hint {
