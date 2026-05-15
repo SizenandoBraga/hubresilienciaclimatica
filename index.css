@@ -24,20 +24,14 @@
    BACKGROUNDS DAS SEÇÕES
 ========================================================= */
 
-.hero,
-#indicadores {
+.hero {
   background:
     radial-gradient(circle at 12% 12%, rgba(255,255,255,.18), transparent 34%),
     linear-gradient(135deg, #62B32F 0%, #81B92A 100%);
 }
 
-#pilares {
-  background: linear-gradient(135deg, #f4f4ef 0%, #ffffff 100%);
-}
-
 #crgr {
-  background: linear-gradient(135deg, #ef6b22 0%, #f2853d 100%);
- 
+  background: linear-gradient(135deg, #f4f4ef 0%, #ffffff 100%);
 }
 
 #faq {
@@ -52,26 +46,21 @@
    ESPAÇAMENTO DAS SEÇÕES
 ========================================================= */
 
-.section-gap {
-  height: 0;
-}
-
 .hero {
   padding: 34px 0 28px;
 }
 
-#pilares,
 #crgr,
 #faq {
-  padding: 34px 0;
+  padding: 42px 0;
 }
 
 #parcerias {
-  padding: 34px 0 44px;
+  padding: 42px 0 52px;
 }
 
 /* =========================================================
-   HERO PREMIUM
+   HERO
 ========================================================= */
 
 .hero-shell {
@@ -95,7 +84,6 @@
 
 .hero-copy {
   padding: 34px 36px 30px;
-  max-width: 720px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -132,24 +120,8 @@
   margin-top: 14px;
   max-width: 650px;
   font-size: 15.5px;
-  line-height: 1.55;
+  line-height: 1.6;
   color: #565b5f;
-}
-
-.hero-bottom-note {
-  margin-top: 14px;
-  padding: 14px 16px;
-  border-radius: 16px;
-  background:
-    linear-gradient(
-      135deg,
-      rgba(98,179,47,.12),
-      rgba(47,168,216,.10)
-    );
-  border: 1px solid rgba(98,179,47,.18);
-  font-size: 14px;
-  line-height: 1.55;
-  color: #3c3a39;
 }
 
 /* =========================================================
@@ -167,8 +139,8 @@
 .hero-carousel {
   position: relative;
   width: 100%;
-  min-height: 340px;
-  max-height: 410px;
+  min-height: 360px;
+  max-height: 430px;
   border-radius: 20px;
   overflow: hidden;
   background:
@@ -178,7 +150,6 @@
       rgba(255,255,255,.48) 58%,
       rgba(255,255,255,.10) 100%
     );
-  border: 1px solid rgba(255,255,255,.36);
 }
 
 .hero-carousel-track {
@@ -191,12 +162,9 @@
 .hero-slide {
   position: absolute;
   inset: 0;
-
   display: none;
-
   align-items: stretch;
   justify-content: stretch;
-
   padding: 0;
 }
 
@@ -206,22 +174,11 @@
 }
 
 .hero-slide img {
-  display: block;
-
   width: 100%;
   height: 100%;
-
   object-fit: cover;
   object-position: center;
-
-  border-radius: 16px;
-
-  filter:
-    brightness(1.03)
-    contrast(1.02)
-    saturate(1.04);
-
-  transform: scale(1.01);
+  border-radius: 18px;
 }
 
 @keyframes heroFade {
@@ -251,8 +208,6 @@
   z-index: 6;
   transform: translateX(-50%);
   display: flex;
-  align-items: center;
-  justify-content: center;
   gap: 7px;
   padding: 6px 10px;
   border-radius: 999px;
@@ -280,93 +235,55 @@
 ========================================================= */
 
 .hero-indicators {
-  margin-top: 18px;
-}
-
-.hero-indicators .section-shell-content {
-  padding: 22px 24px;
+  padding: 0 28px 28px;
 }
 
 .metric-card {
   position: relative;
-  isolation: isolate;
   min-height: 112px;
   padding: 14px;
   border-radius: 20px;
   overflow: hidden;
-  border: 1px solid rgba(255,255,255,.22);
-  box-shadow:
-    0 14px 30px rgba(31,30,29,.13),
-    inset 0 1px 0 rgba(255,255,255,.22);
+  color: #fff;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  transition:
-    transform .25s ease,
-    box-shadow .25s ease;
-}
-
-.metric-card:hover {
-  transform: translateY(-3px);
-}
-
-.metric-card::after {
-  content: "";
-  position: absolute;
-  right: -34px;
-  bottom: -48px;
-  width: 110px;
-  height: 110px;
-  border-radius: 999px;
-  background: rgba(255,255,255,.15);
-  z-index: -1;
 }
 
 .metric-green {
   background: linear-gradient(135deg,#62B32F,#81B92A);
-  color: #fff;
 }
 
 .metric-blue {
   background: linear-gradient(135deg,#2FA8D8,#1f8dbb);
-  color: #fff;
 }
 
 .metric-orange {
   background: linear-gradient(135deg,#ef6b22,#d85a15);
-  color: #fff;
 }
 
 .metric-dark {
   background: linear-gradient(135deg,#3c3a39,#1f1e1d);
-  color: #fff;
 }
 
 .metric-alert {
   background: linear-gradient(135deg,#d64545,#b93333);
-  color: #fff;
 }
 
 .metric-label {
-  color: rgba(255,255,255,.92);
   font-size: 13px;
   font-weight: 800;
-  letter-spacing: .2px;
   text-transform: uppercase;
 }
 
 .metric-value {
   font-size: clamp(26px,2.8vw,36px);
   font-weight: 900;
-  color: #fff;
-  line-height: 1;
-  letter-spacing: -1px;
 }
 
 .metric-hint {
-  font-size: 11.5px;
-  line-height: 1.35;
-  color: rgba(255,255,255,.9);
+  font-size: 12px;
+  line-height: 1.45;
 }
 
 /* =========================================================
@@ -374,7 +291,7 @@
 ========================================================= */
 
 .section-shell-content {
-  padding: 28px 26px;
+  padding: 32px;
   border-radius: 26px;
   background: rgba(255,255,255,.96);
   border: 1px solid rgba(60,58,57,.08);
@@ -388,8 +305,7 @@
 }
 
 .section-head h2,
-.crgr-top h2,
-.section-copy h2 {
+.crgr-top h2 {
   margin: 0;
   font-size: clamp(28px,3vw,38px);
   line-height: 1.08;
@@ -398,13 +314,11 @@
 }
 
 .section-head p,
-.section-text,
-.section-copy .section-text {
+.section-text {
   margin: 10px 0 0;
-  max-width: 860px;
   font-size: 15.8px;
-  line-height: 1.65;
-  color: var(--text-soft);
+  line-height: 1.7;
+  color: #565b5f;
 }
 
 /* =========================================================
@@ -416,44 +330,82 @@
   gap: 18px;
 }
 
-.cards-grid.two {
-  grid-template-columns: repeat(2,minmax(0,1fr));
-}
-
 .cards-grid.five {
   grid-template-columns: repeat(5,minmax(0,1fr));
+}
+
+/* =========================================================
+   CRGR CENTRALIZADO
+========================================================= */
+
+.crgr-top-centered {
+  text-align: center;
+  align-items: center;
+  max-width: 920px;
+  margin: 0 auto 32px;
+}
+
+.crgr-top-centered .section-text {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 860px;
+}
+
+.crgr-top-centered .map-helper-box {
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 760px;
+  text-align: center;
+}
+
+.map-helper-box {
+  margin-top: 18px;
+  padding: 18px 22px;
+  border-radius: 18px;
+  background: linear-gradient(
+    135deg,
+    rgba(98,179,47,.10),
+    rgba(47,168,216,.08)
+  );
+  border: 1px solid rgba(98,179,47,.16);
+}
+
+.map-helper-box strong {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 15px;
+  color: #151515;
+}
+
+.map-helper-box span {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: #4f5558;
 }
 
 /* =========================================================
    MAPA
 ========================================================= */
 
-.crgr-top {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+.crgr-bottom-map-only {
+  display: block;
+  max-width: 1000px;
+  margin: 0 auto;
 }
 
-.crgr-bottom {
-  display: grid;
-  grid-template-columns:
-    minmax(0,1.45fr)
-    minmax(300px,.55fr);
-  gap: 22px;
-  align-items: stretch;
-  margin-top: 22px;
+.crgr-bottom-map-only .map-panel {
+  width: 100%;
 }
 
 .map-panel {
-  margin-top: 0;
-  padding: 12px;
-  border-radius: 22px;
+  padding: 14px;
+  border-radius: 24px;
   background: #f8f8f3;
 }
 
 .map-box {
   width: 100%;
-  min-height: 390px;
+  min-height: 500px;
   border-radius: 18px;
   overflow: hidden;
 }
@@ -462,17 +414,32 @@
    FAQ
 ========================================================= */
 
+.faq-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
 .faq-item {
   border-radius: 18px;
   overflow: hidden;
+  background: rgba(255,255,255,.96);
 }
 
 .faq-item summary {
   padding: 18px 20px;
+  cursor: pointer;
+  font-weight: 700;
+  list-style: none;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
 }
 
 .faq-item p {
   padding: 0 20px 18px;
+  line-height: 1.7;
 }
 
 /* =========================================================
@@ -495,318 +462,154 @@
   padding: 20px;
   border-radius: 22px;
   background: #fff;
-  box-shadow: 0 12px 28px rgba(60,58,57,.08);
 }
 
 .partner-logo {
   max-width: 150px;
   max-height: 86px;
-  width: auto;
-  height: auto;
   object-fit: contain;
 }
 
-
 /* =========================================================
-   MOBILE COMPLETO
+   RESPONSIVO
 ========================================================= */
 
-@media (max-width:768px) {
+@media (max-width:1180px) {
 
-  html {
-    scroll-behavior: smooth;
+  .hero-split {
+    grid-template-columns: 56% 44%;
   }
 
-  body {
-    overflow-x: hidden;
-    text-rendering: optimizeLegibility;
-    -webkit-font-smoothing: antialiased;
+  .cards-grid.five {
+    grid-template-columns: repeat(3,minmax(0,1fr));
   }
 
-  img,
-  video,
-  iframe {
-    max-width: 100%;
+  .partner-grid-logos {
+    grid-template-columns: repeat(2,minmax(0,1fr));
   }
+}
 
-  button,
-  a,
-  summary {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .btn,
-  .small-btn,
-  button,
-  summary {
-    min-height: 44px;
-  }
-
-  /* =========================================================
-     CONTAINER
-  ========================================================= */
-
-  .container {
-    padding: 0 14px;
-  }
-
-  /* =========================================================
-     HERO
-  ========================================================= */
-
-  .hero {
-    padding: 18px 0 18px;
-  }
-
-  .hero-shell {
-    width: 100%;
-    border-radius: 22px;
-    overflow: hidden;
-  }
+@media (max-width:980px) {
 
   .hero-split {
     grid-template-columns: 1fr;
   }
 
   .hero-copy {
-    padding: 24px 20px 12px;
-    max-width: 100%;
+    padding: 28px 24px 18px;
   }
 
-  /* =========================================================
-     TITULO
-  ========================================================= */
+  .hero-image {
+    padding: 0 18px 18px;
+  }
 
-  .hero-title {
-    line-height: 1.04;
+  .cards-grid.five {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width:768px) {
+
+  body {
+    overflow-x: hidden;
+  }
+
+  .container {
+    padding: 0 14px;
+  }
+
+  .hero {
+    padding: 18px 0;
+  }
+
+  .hero-shell {
+    width: 100%;
+    border-radius: 22px;
+  }
+
+  .hero-copy {
+    padding: 24px 20px 12px;
   }
 
   .hero-title-line {
     font-size: clamp(24px, 7vw, 32px);
-    line-height: 1.08;
-    letter-spacing: -.5px;
   }
 
   .hero-title-highlight {
     font-size: clamp(34px, 10vw, 42px);
-    line-height: 1.02;
-    letter-spacing: -.8px;
   }
 
-  /* =========================================================
-     TEXTOS
-  ========================================================= */
-
   .hero-description,
-  .hero-bottom-note,
   .section-text,
-  .section-head p,
-  .section-copy .section-text,
-  .card p,
-  .faq-item p,
   .metric-hint {
     font-size: 15.5px;
     line-height: 1.72;
   }
-
-  .hero-description {
-    margin-top: 14px;
-  }
-
-  .hero-bottom-note {
-    margin-top: 12px;
-    padding: 14px;
-  }
-
-  /* =========================================================
-     CARROSSEL
-  ========================================================= */
 
   .hero-image {
     padding: 0 14px 14px;
   }
 
   .hero-carousel {
-    width: 100%;
-
     min-height: 230px;
     max-height: 260px;
-
     border-radius: 18px;
-
     overflow: hidden;
-  }
-
-  .hero-carousel-track {
-    width: 100%;
-    height: 100%;
   }
 
   .hero-slide {
-    inset: 0;
-
     padding: 8px;
-
     overflow: hidden;
-
-    align-items: center;
-    justify-content: center;
   }
 
   .hero-slide img {
     width: 100%;
     height: 100%;
-
     max-width: 100%;
     max-height: 100%;
-
     object-fit: contain;
     object-position: center;
-
     border-radius: 14px;
-
-    transform: none;
   }
-
-  .carousel-dots {
-    bottom: 6px;
-  }
-
-  .carousel-dot {
-    width: 7px;
-    height: 7px;
-  }
-
-  .carousel-dot.is-active {
-    width: 20px;
-  }
-
-  /* =========================================================
-     INDICADORES
-  ========================================================= */
 
   .hero-indicators {
-    margin-top: 14px;
+    padding: 0 16px 20px;
   }
 
-  .hero-indicators .section-shell-content {
-    padding: 20px 16px;
-  }
-
-  .cards-grid.five,
-  .cards-grid.two {
+  .cards-grid.five {
     grid-template-columns: 1fr;
   }
 
   .metric-card {
     min-height: 118px;
-    padding: 16px;
-    border-radius: 18px;
-  }
-
-  .metric-label {
-    font-size: 13px;
   }
 
   .metric-value {
     font-size: 34px;
   }
 
-  .metric-hint {
-    font-size: 14px;
-    line-height: 1.55;
-  }
-
-  /* =========================================================
-     SEÇÕES
-  ========================================================= */
-
   .section-shell-content {
     padding: 24px 16px;
-    border-radius: 22px;
-  }
-
-  .section-head {
-    margin-bottom: 18px;
   }
 
   .section-head h2,
-  .crgr-top h2,
-  .section-copy h2 {
+  .crgr-top h2 {
     font-size: 27px;
     line-height: 1.16;
-    letter-spacing: -.4px;
-  }
-
-  /* =========================================================
-     MAPA
-  ========================================================= */
-
-  .crgr-bottom {
-    grid-template-columns: 1fr;
-  }
-
-  .map-panel {
-    padding: 10px;
   }
 
   .map-box {
-    min-height: 300px;
+    min-height: 340px;
   }
-
-  .map-helper-box {
-    padding: 14px;
-    font-size: 14.5px;
-    line-height: 1.6;
-  }
-
-  .action-row {
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .action-row .btn {
-    width: 100%;
-    justify-content: center;
-    text-align: center;
-  }
-
-  /* =========================================================
-     FAQ
-  ========================================================= */
-
-  .faq-item summary {
-    font-size: 16px;
-    line-height: 1.4;
-    padding: 16px 18px;
-  }
-
-  .faq-item p {
-    padding: 0 18px 18px;
-  }
-
-  /* =========================================================
-     PARCEIROS
-  ========================================================= */
 
   .partner-grid-logos {
     grid-template-columns: 1fr;
   }
-
-  .logo-card {
-    min-height: 120px;
-    padding: 18px;
-  }
-
-  .partner-logo {
-    max-width: 130px;
-    max-height: 70px;
-  }
 }
-
-/* =========================================================
-   MOBILE PEQUENO
-========================================================= */
 
 @media (max-width:420px) {
 
@@ -823,20 +626,11 @@
     max-height: 240px;
   }
 
-  .metric-value {
-    font-size: 32px;
-  }
-
   .section-head h2,
-  .crgr-top h2,
-  .section-copy h2 {
+  .crgr-top h2 {
     font-size: 25px;
   }
 }
-
-/* =========================================================
-   MOBILE EXTRA PEQUENO
-========================================================= */
 
 @media (max-width:360px) {
 
