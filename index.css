@@ -167,14 +167,7 @@
   overflow: hidden;
 
   background:
-    radial-gradient(
-      circle at center,
-      rgba(255,255,255,.92) 0%,
-      rgba(255,255,255,.48) 58%,
-      rgba(255,255,255,.10) 100%
-    );
-
-  border: 1px solid rgba(255,255,255,.36);
+      #ffffff;
 }
 
 .hero-carousel-track {
@@ -299,8 +292,8 @@
   background:
     linear-gradient(
       135deg,
-      #ef6b22 0%,
-      #f2853d 100%
+     #62B32F 0%,
+      #81B92A 100%
     );
 
   padding: 14px 0 18px;
