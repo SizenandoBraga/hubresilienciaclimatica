@@ -102,6 +102,29 @@ function isApprovedParticipant(item) {
   return item.approvalStatus === "approved" || item.status === "active" || item.active === true;
 }
 
+function isColetaRealizada(item) {
+  const status = normalizeText(
+    item.status ||
+      item.situacao ||
+      item.decision ||
+      item.approvalStatus ||
+      item.coletaStatus ||
+      "realizada"
+  );
+
+  return ![
+    "cancelada",
+    "cancelado",
+    "rejected",
+    "rejeitada",
+    "rejeitado",
+    "pendente",
+    "pending",
+    "rascunho",
+    "draft"
+  ].includes(status);
+}
+
 function participantType(item) {
   return normalizeText(item.participantType || item.tipoParticipante || item.tipo);
 }
@@ -112,7 +135,9 @@ function setText(el, value) {
 }
 
 function setCoopSyncStatus(text) {
-  if (els.syncCoopDashboardStatus) els.syncCoopDashboardStatus.textContent = text;
+  if (els.syncCoopDashboardStatus) {
+    els.syncCoopDashboardStatus.textContent = text;
+  }
 }
 
 function setCoopSyncButtonLoading(isLoading) {
@@ -457,6 +482,7 @@ function listenCollection(collectionName, profile, callback, options = {}) {
 
 function computeDashboardData() {
   const approvedParticipants = STATE.participants.filter(isApprovedParticipant);
+  const coletasRealizadas = STATE.coletas.filter(isColetaRealizada);
 
   const peopleCount = approvedParticipants.filter((item) =>
     ["morador", "familia", "lideranca", "participante", "user", "usuario"].includes(participantType(item))
@@ -466,7 +492,7 @@ function computeDashboardData() {
     participantType(item) === "condominio"
   ).length;
 
-  const coletasCount = STATE.coletas.length;
+  const coletasCount = coletasRealizadas.length;
   const documentsCount = STATE.documents.length;
   const actionsCount = STATE.approvalRequests.filter((item) => item.status === "pending").length;
 
@@ -612,7 +638,9 @@ function buildCooperativaPublicSummary({
 
   const usersFiltered = users.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
   const participantsFiltered = participants.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
-  const coletasFiltered = coletas.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
+  const coletasFiltered = coletas
+    .filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }))
+    .filter(isColetaRealizada);
   const documentsFiltered = documents.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
   const approvalFiltered = approvalRequests.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
 
@@ -786,7 +814,12 @@ function listenDashboardData(profile) {
     "coletas",
     profile,
     (items) => {
-      STATE.coletas = items;
+      const realizadas = items.filter(isColetaRealizada);
+
+      console.log("[Dashboard] Coletas encontradas:", items.length);
+      console.log("[Dashboard] Coletas realizadas:", realizadas.length);
+
+      STATE.coletas = realizadas;
       updateKpis();
     },
     {
