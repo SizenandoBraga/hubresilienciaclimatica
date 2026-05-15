@@ -56,7 +56,10 @@
   padding: 34px 0 28px;
 }
 
-#crgr,
+#crgr {
+  padding: 26px 0 30px;
+}
+
 #faq {
   padding: 42px 0;
 }
@@ -417,9 +420,9 @@
 .crgr-top-centered {
   position: relative;
 
-  max-width: 980px;
+  max-width: 860px;
 
-  margin: 0 auto 42px;
+  margin: 0 auto 24px;
 
   text-align: center;
 }
@@ -442,13 +445,13 @@
 }
 
 .crgr-top-centered h2 {
-  max-width: 820px;
+  max-width: 760px;
 
-  margin: 0 auto 22px;
+  margin: 0 auto 14px;
 
-  font-size: clamp(34px, 3.8vw, 52px);
+  font-size: clamp(28px, 3vw, 42px);
 
-  line-height: 1.02;
+  line-height: 1.04;
 
   letter-spacing: -1.8px;
 
@@ -458,12 +461,12 @@
 }
 
 .crgr-top-centered .section-text {
-  max-width: 860px;
+  max-width: 760px;
 
-  margin: 0 auto 18px;
+  margin: 0 auto 10px;
 
-  font-size: 17px;
-  line-height: 1.9;
+  font-size: 15.8px;
+  line-height: 1.72;
 
   letter-spacing: -.1px;
 
@@ -482,11 +485,11 @@
 .crgr-top-centered .map-helper-box {
   position: relative;
 
-  max-width: 760px;
+  max-width: 680px;
 
-  margin: 30px auto 0;
+  margin: 18px auto 0;
 
-  padding: 20px 24px;
+  padding: 14px 18px;
 
   text-align: center;
 
@@ -579,7 +582,7 @@
 .map-box {
   width: 100%;
 
-  min-height: 500px;
+  min-height: 360px;
 
   border-radius: 18px;
 
