@@ -32,12 +32,11 @@
 }
 
 #pilares {
-  background: linear-gradient(135deg, #f4f4ef 0%, #ffffff 100%);
- 
+  background: linear-gradient(135deg, #ef6b22 0%, #f2853d 100%);
 }
 
 #crgr {
-   background: linear-gradient(135deg, #ef6b22 0%, #f2853d 100%);
+  background: linear-gradient(135deg, #f4f4ef 0%, #ffffff 100%);
 }
 
 #faq {
@@ -57,11 +56,7 @@
 }
 
 .hero {
-  padding: 34px 0 22px;
-}
-
-#indicadores {
-  padding: 0 0 28px;
+  padding: 34px 0 28px;
 }
 
 #pilares,
@@ -104,6 +99,10 @@
   flex-direction: column;
   justify-content: center;
 }
+
+/* =========================================================
+   HERO TEXT
+========================================================= */
 
 .hero-title {
   margin: 0;
@@ -191,10 +190,13 @@
 .hero-slide {
   position: absolute;
   inset: 0;
+
   display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 24px 28px;
+
+  align-items: stretch;
+  justify-content: stretch;
+
+  padding: 0;
 }
 
 .hero-slide.is-active {
@@ -204,15 +206,21 @@
 
 .hero-slide img {
   display: block;
+
   width: 100%;
   height: 100%;
-  max-width: 92%;
-  max-height: 92%;
-  object-fit: contain;
+
+  object-fit: cover;
   object-position: center;
+
   border-radius: 16px;
-  filter: brightness(1.06) contrast(1.04) saturate(1.06);
-  transform: none;
+
+  filter:
+    brightness(1.03)
+    contrast(1.02)
+    saturate(1.04);
+
+  transform: scale(1.01);
 }
 
 @keyframes heroFade {
@@ -231,10 +239,14 @@
   display: none !important;
 }
 
+/* =========================================================
+   DOTS
+========================================================= */
+
 .carousel-dots {
   position: absolute;
   left: 50%;
-  bottom: 8px;
+  bottom: 10px;
   z-index: 6;
   transform: translateX(-50%);
   display: flex;
@@ -263,70 +275,15 @@
 }
 
 /* =========================================================
-   SECTION CONTENT
-========================================================= */
-
-.section-shell-content {
-  padding: 28px 26px;
-  border-radius: 26px;
-  background: rgba(255,255,255,.96);
-  border: 1px solid rgba(60,58,57,.08);
-  box-shadow:
-    0 16px 38px rgba(60,58,57,.12),
-    inset 0 1px 0 rgba(255,255,255,.9);
-}
-
-.section-head {
-  margin-bottom: 20px;
-}
-
-.section-head h2,
-.crgr-top h2,
-.section-copy h2 {
-  margin: 0;
-  font-size: clamp(28px,3vw,38px);
-  line-height: 1.08;
-  letter-spacing: -.8px;
-  color: #1d1d1d;
-}
-
-.section-head p,
-.section-text,
-.section-copy .section-text {
-  margin: 10px 0 0;
-  max-width: 860px;
-  font-size: 15.8px;
-  line-height: 1.65;
-  color: var(--text-soft);
-}
-
-/* =========================================================
-   GRID
-========================================================= */
-
-.cards-grid {
-  display: grid;
-  gap: 18px;
-}
-
-.cards-grid.two {
-  grid-template-columns: repeat(2,minmax(0,1fr));
-}
-
-.cards-grid.five {
-  grid-template-columns: repeat(5,minmax(0,1fr));
-}
-
-/* =========================================================
    INDICADORES
 ========================================================= */
 
-#indicadores .section-shell-content {
-  padding: 22px 24px;
+.hero-indicators {
+  margin-top: 18px;
 }
 
-#indicadores .section-head {
-  margin-bottom: 14px;
+.hero-indicators .section-shell-content {
+  padding: 22px 24px;
 }
 
 .metric-card {
@@ -350,9 +307,6 @@
 
 .metric-card:hover {
   transform: translateY(-3px);
-  box-shadow:
-    0 20px 40px rgba(31,30,29,.18),
-    inset 0 1px 0 rgba(255,255,255,.24);
 }
 
 .metric-card::after {
@@ -412,6 +366,61 @@
   font-size: 11.5px;
   line-height: 1.35;
   color: rgba(255,255,255,.9);
+}
+
+/* =========================================================
+   SECTION CONTENT
+========================================================= */
+
+.section-shell-content {
+  padding: 28px 26px;
+  border-radius: 26px;
+  background: rgba(255,255,255,.96);
+  border: 1px solid rgba(60,58,57,.08);
+  box-shadow:
+    0 16px 38px rgba(60,58,57,.12),
+    inset 0 1px 0 rgba(255,255,255,.9);
+}
+
+.section-head {
+  margin-bottom: 20px;
+}
+
+.section-head h2,
+.crgr-top h2,
+.section-copy h2 {
+  margin: 0;
+  font-size: clamp(28px,3vw,38px);
+  line-height: 1.08;
+  letter-spacing: -.8px;
+  color: #1d1d1d;
+}
+
+.section-head p,
+.section-text,
+.section-copy .section-text {
+  margin: 10px 0 0;
+  max-width: 860px;
+  font-size: 15.8px;
+  line-height: 1.65;
+  color: var(--text-soft);
+}
+
+/* =========================================================
+   GRID
+========================================================= */
+
+.cards-grid {
+  display: grid;
+  gap: 18px;
+}
+
+.cards-grid.two {
+  grid-template-columns: repeat(2,minmax(0,1fr));
+}
+
+.cards-grid.five {
+  grid-template-columns: repeat(5,minmax(0,1fr));
 }
 
 /* =========================================================
@@ -501,6 +510,7 @@
 ========================================================= */
 
 @media (max-width:1180px) {
+
   .hero-split {
     grid-template-columns: 56% 44%;
   }
@@ -515,6 +525,7 @@
 }
 
 @media (max-width:980px) {
+
   .hero {
     padding: 24px 0 22px;
   }
@@ -553,6 +564,7 @@
 ========================================================= */
 
 @media (max-width:768px) {
+
   html {
     scroll-behavior: smooth;
   }
@@ -563,35 +575,12 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  img,
-  video,
-  iframe {
-    max-width: 100%;
-  }
-
-  button,
-  a,
-  summary {
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .btn,
-  .small-btn,
-  button,
-  summary {
-    min-height: 44px;
-  }
-
   .container {
     padding: 0 14px;
   }
 
   .hero {
-    padding: 22px 0 14px;
-  }
-
-  #indicadores {
-    padding: 0 0 22px;
+    padding: 22px 0 20px;
   }
 
   .hero-shell {
@@ -641,13 +630,8 @@
     border-radius: 16px;
   }
 
-  .hero-slide {
-    padding: 14px;
-  }
-
   .hero-slide img {
-    max-width: 90%;
-    max-height: 90%;
+    border-radius: 16px;
   }
 
   .cards-grid.two,
@@ -680,6 +664,7 @@
 }
 
 @media (max-width:420px) {
+
   .hero-title-line {
     font-size: 28px;
   }
@@ -698,6 +683,7 @@
 }
 
 @media (max-width:360px) {
+
   .hero-title-line {
     font-size: 26px;
   }
