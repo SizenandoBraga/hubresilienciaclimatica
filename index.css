@@ -95,10 +95,6 @@
   justify-content: center;
 }
 
-/* =========================================================
-   HERO TEXT
-========================================================= */
-
 .hero-title {
   margin: 0;
   line-height: .96;
@@ -203,10 +199,6 @@
   display: none !important;
 }
 
-/* =========================================================
-   DOTS
-========================================================= */
-
 .carousel-dots {
   position: absolute;
   left: 50%;
@@ -280,12 +272,13 @@
   font-size: 13px;
   font-weight: 800;
   text-transform: uppercase;
+  color: rgba(255,255,255,.96);
 }
 
 .metric-value {
   font-size: clamp(26px,2.8vw,36px);
   font-weight: 900;
-  color: #ffffff;
+  color: #fff;
   line-height: 1;
   letter-spacing: -1px;
 }
@@ -293,6 +286,7 @@
 .metric-hint {
   font-size: 12px;
   line-height: 1.45;
+  color: rgba(255,255,255,.92);
 }
 
 /* =========================================================
@@ -355,15 +349,17 @@
 }
 
 .crgr-top-centered .section-text {
+  max-width: 860px;
   margin-left: auto;
   margin-right: auto;
-  max-width: 860px;
+  text-align: justify;
+  text-align-last: center;
 }
 
 .crgr-top-centered .map-helper-box {
+  max-width: 760px;
   margin-left: auto;
   margin-right: auto;
-  max-width: 760px;
   text-align: center;
 }
 
@@ -373,10 +369,10 @@
   border-radius: 18px;
   background: linear-gradient(
     135deg,
-    rgba(98,179,47,.10),
-    rgba(47,168,216,.08)
+    rgba(255,255,255,.72),
+    rgba(255,255,255,.48)
   );
-  border: 1px solid rgba(98,179,47,.16);
+  border: 1px solid rgba(255,255,255,.42);
 }
 
 .map-helper-box strong {
@@ -484,7 +480,6 @@
 ========================================================= */
 
 @media (max-width:1180px) {
-
   .hero-split {
     grid-template-columns: 56% 44%;
   }
@@ -499,7 +494,6 @@
 }
 
 @media (max-width:980px) {
-
   .hero-split {
     grid-template-columns: 1fr;
   }
@@ -522,7 +516,6 @@
 ========================================================= */
 
 @media (max-width:768px) {
-
   body {
     overflow-x: hidden;
   }
@@ -611,6 +604,11 @@
     line-height: 1.16;
   }
 
+  .crgr-top-centered .section-text {
+    text-align: left;
+    text-align-last: auto;
+  }
+
   .map-box {
     min-height: 340px;
   }
@@ -621,7 +619,6 @@
 }
 
 @media (max-width:420px) {
-
   .hero-title-line {
     font-size: 27px;
   }
@@ -642,7 +639,6 @@
 }
 
 @media (max-width:360px) {
-
   .hero-title-line {
     font-size: 24px;
   }
