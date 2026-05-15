@@ -2,10 +2,10 @@ document.addEventListener("DOMContentLoaded", () => {
   "use strict";
 
   const HEADER_SCROLL_OFFSET = 96;
-  const MAP_SCROLL_OFFSET = 110;
+
   const INITIAL_MAP_VIEW = {
-    lat: -30.02,
-    lng: -51.18,
+    lat: -30.055,
+    lng: -51.165,
     zoom: 11
   };
 
@@ -34,19 +34,21 @@ document.addEventListener("DOMContentLoaded", () => {
       lng: -51.15652604283108,
       address: "Avenida Joaquim Porto Vilanova, 143 • Bom Jesus • Porto Alegre/RS",
       page: "vila-pinto.html",
-      active: true
+      active: true,
+      color: "#62B32F"
     },
     {
       id: "cooadesc",
       code: "cooadesc",
-      territoryId: "coadesc",
+      territoryId: "cooadesc",
       name: "CRGR Cooadesc",
       territoryLabel: "CRGR Cooadesc",
       lat: -30.003,
       lng: -51.206,
       address: "Rua Seis (Vila Esperança), 113 • Farrapos • Porto Alegre/RS",
       page: "cooadesc.html",
-      active: true
+      active: true,
+      color: "#2FA8D8"
     },
     {
       id: "padrecacique",
@@ -58,7 +60,8 @@ document.addEventListener("DOMContentLoaded", () => {
       lng: -51.1268772051727,
       address: "Estrada do Rincão, 6781 • Belém Velho • Porto Alegre/RS",
       page: "padre-cacique.html",
-      active: true
+      active: true,
+      color: "#ef6b22"
     }
   ];
 
@@ -75,6 +78,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (el) el.textContent = String(value ?? 0);
   }
 
+  function escapeHtml(value = "") {
+    return String(value)
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
   function toNumberOrNull(value) {
     if (value === null || value === undefined || value === "") return null;
     const n = Number(value);
@@ -87,8 +99,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function safeScrollTo(target, offset = HEADER_SCROLL_OFFSET) {
     if (!target) return;
+
     const top = target.getBoundingClientRect().top + window.scrollY - offset;
-    window.scrollTo({ top, behavior: "smooth" });
+
+    window.scrollTo({
+      top,
+      behavior: "smooth"
+    });
   }
 
   function canonicalTerritoryId(value) {
@@ -100,8 +117,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!raw) return "";
     if (raw === "crgr-vila-pinto") return "vila-pinto";
-    if (raw === "crgr-coadesc" || raw === "crgr-cooadesc") return "coadesc";
+    if (raw === "crgr-coadesc" || raw === "crgr-cooadesc") return "cooadesc";
     if (raw === "crgr-padre-cacique") return "padre-cacique";
+
     return raw;
   }
 
@@ -145,6 +163,7 @@ document.addEventListener("DOMContentLoaded", () => {
       (entries, obs) => {
         entries.forEach((entry) => {
           if (!entry.isIntersecting) return;
+
           entry.target.classList.add("in");
           obs.unobserve(entry.target);
         });
@@ -176,9 +195,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function initFaq() {
     const items = $$("details.faq-item");
+
     items.forEach((detail) => {
       detail.addEventListener("toggle", () => {
         if (!detail.open) return;
+
         items.forEach((other) => {
           if (other !== detail) other.open = false;
         });
@@ -215,6 +236,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (index < 0) currentIndex = slides.length - 1;
       else if (index >= slides.length) currentIndex = 0;
       else currentIndex = index;
+
       render();
     }
 
@@ -227,14 +249,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     function stopAuto() {
-      if (intervalId) {
-        clearInterval(intervalId);
-        intervalId = null;
-      }
+      if (!intervalId) return;
+
+      clearInterval(intervalId);
+      intervalId = null;
     }
 
     function startAuto() {
       stopAuto();
+
       if (isReducedMotion()) return;
       intervalId = setInterval(next, delay);
     }
@@ -266,52 +289,104 @@ document.addEventListener("DOMContentLoaded", () => {
   function getCrgrPage(name = "", id = "", territoryId = "") {
     const base = `${name} ${id} ${territoryId}`.toLowerCase();
 
-    if (base.includes("vila pinto") || base.includes("vilapinto") || base.includes("crgr_vila_pinto") || base.includes("vila-pinto")) {
+    if (
+      base.includes("vila pinto") ||
+      base.includes("vilapinto") ||
+      base.includes("crgr_vila_pinto") ||
+      base.includes("vila-pinto")
+    ) {
       return "vila-pinto.html";
     }
-    if (base.includes("cooadesc") || base.includes("coadesc") || base.includes("crgr_cooadesc") || base.includes("crgr_coadesc")) {
+
+    if (
+      base.includes("cooadesc") ||
+      base.includes("coadesc") ||
+      base.includes("crgr_cooadesc") ||
+      base.includes("crgr_coadesc")
+    ) {
       return "cooadesc.html";
     }
-    if (base.includes("padre") || base.includes("cacique") || base.includes("crgr_padre_cacique") || base.includes("padre-cacique")) {
+
+    if (
+      base.includes("padre") ||
+      base.includes("cacique") ||
+      base.includes("crgr_padre_cacique") ||
+      base.includes("padre-cacique")
+    ) {
       return "padre-cacique.html";
     }
 
     return "#";
   }
 
+  function getCrgrColor(item = {}, index = 0) {
+    if (item.color) return item.color;
+
+    const base = `${item.name || ""} ${item.id || ""} ${item.territoryId || ""}`.toLowerCase();
+
+    if (base.includes("vila")) return "#62B32F";
+    if (base.includes("cooadesc") || base.includes("coadesc")) return "#2FA8D8";
+    if (base.includes("padre") || base.includes("cacique")) return "#ef6b22";
+
+    const colors = ["#62B32F", "#2FA8D8", "#ef6b22"];
+    return colors[index % colors.length];
+  }
+
   function normalizeCrgrDocs(raw = []) {
     return raw
-      .map((item) => ({
-        id: item.id || item.code || item.territoryId,
-        code: item.code || item.id || item.territoryId,
-        territoryId: canonicalTerritoryId(item.territoryId || item.code || item.id),
-        name:
+      .map((item, index) => {
+        const territoryId = canonicalTerritoryId(item.territoryId || item.code || item.id);
+        const name =
           item.name ||
           item.title ||
           item.label ||
           item.territoryLabel ||
           item.cooperativaNome ||
           item.code ||
-          item.id,
-        territoryLabel:
-          item.territoryLabel ||
-          item.name ||
-          item.title ||
-          item.label ||
-          item.cooperativaNome ||
-          item.code ||
-          item.id,
-        lat: toNumberOrNull(item.lat ?? item.latitude ?? item.coords?.lat ?? item.location?.lat),
-        lng: toNumberOrNull(item.lng ?? item.longitude ?? item.coords?.lng ?? item.location?.lng),
-        address:
-          item.address ||
-          item.enderecoCompleto ||
-          item.location?.address ||
-          item.endereco ||
-          "",
-        page: item.page || item.link || item.slug || "",
-        active: item.active ?? (String(item.status || "").toLowerCase() === "active")
-      }))
+          item.id ||
+          "CRGR";
+
+        const id = item.id || item.code || territoryId || name;
+
+        return {
+          id,
+          code: item.code || item.id || territoryId,
+          territoryId,
+          name,
+          territoryLabel:
+            item.territoryLabel ||
+            item.name ||
+            item.title ||
+            item.label ||
+            item.cooperativaNome ||
+            item.code ||
+            item.id ||
+            "CRGR",
+          lat: toNumberOrNull(
+            item.lat ??
+              item.latitude ??
+              item.coords?.lat ??
+              item.location?.lat
+          ),
+          lng: toNumberOrNull(
+            item.lng ??
+              item.longitude ??
+              item.coords?.lng ??
+              item.location?.lng
+          ),
+          address:
+            item.address ||
+            item.enderecoCompleto ||
+            item.location?.address ||
+            item.endereco ||
+            "",
+          page: item.page || item.link || item.slug || getCrgrPage(name, id, territoryId),
+          active:
+            item.active ??
+            (String(item.status || "").toLowerCase() === "active"),
+          color: item.color || getCrgrColor({ name, id, territoryId }, index)
+        };
+      })
       .filter((item) => item.id);
   }
 
@@ -323,69 +398,93 @@ document.addEventListener("DOMContentLoaded", () => {
     setText("metricAlerts", metrics.alerts || 0);
   }
 
-  function renderSelectedCrgr(item, activatedFromMap = false) {
-    const card = byId("selectedCrgrCard");
-    if (!card || !item) return;
+  function createCrgrIcon(color = "#62B32F") {
+    return window.L.divIcon({
+      className: "crgr-map-marker",
+      html: `
+        <span
+          style="
+            --marker-color:${escapeHtml(color)};
+            display:block;
+            width:24px;
+            height:24px;
+            border-radius:999px;
+            background:${escapeHtml(color)};
+            border:4px solid #ffffff;
+            box-shadow:0 8px 18px rgba(0,0,0,.28);
+          "
+        ></span>
+      `,
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+      popupAnchor: [0, -14]
+    });
+  }
 
+  function createCrgrPopup(item = {}, index = 0) {
+    const name = escapeHtml(item.name || item.territoryLabel || "CRGR");
+    const address = escapeHtml(item.address || "Território conectado à plataforma");
     const page = item.page || getCrgrPage(item.name, item.id, item.territoryId);
-    const hasCoords = Number.isFinite(item.lat) && Number.isFinite(item.lng);
+    const color = escapeHtml(getCrgrColor(item, index));
 
-    card.classList.toggle("is-active", activatedFromMap);
-
-    card.innerHTML = `
-      <div class="panel-card-text">
-        <div class="panel-card-title">${item.name || item.territoryLabel || "CRGR"}</div>
-        <div class="panel-card-subtitle">
-          ${item.address || "Território conectado à plataforma"}
+    return `
+      <div class="crgr-popup" style="min-width:220px; font-family:'Inter',sans-serif;">
+        <div style="display:flex; gap:8px; align-items:center; margin-bottom:8px;">
+          <span style="width:12px; height:12px; border-radius:999px; background:${color}; display:inline-block;"></span>
+          <strong style="font-family:'Archivo Condensed',sans-serif; font-size:20px; line-height:1;">
+            ${name}
+          </strong>
         </div>
-        <div class="panel-card-meta">
-          ${hasCoords ? `Lat/Lng: ${item.lat.toFixed(6)}, ${item.lng.toFixed(6)}` : "Sem coordenadas cadastradas"}
-        </div>
-      </div>
 
-      <div class="panel-card-actions">
-        ${page !== "#" ? `<a href="${page}" class="small-btn solid">Acessar cooperativa</a>` : ""}
+        <div style="font-size:13.5px; line-height:1.45; color:#4f5558; margin-bottom:12px;">
+          ${address}
+        </div>
+
+        ${
+          page && page !== "#"
+            ? `
+              <a
+                href="${escapeHtml(page)}"
+                class="small-btn solid"
+                style="
+                  display:inline-flex;
+                  align-items:center;
+                  justify-content:center;
+                  min-height:36px;
+                  padding:8px 12px;
+                  border-radius:999px;
+                  background:${color};
+                  color:#ffffff;
+                  text-decoration:none;
+                  font-size:13px;
+                  font-weight:800;
+                "
+              >
+                Acessar cooperativa →
+              </a>
+            `
+            : ""
+        }
       </div>
     `;
   }
 
-  function renderCrgrList(crgrs = []) {
-    const card = byId("selectedCrgrCard");
-    if (!card) return;
-
-    if (!crgrs.length) {
-      card.innerHTML = `
-        <div class="panel-card-text">
-          <div class="panel-card-title">Nenhum CRGR encontrado</div>
-          <div class="panel-card-subtitle">
-            Cadastre os territórios/CRGRs no Firebase para listar aqui.
-          </div>
-          <div class="panel-card-meta">
-            Quando houver CRGRs com coordenadas, eles aparecerão no mapa.
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    const firstWithCoords =
-      crgrs.find((item) => Number.isFinite(item.lat) && Number.isFinite(item.lng)) || crgrs[0];
-
-    renderSelectedCrgr(firstWithCoords, false);
-  }
-
   function initMap() {
     const mapEl = byId("map");
+
     if (!mapEl || typeof window.L === "undefined") return null;
 
     if (!map) {
       map = window.L.map(mapEl, {
         zoomControl: true,
-        scrollWheelZoom: false
+        scrollWheelZoom: false,
+        dragging: true,
+        tap: true
       }).setView([INITIAL_MAP_VIEW.lat, INITIAL_MAP_VIEW.lng], INITIAL_MAP_VIEW.zoom);
 
       window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: "&copy; OpenStreetMap"
+        attribution: "&copy; OpenStreetMap",
+        maxZoom: 19
       }).addTo(map);
     }
 
@@ -396,57 +495,51 @@ document.addEventListener("DOMContentLoaded", () => {
     const mapInstance = initMap();
     if (!mapInstance) return;
 
-    mapMarkers.forEach((marker) => mapInstance.removeLayer(marker));
+    mapMarkers.forEach((marker) => {
+      mapInstance.removeLayer(marker);
+    });
+
     mapMarkers = [];
 
     const validPoints = crgrs.filter(
       (item) => Number.isFinite(item.lat) && Number.isFinite(item.lng)
     );
 
-    if (!validPoints.length) return;
+    if (!validPoints.length) {
+      mapInstance.setView([INITIAL_MAP_VIEW.lat, INITIAL_MAP_VIEW.lng], INITIAL_MAP_VIEW.zoom);
+      return;
+    }
 
     const bounds = [];
 
     validPoints.forEach((item, index) => {
-      const marker = window.L.marker([item.lat, item.lng]).addTo(mapInstance);
+      const marker = window.L.marker([item.lat, item.lng], {
+        icon: createCrgrIcon(getCrgrColor(item, index)),
+        title: item.name || item.territoryLabel || "CRGR"
+      }).addTo(mapInstance);
 
-      marker.bindPopup(`
-        <div style="font-family:'Archivo Condensed',sans-serif;">
-          <strong>${item.name || item.territoryLabel || "CRGR"}</strong><br>
-          ${item.address || "Território conectado à plataforma"}
-        </div>
-      `);
-
-      marker.on("click", () => {
-        renderSelectedCrgr(item, true);
+      marker.bindPopup(createCrgrPopup(item, index), {
+        closeButton: true,
+        maxWidth: 280,
+        className: "crgr-leaflet-popup"
       });
-
-      if (index === 0) {
-        renderSelectedCrgr(item, false);
-      }
 
       mapMarkers.push(marker);
       bounds.push([item.lat, item.lng]);
     });
 
-    mapInstance.fitBounds(bounds, { padding: [30, 30] });
+    if (bounds.length === 1) {
+      mapInstance.setView(bounds[0], 14);
+    } else {
+      mapInstance.fitBounds(bounds, {
+        padding: [38, 38],
+        maxZoom: 13
+      });
+    }
 
     setTimeout(() => {
       mapInstance.invalidateSize();
-    }, 200);
-  }
-
-  function initMapOpenButton() {
-    const mapEl = byId("map");
-    const button = document.querySelector("[data-open-map]");
-    if (!button || !mapEl) return;
-
-    button.addEventListener("click", () => {
-      safeScrollTo(mapEl, MAP_SCROLL_OFFSET);
-      setTimeout(() => {
-        if (map) map.invalidateSize();
-      }, 220);
-    });
+    }, 250);
   }
 
   async function loadCRGRCollections() {
@@ -459,7 +552,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       async function loadCollectionSafe(name) {
         try {
-          const snap = await getDocs(query(collection(db, name), orderBy("createdAt", "desc")));
+          const snap = await getDocs(
+            query(collection(db, name), orderBy("createdAt", "desc"))
+          );
+
           return snap.docs.map((docItem) => ({
             id: docItem.id,
             ...docItem.data()
@@ -467,6 +563,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch {
           try {
             const snap = await getDocs(collection(db, name));
+
             return snap.docs.map((docItem) => ({
               id: docItem.id,
               ...docItem.data()
@@ -484,15 +581,19 @@ document.addEventListener("DOMContentLoaded", () => {
         loadCollectionSafe("crgrs")
       ]);
 
-      const normalized = normalizeCrgrDocs([...territories, ...cooperativas, ...crgrs]);
+      const normalized = normalizeCrgrDocs([
+        ...territories,
+        ...cooperativas,
+        ...crgrs
+      ]);
+
       STATE.crgrs = normalized.length ? normalized : FALLBACK_CRGRS;
 
-      renderCrgrList(STATE.crgrs);
       renderMap(STATE.crgrs);
     } catch (error) {
       console.error("[INDEX] Erro ao carregar CRGRs:", error);
+
       STATE.crgrs = FALLBACK_CRGRS;
-      renderCrgrList(STATE.crgrs);
       renderMap(STATE.crgrs);
     }
   }
@@ -509,6 +610,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
           publicIndicatorsUnsubscribe();
         } catch (_) {}
+
         publicIndicatorsUnsubscribe = null;
       }
 
@@ -528,6 +630,7 @@ document.addEventListener("DOMContentLoaded", () => {
             crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
             alerts: 0
           };
+
           renderMetrics(STATE.metrics);
           return;
         }
@@ -540,7 +643,12 @@ document.addEventListener("DOMContentLoaded", () => {
             acc.alerts += Number(item.alertsCount ?? 0);
             return acc;
           },
-          { users: 0, coletas: 0, approvals: 0, alerts: 0 }
+          {
+            users: 0,
+            coletas: 0,
+            approvals: 0,
+            alerts: 0
+          }
         );
 
         const activeCrgrs = summaries.filter((item) => {
@@ -552,7 +660,11 @@ document.addEventListener("DOMContentLoaded", () => {
           users: totals.users,
           coletas: totals.coletas,
           approvals: totals.approvals,
-          crgrs: activeCrgrs || summaries.length || STATE.crgrs.length || FALLBACK_CRGRS.length,
+          crgrs:
+            activeCrgrs ||
+            summaries.length ||
+            STATE.crgrs.length ||
+            FALLBACK_CRGRS.length,
           alerts: totals.alerts
         };
 
@@ -572,6 +684,7 @@ document.addEventListener("DOMContentLoaded", () => {
             applyDocs(snap.docs);
           } catch (fallbackError) {
             console.error("[INDEX] Erro ao carregar indicadores públicos:", fallbackError);
+
             STATE.metrics = {
               users: 0,
               coletas: 0,
@@ -579,12 +692,14 @@ document.addEventListener("DOMContentLoaded", () => {
               crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
               alerts: 0
             };
+
             renderMetrics(STATE.metrics);
           }
         }
       );
     } catch (error) {
       console.error("[INDEX] Erro ao carregar indicadores públicos:", error);
+
       renderMetrics({
         users: 0,
         coletas: 0,
@@ -596,12 +711,14 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function initHashScroll() {
-    if (window.location.hash) {
-      const target = document.querySelector(window.location.hash);
-      if (target) {
-        setTimeout(() => safeScrollTo(target), 100);
-      }
-    }
+    if (!window.location.hash) return;
+
+    const target = document.querySelector(window.location.hash);
+    if (!target) return;
+
+    setTimeout(() => {
+      safeScrollTo(target);
+    }, 100);
   }
 
   initCursorGlow();
@@ -609,11 +726,9 @@ document.addEventListener("DOMContentLoaded", () => {
   initAnchorScroll();
   initFaq();
   initHeroCarousel();
-  initMapOpenButton();
   initHashScroll();
 
   renderMetrics(STATE.metrics);
-  renderCrgrList(FALLBACK_CRGRS);
   renderMap(FALLBACK_CRGRS);
 
   Promise.all([

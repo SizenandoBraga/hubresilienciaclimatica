@@ -7,14 +7,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>Núcleo de Soluções para Resíduos Urbanos | NSRU</title>
-  <meta
-    name="description"
-    content="O Núcleo de Soluções para Resíduos Urbanos conecta cooperativas, comunidades, técnicos e gestores para fortalecer a reciclagem, a economia circular e a resiliência climática em Porto Alegre."
-  />
-  <meta
-    name="keywords"
-    content="NSRU, resíduos urbanos, reciclagem, economia circular, cooperativas, Porto Alegre, sustentabilidade, resiliência climática, gestão de resíduos, CRGR"
-  />
+  <meta name="description" content="O Núcleo de Soluções para Resíduos Urbanos conecta cooperativas, comunidades, técnicos e gestores para fortalecer a reciclagem, a economia circular e a resiliência climática em Porto Alegre." />
+  <meta name="keywords" content="NSRU, resíduos urbanos, reciclagem, economia circular, cooperativas, Porto Alegre, sustentabilidade, resiliência climática, gestão de resíduos, CRGR" />
   <meta name="author" content="Mãos Verdes" />
   <meta name="robots" content="index, follow" />
   <meta name="theme-color" content="#81B92A" />
@@ -27,17 +21,9 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link
-    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap"
-    rel="stylesheet"
-  />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 
   <link rel="stylesheet" href="public-base.css" />
   <link rel="stylesheet" href="header-publico.css" />
@@ -53,12 +39,12 @@
 
   <main id="conteudo" class="main-content">
 
-    <section class="hero hero-premium" data-reveal>
+    <section class="hero hero-premium" aria-labelledby="hero-title" data-reveal>
       <div class="container hero-shell">
 
         <div class="hero-split">
           <div class="hero-copy">
-            <h1 class="hero-title">
+            <h1 id="hero-title" class="hero-title">
               <span class="hero-title-line">Um ponto de encontro para fortalecer a</span>
               <span class="hero-title-highlight">Resiliência Climática</span>
               <span class="hero-title-line">nos centros urbanos</span>
@@ -72,68 +58,34 @@
             </p>
           </div>
 
-          <div class="hero-image">
+          <div class="hero-image" aria-label="Imagens do projeto Guardiões Urbanos">
             <div class="hero-carousel" id="heroCarousel">
               <div class="hero-carousel-track">
                 <div class="hero-slide is-active">
-                  <img
-                    src="img/BANNER-SITE-GUARDIOES-D.png"
-                    alt="Guardiões Urbanos"
-                    loading="eager"
-                  />
+                  <img src="img/BANNER-SITE-GUARDIOES-D.png" alt="Banner do projeto Guardiões Urbanos" loading="eager" />
                 </div>
 
                 <div class="hero-slide">
-                  <img
-                    src="img/BANNER-SITE-GUARDIOES-E.png"
-                    alt="Logotipo NSRU"
-                    loading="lazy"
-                  />
+                  <img src="img/BANNER-SITE-GUARDIOES-E.png" alt="Banner institucional do projeto NSRU" loading="lazy" />
                 </div>
               </div>
 
-              <button
-                class="carousel-btn carousel-prev"
-                id="carouselPrev"
-                type="button"
-                aria-label="Imagem anterior"
-              >
-                ‹
-              </button>
+              <button class="carousel-btn carousel-prev" id="carouselPrev" type="button" aria-label="Imagem anterior">‹</button>
+              <button class="carousel-btn carousel-next" id="carouselNext" type="button" aria-label="Próxima imagem">›</button>
 
-              <button
-                class="carousel-btn carousel-next"
-                id="carouselNext"
-                type="button"
-                aria-label="Próxima imagem"
-              >
-                ›
-              </button>
-
-              <div class="carousel-dots" id="carouselDots">
-                <button
-                  class="carousel-dot is-active"
-                  type="button"
-                  data-slide="0"
-                  aria-label="Ir para slide 1"
-                ></button>
-
-                <button
-                  class="carousel-dot"
-                  type="button"
-                  data-slide="1"
-                  aria-label="Ir para slide 2"
-                ></button>
+              <div class="carousel-dots" id="carouselDots" aria-label="Controle de slides">
+                <button class="carousel-dot is-active" type="button" data-slide="0" aria-label="Ir para slide 1"></button>
+                <button class="carousel-dot" type="button" data-slide="1" aria-label="Ir para slide 2"></button>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="hero-indicators">
+        <div class="hero-indicators" aria-labelledby="indicadores-title">
           <div class="section-shell-content">
             <div class="section-head">
               <div>
-                <h2>Panorama geral dos territórios</h2>
+                <h2 id="indicadores-title">Panorama geral dos territórios</h2>
                 <p>
                   Indicadores consolidados de cadastrados, coletas, planos,
                   CRGRs e alertas considerando todos os territórios
@@ -179,78 +131,49 @@
       </div>
     </section>
 
-    <div class="section-gap"></div>
-
-    <section id="crgr" class="section-shell section-white" data-reveal>
+    <section id="crgr" class="section-shell section-white" aria-labelledby="crgr-title" data-reveal>
       <div class="container section-shell-content">
-        <div class="crgr-top">
-          <h2>Rede CRGR — Piloto Porto Alegre</h2>
+
+        <div class="crgr-top crgr-top-centered">
+          <h2 id="crgr-title">Rede CRGR — Piloto Porto Alegre</h2>
 
           <p class="section-text">
             Os <strong>Centros de Referência na Gestão de Resíduos (CRGRs)</strong>
-            são Unidades de Triagem conveniadas com o DMLU que, além da separação
-            e destinação de materiais recicláveis, atuam no território com serviços
-            comunitários, educação ambiental e orientação sobre boas práticas de
-            descarte antes, durante e após eventos climáticos extremos.
+            conectam cooperativas, territórios e comunidades para fortalecer
+            a gestão de resíduos urbanos, a educação ambiental e a resposta
+            local diante dos desafios climáticos.
           </p>
 
           <p class="section-text">
-            Nesta etapa inicial, o NSRU integra <strong>três CRGRs pilotos em Porto Alegre</strong>,
-            conectando atuação local, organização territorial e acesso a informações estratégicas.
+            Nesta etapa inicial, o NSRU integra
+            <strong>três CRGRs pilotos em Porto Alegre</strong>,
+            reunindo atuação territorial, dados estratégicos
+            e acesso direto às páginas das cooperativas participantes.
           </p>
 
           <div class="map-helper-box">
             <strong>Clique nos pontos do mapa</strong>
             <span>
-              Ao selecionar um ponto, o card ao lado exibirá as informações da cooperativa
-              e o botão para acessar sua página.
+              Cada marcador representa uma cooperativa. Ao selecionar um ponto,
+              você verá as informações principais e o botão para acessar sua página.
             </span>
           </div>
-
-          <div class="action-row">
-            <button data-open-map class="btn btn-blue" type="button">
-              Abrir mapa agora →
-            </button>
-
-            <a href="#faq" class="btn btn-outline-green">
-              Ver dúvidas frequentes ↘
-            </a>
-          </div>
         </div>
 
-        <div class="crgr-bottom">
+        <div class="crgr-bottom crgr-bottom-map-only">
           <div class="map-panel crgr-map-panel">
-            <div id="map" class="map-box" aria-label="Mapa dos CRGRs"></div>
+            <div id="map" class="map-box" role="region" aria-label="Mapa interativo dos CRGRs em Porto Alegre"></div>
           </div>
-
-          <aside class="side-panel cooperative-side-panel">
-            <strong class="panel-title">Cooperativa selecionada</strong>
-
-            <div class="panel-card panel-card-soft panel-card-selected" id="selectedCrgrCard">
-              <div class="panel-card-text">
-                <div class="panel-card-title">Selecione um ponto no mapa</div>
-                <div class="panel-card-subtitle">
-                  Clique em um dos CRGRs para visualizar os dados da cooperativa.
-                </div>
-                <div class="panel-card-meta">
-                  As informações aparecerão aqui junto com o botão de acesso.
-                </div>
-              </div>
-
-              <div class="panel-card-actions" id="selectedCrgrActions"></div>
-            </div>
-          </aside>
         </div>
+
       </div>
     </section>
 
-    <div class="section-gap"></div>
-
-    <section id="faq" class="section-shell section-blue" data-reveal>
+    <section id="faq" class="section-shell section-blue" aria-labelledby="faq-title" data-reveal>
       <div class="container section-shell-content">
         <div class="section-head">
           <div>
-            <h2>Perguntas comuns</h2>
+            <h2 id="faq-title">Perguntas comuns</h2>
             <p>
               Respostas rápidas para orientar o uso da plataforma, o acesso aos territórios
               e a navegação pelas cooperativas.
@@ -262,7 +185,7 @@
           <details class="faq-item">
             <summary>
               Quem pode acessar a plataforma?
-              <span class="faq-icon">⌄</span>
+              <span class="faq-icon" aria-hidden="true">⌄</span>
             </summary>
             <p>
               Qualquer pessoa pode acessar os indicadores e áreas públicas. Para perfis internos,
@@ -273,10 +196,10 @@
           <details class="faq-item">
             <summary>
               Como acessar uma cooperativa?
-              <span class="faq-icon">⌄</span>
+              <span class="faq-icon" aria-hidden="true">⌄</span>
             </summary>
             <p>
-              Na página inicial, clique em um ponto do mapa. O card lateral mostrará as informações
+              Na página inicial, clique em um ponto do mapa. O popup exibirá as informações
               da cooperativa selecionada e o botão para entrar na página correspondente.
             </p>
           </details>
@@ -284,7 +207,7 @@
           <details class="faq-item">
             <summary>
               Esses dados podem apoiar políticas públicas?
-              <span class="faq-icon">⌄</span>
+              <span class="faq-icon" aria-hidden="true">⌄</span>
             </summary>
             <p>
               Sim. Os dados ajudam no diagnóstico, planejamento e monitoramento de ações e políticas públicas.
@@ -294,7 +217,7 @@
           <details class="faq-item">
             <summary>
               Quem alimenta os dados da plataforma?
-              <span class="faq-icon">⌄</span>
+              <span class="faq-icon" aria-hidden="true">⌄</span>
             </summary>
             <p>
               Cooperativas, equipes técnicas, gestores públicos e parceiros do projeto.
@@ -304,23 +227,21 @@
           <details class="faq-item">
             <summary>
               Sou uma cooperativa: como posso me envolver?
-              <span class="faq-icon">⌄</span>
+              <span class="faq-icon" aria-hidden="true">⌄</span>
             </summary>
             <p>
-              Entre em contato conosco pelo email: <strong>queroumCRGR@hub.br</strong>
+              Entre em contato pelo email: <strong>queroumCRGR@hub.br</strong>
             </p>
           </details>
         </div>
       </div>
     </section>
 
-    <div class="section-gap"></div>
-
-    <section id="parcerias" class="section-shell section-white" data-reveal>
+    <section id="parcerias" class="section-shell section-white" aria-labelledby="parcerias-title" data-reveal>
       <div class="container section-shell-content">
         <div class="section-head">
           <div>
-            <h2>Construído em rede</h2>
+            <h2 id="parcerias-title">Construído em rede</h2>
             <p>
               O NSRU é construído com instituições, redes e apoiadores comprometidos com
               desenvolvimento territorial, justiça climática e economia circular.
@@ -330,21 +251,21 @@
 
         <div class="partner-grid partner-grid-logos">
           <div class="partner-card logo-card">
-            <img src="img/maos-verdes-logo-escuro.png" alt="Logo Mãos Verdes" class="partner-logo" />
+            <img src="img/maos-verdes-logo-escuro.png" alt="Logo Mãos Verdes" class="partner-logo" loading="lazy" />
           </div>
 
           <div class="partner-card logo-card">
-            <img src="img/Cluster_ecoar.png" alt="Logo Cluster Ecoar" class="partner-logo" />
+            <img src="img/Cluster_ecoar.png" alt="Logo Cluster Ecoar" class="partner-logo" loading="lazy" />
           </div>
 
           <div class="partner-card logo-card">
-            <img src="img/padre_cacique.jpg" alt="Logo Padre Cacique" class="partner-logo" />
-            <img src="img/LogoVP.png" alt="Logo Vila Pinto" class="partner-logo" />
-            <img src="img/logo_cooadesc.jpg" alt="Logo Cooadesc" class="partner-logo" />
+            <img src="img/padre_cacique.jpg" alt="Logo Padre Cacique" class="partner-logo" loading="lazy" />
+            <img src="img/LogoVP.png" alt="Logo Vila Pinto" class="partner-logo" loading="lazy" />
+            <img src="img/logo_cooadesc.jpg" alt="Logo Cooadesc" class="partner-logo" loading="lazy" />
           </div>
 
           <div class="partner-card logo-card">
-            <img src="img/regenera-rs-logo.png" alt="Logo Regenera RS" class="partner-logo" />
+            <img src="img/regenera-rs-logo.png" alt="Logo Regenera RS" class="partner-logo" loading="lazy" />
           </div>
         </div>
       </div>
@@ -354,11 +275,7 @@
 
   <div id="site-footer"></div>
 
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script src="header-publico.js"></script>
   <script src="footer-publico.js"></script>
   <script type="module" src="index.js"></script>
