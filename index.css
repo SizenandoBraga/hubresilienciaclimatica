@@ -1,4 +1,7 @@
-/* CONTAINER */
+/* =========================================================
+   CONTAINER
+========================================================= */
+
 .container {
   width: 100%;
   max-width: 1240px;
@@ -6,11 +9,15 @@
   padding: 0 20px;
 }
 
-/* MAIN */
+/* =========================================================
+   MAIN
+========================================================= */
+
 .main-content {
   position: relative;
   z-index: 2;
   padding: 0 0 60px;
+
   background:
     linear-gradient(
       to bottom,
@@ -29,15 +36,30 @@
     );
 }
 
-/* HERO */
+/* =========================================================
+   HERO
+========================================================= */
+
+.hero {
+  background: #62B32F;
+  padding: 34px 0 46px;
+}
+
 .hero-shell {
-  width: 100%;
-  max-width: 1240px;
-  margin: 20px auto 0;
+  width: 80%;
+  max-width: 1440px;
+
+  margin: 0 auto;
+
   background: #fff;
-  border-radius: 24px;
-  border: 1px solid var(--border);
-  box-shadow: 0 12px 28px rgba(60, 58, 57, 0.12);
+
+  border-radius: 28px;
+
+  border: 1px solid rgba(255,255,255,0.18);
+
+  box-shadow:
+    0 20px 50px rgba(0,0,0,0.12);
+
   overflow: hidden;
 }
 
@@ -47,17 +69,115 @@
   align-items: stretch;
   gap: 28px;
 }
+
 .hero-copy {
   padding: 52px 42px 46px;
   max-width: 680px;
 }
 
-/* CARROSSEL 100% AJUSTADO */
+/* =========================================================
+   HERO TEXT
+========================================================= */
+
+.hero-title {
+  margin: 0;
+  line-height: 0.95;
+}
+
+.hero-title-line {
+  display: block;
+
+  font-size: clamp(44px, 5vw, 72px);
+
+  font-weight: 800;
+
+  color: #121212;
+
+  letter-spacing: -2px;
+}
+
+.hero-title-highlight {
+  display: block;
+
+  font-size: clamp(60px, 7vw, 96px);
+
+  font-weight: 900;
+
+  color: #62B32F;
+
+  letter-spacing: -3px;
+}
+
+.hero-description {
+  margin-top: 28px;
+
+  font-size: 18px;
+
+  line-height: 1.8;
+
+  color: #5f6368;
+
+  max-width: 620px;
+}
+
+/* =========================================================
+   HERO CAROUSEL
+========================================================= */
+
 .hero-image {
   display: flex;
   align-items: stretch;
   height: 100%;
 }
+
+.hero-carousel {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+
+  min-height: 520px;
+  max-height: 640px;
+
+  border-radius: 22px;
+
+  overflow: hidden;
+
+  background:
+    radial-gradient(
+      circle at center,
+      rgba(255,255,255,0.92) 0%,
+      rgba(255,255,255,0.72) 55%,
+      rgba(255,255,255,0.15) 100%
+    );
+
+  border: 1px solid rgba(255,255,255,0.45);
+}
+
+.hero-carousel-track {
+  position: relative;
+
+  width: 100%;
+  height: 100%;
+}
+
+.hero-slide {
+  position: absolute;
+  inset: 0;
+
+  width: 100%;
+  height: 100%;
+
+  display: none;
+
+  align-items: center;
+  justify-content: center;
+}
+
+.hero-slide.is-active {
+  display: flex;
+}
+
 .hero-slide img {
   display: block;
 
@@ -81,157 +201,108 @@
     filter .5s ease;
 }
 
-
+/* Caso queira imagem preenchendo o card */
 .hero-slide.hero-photo img {
   width: 100%;
   height: 100%;
   object-fit: cover;
 }
 
-.hero-carousel {
-  width: 100%;
-  height: 100%;
-  min-height: 520px;
-  max-height: 640px;
+/* =========================================================
+   REMOVE BOTÕES
+========================================================= */
 
-  border-radius: 22px;
-
-  overflow: hidden;
-
-  background: transparent;
-
-  box-shadow: none;
-}
-
-.hero-carousel-track {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.hero-slide {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
-
-.hero-slide.is-active {
-  display: flex;
-}
-
-.hero-slide img {
-  display: block;
-  max-width: 100%;
-  max-height: 100%;
-  width: auto;
-  height: auto;
-  min-height: 0;
-  object-fit: contain;
-  object-position: center;
-  border-radius: 14px;
-}
-
-/* Quando a imagem for fotográfica e você quiser preencher mais o card */
-.hero-slide.hero-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
-/* Botões do carrossel */
 .carousel-btn {
-  position: absolute;
-  top: 50%;
-  z-index: 5;
-  width: 38px;
-  height: 38px;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255,255,255,.9);
-  color: var(--black);
-  font-size: 28px;
-  line-height: 1;
-  display: grid;
-  place-items: center;
-  cursor: pointer;
-  transform: translateY(-50%);
-  box-shadow: 0 8px 18px rgba(0,0,0,.18);
+  display: none !important;
 }
 
-.carousel-btn:hover {
-  background: var(--green-primary);
-  color: #fff;
-}
+/* =========================================================
+   DOTS
+========================================================= */
 
-.carousel-prev {
-  left: 14px;
-}
-
-.carousel-next {
-  right: 14px;
-}
-
-/* Dots */
 .carousel-dots {
   position: absolute;
+
   left: 50%;
-  bottom: 14px;
-  z-index: 6;
+  bottom: 16px;
+
   transform: translateX(-50%);
+
   display: flex;
-  gap: 7px;
+  gap: 9px;
+
   align-items: center;
   justify-content: center;
+
+  z-index: 6;
 }
 
 .carousel-dot {
-  width: 8px;
-  height: 8px;
+  width: 9px;
+  height: 9px;
+
   border: 0;
   border-radius: 999px;
-  background: rgba(255,255,255,.45);
+
+  background: rgba(255,255,255,.5);
+
+  backdrop-filter: blur(4px);
+
   cursor: pointer;
-  transition: 0.2s ease;
+
+  transition: .2s ease;
 }
 
 .carousel-dot.is-active {
-  width: 20px;
-  background: var(--green-primary);
+  width: 28px;
+
+  background: #62B32F;
 }
 
-/* SECTIONS */
+/* =========================================================
+   SECTIONS
+========================================================= */
+
 .section-gap {
   height: 40px;
 }
 
 .section-shell-content {
   padding: 42px 32px;
+
   border-radius: 24px;
-  box-shadow: 0 12px 26px rgba(60, 58, 57, 0.12);
+
+  box-shadow:
+    0 12px 26px rgba(60, 58, 57, 0.12);
+
   border: 1px solid var(--border);
+
   background: #fff;
 }
 
-/* GRID */
+/* =========================================================
+   GRID
+========================================================= */
+
 .cards-grid {
   display: grid;
   gap: 22px;
 }
 
 .cards-grid.two {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(2, minmax(0, 1fr));
 }
 
 .cards-grid.five {
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns:
+    repeat(5, minmax(0, 1fr));
 }
 
-/* CARDS */
+/* =========================================================
+   CARDS
+========================================================= */
+
 .card {
   padding: 24px;
 }
@@ -241,7 +312,10 @@
   min-height: 190px;
 }
 
-/* MAPA / CRGR */
+/* =========================================================
+   MAPA / CRGR
+========================================================= */
+
 .crgr-top {
   display: flex;
   flex-direction: column;
@@ -250,9 +324,15 @@
 
 .crgr-bottom {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(300px, 0.55fr);
+
+  grid-template-columns:
+    minmax(0, 1.45fr)
+    minmax(300px, 0.55fr);
+
   gap: 28px;
+
   align-items: stretch;
+
   margin-top: 24px;
 }
 
@@ -264,25 +344,15 @@
 .map-box {
   width: 100%;
   min-height: 440px;
+
   border-radius: 18px;
+
   overflow: hidden;
 }
 
-.cooperative-side-panel {
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-}
-
-.panel-card {
-  padding: 14px;
-}
-
-.panel-card-selected {
-  min-height: auto;
-  height: auto;
-  padding: 18px;
-}
+/* =========================================================
+   TEXTOS
+========================================================= */
 
 .section-copy {
   display: flex;
@@ -294,7 +364,10 @@
 .section-head h2,
 .crgr-top h2 {
   margin: 0;
-  font-size: clamp(30px, 4vw, 38px);
+
+  font-size:
+    clamp(30px, 4vw, 38px);
+
   line-height: 1.1;
 }
 
@@ -302,111 +375,117 @@
 .section-text,
 .section-head p {
   margin: 0;
-  font-size: clamp(16px, 1.6vw, 18px);
+
+  font-size:
+    clamp(16px, 1.6vw, 18px);
+
   line-height: 1.7;
+
   color: var(--text-soft);
+
   max-width: 850px;
 }
 
-.section-copy p + p {
-  margin-top: 8px;
-}
-
-.map-helper-box {
-  margin-top: 12px;
-  padding: 18px 20px;
-  line-height: 1.6;
-}
-
-.action-row {
-  margin-top: 16px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 14px;
-}
-
-.panel-card-title {
-  font-size: 20px;
-  margin-bottom: 4px;
-}
-
-.panel-card-subtitle {
-  font-size: 14px;
-  margin-bottom: 6px;
-}
-
-.panel-card-meta {
-  font-size: 13px;
-}
-
-.panel-card-actions {
-  margin-top: 12px;
-}
-
-/* INDICADORES */
-.section-orange .section-shell-content {
-  background: #ffffff;
-  border-color: var(--border);
-  color: var(--black);
-}
+/* =========================================================
+   INDICADORES
+========================================================= */
 
 .metric-card {
   border-radius: 20px;
+
   box-shadow: var(--shadow-card);
+
   border: 0;
+
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-.metric-card::before {
-  display: none;
-}
-
 .metric-green {
-  background: linear-gradient(135deg, #62B32F, #62B32F);
+  background:
+    linear-gradient(
+      135deg,
+      #62B32F,
+      #62B32F
+    );
+
   color: #fff;
 }
 
 .metric-blue {
-  background: linear-gradient(135deg, #2FA8D8, #2f93c9);
+  background:
+    linear-gradient(
+      135deg,
+      #2FA8D8,
+      #2f93c9
+    );
+
   color: #fff;
 }
 
 .metric-orange {
-  background: linear-gradient(135deg, #ef6b22, #d85a15);
+  background:
+    linear-gradient(
+      135deg,
+      #ef6b22,
+      #d85a15
+    );
+
   color: #fff;
 }
 
 .metric-dark {
-  background: linear-gradient(135deg, #3c3a39, #1f1e1d);
+  background:
+    linear-gradient(
+      135deg,
+      #3c3a39,
+      #1f1e1d
+    );
+
   color: #fff;
 }
 
 .metric-alert {
-  background: linear-gradient(135deg, #d64545, #b93333);
+  background:
+    linear-gradient(
+      135deg,
+      #d64545,
+      #b93333
+    );
+
   color: #fff;
 }
 
 .metric-label {
   color: rgba(255,255,255,0.9);
+
   font-size: 16px;
+
   font-weight: 700;
 }
 
 .metric-value {
-  font-size: clamp(40px, 5vw, 56px);
+  font-size:
+    clamp(40px, 5vw, 56px);
+
   font-weight: 800;
+
   color: #fff;
+
   line-height: 1;
 }
 
 .metric-hint {
   font-size: 14px;
+
   color: rgba(255,255,255,0.9);
 }
 
-/* FAQ */
+/* =========================================================
+   FAQ
+========================================================= */
+
 .faq-item summary {
   padding: 18px 20px;
 }
@@ -415,36 +494,52 @@
   padding: 0 20px 18px;
 }
 
-/* PARCEIROS */
+/* =========================================================
+   PARCEIROS
+========================================================= */
+
 .partner-grid-logos {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  grid-template-columns:
+    repeat(4, minmax(0, 1fr));
+
   gap: 20px;
 }
 
 .logo-card {
   min-height: 150px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   gap: 14px;
+
   flex-wrap: wrap;
+
   padding: 22px;
 }
 
 .partner-logo {
   max-width: 160px;
   max-height: 92px;
+
   width: auto;
   height: auto;
+
   object-fit: contain;
 }
+
 /* =========================================================
-   RESPONSIVO HERO + CARROSSEL
+   RESPONSIVO
 ========================================================= */
 
-/* NOTEBOOK GRANDE */
 @media (max-width: 1180px) {
+
+  .hero-shell {
+    width: 90%;
+  }
 
   .hero-split {
     grid-template-columns: 58% 42%;
@@ -461,8 +556,6 @@
   }
 }
 
-
-/* NOTEBOOK MÉDIO */
 @media (max-width: 1024px) {
 
   .hero-split {
@@ -480,8 +573,6 @@
   }
 }
 
-
-/* NOTEBOOK PEQUENO / TABLET HORIZONTAL */
 @media (max-width: 980px) {
 
   .hero-split {
@@ -490,16 +581,21 @@
 
   .hero-image {
     padding: 0 24px 28px;
+
     display: flex;
     justify-content: center;
   }
 
   .hero-carousel {
     width: 100%;
+
     max-width: 680px;
+
     min-height: 420px;
     max-height: 520px;
+
     aspect-ratio: 4 / 3;
+
     margin: 0 auto;
   }
 
@@ -508,16 +604,20 @@
   }
 }
 
-
-/* TABLET */
 @media (max-width: 768px) {
 
   .container {
     padding: 0 16px;
   }
 
+  .hero {
+    padding: 24px 0 34px;
+  }
+
   .hero-shell {
-    border-radius: 20px;
+    width: calc(100% - 24px);
+
+    border-radius: 22px;
   }
 
   .hero-copy {
@@ -525,7 +625,6 @@
   }
 
   .hero-title {
-    font-size: clamp(34px, 8vw, 48px);
     line-height: 1.05;
   }
 
@@ -540,25 +639,16 @@
 
   .hero-carousel {
     max-width: 100%;
+
     min-height: 380px;
     max-height: 480px;
+
     aspect-ratio: 4 / 3;
+
     border-radius: 18px;
-  }
-
-  .hero-slide {
-    padding: 18px;
-  }
-
-  .carousel-btn {
-    width: 36px;
-    height: 36px;
-    font-size: 26px;
   }
 }
 
-
-/* CELULAR */
 @media (max-width: 560px) {
 
   .container {
@@ -581,30 +671,14 @@
   .hero-carousel {
     min-height: 320px;
     max-height: 380px;
+
     aspect-ratio: 1 / 1;
+
     border-radius: 16px;
   }
 
-  .hero-slide {
-    padding: 14px;
-  }
-
   .hero-slide img {
-    border-radius: 12px;
-  }
-
-  .carousel-btn {
-    width: 32px;
-    height: 32px;
-    font-size: 24px;
-  }
-
-  .carousel-prev {
-    left: 10px;
-  }
-
-  .carousel-next {
-    right: 10px;
+    padding: 12px;
   }
 
   .carousel-dots {
@@ -612,65 +686,14 @@
   }
 }
 
-
-/* CELULAR PEQUENO */
 @media (max-width: 380px) {
 
   .hero-copy {
     padding: 24px 14px 22px;
   }
 
-  .hero-title {
-    font-size: 30px;
-  }
-
   .hero-carousel {
     min-height: 260px;
     max-height: 320px;
   }
-
-  .carousel-btn {
-    width: 30px;
-    height: 30px;
-    font-size: 22px;
-  }
-}
-/* Remove botões laterais */
-.carousel-btn {
-  display: none !important;
-}
-
-/* Destaca melhor a área da imagem */
-.hero-carousel {
-  position: relative;
-
-  background:
-    radial-gradient(
-      circle at center,
-      rgba(255,255,255,0.92) 0%,
-      rgba(255,255,255,0.72) 55%,
-      rgba(255,255,255,0.15) 100%
-    );
-
-  border: 1px solid rgba(255,255,255,0.45);
-}
-
-/* Deixa os dots mais elegantes */
-.carousel-dots {
-  bottom: 16px;
-  gap: 9px;
-}
-
-.carousel-dot {
-  width: 9px;
-  height: 9px;
-
-  background: rgba(255,255,255,.5);
-
-  backdrop-filter: blur(4px);
-}
-
-.carousel-dot.is-active {
-  width: 28px;
-  background: #62B32F;
 }
