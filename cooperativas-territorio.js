@@ -25,6 +25,7 @@ function canonicalTerritoryId(value) {
   if (!raw) return "vila-pinto";
   if (raw === "crgr-vila-pinto") return "vila-pinto";
   if (raw === "crgr-coadesc" || raw === "crgr-cooadesc") return "cooadesc";
+  if (raw === "coadesc") return "cooadesc";
   if (raw === "crgr-padre-cacique") return "padre-cacique";
 
   return raw;
@@ -75,6 +76,7 @@ const STATE = {
   canEditAll: false,
   participants: [],
   coletas: [],
+  documents: [],
   approvalRequests: [],
   users: [],
   unsubscribers: []
@@ -86,10 +88,6 @@ function normalizeText(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .trim()
     .toLowerCase();
-}
-
-function normalizedTerritoryEqual(a, b) {
-  return canonicalTerritoryId(a) === canonicalTerritoryId(b);
 }
 
 function isAdminUser(role) {
@@ -114,15 +112,56 @@ function setText(el, value) {
 }
 
 function setCoopSyncStatus(text) {
-  if (els.syncCoopDashboardStatus) {
-    els.syncCoopDashboardStatus.textContent = text;
-  }
+  if (els.syncCoopDashboardStatus) els.syncCoopDashboardStatus.textContent = text;
 }
 
 function setCoopSyncButtonLoading(isLoading) {
   if (!els.syncCoopDashboardBtn) return;
   els.syncCoopDashboardBtn.classList.toggle("is-loading", isLoading);
   els.syncCoopDashboardBtn.disabled = isLoading;
+}
+
+function getPossibleTerritoryValues(profile) {
+  const canonical = canonicalTerritoryId(profile?.territoryId || PAGE_TERRITORY.territoryId);
+
+  if (canonical === "vila-pinto") {
+    return ["vila-pinto", "crgr_vila_pinto", "crgr-vila-pinto"];
+  }
+
+  if (canonical === "cooadesc") {
+    return ["cooadesc", "coadesc", "crgr_cooadesc", "crgr_coadesc", "crgr-cooadesc", "crgr-coadesc"];
+  }
+
+  if (canonical === "padre-cacique") {
+    return ["padre-cacique", "crgr_padre_cacique", "crgr-padre-cacique"];
+  }
+
+  return [canonical];
+}
+
+function itemBelongsToTerritory(item, profile) {
+  if (isGovernancaUser(profile.role)) return true;
+
+  const possible = getPossibleTerritoryValues(profile).map(canonicalTerritoryId);
+
+  const fields = [
+    item.territoryId,
+    item.territory,
+    item.territorio,
+    item.cooperativeId,
+    item.cooperativaId,
+    item.cooperativeCode,
+    item.cooperativaCode,
+    item.code,
+    item.crgrId,
+    item.localCrgr,
+    item.cooperativa,
+    item.cooperativeName
+  ]
+    .filter(Boolean)
+    .map(canonicalTerritoryId);
+
+  return fields.some((field) => possible.includes(field));
 }
 
 function clearUnsubscribers() {
@@ -138,13 +177,13 @@ function clearUnsubscribers() {
 function animateNumber(el, value) {
   if (!el) return;
 
-  const target = Number(value || 0);
-  const current = Number(String(el.textContent || "0").replace(/\D/g, "")) || 0;
-
-  if (target === current) {
-    el.textContent = target.toLocaleString("pt-BR");
+  if (typeof value !== "number") {
+    setText(el, value);
     return;
   }
+
+  const target = Number(value || 0);
+  const current = Number(String(el.textContent || "0").replace(/\D/g, "")) || 0;
 
   const duration = 500;
   const start = performance.now();
@@ -155,9 +194,7 @@ function animateNumber(el, value) {
 
     el.textContent = next.toLocaleString("pt-BR");
 
-    if (progress < 1) {
-      requestAnimationFrame(frame);
-    }
+    if (progress < 1) requestAnimationFrame(frame);
   }
 
   requestAnimationFrame(frame);
@@ -260,9 +297,7 @@ function fillHeader(profile) {
     profile.nome ||
     (isAdmin ? "Administrador VP" : "Usuário");
 
-  if (els.userNameTop) {
-    els.userNameTop.textContent = name;
-  }
+  if (els.userNameTop) els.userNameTop.textContent = name;
 
   if (els.accessBanner) {
     if (isGovernanca) {
@@ -282,7 +317,7 @@ function fillHeader(profile) {
 
   if (els.sidebarHelpText) {
     els.sidebarHelpText.textContent =
-      "Dashboard da cooperativa com dados operacionais, participantes e coletas.";
+      "Dashboard da cooperativa com dados operacionais, participantes, documentos e coletas.";
   }
 
   document.querySelectorAll(`a[href="cadastro-coletas-vila-pinto.html"]`).forEach((a) => {
@@ -317,7 +352,7 @@ function fillStaticPanels() {
     },
     {
       title: "Acompanhamento operacional",
-      description: "Use o dashboard para acompanhar participantes, coletas e ações pendentes.",
+      description: "Use o dashboard para acompanhar participantes, coletas, documentos e ações pendentes.",
       meta: "Painel"
     }
   ]);
@@ -330,76 +365,76 @@ function fillStaticPanels() {
     },
     {
       title: "Dados integrados",
-      description: "Participantes, coletas e solicitações são carregados diretamente do Firebase.",
+      description: "Participantes, coletas, documentos e solicitações são carregados diretamente do Firebase.",
       meta: "Firebase"
     }
   ]);
 }
 
-function buildScopedQuery(collectionName, profile, useOrder = false, orderField = "createdAtISO") {
-  const constraints = [];
-
-  if (!isGovernancaUser(profile.role)) {
-    constraints.push(where("territoryId", "==", profile.territoryId));
-  }
-
-  if (useOrder) {
-    constraints.push(orderBy(orderField, "desc"));
-  }
-
-  return query(collection(db, collectionName), ...constraints);
-}
-
 function listenCollection(collectionName, profile, callback, options = {}) {
-  const { useOrder = false, orderField = "createdAtISO" } = options;
+  const {
+    useOrder = false,
+    orderField = "createdAtISO",
+    clientFilter = true
+  } = options;
+
+  const possibleValues = getPossibleTerritoryValues(profile).slice(0, 10);
 
   try {
-    const q = buildScopedQuery(collectionName, profile, useOrder, orderField);
+    const constraints = [];
+
+    if (!isGovernancaUser(profile.role)) {
+      constraints.push(where("territoryId", "in", possibleValues));
+    }
+
+    if (useOrder) {
+      constraints.push(orderBy(orderField, "desc"));
+    }
+
+    const q = query(collection(db, collectionName), ...constraints);
 
     const unsubscribe = onSnapshot(
       q,
       (snapshot) => {
-        const docs = snapshot.docs.map((docItem) => {
+        let docs = snapshot.docs.map((docItem) => {
           const data = {
             id: docItem.id,
             ...docItem.data()
           };
 
-          if (data.territoryId) {
-            data.territoryId = canonicalTerritoryId(data.territoryId);
-          }
+          if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
 
           return data;
         });
 
+        if (clientFilter) {
+          docs = docs.filter((item) => itemBelongsToTerritory(item, profile));
+        }
+
         callback(docs);
       },
       (error) => {
-        console.warn(`[${collectionName}] Falha com query ordenada. Tentando fallback.`, error);
+        console.warn(`[${collectionName}] Falha na consulta filtrada. Tentando fallback geral.`, error);
 
-        const fallbackConstraints = [];
-
-        if (!isGovernancaUser(profile.role)) {
-          fallbackConstraints.push(where("territoryId", "==", profile.territoryId));
-        }
-
-        const fallbackQuery = query(collection(db, collectionName), ...fallbackConstraints);
+        const fallbackQuery = query(collection(db, collectionName));
 
         const fallbackUnsubscribe = onSnapshot(
           fallbackQuery,
           (snapshot) => {
-            const docs = snapshot.docs.map((docItem) => {
+            let docs = snapshot.docs.map((docItem) => {
               const data = {
                 id: docItem.id,
                 ...docItem.data()
               };
 
-              if (data.territoryId) {
-                data.territoryId = canonicalTerritoryId(data.territoryId);
-              }
+              if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
 
               return data;
             });
+
+            if (clientFilter) {
+              docs = docs.filter((item) => itemBelongsToTerritory(item, profile));
+            }
 
             callback(docs);
           },
@@ -432,19 +467,16 @@ function computeDashboardData() {
   ).length;
 
   const coletasCount = STATE.coletas.length;
+  const documentsCount = STATE.documents.length;
   const actionsCount = STATE.approvalRequests.filter((item) => item.status === "pending").length;
-
-  const docsOrUsers = isGovernancaUser(STATE.profile?.role)
-    ? STATE.users.length
-    : "—";
 
   return {
     participants: approvedParticipants.length,
     people: peopleCount,
     condos: condoCount,
     coletas: coletasCount,
-    docs: docsOrUsers,
-    actions: STATE.isAdmin || STATE.canEditAll ? actionsCount : "—"
+    docs: documentsCount,
+    actions: STATE.isAdmin || STATE.canEditAll ? actionsCount : 0
   };
 }
 
@@ -453,18 +485,8 @@ function updateKpis() {
 
   animateNumber(els.indicatorParticipants, data.participants);
   animateNumber(els.indicatorColetas, data.coletas);
-
-  if (typeof data.docs === "number") {
-    animateNumber(els.indicatorDocs, data.docs);
-  } else {
-    setText(els.indicatorDocs, data.docs);
-  }
-
-  if (typeof data.actions === "number") {
-    animateNumber(els.indicatorActions, data.actions);
-  } else {
-    setText(els.indicatorActions, data.actions);
-  }
+  animateNumber(els.indicatorDocs, data.docs);
+  animateNumber(els.indicatorActions, data.actions);
 
   animateNumber(els.participantsTotalCount, data.participants);
   animateNumber(els.participantsPeopleCount, data.people);
@@ -477,10 +499,19 @@ function updateCharts(data) {
   const bars = els.chartColetasMensais?.querySelectorAll(".fake-bars span");
 
   if (bars?.length) {
-    const base = Math.max(data.coletas, 1);
+    const values = [
+      data.coletas * 0.42,
+      data.coletas * 0.58,
+      data.coletas * 0.34,
+      data.coletas * 0.72,
+      data.coletas * 0.62,
+      data.coletas * 0.86
+    ];
+
+    const max = Math.max(...values, 1);
 
     bars.forEach((bar, index) => {
-      const height = Math.min(92, 24 + ((base + index * 7) % 68));
+      const height = Math.max(18, Math.round((values[index] / max) * 92));
       bar.style.height = `${height}%`;
     });
   }
@@ -513,9 +544,7 @@ async function loadCollectionSafe(name) {
         ...docItem.data()
       };
 
-      if (data.territoryId) {
-        data.territoryId = canonicalTerritoryId(data.territoryId);
-      }
+      if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
 
       return data;
     });
@@ -529,9 +558,7 @@ async function loadCollectionSafe(name) {
           ...docItem.data()
         };
 
-        if (data.territoryId) {
-          data.territoryId = canonicalTerritoryId(data.territoryId);
-        }
+        if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
 
         return data;
       });
@@ -576,16 +603,18 @@ function buildCooperativaPublicSummary({
   users,
   participants,
   coletas,
+  documents,
   approvalRequests,
   territoryId,
   territoryLabel
 }) {
   const normalizedId = canonicalTerritoryId(territoryId);
 
-  const usersFiltered = users.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
-  const participantsFiltered = participants.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
-  const coletasFiltered = coletas.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
-  const approvalFiltered = approvalRequests.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
+  const usersFiltered = users.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
+  const participantsFiltered = participants.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
+  const coletasFiltered = coletas.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
+  const documentsFiltered = documents.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
+  const approvalFiltered = approvalRequests.filter((item) => itemBelongsToTerritory(item, { role: "admin", territoryId: normalizedId }));
 
   const residuosCount = coletasFiltered.reduce((acc, item) => {
     return acc + getResiduosTotalFromColeta(item);
@@ -597,6 +626,7 @@ function buildCooperativaPublicSummary({
     usersCount: usersFiltered.length + participantsFiltered.length,
     participantsCount: participantsFiltered.length,
     coletasCount: coletasFiltered.length,
+    documentosCount: documentsFiltered.length,
     residuosCount,
     approvalsCount: approvalFiltered.length,
     crgrsCount: 1,
@@ -626,10 +656,11 @@ async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent
         : "Atualizando indicadores da cooperativa..."
     );
 
-    const [users, participants, coletas, approvalRequests] = await Promise.all([
+    const [users, participants, coletas, documents, approvalRequests] = await Promise.all([
       loadCollectionSafe("users"),
       loadCollectionSafe("participants"),
       loadCollectionSafe("coletas"),
+      loadCollectionSafe("documentos"),
       loadCollectionSafe("approvalRequests")
     ]);
 
@@ -637,6 +668,7 @@ async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent
       users,
       participants,
       coletas,
+      documents,
       approvalRequests,
       territoryId: normalizedId,
       territoryLabel
@@ -718,9 +750,7 @@ function applyPermissionRules(profile) {
 }
 
 function applyRoleVisibility(profile) {
-  const isAdmin = isAdminUser(profile.role);
-  const isGovernanca = isGovernancaUser(profile.role);
-  const canManageUsers = isAdmin || isGovernanca;
+  const canManageUsers = isAdminUser(profile.role) || isGovernancaUser(profile.role);
 
   const userLinks = [
     document.querySelector('a[href="usuario-cooperativa-vila-pinto.html"]'),
@@ -766,6 +796,18 @@ function listenDashboardData(profile) {
   );
 
   listenCollection(
+    "documentos",
+    profile,
+    (items) => {
+      STATE.documents = items;
+      updateKpis();
+    },
+    {
+      useOrder: false
+    }
+  );
+
+  listenCollection(
     "approvalRequests",
     profile,
     (items) => {
@@ -790,7 +832,8 @@ function listenDashboardData(profile) {
         updateKpis();
       },
       {
-        useOrder: false
+        useOrder: false,
+        clientFilter: false
       }
     );
   }
