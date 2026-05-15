@@ -70,7 +70,8 @@
 ========================================================= */
 
 .hero-shell {
-  width: min(94%, 1240px);
+  width: min(90%, 1120px);
+
   margin: 0 auto;
 
   background: rgba(255,255,255,.96);
@@ -410,7 +411,7 @@
 }
 
 /* =========================================================
-   CRGR PREMIUM REFINADO
+   CRGR PREMIUM
 ========================================================= */
 
 .crgr-top-centered {
@@ -558,7 +559,7 @@
 .crgr-bottom-map-only {
   display: block;
 
-  max-width: 1000px;
+  max-width: 860px;
 
   margin: 0 auto;
 }
@@ -696,10 +697,6 @@
   }
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
-
 @media (max-width:768px) {
 
   body {
@@ -715,7 +712,7 @@
   }
 
   .hero-shell {
-    width: 100%;
+    width: calc(100% - 12px);
     border-radius: 22px;
   }
 
