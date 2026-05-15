@@ -661,57 +661,40 @@
 
   object-fit: contain;
 }
-
 /* =========================================================
-   RESPONSIVO
+   MOBILE COMPLETO PREMIUM
 ========================================================= */
 
-@media (max-width:1180px) {
+@media (max-width: 768px) {
 
-  .hero-split {
-    grid-template-columns: 56% 44%;
-  }
-
-  .cards-grid.five {
-    grid-template-columns: repeat(3,minmax(0,1fr));
-  }
-
-  .partner-grid-logos {
-    grid-template-columns: repeat(2,minmax(0,1fr));
-  }
-}
-
-@media (max-width:980px) {
-
-  .hero-split {
-    grid-template-columns: 1fr;
-  }
-
-  .hero-copy {
-    padding: 28px 24px 18px;
-  }
-
-  .hero-image {
-    padding: 0 18px 18px;
-  }
-
-  .cards-grid.five {
-    grid-template-columns: repeat(2,minmax(0,1fr));
-  }
-}
-
-@media (max-width:768px) {
-
+  html,
   body {
     overflow-x: hidden;
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
+
+  img,
+  video,
+  iframe {
+    max-width: 100%;
+  }
+
+  /* =========================================================
+     CONTAINER
+  ========================================================= */
 
   .container {
     padding: 0 14px;
   }
 
+  /* =========================================================
+     HERO
+  ========================================================= */
+
   .hero {
-    padding: 18px 0;
+    padding: 14px 0 18px;
   }
 
   .hero-shell {
@@ -719,40 +702,80 @@
     border-radius: 22px;
   }
 
+  .hero-split {
+    grid-template-columns: 1fr;
+  }
+
   .hero-copy {
-    padding: 24px 20px 12px;
+    padding: 24px 20px 10px;
+  }
+
+  /* =========================================================
+     TITULOS
+  ========================================================= */
+
+  .hero-title {
+    line-height: 1;
   }
 
   .hero-title-line {
     font-size: clamp(24px, 7vw, 32px);
+    line-height: 1.08;
+    letter-spacing: -.8px;
   }
 
   .hero-title-highlight {
     font-size: clamp(34px, 10vw, 42px);
+    line-height: 1;
+    letter-spacing: -1.4px;
   }
+
+  /* =========================================================
+     TEXTOS
+  ========================================================= */
 
   .hero-description,
   .section-text,
-  .metric-hint {
+  .metric-hint,
+  .faq-item p {
     font-size: 15.5px;
     line-height: 1.72;
   }
 
+  .hero-description {
+    margin-top: 14px;
+  }
+
+  /* =========================================================
+     HERO IMAGEM
+  ========================================================= */
+
   .hero-image {
-    padding: 0 14px 14px;
+    padding: 0 12px 14px;
   }
 
   .hero-carousel {
-    min-height: 230px;
-    max-height: 260px;
+    width: 100%;
+
+    height: 220px;
+    min-height: 220px;
+    max-height: 220px;
 
     border-radius: 18px;
 
     overflow: hidden;
   }
 
+  .hero-carousel-track {
+    width: 100%;
+    height: 100%;
+  }
+
   .hero-slide {
-    padding: 8px;
+    width: 100%;
+    height: 100%;
+
+    padding: 0;
 
     overflow: hidden;
   }
@@ -761,114 +784,291 @@
     width: 100%;
     height: 100%;
 
-    max-width: 100%;
-    max-height: 100%;
+    display: block;
 
     object-fit: contain;
     object-position: center;
 
+    transform: none;
+
     border-radius: 14px;
   }
 
+  .carousel-dots {
+    bottom: 8px;
+  }
+
+  .carousel-dot {
+    width: 7px;
+    height: 7px;
+  }
+
+  .carousel-dot.is-active {
+    width: 20px;
+  }
+
+  /* =========================================================
+     INDICADORES
+  ========================================================= */
+
   .hero-indicators {
-    padding: 0 16px 20px;
+    padding: 0 14px 18px;
   }
 
   .cards-grid.five {
     grid-template-columns: 1fr;
+    gap: 12px;
   }
 
   .metric-card {
-    min-height: 118px;
+    min-height: 108px;
+    padding: 14px 15px;
+    border-radius: 18px;
+  }
+
+  .metric-label {
+    font-size: 12px;
   }
 
   .metric-value {
-    font-size: 34px;
+    font-size: 32px;
   }
 
+  .metric-hint {
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  /* =========================================================
+     SECTION CONTENT
+  ========================================================= */
+
   .section-shell-content {
-    padding: 24px 16px;
+    padding: 22px 16px;
+    border-radius: 22px;
+  }
+
+  .section-head {
+    margin-bottom: 16px;
   }
 
   .section-head h2,
   .crgr-top h2 {
     font-size: 27px;
-    line-height: 1.16;
+    line-height: 1.12;
+    letter-spacing: -.8px;
+  }
+
+  /* =========================================================
+     CRGR
+  ========================================================= */
+
+  #crgr {
+    padding: 22px 0 24px;
   }
 
   .crgr-top-centered {
-    margin-bottom: 30px;
+    max-width: 100%;
+    margin-bottom: 24px;
   }
 
   .crgr-top-centered::before {
-    width: 62px;
+    width: 58px;
     height: 5px;
     margin-bottom: 18px;
   }
 
   .crgr-top-centered h2 {
-    font-size: 30px;
+    font-size: 29px;
     line-height: 1.08;
     letter-spacing: -1px;
+
+    margin-bottom: 14px;
   }
 
   .crgr-top-centered .section-text {
-    font-size: 15.8px;
-    line-height: 1.78;
+    font-size: 15.4px;
+    line-height: 1.72;
+
     text-align: left;
+
+    margin-bottom: 10px;
   }
 
   .crgr-top-centered .map-helper-box {
-    padding: 18px 18px;
+    margin-top: 18px;
+
+    padding: 16px;
+
+    border-radius: 18px;
+  }
+
+  .map-helper-box strong {
+    font-size: 15px;
+  }
+
+  .map-helper-box span {
+    font-size: 14px;
+    line-height: 1.62;
+  }
+
+  /* =========================================================
+     MAPA
+  ========================================================= */
+
+  .crgr-bottom-map-only {
+    max-width: 100%;
+  }
+
+  .map-panel {
+    padding: 10px;
     border-radius: 20px;
   }
 
   .map-box {
-    min-height: 340px;
+    width: 100%;
+
+    height: 360px;
+    min-height: 360px;
+    max-height: 360px;
+
+    border-radius: 16px;
+
+    overflow: hidden;
+
+    touch-action: pan-y;
   }
+
+  .leaflet-container {
+    touch-action: pan-y;
+  }
+
+  .leaflet-control-zoom {
+    transform: scale(.92);
+    transform-origin: bottom right;
+  }
+
+  .leaflet-popup-content {
+    margin: 12px 14px;
+  }
+
+  /* =========================================================
+     FAQ
+  ========================================================= */
+
+  #faq {
+    padding: 28px 0;
+  }
+
+  .faq-item {
+    border-radius: 16px;
+  }
+
+  .faq-item summary {
+    padding: 16px 18px;
+
+    font-size: 15.5px;
+    line-height: 1.45;
+  }
+
+  .faq-item p {
+    padding: 0 18px 18px;
+  }
+
+  /* =========================================================
+     PARCEIROS
+  ========================================================= */
 
   .partner-grid-logos {
     grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .logo-card {
+    min-height: 110px;
+
+    padding: 18px;
+
+    border-radius: 18px;
+  }
+
+  .partner-logo {
+    max-width: 120px;
+    max-height: 70px;
   }
 }
 
-@media (max-width:420px) {
+/* =========================================================
+   MOBILE PEQUENO
+========================================================= */
+
+@media (max-width: 420px) {
 
   .hero-title-line {
-    font-size: 27px;
-  }
-
-  .hero-title-highlight {
-    font-size: 38px;
-  }
-
-  .hero-carousel {
-    min-height: 210px;
-    max-height: 240px;
-  }
-
-  .section-head h2,
-  .crgr-top h2 {
     font-size: 25px;
   }
-}
-
-@media (max-width:360px) {
-
-  .hero-title-line {
-    font-size: 24px;
-  }
 
   .hero-title-highlight {
-    font-size: 34px;
+    font-size: 36px;
   }
 
   .hero-carousel {
-    min-height: 190px;
-    max-height: 220px;
+    height: 205px;
+    min-height: 205px;
+    max-height: 205px;
+  }
+
+  .metric-value {
+    font-size: 30px;
+  }
+
+  .crgr-top-centered h2,
+  .section-head h2 {
+    font-size: 25px;
+  }
+
+  .map-box {
+    height: 320px;
+    min-height: 320px;
+    max-height: 320px;
+  }
+}
+
+/* =========================================================
+   MOBILE EXTRA PEQUENO
+========================================================= */
+
+@media (max-width: 360px) {
+
+  .container {
+    padding: 0 10px;
   }
 
   .hero-copy {
-    padding: 22px 16px 12px;
+    padding: 22px 16px 10px;
+  }
+
+  .hero-title-line {
+    font-size: 23px;
+  }
+
+  .hero-title-highlight {
+    font-size: 32px;
+  }
+
+  .hero-carousel {
+    height: 190px;
+    min-height: 190px;
+    max-height: 190px;
+  }
+
+  .section-shell-content {
+    padding: 18px 14px;
+  }
+
+  .map-box {
+    height: 290px;
+    min-height: 290px;
+    max-height: 290px;
   }
 }
