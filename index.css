@@ -1,7 +1,4 @@
-/* =========================================================
-   CONTAINER
-========================================================= */
-
+/* CONTAINER */
 .container {
   width: 100%;
   max-width: 1240px;
@@ -9,40 +6,21 @@
   padding: 0 20px;
 }
 
-/* =========================================================
-   MAIN
-========================================================= */
-
+/* MAIN */
 .main-content {
   position: relative;
   z-index: 2;
   padding: 0 0 60px;
-
-  background:
-    linear-gradient(
-      to bottom,
-      #f4f4ef 0%,
-      #f4f4ef 16%,
-      #62B32F 16%,
-      #62B32F 33%,
-      #f4f4ef 33%,
-      #f4f4ef 54%,
-      #ef6b22 54%,
-      #ef6b22 67%,
-      #2FA8D8 67%,
-      #2FA8D8 82%,
-      #f4f4ef 82%,
-      #f4f4ef 100%
-    );
+  background: #f4f4ef;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
-
+/* HERO */
 .hero {
   background: #62B32F;
-  padding: 34px 0 46px;
+  min-height: 80vh;
+  display: flex;
+  align-items: center;
+  padding: 24px 0;
 }
 
 .hero-shell {
@@ -97,10 +75,7 @@
   max-width: 620px;
 }
 
-/* =========================================================
-   HERO CAROUSEL
-========================================================= */
-
+/* HERO CAROUSEL */
 .hero-image {
   display: flex;
   align-items: stretch;
@@ -111,8 +86,8 @@
   position: relative;
   width: 100%;
   height: 100%;
-  min-height: 520px;
-  max-height: 640px;
+  min-height: 58vh;
+  max-height: 68vh;
   border-radius: 22px;
   overflow: hidden;
   background:
@@ -157,10 +132,12 @@
   transition: transform .5s ease, filter .5s ease;
 }
 
+/* REMOVE BOTÕES */
 .carousel-btn {
   display: none !important;
 }
 
+/* DOTS */
 .carousel-dots {
   position: absolute;
   left: 50%;
@@ -189,10 +166,7 @@
   background: #62B32F;
 }
 
-/* =========================================================
-   SECTIONS
-========================================================= */
-
+/* SECTIONS */
 .section-gap {
   height: 40px;
 }
@@ -205,10 +179,19 @@
   background: #fff;
 }
 
-/* =========================================================
-   GRID
-========================================================= */
+/* INDICADORES - 20% DA TELA */
+#indicadores {
+  min-height: 20vh;
+  display: flex;
+  align-items: center;
+  background: #f4f4ef;
+}
 
+#indicadores .section-shell-content {
+  width: 100%;
+}
+
+/* GRID */
 .cards-grid {
   display: grid;
   gap: 22px;
@@ -218,24 +201,18 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
 }
 
-/* Indicadores: 80% + 20% */
 .cards-grid.five {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr)) 0.8fr;
-  gap: 22px;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
 }
 
-/* =========================================================
-   CARDS
-========================================================= */
-
+/* CARDS */
 .card {
   padding: 24px;
 }
 
 .metric-card {
   padding: 20px;
-  min-height: 190px;
+  min-height: 170px;
   border-radius: 20px;
   box-shadow: var(--shadow-card);
   border: 0;
@@ -267,7 +244,6 @@
 .metric-alert {
   background: linear-gradient(135deg, #d64545, #b93333);
   color: #fff;
-  transform: scale(0.96);
 }
 
 .metric-label {
@@ -277,14 +253,10 @@
 }
 
 .metric-value {
-  font-size: clamp(40px, 5vw, 56px);
+  font-size: clamp(34px, 4vw, 48px);
   font-weight: 800;
   color: #fff;
   line-height: 1;
-}
-
-.metric-alert .metric-value {
-  font-size: clamp(34px, 4vw, 48px);
 }
 
 .metric-hint {
@@ -292,10 +264,7 @@
   color: rgba(255,255,255,0.9);
 }
 
-/* =========================================================
-   MAPA / CRGR
-========================================================= */
-
+/* MAPA / CRGR */
 .crgr-top {
   display: flex;
   flex-direction: column;
@@ -322,10 +291,7 @@
   overflow: hidden;
 }
 
-/* =========================================================
-   TEXTOS
-========================================================= */
-
+/* TEXTOS */
 .section-copy {
   display: flex;
   flex-direction: column;
@@ -350,10 +316,7 @@
   max-width: 850px;
 }
 
-/* =========================================================
-   FAQ
-========================================================= */
-
+/* FAQ */
 .faq-item summary {
   padding: 18px 20px;
 }
@@ -362,10 +325,7 @@
   padding: 0 20px 18px;
 }
 
-/* =========================================================
-   PARCEIROS
-========================================================= */
-
+/* PARCEIROS */
 .partner-grid-logos {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -390,10 +350,7 @@
   object-fit: contain;
 }
 
-/* =========================================================
-   RESPONSIVO
-========================================================= */
-
+/* RESPONSIVO */
 @media (max-width: 1180px) {
   .hero-shell {
     width: 90%;
@@ -408,17 +365,8 @@
     padding: 42px 32px;
   }
 
-  .hero-carousel {
-    min-height: 500px;
-    max-height: 580px;
-  }
-
   .cards-grid.five {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-
-  .metric-alert {
-    transform: none;
   }
 
   .partner-grid-logos {
@@ -426,23 +374,11 @@
   }
 }
 
-@media (max-width: 1024px) {
-  .hero-split {
-    grid-template-columns: 55% 45%;
-    gap: 20px;
-  }
-
-  .hero-copy {
-    padding: 36px 28px;
-  }
-
-  .hero-carousel {
-    min-height: 460px;
-    max-height: 540px;
-  }
-}
-
 @media (max-width: 980px) {
+  .hero {
+    min-height: auto;
+  }
+
   .hero-split {
     grid-template-columns: 1fr;
   }
@@ -457,7 +393,7 @@
     width: 100%;
     max-width: 680px;
     min-height: 420px;
-    max-height: 520px;
+    max-height: none;
     aspect-ratio: 4 / 3;
     margin: 0 auto;
   }
@@ -466,15 +402,16 @@
     max-width: 100%;
   }
 
+  #indicadores {
+    min-height: auto;
+  }
+
   .crgr-bottom {
     grid-template-columns: 1fr;
   }
 }
 
-/* =========================================================
-   MOBILE MELHORADO
-========================================================= */
-
+/* MOBILE */
 @media (max-width: 768px) {
   .container {
     padding: 0 16px;
@@ -486,6 +423,7 @@
   }
 
   .hero {
+    min-height: auto;
     padding: 18px 0 28px;
   }
 
@@ -546,6 +484,11 @@
     bottom: 10px;
   }
 
+  #indicadores {
+    min-height: auto;
+    padding-top: 22px;
+  }
+
   .section-shell-content {
     padding: 28px 22px;
     border-radius: 20px;
@@ -557,11 +500,7 @@
   }
 
   .metric-card {
-    min-height: 160px;
-  }
-
-  .metric-alert .metric-value {
-    font-size: clamp(40px, 5vw, 56px);
+    min-height: 150px;
   }
 
   .partner-grid-logos {
