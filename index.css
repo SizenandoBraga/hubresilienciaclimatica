@@ -32,11 +32,12 @@
 }
 
 #pilares {
-  background: linear-gradient(135deg, #ef6b22 0%, #f2853d 100%);
+  background: linear-gradient(135deg, #f4f4ef 0%, #ffffff 100%);
+ 
 }
 
 #crgr {
-  background: linear-gradient(135deg, #f4f4ef 0%, #ffffff 100%);
+   background: linear-gradient(135deg, #ef6b22 0%, #f2853d 100%);
 }
 
 #faq {
