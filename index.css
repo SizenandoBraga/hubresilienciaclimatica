@@ -58,8 +58,12 @@
 }
 
 .hero-copy{
-  padding:26px 30px 22px;
-  max-width:720px;
+  padding:24px 30px 20px;
+  max-width:680px;
+
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
 }
 
 /* =========================================================
@@ -74,29 +78,29 @@
 .hero-title-line{
   display:block;
 
-  font-size:clamp(30px,3.6vw,48px);
+  font-size:clamp(24px,2.8vw,38px);
 
   font-weight:800;
 
   color:#151515;
 
-  letter-spacing:-1.4px;
+  letter-spacing:-1px;
 }
 
 .hero-title-highlight{
   display:block;
 
-  margin:0;
+  margin:2px 0;
 
-  font-size:clamp(40px,5vw,62px);
+  font-size:clamp(34px,4.2vw,52px);
 
   font-weight:900;
 
   color:#62B32F;
 
-  letter-spacing:-2px;
+  letter-spacing:-1.6px;
 
-  text-shadow:0 8px 20px rgba(98,179,47,.16);
+  text-shadow:0 6px 16px rgba(98,179,47,.14);
 }
 
 .hero-description{
@@ -140,9 +144,13 @@
 
 .hero-image{
   display:flex;
-  align-items:stretch;
+
+  align-items:center;
+  justify-content:center;
+
   min-height:100%;
-  padding:10px 14px 10px 0;
+
+  padding:16px 16px 16px 0;
 }
 
 .hero-carousel{
@@ -184,7 +192,7 @@
   align-items:center;
   justify-content:center;
 
-  padding:10px;
+  padding:18px 16px 10px;
 }
 
 .hero-slide.is-active{
@@ -722,15 +730,15 @@
   }
 
   .hero-title-line{
-    font-size:clamp(28px,9vw,38px);
+    font-size:clamp(24px,7vw,32px);
 
-    letter-spacing:-1.2px;
+    letter-spacing:-1px;
   }
 
   .hero-title-highlight{
-    font-size:clamp(38px,12vw,50px);
+    font-size:clamp(32px,10vw,42px);
 
-    letter-spacing:-2px;
+    letter-spacing:-1.4px;
   }
 
   .hero-description{
