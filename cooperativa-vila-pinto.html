@@ -11,31 +11,28 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet" />
 
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
-    crossorigin=""
-  />
+  <link rel="icon" type="image/png" href="img/Logo_verde_NSRU.png" />
+<link rel="shortcut icon" href="img/Logo_verde_NSRU.png" />
+<link rel="apple-touch-icon" href="img/Logo_verde_NSRU.png" />
+<meta name="theme-color" content="#81B92A" />
 
   <link rel="stylesheet" href="cooperativas.css" />
 </head>
+
 <body
   data-territory-id="crgr_vila_pinto"
   data-territory-label="Centro de Triagem Vila Pinto"
   data-cooperative-name="Vila Pinto"
   data-participant-url="cadastro-participantes-vila-pinto.html"
   data-coletas-url="cadastro-coletas-vila-pinto.html"
-  data-map-lat="-30.048729170292532"
-  data-map-lng="-51.15652604283108"
-  data-map-zoom="15"
 >
   <div class="coop-bg"></div>
   <div class="coop-noise"></div>
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
   <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
+
+    <aside class="sidebar sidebar-sticky" id="sidebar">
       <div class="sidebar-top">
         <a class="brand" href="index.html" aria-label="Ir para a página inicial">
           <div class="brand-mark">
@@ -48,17 +45,17 @@
         <div class="nav-label">Menu</div>
 
         <a class="nav-link active" href="cooperativa-vila-pinto.html">
-          <span class="nav-ico">🏠</span>
-          <span>Painel inicial</span>
+          <span class="nav-ico">📊</span>
+          <span>Dashboard inicial</span>
         </a>
 
         <a class="nav-link" href="usuarios-vila-pinto.html">
           <span class="nav-ico">👥</span>
           <span>Gestão de Participantes</span>
         </a>
-        
-         <a class="nav-link" href="usuario-cooperativa-vila-pinto.html">
-          <span class="nav-ico">👥</span>
+
+        <a class="nav-link" href="usuario-cooperativa-vila-pinto.html">
+          <span class="nav-ico">👤</span>
           <span>Gestão de Usuários</span>
         </a>
 
@@ -68,26 +65,16 @@
         </a>
 
         <a class="nav-link" href="dashboard-cooperativa.html">
-          <span class="nav-ico">📊</span>
-          <span>Dashboard da cooperativa</span>
-        </a>
-
-        <a class="nav-link" href="moodle.html">
-          <span class="nav-ico">📚</span>
-          <span>Conteúdos</span>
-        </a>
-
-        <a class="nav-link" href="documentos.html">
-          <span class="nav-ico">📄</span>
-          <span>Documentos</span>
+          <span class="nav-ico">📈</span>
+          <span>Dashboard completo</span>
         </a>
 
         <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
-          Atualizar indicadores da cooperativa
+          Atualizar indicadores
         </button>
 
         <div class="coop-sync-box">
-          <span class="coop-sync-label">Indicadores públicos da cooperativa</span>
+          <span class="coop-sync-label">Indicadores públicos</span>
           <small id="syncCoopDashboardStatus">Aguardando verificação...</small>
         </div>
 
@@ -101,12 +88,13 @@
 
       <div class="sidebar-help">
         <p id="sidebarHelpText">
-          Área vinculada à cooperativa logada. Os dados são filtrados automaticamente conforme o perfil do usuário.
+          Dashboard da cooperativa com dados operacionais, participantes e coletas.
         </p>
       </div>
     </aside>
 
     <div class="content-area">
+
       <header class="topbar">
         <div class="topbar-left">
           <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
@@ -115,388 +103,153 @@
             <div class="topbar-brand-mark">
               <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
             </div>
+
             <div class="topbar-brand-copy">
-              <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-              <span>Plataforma • Cooperativas</span>
+              <strong>Painel da Cooperativa Vila Pinto</strong>
+              <span>Indicadores operacionais e atualizações</span>
             </div>
           </a>
         </div>
 
         <div class="topbar-right">
-          
           <div class="topbar-pill user-pill">
             <span class="user-icon">👤</span>
-            <span id="userNameTop">Usuário</span>
+            <span id="userNameTop">Administrador VP</span>
           </div>
         </div>
       </header>
 
       <main class="coop-main" id="painel-inicial">
+
         <section class="access-banner" id="accessBanner"></section>
 
-        <section class="coop-hero">
-          <div class="hero-badge">Área logada da cooperativa</div>
-          <h1>Bem-vinda(o) ao painel da Vila Pinto</h1>
-          <p>
-            Seu espaço para acessar conteúdos, acompanhar ações da cooperativa, registrar coletas realizadas
-            e visualizar indicadores operacionais do território.
-          </p>
-        </section>-->
+        <section class="dashboard-section dashboard-home">
+          <div class="section-head dashboard-home-head">
+            <div>
+              <span class="section-tag">Dashboard inicial</span>
+              <h1>Visão geral da cooperativa</h1>
+            </div>
 
-       <!-- <section class="dashboard-section">
+            <p>
+              Acompanhe os principais números da Vila Pinto em tempo real.
+            </p>
+          </div>
+
+          <div class="dashboard-kpi-grid">
+            <article class="dashboard-kpi-card kpi-green">
+              <span>Participantes</span>
+              <strong id="indicatorParticipants">0</strong>
+              <small>Total de participantes vinculados</small>
+            </article>
+
+            <article class="dashboard-kpi-card kpi-blue">
+              <span>Coletas</span>
+              <strong id="indicatorColetas">0</strong>
+              <small>Registros de coletas lançados</small>
+            </article>
+
+            <article class="dashboard-kpi-card kpi-orange">
+              <span>Documentos</span>
+              <strong id="indicatorDocs">0</strong>
+              <small>Arquivos e materiais cadastrados</small>
+            </article>
+
+            <article class="dashboard-kpi-card kpi-dark">
+              <span>Ações</span>
+              <strong id="indicatorActions">0</strong>
+              <small>Ações e atualizações registradas</small>
+            </article>
+          </div>
+        </section>
+
+        <section class="dashboard-section dashboard-charts-section">
           <div class="section-head">
             <div>
-              
-              <h2>Acessos e materiais da cooperativa</h2>
+              <span class="section-tag">Gráficos</span>
+              <h2>Evolução e composição dos dados</h2>
             </div>
-            <p>
-              Espaço para conteúdos, documentos, avisos importantes e acesso rápido ao registro de coletas.
-            </p>
           </div>
 
-          <div class="quick-grid quick-grid-three">
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📘</span>
+          <div class="dashboard-chart-grid">
+            <article class="dashboard-chart-card chart-large">
+              <div class="chart-card-head">
+                <h3>Coletas registradas</h3>
+                <span>Mensal</span>
               </div>
-              <h3>Conteúdos</h3>
-              <p>Cartilhas, vídeos, materiais operacionais e referências por tema.</p>
-              <a href="moodle.html">Acessar conteúdos →</a>
+              <div class="chart-placeholder" id="chartColetasMensais">
+                <div class="fake-chart fake-bars">
+                  <span style="height:42%"></span>
+                  <span style="height:58%"></span>
+                  <span style="height:34%"></span>
+                  <span style="height:72%"></span>
+                  <span style="height:62%"></span>
+                  <span style="height:86%"></span>
+                </div>
+              </div>
             </article>
 
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📄</span>
+            <article class="dashboard-chart-card">
+              <div class="chart-card-head">
+                <h3>Participantes</h3>
+                <span>Perfil</span>
               </div>
-              <h3>Documentos</h3>
-              <p>PDFs, atas, relatórios e arquivos institucionais.</p>
-              <a href="documentos.html">Abrir documentos →</a>
+              <div class="chart-placeholder" id="chartParticipantesPerfil">
+                <div class="fake-chart fake-donut">
+                  <span></span>
+                </div>
+              </div>
             </article>
-          
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Operação</span>
-                <span class="quick-icon">♻️</span>
+
+            <article class="dashboard-chart-card">
+              <div class="chart-card-head">
+                <h3>Indicadores gerais</h3>
+                <span>Resumo</span>
               </div>
-              <h3>Registro de coletas</h3>
-              <p>Lance as coletas realizadas e envie os números para o dashboard.</p>
-              <a href="cadastro-coletas-vila-pinto.html">Registrar coletas →</a>
+
+              <div class="mini-indicator-list">
+                <div>
+                  <span>Participantes</span>
+                  <strong id="participantsTotalCount">0</strong>
+                </div>
+
+                <div>
+                  <span>Famílias / moradores</span>
+                  <strong id="participantsPeopleCount">0</strong>
+                </div>
+
+                <div>
+                  <span>Condomínios</span>
+                  <strong id="participantsCondoCount">0</strong>
+                </div>
+              </div>
             </article>
           </div>
+        </section>
 
-          <!--<div class="panel-grid">
-            <article class="panel-card">
-              <div class="panel-card-head">
-                <h3>📢 Avisos importantes</h3>
-              </div>
+        <section class="dashboard-section dashboard-updates-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Atualizações</span>
+              <h2>Últimas atualizações da cooperativa</h2>
+            </div>
+          </div>
+
+          <div class="updates-grid">
+            <article class="updates-card">
+              <h3>📢 Avisos recentes</h3>
               <div class="info-list" id="noticesList"></div>
             </article>
-          </div>
-        </section>-->
 
-        <section class="dashboard-section participants-section-shell">
-          <div class="section-head participants-head">
-            <div>
-              <span class="section-tag">Cadastro da cooperativa</span>
-              <h2>Participantes cadastrados</h2>
-            </div>
-            <p id="participantsSectionText">
-              Gerencie moradores, famílias, condomínios e outros participantes vinculados à cooperativa.
-            </p>
-          </div>
-
-          <div class="participants-toolbar">
-            <div class="participants-search">
-              <input
-                type="text"
-                id="participantSearchInput"
-                placeholder="Buscar por nome, código, bairro ou endereço..."
-              />
-            </div>
-
-            <a class="participants-add-btn" href="cadastro-colaboradores-vila-pinto.html" id="newParticipantBtn">
-              + Novo participante
-            </a>
-          </div>
-
-          <div class="participants-kpis">
-            <article class="participants-kpi-card">
-              <span>Total cadastrados</span>
-              <strong id="participantsTotalCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Famílias / moradores</span>
-              <strong id="participantsPeopleCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Condomínios</span>
-              <strong id="participantsCondoCount">0</strong>
+            <article class="updates-card">
+              <h3>📋 Comunicados</h3>
+              <div class="territory-list" id="territoryCommunications"></div>
             </article>
           </div>
-
-          <div class="participants-list" id="participantsList"></div>
         </section>
 
-        <!-- NOVA SEÇÃO: USUÁRIOS INTERNOS DA COOPERATIVA -->
-        <section class="dashboard-section participants-section-shell admin-only" id="coopUsersSection">
-          <div class="section-head participants-head">
-            <div>
-              <span class="section-tag">Gestão interna</span>
-              <h2>Usuários da cooperativa</h2>
-            </div>
-            <p id="coopUsersSectionText">
-              Cadastre e acompanhe os usuários internos da cooperativa com acesso à plataforma.
-            </p>
-          </div>
-
-          <div class="participants-toolbar">
-            <div class="participants-search">
-              <input
-                type="text"
-                id="coopUserSearchInput"
-                placeholder="Buscar por nome, e-mail, função ou perfil..."
-              />
-            </div>
-
-            <a class="participants-add-btn" href="usuarios.html" id="newCoopUserBtn">
-              + Novo usuário interno
-            </a>
-          </div>
-
-          <div class="participants-kpis">
-            <article class="participants-kpi-card">
-              <span>Total de usuários</span>
-              <strong id="coopUsersTotalCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Administradores</span>
-              <strong id="coopUsersAdminCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Usuários ativos</span>
-              <strong id="coopUsersActiveCount">0</strong>
-            </article>
-          </div>
-
-          <div class="participants-list" id="coopUsersList"></div>
-        </section>
-
-        <section class="dashboard-section territory-panel-shell">
-          <div class="territory-topbar">
-            <span class="section-tag territory-tag">Painel da cooperativa</span>
-
-            <div class="territory-tabs" id="territoryTabs">
-              <button class="territory-tab active" data-tab="comunicados">📋 Comunicados</button>
-              <button class="territory-tab" data-tab="servicos">🛠 Serviços</button>
-              <button class="territory-tab" data-tab="mapa">🗺 Mapa</button>
-              <button class="territory-tab" data-tab="calendario">🗓 Calendário</button>
-              <button class="territory-tab" data-tab="treinamentos">🎓 Capacitações</button>
-              <button class="territory-tab territory-tab-special" data-tab="coleta">🚚 Coleta especial</button>
-              <button class="territory-tab" data-tab="ouvidoria">🗣 Ouvidoria</button>
-            </div>
-          </div>
-
-          <div class="territory-panel-grid">
-            <div class="territory-main">
-              <div class="territory-main-head">
-                <div>
-                  <h3 id="territoryPanelTitle">Comunicados da cooperativa</h3>
-                  <p id="territoryPanelSubtitle">Avisos, atualizações e orientações da cooperativa.</p>
-                </div>
-
-                <div class="territory-head-actions">
-                  <button class="pill-state pill-state-active" type="button">Atual</button>
-                  <button class="pill-state" type="button">Timeline</button>
-                </div>
-              </div>
-
-              <div class="territory-tab-content active" id="tab-comunicados">
-                <div class="territory-list" id="territoryCommunications"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-servicos">
-                <div class="territory-list" id="territoryServices"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-mapa">
-                <section class="territory-map-section">
-                  <div class="territory-map-toolbar">
-                    <div>
-                      <h4>Mapa de pontos de coleta</h4>
-                      <p>
-                        Veja no mapa os pontos fixos da cooperativa e os endereços cadastrados pelos participantes.
-                      </p>
-                    </div>
-
-                    <div class="territory-map-filters">
-                      <select id="mapTypeFilter" class="map-select">
-                        <option value="all">Todos os tipos</option>
-                        <option value="seletiva">Coleta seletiva</option>
-                        <option value="papel">Papel</option>
-                        <option value="plastico">Plástico</option>
-                        <option value="vidro">Vidro</option>
-                        <option value="metal">Metal</option>
-                        <option value="eletronicos">Eletrônicos</option>
-                        <option value="oleo">Óleo</option>
-                        <option value="participante">Pontos de participantes</option>
-                      </select>
-
-                      <button id="btnLoadParticipantPoints" class="map-ghost-btn" type="button">
-                        ➕ Carregar pontos por endereço
-                      </button>
-
-                      <button id="btnNearMe" class="map-ghost-btn" type="button">
-                        📍 Perto de mim
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="territory-map-layout">
-                    <div class="territory-map-canvas">
-                      <div id="territoryMap"></div>
-                    </div>
-
-                    <aside class="territory-map-sidebar">
-                      <div class="map-sidebar-head">
-                        <h5>Lista de pontos</h5>
-                        <span id="mapPointsCount">0</span>
-                      </div>
-
-                      <div id="mapPointsList" class="map-points-list"></div>
-
-                      <div class="map-editor-box" id="mapEditorBox">
-                        <h6>Editar ponto selecionado</h6>
-                        <div class="map-editor-fields">
-                          <input type="text" id="editPointName" placeholder="Nome do ponto" />
-                          <input type="text" id="editPointAddress" placeholder="Endereço do ponto" />
-                          <input type="text" id="editPointType" placeholder="Tipo (seletiva, papel, plástico...)" />
-                          <input type="number" step="any" id="editPointLat" placeholder="Latitude" />
-                          <input type="number" step="any" id="editPointLng" placeholder="Longitude" />
-                        </div>
-
-                        <div class="map-editor-actions">
-                          <button type="button" class="map-ghost-btn" id="btnApplyPointEdit">Salvar posição</button>
-                          <button type="button" class="map-ghost-btn" id="btnCancelPointEdit">Cancelar</button>
-                        </div>
-                      </div>
-                    </aside>
-                  </div>
-                </section>
-              </div>
-
-              <div class="territory-tab-content" id="tab-calendario">
-                <div class="territory-list" id="territoryCalendar"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-treinamentos">
-                <div class="territory-list" id="territoryTrainings"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-coleta">
-                <div class="territory-special-box">
-                  <strong>Coleta especial aberta</strong>
-                  <p>
-                    Registre coletas especiais, agendadas ou operacionais da cooperativa.
-                  </p>
-                  <a class="special-cta" href="cadastro-coletas-vila-pinto.html">♻️ Registrar coleta realizada</a>
-                </div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-ouvidoria">
-                <div class="territory-special-box">
-                  <strong>Ouvidoria da cooperativa</strong>
-                  <p>
-                    Canal para dúvidas, sugestões, ocorrências e retorno da comunidade ligada à cooperativa.
-                  </p>
-                  <a class="panel-link" href="ouvidoria.html">Abrir ouvidoria →</a>
-                </div>
-              </div>
-            </div>
-
-            <aside class="territory-side">
-              <div class="side-card">
-                <h4>Resumo rápido</h4>
-
-                <div class="summary-list">
-                  <div class="summary-row">
-                    <span>Materiais aceitos</span>
-                    <strong id="summaryAccepted">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Não aceitos</span>
-                    <strong id="summaryRejected">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Pontos no mapa</span>
-                    <strong id="summaryPoints">0</strong>
-                  </div>
-                </div>
-
-                <div class="summary-actions">
-                  <a href="servicos.html" class="summary-btn">Serviços</a>
-                  <a href="dashboard-cooperativa.html" class="summary-btn">Mapa</a>
-                </div>
-              </div>
-
-              <div class="side-card quick-shortcuts">
-                <h4>Atalho rápido</h4>
-                <a class="special-cta" href="cadastro-coletas-vila-pinto.html">♻️ Registrar coleta</a>
-              </div>
-
-              <div class="side-card small-grid">
-                <a href="calendario.html" class="summary-btn">Calendário</a>
-                <a href="ouvidoria.html" class="summary-btn">Ouvidoria</a>
-              </div>
-
-              <div class="side-card indicators-card">
-                <div class="indicators-head">
-                  <h4>Indicadores gerais</h4>
-                  <p id="indicatorCardText">
-                    Resumo consolidado da cooperativa, incluindo registros de coleta.
-                  </p>
-                </div>
-
-                <div class="indicator-mini-grid">
-                  <div class="indicator-mini">
-                    <span>Coletas</span>
-                    <strong id="indicatorColetas">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Participantes</span>
-                    <strong id="indicatorParticipants">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Documentos</span>
-                    <strong id="indicatorDocs">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Ações</span>
-                    <strong id="indicatorActions">0</strong>
-                  </div>
-                </div>
-
-                <a class="dashboard-cta" href="dashboard-cooperativa.html">
-                  📊 Acessar dashboard da cooperativa
-                </a>
-              </div>
-            </aside>
-          </div>
-        </section>
       </main>
     </div>
   </div>
-
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
 
   <script type="module" src="/cooperativas-territorio.js"></script>
 </body>
