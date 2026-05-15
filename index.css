@@ -201,13 +201,6 @@
     filter .5s ease;
 }
 
-/* Caso queira imagem preenchendo o card */
-.hero-slide.hero-photo img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-}
-
 /* =========================================================
    REMOVE BOTÕES
 ========================================================= */
@@ -604,6 +597,10 @@
   }
 }
 
+/* =========================================================
+   MOBILE MELHORADO
+========================================================= */
+
 @media (max-width: 768px) {
 
   .container {
@@ -611,78 +608,117 @@
   }
 
   .hero {
-    padding: 24px 0 34px;
+    padding: 18px 0 28px;
   }
 
   .hero-shell {
-    width: calc(100% - 24px);
+    width: calc(100% - 20px);
 
-    border-radius: 22px;
+    border-radius: 20px;
+  }
+
+  .hero-split {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
   }
 
   .hero-copy {
-    padding: 34px 24px 28px;
+    padding: 30px 22px 18px;
   }
 
   .hero-title {
-    line-height: 1.05;
+    line-height: 1;
+    letter-spacing: -1px;
+  }
+
+  .hero-title-line {
+    font-size: clamp(34px, 11vw, 48px);
+    letter-spacing: -1.2px;
+  }
+
+  .hero-title-highlight {
+    font-size: clamp(46px, 14vw, 66px);
+    letter-spacing: -1.8px;
   }
 
   .hero-description {
+    margin-top: 22px;
+
     font-size: 16px;
-    line-height: 1.65;
+
+    line-height: 1.6;
   }
 
   .hero-image {
-    padding: 0 20px 24px;
+    padding: 0 18px 22px;
   }
 
   .hero-carousel {
-    max-width: 100%;
+    min-height: 300px;
 
-    min-height: 380px;
-    max-height: 480px;
-
-    aspect-ratio: 4 / 3;
-
-    border-radius: 18px;
-  }
-}
-
-@media (max-width: 560px) {
-
-  .container {
-    padding: 0 12px;
-  }
-
-  .hero-shell {
-    margin-top: 12px;
-    border-radius: 18px;
-  }
-
-  .hero-copy {
-    padding: 28px 18px 24px;
-  }
-
-  .hero-image {
-    padding: 0 14px 18px;
-  }
-
-  .hero-carousel {
-    min-height: 320px;
-    max-height: 380px;
+    max-height: none;
 
     aspect-ratio: 1 / 1;
 
-    border-radius: 16px;
+    border-radius: 18px;
   }
 
   .hero-slide img {
-    padding: 12px;
+    padding: 10px;
+
+    transform: scale(1);
+
+    object-fit: contain;
   }
 
   .carousel-dots {
     bottom: 10px;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .hero-shell {
+    width: calc(100% - 16px);
+
+    border-radius: 18px;
+  }
+
+  .hero-copy {
+    padding: 26px 18px 14px;
+  }
+
+  .hero-title-line {
+    font-size: 33px;
+  }
+
+  .hero-title-highlight {
+    font-size: 46px;
+  }
+
+  .hero-description {
+    font-size: 15.5px;
+    line-height: 1.58;
+  }
+
+  .hero-image {
+    padding: 0 12px 16px;
+  }
+
+  .hero-carousel {
+    min-height: 260px;
+
+    aspect-ratio: 1 / 1;
+  }
+
+  .carousel-dot {
+    width: 8px;
+    height: 8px;
+  }
+
+  .carousel-dot.is-active {
+    width: 22px;
   }
 }
 
@@ -693,7 +729,7 @@
   }
 
   .hero-carousel {
-    min-height: 260px;
-    max-height: 320px;
+    min-height: 240px;
+    max-height: 300px;
   }
 }
