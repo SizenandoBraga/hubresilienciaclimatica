@@ -2,14 +2,18 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR">
-  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
+
   <title>NSRU • Dashboard de Coletas</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;700&family=Inter:wght@400;500;600;700;800&display=swap"
+    rel="stylesheet"
+  />
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
@@ -18,10 +22,10 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
-  
 
-  <link rel="stylesheet" href="./dashboard-cooperativa.css">
+  <link rel="stylesheet" href="./dashboard-cooperativa.css" />
 </head>
+
 <body data-territory-id="vila-pinto">
   <div class="bg-grid"></div>
   <div class="noise"></div>
@@ -32,7 +36,7 @@
       <div class="side-inner">
         <a class="brand" href="index.html" aria-label="Voltar para a Home">
           <div class="brand-logo-wrap">
-            <img src="img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo">
+            <img src="img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo" />
           </div>
           <div>
             <strong>Dashboard • Cooperativa</strong>
@@ -48,7 +52,7 @@
 
           <div class="field">
             <div class="label">Código do participante</div>
-            <input id="fParticipantCode" type="text" placeholder="Ex.: RB-ABC123 ou COND-ABC123" />
+            <input id="fParticipantCode" type="text" placeholder="Ex.: VPD-0001 ou COND-ABC123" />
           </div>
 
           <div class="quick-participant-preview hidden" id="quickParticipantPreview">
@@ -104,7 +108,7 @@
 
           <div class="field">
             <div class="label">Busca complementar</div>
-            <input id="fBusca" type="text" placeholder="digite para localizar registros..." />
+            <input id="fBusca" type="text" placeholder="Digite para localizar registros..." />
           </div>
 
           <div class="field stack">
@@ -124,8 +128,8 @@
           <div class="field">
             <div class="label">Quantidade de coletas</div>
             <select id="chartMainType">
-              <option value="line">Linha</option>
               <option value="bar">Barras</option>
+              <option value="line">Linha</option>
             </select>
           </div>
 
@@ -331,10 +335,9 @@
               <p>Materiais recicláveis e fluxos especiais exibidos juntos em cards visuais, com peso e identificação por material.</p>
             </div>
           </div>
+
           <div class="material-cards enhanced" id="materialCards"></div>
 
-          <!-- IDs técnicos para compatibilidade com o JS.
-               O óleo deve aparecer visualmente junto nos cards de materiais. -->
           <div class="hidden" aria-hidden="true">
             <span id="k_oleoKg">0 kg</span>
             <span id="k_oleoPct">—</span>
@@ -368,41 +371,52 @@
       </section>
 
       <section class="panel">
- <section class="panel">
-  <div class="panel-inner">
-    <div class="panel-head">
-      <div class="hgroup">
-        <h2>Seção 4 • Evolução diária das coletas</h2>
-        <p>
-          Gráficos consolidados por data da operação. Cada data aparece uma única vez, somando as coletas e os pesos do dia.
-        </p>
-      </div>
-    </div>
+        <div class="panel-inner">
+          <div class="panel-head">
+            <div class="hgroup">
+              <h2>Seção 4 • Evolução diária das coletas</h2>
+              <p>
+                Gráficos consolidados por data da operação. Cada data aparece uma única vez,
+                somando as coletas, o peso reciclável e o rejeito do dia.
+              </p>
+            </div>
+          </div>
 
-    <div class="charts-side-by-side">
-      <div class="chart-card">
-        <div class="chart-title">Peso por data da operação</div>
-        <div class="canvas-wrap medium">
-          <canvas id="weightTimelineChart"></canvas>
-        </div>
-      </div>
+          <div class="charts-side-by-side">
+            <article class="chart-card chart-card-pro">
+              <div class="chart-card-head-pro">
+                <div>
+                  <span class="chart-kicker">Peso diário</span>
+                  <h3>Peso por data da operação</h3>
+                </div>
+              </div>
 
-      <div class="chart-card">
-        <div class="chart-title">Quantidade de coletas por data</div>
-        <div class="canvas-wrap medium">
-          <canvas id="mainChart"></canvas>
+              <div class="canvas-wrap chart-canvas-pro">
+                <canvas id="weightTimelineChart"></canvas>
+              </div>
+            </article>
+
+            <article class="chart-card chart-card-pro">
+              <div class="chart-card-head-pro">
+                <div>
+                  <span class="chart-kicker">Quantidade diária</span>
+                  <h3>Quantidade de coletas por data</h3>
+                </div>
+              </div>
+
+              <div class="canvas-wrap chart-canvas-pro">
+                <canvas id="mainChart"></canvas>
+              </div>
+            </article>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</section>
-</section>
+      </section>
 
       <section class="panel">
         <div class="panel-inner">
           <div class="panel-head">
             <div class="hgroup">
-              <h2>Pontos de coleta dos participantes</h2>
+              <h2>Seção 5 • Pontos de coleta dos participantes</h2>
               <p>Mapa com rota da cooperativa até cada ponto cadastrado.</p>
             </div>
           </div>
@@ -509,8 +523,6 @@
                   <tbody id="tableColetasBody"></tbody>
                 </table>
               </div>
-
-
             </div>
           </div>
         </div>
@@ -521,29 +533,25 @@
   </div>
 
   <div id="photoModal" class="modal" aria-hidden="true">
-  <div class="modal-backdrop" data-close="photoModal"></div>
+    <div class="modal-backdrop" data-close="photoModal"></div>
 
-  <div class="modal-card modal-photo">
-    <button
-      type="button"
-      class="modal-close"
-      data-close="photoModal"
-      aria-label="Fechar"
-    >×</button>
+    <div class="modal-card modal-photo">
+      <button type="button" class="modal-close" data-close="photoModal" aria-label="Fechar">×</button>
 
-    <div class="modal-head">
-      <h3>Visualizar foto</h3>
-      <p>Imagem do registro selecionado.</p>
-    </div>
+      <div class="modal-head">
+        <h3>Visualizar foto</h3>
+        <p>Imagem do registro selecionado.</p>
+      </div>
 
-    <div class="modal-body">
-      <img id="photoModalImg" src="" alt="Foto ampliada da coleta">
+      <div class="modal-body">
+        <img id="photoModalImg" src="" alt="Foto ampliada da coleta" />
+      </div>
     </div>
   </div>
-</div>
 
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="editModal"></div>
+
     <div class="modal-card">
       <button class="modal-close" data-close="editModal" aria-label="Fechar">×</button>
 
