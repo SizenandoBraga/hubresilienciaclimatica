@@ -946,3 +946,459 @@ body.menu-open{
     font-size:24px;
   }
 }
+/* =========================================================
+   POWER BI PRO DASHBOARD
+========================================================= */
+
+.powerbi-grid{
+  display:grid;
+  grid-template-columns:1.4fr .8fr .8fr;
+  gap:16px;
+}
+
+.powerbi-card{
+  background:#fff;
+  border:1px solid rgba(60,58,57,.08);
+  border-radius:22px;
+  padding:20px;
+  box-shadow:0 8px 24px rgba(60,58,57,.08);
+  min-height:320px;
+  position:relative;
+  overflow:hidden;
+}
+
+.powerbi-card::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:
+    radial-gradient(circle at top right,
+    rgba(83,172,222,.08),
+    transparent 42%);
+  pointer-events:none;
+}
+
+.powerbi-card-large{
+  min-height:360px;
+}
+
+.powerbi-card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:14px;
+  margin-bottom:22px;
+  position:relative;
+  z-index:2;
+}
+
+.powerbi-card-head span{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:28px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:11px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#2f88ba;
+  background:#eaf6fc;
+}
+
+.powerbi-card-head h3{
+  margin:10px 0 0;
+  font-size:24px;
+  line-height:1.1;
+  color:#3C3A39;
+}
+
+.powerbi-card-head strong{
+  font-size:36px;
+  line-height:1;
+  color:#3C3A39;
+  font-weight:900;
+}
+
+/* =========================================================
+   BARRAS VERTICAIS
+========================================================= */
+
+.powerbi-bars{
+  height:260px;
+  display:flex;
+  align-items:flex-end;
+  gap:12px;
+  padding-top:12px;
+  position:relative;
+  z-index:2;
+}
+
+.powerbi-bar-item{
+  flex:1;
+  min-width:34px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  gap:8px;
+  height:100%;
+}
+
+.powerbi-bar{
+  width:100%;
+  min-height:8px;
+  border-radius:14px 14px 4px 4px;
+  background:
+    linear-gradient(
+      180deg,
+      #53ACDE,
+      #2f88ba
+    );
+
+  box-shadow:
+    0 8px 18px rgba(83,172,222,.25),
+    inset 0 1px 0 rgba(255,255,255,.28);
+
+  transition:.25s ease;
+}
+
+.powerbi-bar:hover{
+  transform:translateY(-3px);
+}
+
+.powerbi-bar-value{
+  font-size:13px;
+  font-weight:900;
+  color:#3C3A39;
+}
+
+.powerbi-bar-label{
+  font-size:12px;
+  font-weight:800;
+  color:#6c6764;
+  white-space:nowrap;
+  text-transform:capitalize;
+}
+
+/* =========================================================
+   DONUT
+========================================================= */
+
+.powerbi-donut-wrap{
+  position:relative;
+  width:210px;
+  height:210px;
+  margin:12px auto 18px;
+}
+
+.powerbi-donut{
+  width:210px;
+  height:210px;
+  border-radius:50%;
+  background:
+    conic-gradient(
+      #81B92A 0 0%,
+      #53ACDE 0 0%,
+      #EF6B22 0 100%
+    );
+
+  box-shadow:
+    0 14px 32px rgba(60,58,57,.10),
+    inset 0 0 0 1px rgba(60,58,57,.08);
+
+  position:relative;
+}
+
+.powerbi-donut::after{
+  content:"";
+  position:absolute;
+  inset:42px;
+  background:#fff;
+  border-radius:50%;
+  box-shadow:
+    inset 0 0 0 1px rgba(60,58,57,.08),
+    0 4px 14px rgba(60,58,57,.06);
+}
+
+.powerbi-donut-center{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-content:center;
+  text-align:center;
+  z-index:2;
+}
+
+.powerbi-donut-center strong{
+  font-size:36px;
+  line-height:1;
+  font-weight:900;
+  color:#3C3A39;
+}
+
+.powerbi-donut-center small{
+  margin-top:4px;
+  color:#6c6764;
+  font-size:13px;
+  font-weight:900;
+}
+
+/* =========================================================
+   LEGENDA
+========================================================= */
+
+.powerbi-legend{
+  display:grid;
+  gap:10px;
+  position:relative;
+  z-index:2;
+}
+
+.powerbi-legend span{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-size:14px;
+  font-weight:800;
+  color:#575351;
+}
+
+.powerbi-legend i{
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  display:inline-block;
+  box-shadow:0 2px 8px rgba(0,0,0,.12);
+}
+
+.legend-green{
+  background:#81B92A;
+}
+
+.legend-blue{
+  background:#53ACDE;
+}
+
+.legend-orange{
+  background:#EF6B22;
+}
+
+/* =========================================================
+   BARRAS HORIZONTAIS
+========================================================= */
+
+.powerbi-horizontal-bars{
+  display:grid;
+  gap:22px;
+  margin-top:26px;
+  position:relative;
+  z-index:2;
+}
+
+.powerbi-horizontal-bars div{
+  display:grid;
+  gap:8px;
+}
+
+.powerbi-horizontal-bars label{
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.08em;
+  color:#6c6764;
+}
+
+.powerbi-horizontal-bars span{
+  font-size:22px;
+  font-weight:900;
+  color:#3C3A39;
+}
+
+.powerbi-horizontal-bars strong{
+  height:14px;
+  border-radius:999px;
+  background:#f0f1ec;
+  overflow:hidden;
+  display:block;
+  box-shadow:inset 0 1px 3px rgba(0,0,0,.08);
+}
+
+.powerbi-horizontal-bars i{
+  display:block;
+  height:100%;
+  width:0%;
+  border-radius:999px;
+  background:
+    linear-gradient(
+      90deg,
+      #81B92A,
+      #53ACDE
+    );
+
+  transition:.4s ease;
+}
+
+#barRejeito{
+  background:
+    linear-gradient(
+      90deg,
+      #EF6B22,
+      #c95518
+    );
+}
+
+#barNaoComercializado{
+  background:
+    linear-gradient(
+      90deg,
+      #3C3A39,
+      #575351
+    );
+}
+
+/* =========================================================
+   EMPTY
+========================================================= */
+
+.empty-chart-message{
+  width:100%;
+  min-height:180px;
+  display:grid;
+  place-items:center;
+  color:#6c6764;
+  font-weight:900;
+  background:#fafaf8;
+  border:1px dashed rgba(60,58,57,.18);
+  border-radius:18px;
+}
+
+/* =========================================================
+   DETALHES DAS COLETAS
+========================================================= */
+
+.details-metrics{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+}
+
+.details-metrics span{
+  display:inline-flex;
+  align-items:center;
+  min-height:28px;
+  padding:6px 10px;
+  border-radius:999px;
+  background:#fff;
+  border:1px solid rgba(60,58,57,.10);
+  font-size:12px;
+  color:#3C3A39;
+  white-space:nowrap;
+  font-weight:700;
+}
+
+.details-metrics strong{
+  margin-right:4px;
+  font-weight:900;
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.status-badge{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:6px 12px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+.status-badge.realizada{
+  background:#e8f7ea;
+  color:#1f7a2f;
+}
+
+.status-badge.pendente{
+  background:#fff3db;
+  color:#a66a00;
+}
+
+.status-badge.rejeitado{
+  background:#ffe5e2;
+  color:#c83a2b;
+}
+
+/* =========================================================
+   LINK AÇÃO
+========================================================= */
+
+.table-action-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+  padding:0 14px;
+  border-radius:999px;
+  background:#3C3A39;
+  color:#fff;
+  text-decoration:none;
+  font-size:13px;
+  font-weight:900;
+  transition:.2s ease;
+}
+
+.table-action-link:hover{
+  background:#81B92A;
+  transform:translateY(-1px);
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:1180px){
+
+  .powerbi-grid{
+    grid-template-columns:1fr;
+  }
+
+}
+
+@media(max-width:760px){
+
+  .powerbi-card{
+    padding:16px;
+    min-height:auto;
+  }
+
+  .powerbi-bars{
+    height:220px;
+    gap:8px;
+  }
+
+  .powerbi-donut-wrap,
+  .powerbi-donut{
+    width:180px;
+    height:180px;
+  }
+
+  .powerbi-donut::after{
+    inset:36px;
+  }
+
+  .powerbi-card-head{
+    flex-direction:column;
+  }
+
+  .powerbi-card-head strong{
+    font-size:28px;
+  }
+
+}
