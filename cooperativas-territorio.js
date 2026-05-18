@@ -27,9 +27,9 @@ function canonicalTerritoryId(value) {
     .replace(/\s+/g, "-");
 
   if (!raw) return "vila-pinto";
+
   if (raw === "crgr-vila-pinto") return "vila-pinto";
-  if (raw === "crgr-cooadesc" || raw === "crgr-coadesc") return "cooadesc";
-  if (raw === "coadesc") return "cooadesc";
+  if (raw === "crgr-cooadesc") return "cooadesc";
   if (raw === "crgr-padre-cacique") return "padre-cacique";
 
   return raw;
@@ -37,11 +37,7 @@ function canonicalTerritoryId(value) {
 
 const PAGE_TERRITORY = {
   territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
-  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Vila Pinto",
-  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto",
-  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
-  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
-  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html"
+  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto"
 };
 
 /* =========================================================
@@ -66,11 +62,10 @@ const els = {
   indicatorNaoComercializado: document.getElementById("indicatorNaoComercializado"),
   indicatorQualidadeMedia: document.getElementById("indicatorQualidadeMedia"),
 
-  chartColetasMensais: document.getElementById("chartColetasMensais"),
-  chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil"),
-
   recentColetasTableBody: document.getElementById("recentColetasTableBody"),
-  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas")
+
+  chartColetasMensais: document.getElementById("chartColetasMensais"),
+  chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil")
 };
 
 /* =========================================================
@@ -153,15 +148,6 @@ function animateNumber(el, value, suffix = "") {
   requestAnimationFrame(frame);
 }
 
-function formatFluxoLabel(value) {
-  const normalized = normalizeText(value).replaceAll("-", "_");
-
-  if (normalized === "recebimento") return "Recebimento";
-  if (normalized === "final_turno") return "Final do turno";
-
-  return value || "Recebimento";
-}
-
 function getDateValue(item = {}) {
   const possible =
     item.dataColeta ||
@@ -236,6 +222,15 @@ function getTipoRecebimento(item = {}) {
   );
 }
 
+function formatFluxoLabel(value) {
+  const normalized = normalizeText(value).replaceAll("-", "_");
+
+  if (normalized === "recebimento") return "Recebimento";
+  if (normalized === "final_turno") return "Final do turno";
+
+  return value || "Recebimento";
+}
+
 function getPesoRecebido(coleta = {}) {
   return (
     toNumber(coleta.pesoRecebido) ||
@@ -269,7 +264,9 @@ function getQualidade(coleta = {}) {
     toNumber(coleta.notaQualidade) ||
     0
   );
-}/* =========================================================
+}
+
+/* =========================================================
    STATUS
 ========================================================= */
 
@@ -433,7 +430,7 @@ function listenCollection(collectionName, callback) {
 }
 
 /* =========================================================
-   KPIs
+   KPIS
 ========================================================= */
 
 function updateKpis() {
@@ -499,7 +496,7 @@ function updateKpis() {
 }
 
 /* =========================================================
-   TABELA RECENTE
+   RECENTES
 ========================================================= */
 
 function renderRecentColetas() {
@@ -524,8 +521,6 @@ function renderRecentColetas() {
         </td>
       </tr>
     `;
-
-    updateLoadMoreButton();
 
     return;
   }
@@ -562,7 +557,7 @@ function renderRecentColetas() {
             <div class="details-metrics">
 
               <span>
-                <strong>Peso recebido:</strong>
+                <strong>Peso:</strong>
                 ${escapeHtml(formatKg(getPesoRecebido(item)))}
               </span>
 
@@ -593,50 +588,6 @@ function renderRecentColetas() {
       `;
     })
     .join("");
-
-  updateLoadMoreButton();
-}
-
-/* =========================================================
-   LOAD MORE
-========================================================= */
-
-function updateLoadMoreButton() {
-
-  const btn = document.getElementById("btnLoadMoreColetas");
-
-  if (!btn) return;
-
-  const total = STATE.coletas.length;
-
-  if (STATE.recentLimit >= total) {
-
-    btn.textContent =
-      "Todas as coletas já estão visíveis";
-
-    btn.disabled = true;
-
-    return;
-  }
-
-  btn.textContent =
-    "Visualizar mais 10 coletas";
-
-  btn.disabled = false;
-}
-
-function setupLoadMoreColetasButton() {
-
-  const btn = document.getElementById(
-    "btnLoadMoreColetas"
-  );
-
-  if (!btn) return;
-
-  btn.addEventListener("click", () => {
-    STATE.recentLimit += 10;
-    renderRecentColetas();
-  });
 }
 
 /* =========================================================
@@ -709,10 +660,6 @@ function openColetaModal(item) {
 
       <div class="coleta-modal-head">
         <h2>Detalhes da coleta</h2>
-
-        <p>
-          Visualização completa do registro salvo.
-        </p>
       </div>
 
       <div class="coleta-modal-grid">
@@ -720,15 +667,6 @@ function openColetaModal(item) {
         <div class="coleta-info-card">
           <strong>Data:</strong>
           ${escapeHtml(formatDateLabel(item))}
-        </div>
-
-        <div class="coleta-info-card">
-          <strong>Fluxo:</strong>
-          ${escapeHtml(
-            formatFluxoLabel(
-              getTipoRecebimento(item)
-            )
-          )}
         </div>
 
         <div class="coleta-info-card">
@@ -742,7 +680,16 @@ function openColetaModal(item) {
         </div>
 
         <div class="coleta-info-card">
-          <strong>Peso recebido:</strong>
+          <strong>Tipo:</strong>
+          ${escapeHtml(
+            formatFluxoLabel(
+              getTipoRecebimento(item)
+            )
+          )}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Peso:</strong>
           ${escapeHtml(
             formatKg(getPesoRecebido(item))
           )}
@@ -762,18 +709,11 @@ function openColetaModal(item) {
           )}
         </div>
 
-        <div class="coleta-info-card">
-          <strong>Status:</strong>
-          ${escapeHtml(
-            getColetaStatusLabel(item)
-          )}
-        </div>
-
       </div>
 
       <div class="coleta-materials-box">
 
-        <h3>Materiais informados</h3>
+        <h3>Materiais</h3>
 
         <div class="coleta-materials-list">
           ${renderMaterialsList(item)}
@@ -786,18 +726,13 @@ function openColetaModal(item) {
 
   document.body.appendChild(modal);
 
-  document.body.classList.add("modal-open");
-
   modal.addEventListener("click", (event) => {
 
     if (
       event.target.id === "closeColetaModal" ||
       event.target === modal
     ) {
-
       modal.remove();
-
-      document.body.classList.remove("modal-open");
     }
   });
 }
@@ -862,3 +797,148 @@ function buildMonthlyColetasSeries(items = []) {
 
   return Array.from(map.values()).slice(-8);
 }
+
+function updateCharts(data) {
+
+  const monthly =
+    buildMonthlyColetasSeries(STATE.coletas);
+
+  if (els.chartColetasMensais) {
+
+    const max =
+      Math.max(...monthly.map((item) => item.total), 1);
+
+    els.chartColetasMensais.innerHTML =
+      monthly
+        .map((item) => {
+
+          const height =
+            Math.max(
+              10,
+              Math.round((item.total / max) * 100)
+            );
+
+          return `
+            <div class="powerbi-bar-item">
+
+              <span class="powerbi-bar-value">
+                ${item.total}
+              </span>
+
+              <div
+                class="powerbi-bar"
+                style="height:${height}%"
+              ></div>
+
+              <span class="powerbi-bar-label">
+                ${escapeHtml(item.label)}
+              </span>
+
+            </div>
+          `;
+        })
+        .join("");
+  }
+
+  if (els.chartParticipantesPerfil) {
+
+    const total =
+      Math.max(data.participants, 1);
+
+    const familias =
+      Math.round((data.participants / total) * 100);
+
+    const condominios = 25;
+    const outros = 15;
+
+    els.chartParticipantesPerfil.style.background =
+      `
+      conic-gradient(
+        #81B92A 0 ${familias}%,
+        #53ACDE ${familias}% ${familias + condominios}%,
+        #EF6B22 ${familias + condominios}% 100%
+      )
+    `;
+  }
+}
+
+/* =========================================================
+   DATA
+========================================================= */
+
+function listenDashboardData() {
+
+  clearUnsubscribers();
+
+  listenCollection("participants", (items) => {
+
+    STATE.participants = items;
+
+    updateKpis();
+  });
+
+  listenCollection("coletas", (items) => {
+
+    STATE.coletas = items;
+
+    console.log(
+      "[Dashboard] Coletas:",
+      STATE.coletas.length
+    );
+
+    updateKpis();
+  });
+
+  listenCollection("approvalRequests", (items) => {
+
+    STATE.approvalRequests = items;
+
+    updateKpis();
+  });
+}
+
+/* =========================================================
+   BOOT
+========================================================= */
+
+function boot() {
+
+  setupSidebar();
+  setupLogout();
+  setupRecentColetasActions();
+
+  onAuthStateChanged(auth, async (user) => {
+
+    try {
+
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      STATE.currentUser = user;
+
+      const profile =
+        await getUserProfile(user.uid);
+
+      STATE.profile = profile;
+
+      fillHeader(profile);
+
+      listenDashboardData();
+
+    } catch (error) {
+
+      console.error(
+        "Erro ao carregar painel:",
+        error
+      );
+
+      alert(
+        "Não foi possível carregar o painel."
+      );
+    }
+  });
+}
+
+boot();
