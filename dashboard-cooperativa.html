@@ -368,34 +368,33 @@
       </section>
 
       <section class="panel">
-        <div class="panel-inner">
-          <div class="panel-head">
-            <div class="hgroup">
-              <h2>Seção 4 • Série de peso por operação</h2>
-              <p>Evolução do peso reciclável e rejeito por operação registrada.</p>
-            </div>
-          </div>
-          <div class="canvas-wrap"><canvas id="weightTimelineChart"></canvas></div>
-        </div>
-      </section>
+  <div class="panel-inner">
+    <div class="panel-head">
+      <div class="hgroup">
+        <h2>Seção 4 • Evolução diária das coletas</h2>
+        <p>
+          Gráficos consolidados por data da operação. Cada data aparece uma única vez, somando as coletas e os pesos do dia.
+        </p>
+      </div>
+    </div>
 
-      <section class="panel">
-        <div class="panel-inner">
-          <div class="panel-head">
-            <div class="hgroup">
-              <h2>Seção 5 • Gráficos</h2>
-              <p>Quantidade de coletas, tipos de coletas, materiais e pontos de coleta.</p>
-            </div>
-          </div>
-
-          <div class="charts-grid-2x2">
-            <div class="chart-card"><div class="chart-title">Quantidade de coletas</div><div class="canvas-wrap medium"><canvas id="mainChart"></canvas></div></div>
-            <div class="chart-card"><div class="chart-title">Tipos de coletas</div><div class="canvas-wrap medium"><canvas id="secA"></canvas></div></div>
-            <div class="chart-card"><div class="chart-title">Coletas por materiais</div><div class="canvas-wrap medium"><canvas id="secB"></canvas></div></div>
-            <div class="chart-card"><div class="chart-title">Pontos de coleta</div><div class="canvas-wrap medium"><canvas id="secC"></canvas></div></div>
-          </div>
+    <div class="charts-side-by-side">
+      <div class="chart-card">
+        <div class="chart-title">Peso por data da operação</div>
+        <div class="canvas-wrap medium">
+          <canvas id="weightTimelineChart"></canvas>
         </div>
-      </section>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-title">Quantidade de coletas por data</div>
+        <div class="canvas-wrap medium">
+          <canvas id="mainChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
       <section class="panel">
         <div class="panel-inner">
