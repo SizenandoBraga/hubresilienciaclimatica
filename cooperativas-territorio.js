@@ -138,7 +138,6 @@ function formatKg(value) {
 
 function toNumber(value) {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
-
   if (value === null || value === undefined || value === "") return 0;
 
   const parsed = Number(
@@ -163,9 +162,12 @@ function animateNumber(el, value, suffix = "") {
   function frame(now) {
     const progress = Math.min((now - start) / duration, 1);
     const next = Math.round(current + (target - current) * progress);
+
     el.textContent = next.toLocaleString("pt-BR") + suffix;
 
-    if (progress < 1) requestAnimationFrame(frame);
+    if (progress < 1) {
+      requestAnimationFrame(frame);
+    }
   }
 
   requestAnimationFrame(frame);
@@ -446,7 +448,78 @@ function getMateriaisObject(coleta = {}) {
   );
 }
 
+function getFinalTurnoMateriais(item = {}) {
+  return {
+    "Plástico":
+      toNumber(item.plasticoKg) ||
+      toNumber(item.plastico) ||
+      toNumber(item.finalTurno?.plasticoKg) ||
+      toNumber(item.finalTurno?.plastico) ||
+      toNumber(item.payloadSnapshot?.plasticoKg) ||
+      toNumber(item.payloadSnapshot?.plastico),
+
+    "Vidro":
+      toNumber(item.vidroKg) ||
+      toNumber(item.vidro) ||
+      toNumber(item.finalTurno?.vidroKg) ||
+      toNumber(item.finalTurno?.vidro) ||
+      toNumber(item.payloadSnapshot?.vidroKg) ||
+      toNumber(item.payloadSnapshot?.vidro),
+
+    "Sacaria":
+      toNumber(item.sacariaKg) ||
+      toNumber(item.sacaria) ||
+      toNumber(item.finalTurno?.sacariaKg) ||
+      toNumber(item.finalTurno?.sacaria) ||
+      toNumber(item.payloadSnapshot?.sacariaKg) ||
+      toNumber(item.payloadSnapshot?.sacaria),
+
+    "Papel misto":
+      toNumber(item.papelMistoKg) ||
+      toNumber(item.papelMisto) ||
+      toNumber(item.finalTurno?.papelMistoKg) ||
+      toNumber(item.finalTurno?.papelMisto) ||
+      toNumber(item.payloadSnapshot?.papelMistoKg) ||
+      toNumber(item.payloadSnapshot?.papelMisto),
+
+    "Papelão":
+      toNumber(item.papelaoKg) ||
+      toNumber(item.papelao) ||
+      toNumber(item.finalTurno?.papelaoKg) ||
+      toNumber(item.finalTurno?.papelao) ||
+      toNumber(item.payloadSnapshot?.papelaoKg) ||
+      toNumber(item.payloadSnapshot?.papelao),
+
+    "Metal / Alumínio":
+      toNumber(item.aluminioMetalKg) ||
+      toNumber(item.metalKg) ||
+      toNumber(item.aluminioKg) ||
+      toNumber(item.finalTurno?.aluminioMetalKg) ||
+      toNumber(item.finalTurno?.metalKg) ||
+      toNumber(item.finalTurno?.aluminioKg) ||
+      toNumber(item.payloadSnapshot?.aluminioMetalKg) ||
+      toNumber(item.payloadSnapshot?.metalKg) ||
+      toNumber(item.payloadSnapshot?.aluminioKg),
+
+    "Isopor":
+      toNumber(item.isoporKg) ||
+      toNumber(item.isopor) ||
+      toNumber(item.finalTurno?.isoporKg) ||
+      toNumber(item.finalTurno?.isopor) ||
+      toNumber(item.payloadSnapshot?.isoporKg) ||
+      toNumber(item.payloadSnapshot?.isopor)
+  };
+}
+
 function somaMateriais(coleta = {}) {
+  const fixedMaterials = getFinalTurnoMateriais(coleta);
+
+  const fixedTotal = Object.values(fixedMaterials).reduce((acc, value) => {
+    return acc + toNumber(value);
+  }, 0);
+
+  if (fixedTotal > 0) return fixedTotal;
+
   const materiais = getMateriaisObject(coleta);
 
   if (Array.isArray(materiais)) {
@@ -559,6 +632,24 @@ function getQualidade(coleta = {}) {
 }
 
 function renderMaterialsList(item = {}) {
+  const fixedMaterials = getFinalTurnoMateriais(item);
+
+  const fixedEntries = Object.entries(fixedMaterials)
+    .filter(([, value]) => toNumber(value) > 0);
+
+  if (fixedEntries.length) {
+    return fixedEntries
+      .map(([name, value]) => {
+        return `
+          <div class="material-line">
+            <span>${escapeHtml(name)}</span>
+            <strong>${escapeHtml(formatKg(value))}</strong>
+          </div>
+        `;
+      })
+      .join("");
+  }
+
   const materiais = getMateriaisObject(item);
 
   let entries = [];
@@ -993,9 +1084,9 @@ function openColetaModal(item) {
 
       <div class="coleta-modal-grid">
         <div class="coleta-info-card"><strong>Data:</strong> ${escapeHtml(formatDateLabel(item))}</div>
+        <div class="coleta-info-card"><strong>Fluxo:</strong> ${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</div>
         <div class="coleta-info-card"><strong>Participante:</strong> ${escapeHtml(getParticipantName(item))}</div>
         <div class="coleta-info-card"><strong>Código:</strong> ${escapeHtml(getParticipantCode(item))}</div>
-        <div class="coleta-info-card"><strong>Tipo:</strong> ${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</div>
         <div class="coleta-info-card"><strong>Status:</strong> ${escapeHtml(getColetaStatusLabel(item))}</div>
         <div class="coleta-info-card"><strong>Qualidade:</strong> ${escapeHtml(getQualidade(item) || "—")}</div>
         <div class="coleta-info-card"><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</div>
