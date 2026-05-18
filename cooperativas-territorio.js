@@ -28,8 +28,7 @@ function canonicalTerritoryId(value) {
 
   if (!raw) return "vila-pinto";
   if (raw === "crgr-vila-pinto") return "vila-pinto";
-  if (raw === "crgr-cooadesc") return "cooadesc";
-  if (raw === "crgr-coadesc") return "cooadesc";
+  if (raw === "crgr-cooadesc" || raw === "crgr-coadesc") return "cooadesc";
   if (raw === "coadesc") return "cooadesc";
   if (raw === "crgr-padre-cacique") return "padre-cacique";
 
@@ -58,9 +57,6 @@ const els = {
   userNameTop: document.getElementById("userNameTop"),
   accessBanner: document.getElementById("accessBanner"),
 
-  syncCoopDashboardBtn: document.getElementById("syncCoopDashboardBtn"),
-  syncCoopDashboardStatus: document.getElementById("syncCoopDashboardStatus"),
-
   indicatorParticipants: document.getElementById("indicatorParticipants"),
   indicatorColetas: document.getElementById("indicatorColetas"),
   indicatorActions: document.getElementById("indicatorActions"),
@@ -70,12 +66,11 @@ const els = {
   indicatorNaoComercializado: document.getElementById("indicatorNaoComercializado"),
   indicatorQualidadeMedia: document.getElementById("indicatorQualidadeMedia"),
 
-  recentColetasTableBody: document.getElementById("recentColetasTableBody"),
-
   chartColetasMensais: document.getElementById("chartColetasMensais"),
   chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil"),
 
-  exportParticipantsPdfBtn: document.getElementById("exportParticipantsPdfBtn")
+  recentColetasTableBody: document.getElementById("recentColetasTableBody"),
+  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas")
 };
 
 /* =========================================================
@@ -85,12 +80,11 @@ const els = {
 const STATE = {
   currentUser: null,
   profile: null,
-  isAdmin: false,
-  canEditAll: false,
   participants: [],
   coletas: [],
   approvalRequests: [],
-  unsubscribers: []
+  unsubscribers: [],
+  recentLimit: 10
 };
 
 /* =========================================================
@@ -122,14 +116,20 @@ function formatKg(value) {
   return `${formatNumber(Math.round(Number(value || 0)))} kg`;
 }
 
-function formatFluxoLabel(value) {
-  const normalized = normalizeText(value).replaceAll("-", "_");
+function toNumber(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
 
-  if (normalized === "recebimento") return "Recebimento";
-  if (normalized === "final_turno") return "Final do turno";
-  if (normalized.includes("final")) return "Final do turno";
+  if (value === null || value === undefined || value === "") return 0;
 
-  return value || "Recebimento";
+  const parsed = Number(
+    String(value)
+      .trim()
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .replace(/[^\d.-]/g, "")
+  );
+
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
 function animateNumber(el, value, suffix = "") {
@@ -153,20 +153,13 @@ function animateNumber(el, value, suffix = "") {
   requestAnimationFrame(frame);
 }
 
-function toNumber(value) {
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+function formatFluxoLabel(value) {
+  const normalized = normalizeText(value).replaceAll("-", "_");
 
-  if (value === null || value === undefined || value === "") return 0;
+  if (normalized === "recebimento") return "Recebimento";
+  if (normalized === "final_turno") return "Final do turno";
 
-  const parsed = Number(
-    String(value)
-      .trim()
-      .replace(/\./g, "")
-      .replace(",", ".")
-      .replace(/[^\d.-]/g, "")
-  );
-
-  return Number.isFinite(parsed) ? parsed : 0;
+  return value || "Recebimento";
 }
 
 function getDateValue(item = {}) {
@@ -250,7 +243,6 @@ function getPesoRecebido(coleta = {}) {
     toNumber(coleta.pesoTotal) ||
     toNumber(coleta.peso) ||
     toNumber(coleta.kg) ||
-    toNumber(coleta.payloadSnapshot?.pesoRecebido) ||
     0
   );
 }
@@ -259,7 +251,6 @@ function getRejeito(coleta = {}) {
   return (
     toNumber(coleta.rejeito) ||
     toNumber(coleta.totalRejeito) ||
-    toNumber(coleta.payloadSnapshot?.rejeito) ||
     0
   );
 }
@@ -268,7 +259,6 @@ function getNaoComercializado(coleta = {}) {
   return (
     toNumber(coleta.naoComercializado) ||
     toNumber(coleta.totalNaoComercializado) ||
-    toNumber(coleta.payloadSnapshot?.naoComercializado) ||
     0
   );
 }
@@ -279,7 +269,9 @@ function getQualidade(coleta = {}) {
     toNumber(coleta.notaQualidade) ||
     0
   );
-}
+}/* =========================================================
+   STATUS
+========================================================= */
 
 function getColetaStatusLabel(item = {}) {
   const raw =
@@ -309,7 +301,9 @@ function statusBadge(status) {
   if (normalized.includes("real")) className += " realizada";
 
   return `<span class="${className}">${escapeHtml(label)}</span>`;
-}/* =========================================================
+}
+
+/* =========================================================
    AUTH
 ========================================================= */
 
@@ -331,6 +325,7 @@ async function getUserProfile(uid) {
 ========================================================= */
 
 function setupSidebar() {
+
   function openSidebar() {
     els.sidebar?.classList.add("open");
     els.mobileOverlay?.classList.add("show");
@@ -344,6 +339,7 @@ function setupSidebar() {
   }
 
   els.menuBtn?.addEventListener("click", openSidebar);
+
   els.mobileOverlay?.addEventListener("click", closeSidebar);
 
   window.addEventListener("resize", () => {
@@ -359,6 +355,7 @@ function setupSidebar() {
 
 function setupLogout() {
   els.logoutLink?.addEventListener("click", async (event) => {
+
     event.preventDefault();
 
     try {
@@ -376,6 +373,7 @@ function setupLogout() {
 ========================================================= */
 
 function fillHeader(profile) {
+
   const name =
     profile.displayName ||
     profile.name ||
@@ -399,6 +397,7 @@ function fillHeader(profile) {
 ========================================================= */
 
 function clearUnsubscribers() {
+
   STATE.unsubscribers.forEach((unsubscribe) => {
     try {
       unsubscribe();
@@ -409,11 +408,13 @@ function clearUnsubscribers() {
 }
 
 function listenCollection(collectionName, callback) {
+
   const q = query(collection(db, collectionName));
 
   const unsubscribe = onSnapshot(
     q,
     (snapshot) => {
+
       const docs = snapshot.docs.map((docItem) => ({
         id: docItem.id,
         ...docItem.data()
@@ -421,6 +422,7 @@ function listenCollection(collectionName, callback) {
 
       callback(docs);
     },
+
     (error) => {
       console.error(`[${collectionName}]`, error);
       callback([]);
@@ -435,7 +437,9 @@ function listenCollection(collectionName, callback) {
 ========================================================= */
 
 function updateKpis() {
+
   const participants = STATE.participants.length;
+
   const coletas = STATE.coletas.length;
 
   const pesoRecebido = STATE.coletas.reduce(
@@ -484,6 +488,7 @@ function updateKpis() {
   }
 
   renderRecentColetas();
+
   updateCharts({
     participants,
     coletas,
@@ -498,6 +503,7 @@ function updateKpis() {
 ========================================================= */
 
 function renderRecentColetas() {
+
   if (!els.recentColetasTableBody) return;
 
   const recent = [...STATE.coletas]
@@ -507,36 +513,54 @@ function renderRecentColetas() {
 
       return dateB - dateA;
     })
-    .slice(0, 8);
+    .slice(0, STATE.recentLimit);
 
   if (!recent.length) {
+
     els.recentColetasTableBody.innerHTML = `
       <tr>
-        <td colspan="7">Nenhuma coleta cadastrada.</td>
+        <td colspan="7">
+          Nenhuma coleta cadastrada.
+        </td>
       </tr>
     `;
+
+    updateLoadMoreButton();
+
     return;
   }
 
   els.recentColetasTableBody.innerHTML = recent
     .map((item) => {
+
       return `
         <tr>
 
-          <td>${escapeHtml(formatDateLabel(item))}</td>
+          <td>
+            ${escapeHtml(formatDateLabel(item))}
+          </td>
 
-          <td>${escapeHtml(getParticipantName(item))}</td>
+          <td>
+            ${escapeHtml(getParticipantName(item))}
+          </td>
 
-          <td>${escapeHtml(getParticipantCode(item))}</td>
+          <td>
+            ${escapeHtml(getParticipantCode(item))}
+          </td>
 
-          <td>${escapeHtml(
-            formatFluxoLabel(getTipoRecebimento(item))
-          )}</td>
+          <td>
+            ${escapeHtml(
+              formatFluxoLabel(getTipoRecebimento(item))
+            )}
+          </td>
 
-          <td>${statusBadge(getColetaStatusLabel(item))}</td>
+          <td>
+            ${statusBadge(getColetaStatusLabel(item))}
+          </td>
 
           <td>
             <div class="details-metrics">
+
               <span>
                 <strong>Peso recebido:</strong>
                 ${escapeHtml(formatKg(getPesoRecebido(item)))}
@@ -551,43 +575,279 @@ function renderRecentColetas() {
                 <strong>Não comercializado:</strong>
                 ${escapeHtml(formatKg(getNaoComercializado(item)))}
               </span>
+
             </div>
           </td>
 
           <td>
-            <a
+            <button
               class="table-action-link"
-              href="${PAGE_TERRITORY.coletasUrl}"
+              type="button"
+              data-view-coleta="${item.id}"
             >
-              Abrir
-            </a>
+              Ver coleta
+            </button>
           </td>
 
         </tr>
       `;
     })
     .join("");
+
+  updateLoadMoreButton();
 }
 
 /* =========================================================
-   CHARTS POWER BI
+   LOAD MORE
+========================================================= */
+
+function updateLoadMoreButton() {
+
+  const btn = document.getElementById("btnLoadMoreColetas");
+
+  if (!btn) return;
+
+  const total = STATE.coletas.length;
+
+  if (STATE.recentLimit >= total) {
+
+    btn.textContent =
+      "Todas as coletas já estão visíveis";
+
+    btn.disabled = true;
+
+    return;
+  }
+
+  btn.textContent =
+    "Visualizar mais 10 coletas";
+
+  btn.disabled = false;
+}
+
+function setupLoadMoreColetasButton() {
+
+  const btn = document.getElementById(
+    "btnLoadMoreColetas"
+  );
+
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    STATE.recentLimit += 10;
+    renderRecentColetas();
+  });
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function renderMaterialsList(item = {}) {
+
+  const materials =
+    item.materials ||
+    item.materiais ||
+    item.payloadSnapshot?.materials ||
+    item.payloadSnapshot?.materiais ||
+    {};
+
+  const entries = Object.entries(materials);
+
+  if (!entries.length) {
+    return `
+      <div class="empty-materials">
+        Nenhum material informado.
+      </div>
+    `;
+  }
+
+  return entries
+    .map(([name, value]) => {
+
+      return `
+        <div class="material-line">
+
+          <span>
+            ${escapeHtml(name)}
+          </span>
+
+          <strong>
+            ${escapeHtml(formatKg(value))}
+          </strong>
+
+        </div>
+      `;
+    })
+    .join("");
+}
+
+function openColetaModal(item) {
+
+  const old =
+    document.getElementById("coletaDetailsModal");
+
+  if (old) {
+    old.remove();
+  }
+
+  const modal = document.createElement("div");
+
+  modal.id = "coletaDetailsModal";
+
+  modal.className = "coleta-modal-overlay";
+
+  modal.innerHTML = `
+    <div class="coleta-modal">
+
+      <button
+        class="coleta-modal-close"
+        id="closeColetaModal"
+      >
+        ×
+      </button>
+
+      <div class="coleta-modal-head">
+        <h2>Detalhes da coleta</h2>
+
+        <p>
+          Visualização completa do registro salvo.
+        </p>
+      </div>
+
+      <div class="coleta-modal-grid">
+
+        <div class="coleta-info-card">
+          <strong>Data:</strong>
+          ${escapeHtml(formatDateLabel(item))}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Fluxo:</strong>
+          ${escapeHtml(
+            formatFluxoLabel(
+              getTipoRecebimento(item)
+            )
+          )}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Participante:</strong>
+          ${escapeHtml(getParticipantName(item))}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Código:</strong>
+          ${escapeHtml(getParticipantCode(item))}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Peso recebido:</strong>
+          ${escapeHtml(
+            formatKg(getPesoRecebido(item))
+          )}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Rejeito:</strong>
+          ${escapeHtml(
+            formatKg(getRejeito(item))
+          )}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Não comercializado:</strong>
+          ${escapeHtml(
+            formatKg(getNaoComercializado(item))
+          )}
+        </div>
+
+        <div class="coleta-info-card">
+          <strong>Status:</strong>
+          ${escapeHtml(
+            getColetaStatusLabel(item)
+          )}
+        </div>
+
+      </div>
+
+      <div class="coleta-materials-box">
+
+        <h3>Materiais informados</h3>
+
+        <div class="coleta-materials-list">
+          ${renderMaterialsList(item)}
+        </div>
+
+      </div>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.body.classList.add("modal-open");
+
+  modal.addEventListener("click", (event) => {
+
+    if (
+      event.target.id === "closeColetaModal" ||
+      event.target === modal
+    ) {
+
+      modal.remove();
+
+      document.body.classList.remove("modal-open");
+    }
+  });
+}
+
+function setupRecentColetasActions() {
+
+  document.addEventListener("click", (event) => {
+
+    const button =
+      event.target.closest("[data-view-coleta]");
+
+    if (!button) return;
+
+    const coletaId =
+      button.dataset.viewColeta;
+
+    const coleta = STATE.coletas.find(
+      (item) =>
+        String(item.id) === String(coletaId)
+    );
+
+    if (!coleta) return;
+
+    openColetaModal(coleta);
+  });
+}
+
+/* =========================================================
+   CHARTS
 ========================================================= */
 
 function buildMonthlyColetasSeries(items = []) {
+
   const map = new Map();
 
   items.forEach((item) => {
+
     const date = getDateValue(item);
 
     if (!date) return;
 
-    const key = `${date.getFullYear()}-${String(
-      date.getMonth() + 1
-    ).padStart(2, "0")}`;
+    const key =
+      `${date.getFullYear()}-${String(
+        date.getMonth() + 1
+      ).padStart(2, "0")}`;
 
-    const label = date.toLocaleDateString("pt-BR", {
-      month: "short"
-    });
+    const label =
+      date.toLocaleDateString("pt-BR", {
+        month: "short"
+      });
 
     if (!map.has(key)) {
       map.set(key, {
@@ -602,262 +862,3 @@ function buildMonthlyColetasSeries(items = []) {
 
   return Array.from(map.values()).slice(-8);
 }
-
-function updateCharts(data) {
-  const monthly = buildMonthlyColetasSeries(STATE.coletas);
-
-  const totalLabel = document.getElementById(
-    "chartTotalColetasLabel"
-  );
-
-  if (totalLabel) {
-    totalLabel.textContent = String(data.coletas || 0);
-  }
-
-  if (els.chartColetasMensais) {
-    const max = Math.max(
-      ...monthly.map((item) => item.total),
-      1
-    );
-
-    els.chartColetasMensais.innerHTML = monthly
-      .map((item) => {
-        const height = Math.max(
-          8,
-          Math.round((item.total / max) * 100)
-        );
-
-        return `
-          <div class="powerbi-bar-item">
-            <span class="powerbi-bar-value">
-              ${item.total}
-            </span>
-
-            <div
-              class="powerbi-bar"
-              style="height:${height}%"
-            ></div>
-
-            <span class="powerbi-bar-label">
-              ${escapeHtml(item.label)}
-            </span>
-          </div>
-        `;
-      })
-      .join("");
-  }
-
-  const donut = document.getElementById(
-    "chartParticipantesPerfil"
-  );
-
-  const donutTotal = document.getElementById(
-    "chartTotalParticipantesLabel"
-  );
-
-  if (donutTotal) {
-    donutTotal.textContent = String(data.participants || 0);
-  }
-
-  const families = STATE.participants.filter((p) => {
-    const type = normalizeText(
-      p.localType || p.codeLocalType || ""
-    );
-
-    return type === "casa";
-  }).length;
-
-  const condos = STATE.participants.filter((p) => {
-    const type = normalizeText(
-      p.localType || p.codeLocalType || ""
-    );
-
-    return type === "condominio";
-  }).length;
-
-  const others = Math.max(
-    STATE.participants.length - families - condos,
-    0
-  );
-
-  const total = Math.max(
-    STATE.participants.length,
-    1
-  );
-
-  const p1 = (families / total) * 100;
-  const p2 = p1 + (condos / total) * 100;
-  const p3 = p2 + (others / total) * 100;
-
-  if (donut) {
-    donut.style.background = `
-      conic-gradient(
-        #81B92A 0 ${p1}%,
-        #53ACDE ${p1}% ${p2}%,
-        #EF6B22 ${p2}% ${p3}%
-      )
-    `;
-  }
-
-  const peso = Number(data.pesoRecebido || 0);
-  const rejeito = Number(data.rejeito || 0);
-  const naoComercializado = Number(
-    data.naoComercializado || 0
-  );
-
-  const maxPeso = Math.max(
-    peso,
-    rejeito,
-    naoComercializado,
-    1
-  );
-
-  const barPeso = document.getElementById(
-    "barPesoRecebido"
-  );
-
-  const barRejeito = document.getElementById(
-    "barRejeito"
-  );
-
-  const barNao = document.getElementById(
-    "barNaoComercializado"
-  );
-
-  if (barPeso) {
-    barPeso.style.width = `${
-      (peso / maxPeso) * 100
-    }%`;
-  }
-
-  if (barRejeito) {
-    barRejeito.style.width = `${
-      (rejeito / maxPeso) * 100
-    }%`;
-  }
-
-  if (barNao) {
-    barNao.style.width = `${
-      (naoComercializado / maxPeso) * 100
-    }%`;
-  }
-
-  const pesoLabel = document.getElementById(
-    "barPesoRecebidoLabel"
-  );
-
-  const rejeitoLabel = document.getElementById(
-    "barRejeitoLabel"
-  );
-
-  const naoLabel = document.getElementById(
-    "barNaoComercializadoLabel"
-  );
-
-  if (pesoLabel) {
-    pesoLabel.textContent = formatKg(peso);
-  }
-
-  if (rejeitoLabel) {
-    rejeitoLabel.textContent = formatKg(rejeito);
-  }
-
-  if (naoLabel) {
-    naoLabel.textContent = formatKg(
-      naoComercializado
-    );
-  }
-}
-
-/* =========================================================
-   DASHBOARD
-========================================================= */
-
-function listenDashboardData() {
-  clearUnsubscribers();
-
-  listenCollection("participants", (items) => {
-    STATE.participants = items;
-    updateKpis();
-  });
-
-  listenCollection("coletas", (items) => {
-    STATE.coletas = items;
-
-    console.table(
-      items.slice(0, 5).map((item) => ({
-        participante: getParticipantName(item),
-        codigo: getParticipantCode(item),
-        tipo: getTipoRecebimento(item),
-        peso: getPesoRecebido(item),
-        rejeito: getRejeito(item),
-        naoComercializado:
-          getNaoComercializado(item)
-      }))
-    );
-
-    updateKpis();
-  });
-
-  listenCollection("approvalRequests", (items) => {
-    STATE.approvalRequests = items;
-    updateKpis();
-  });
-}
-
-/* =========================================================
-   EXPORTAÇÃO
-========================================================= */
-
-function setupExportButton() {
-  els.exportParticipantsPdfBtn?.addEventListener(
-    "click",
-    () => {
-      window.print();
-    }
-  );
-}
-
-/* =========================================================
-   BOOT
-========================================================= */
-
-function boot() {
-  setupSidebar();
-  setupLogout();
-  setupExportButton();
-
-  onAuthStateChanged(auth, async (user) => {
-    try {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      STATE.currentUser = user;
-
-      const profile = await getUserProfile(user.uid);
-
-      STATE.profile = profile;
-
-      fillHeader(profile);
-
-      listenDashboardData();
-
-      document.body.classList.add(
-        "dashboard-loaded"
-      );
-
-    } catch (error) {
-      console.error(error);
-
-      alert(
-        "Não foi possível carregar o painel."
-      );
-
-      window.location.href = "login.html";
-    }
-  });
-}
-
-boot();
