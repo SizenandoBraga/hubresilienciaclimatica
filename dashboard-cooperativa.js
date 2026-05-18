@@ -10,7 +10,6 @@ import {
   setDoc,
   collection,
   query,
-  where,
   onSnapshot,
   updateDoc,
   serverTimestamp
@@ -112,58 +111,14 @@ const COOP_BASES = {
 };
 
 const MATERIAL_ALIASES = {
-  plasticoKg: [
-    "plasticoKg",
-    "plastico",
-    "pesoPlasticoKg",
-    "plasticoPesoKg"
-  ],
-  vidroKg: [
-    "vidroKg",
-    "vidro",
-    "pesoVidroKg",
-    "vidroPesoKg"
-  ],
-  aluminioMetalKg: [
-    "aluminioMetalKg",
-    "metalKg",
-    "aluminioKg",
-    "metalAluminioKg",
-    "pesoMetalKg",
-    "pesoAluminioKg"
-  ],
-  sacariaKg: [
-    "sacariaKg",
-    "sacaria",
-    "pesoSacariaKg"
-  ],
-  papelMistoKg: [
-    "papelMistoKg",
-    "papelKg",
-    "papelMisto",
-    "pesoPapelMistoKg",
-    "pesoPapelKg"
-  ],
-  papelaoKg: [
-    "papelaoKg",
-    "papelao",
-    "papelãoKg",
-    "pesoPapelaoKg"
-  ],
-  isoporKg: [
-    "isoporKg",
-    "isopor",
-    "pesoIsoporKg"
-  ],
-  oleoKg: [
-    "oleoKg",
-    "oleo",
-    "óleoKg",
-    "oleoCozinhaKg",
-    "oleoDeCozinhaKg",
-    "litrosOleo",
-    "oleoLitros"
-  ]
+  plasticoKg: ["plasticoKg", "plastico", "pesoPlasticoKg", "plasticoPesoKg"],
+  vidroKg: ["vidroKg", "vidro", "pesoVidroKg", "vidroPesoKg"],
+  aluminioMetalKg: ["aluminioMetalKg", "metalKg", "aluminioKg", "metalAluminioKg", "pesoMetalKg", "pesoAluminioKg"],
+  sacariaKg: ["sacariaKg", "sacaria", "pesoSacariaKg"],
+  papelMistoKg: ["papelMistoKg", "papelKg", "papelMisto", "pesoPapelMistoKg", "pesoPapelKg"],
+  papelaoKg: ["papelaoKg", "papelao", "papelãoKg", "pesoPapelaoKg"],
+  isoporKg: ["isoporKg", "isopor", "pesoIsoporKg"],
+  oleoKg: ["oleoKg", "oleo", "óleoKg", "oleoCozinhaKg", "oleoDeCozinhaKg", "litrosOleo", "oleoLitros"]
 };
 
 /* =========================
@@ -355,6 +310,69 @@ function getTerritoryAliases(value) {
   return v ? [v] : [];
 }
 
+function itemBelongsToPageTerritory(item = {}) {
+  const aliases = getTerritoryAliases(pageTerritoryId);
+
+  if (!aliases.length) return true;
+
+  const code = String(
+    item.participantCode ||
+    item.codigoParticipante ||
+    item.codigo ||
+    item.familyCode ||
+    item.code ||
+    item.payloadSnapshot?.participantCode ||
+    item.payloadSnapshot?.codigoParticipante ||
+    item.payloadSnapshot?.familyCode ||
+    ""
+  ).trim().toUpperCase();
+
+  const territoryFields = [
+    item.territoryId,
+    item.territory,
+    item.territorio,
+    item.cooperativeId,
+    item.cooperativaId,
+    item.cooperativeName,
+    item.cooperativa,
+    item.localCrgr,
+    item.crgr,
+    item.payloadSnapshot?.territoryId,
+    item.payloadSnapshot?.territory,
+    item.payloadSnapshot?.territorio,
+    item.payloadSnapshot?.cooperativeId,
+    item.payloadSnapshot?.cooperativaId,
+    item.payloadSnapshot?.cooperativa,
+    item.payloadSnapshot?.localCrgr,
+    item.payloadSnapshot?.crgr
+  ].filter(Boolean);
+
+  const hasTerritoryMatch = territoryFields.some((value) => {
+    const normalized = normalizeTerritory(value);
+    return aliases.includes(normalized);
+  });
+
+  if (hasTerritoryMatch) return true;
+
+  if (aliases.includes("vila-pinto") || aliases.includes("crgr-vila-pinto")) {
+    return code.startsWith("VPD") || code.startsWith("C") || code.startsWith("F");
+  }
+
+  if (
+    aliases.includes("cooadesc") ||
+    aliases.includes("coadesc") ||
+    aliases.includes("crgr-cooadesc") ||
+    aliases.includes("crgr-coadesc")
+  ) {
+    return code.startsWith("COA") || code.startsWith("COO");
+  }
+
+  if (aliases.includes("padre-cacique") || aliases.includes("crgr-padre-cacique")) {
+    return code.startsWith("PC") || code.startsWith("PCA") || code.startsWith("PDC");
+  }
+
+  return false;
+}
 function sameTerritoryValue(a, b) {
   const aNorm = normalizeTerritory(a);
   const aliases = getTerritoryAliases(b);
@@ -366,7 +384,7 @@ function resolvePageTerritory(profile) {
   const urlTerritory = normalizeTerritory(new URLSearchParams(window.location.search).get("territory") || "");
   const userTerritory = normalizeTerritory(profile?.territoryId || "");
 
-  return bodyTerritory || urlTerritory || userTerritory || "";
+  return bodyTerritory || urlTerritory || userTerritory || "vila-pinto";
 }
 
 function getCooperativaHomeUrl(territoryId) {
@@ -385,6 +403,7 @@ function getCooperativaHomeUrl(territoryId) {
 
 function updateDashboardLinks() {
   const backToCoopBtn = document.getElementById("backToCoopBtn");
+
   if (backToCoopBtn) {
     backToCoopBtn.href = getCooperativaHomeUrl(pageTerritoryId);
   }
@@ -441,7 +460,10 @@ function formatMoneyBR(value) {
 
 function toNumberBR(value) {
   if (value === null || value === undefined || value === "") return 0;
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : 0;
+  }
 
   const cleaned = String(value)
     .trim()
@@ -451,6 +473,7 @@ function toNumberBR(value) {
     .replace(",", ".");
 
   const n = Number(cleaned);
+
   return Number.isFinite(n) ? n : 0;
 }
 
@@ -458,7 +481,10 @@ function firstNumber(...values) {
   for (const value of values) {
     if (value !== null && value !== undefined && value !== "") {
       const n = toNumberBR(value);
-      if (Number.isFinite(n)) return n;
+
+      if (Number.isFinite(n)) {
+        return n;
+      }
     }
   }
 
@@ -468,7 +494,10 @@ function firstNumber(...values) {
 function firstFinite(...values) {
   for (const value of values) {
     const n = Number(value);
-    if (Number.isFinite(n)) return n;
+
+    if (Number.isFinite(n)) {
+      return n;
+    }
   }
 
   return null;
@@ -492,16 +521,34 @@ function createdAtToISO(item) {
 
 function inferDateISO(item) {
   if (item.opDate) return String(item.opDate).slice(0, 10);
+  if (item.dataOperacao) return String(item.dataOperacao).slice(0, 10);
+  if (item.operationDate) return String(item.operationDate).slice(0, 10);
   if (item.dataColeta) return String(item.dataColeta).slice(0, 10);
   if (item.coletaData) return String(item.coletaData).slice(0, 10);
+  if (item.dateColeta) return String(item.dateColeta).slice(0, 10);
+  if (item.data) return String(item.data).slice(0, 10);
+
+  if (item.payloadSnapshot?.opDate) return String(item.payloadSnapshot.opDate).slice(0, 10);
+  if (item.payloadSnapshot?.dataOperacao) return String(item.payloadSnapshot.dataOperacao).slice(0, 10);
   if (item.payloadSnapshot?.dataColeta) return String(item.payloadSnapshot.dataColeta).slice(0, 10);
+  if (item.payloadSnapshot?.data) return String(item.payloadSnapshot.data).slice(0, 10);
 
   const iso = createdAtToISO(item);
   return iso ? iso.slice(0, 10) : "";
 }
 
 function inferDateTimeISO(item) {
-  return createdAtToISO(item) || item.opDate || item.dataColeta || "";
+  return (
+    createdAtToISO(item) ||
+    item.opDate ||
+    item.dataOperacao ||
+    item.operationDate ||
+    item.dataColeta ||
+    item.coletaData ||
+    item.dateColeta ||
+    item.data ||
+    ""
+  );
 }
 
 function inferFluxo(item) {
@@ -510,9 +557,14 @@ function inferFluxo(item) {
     item.fluxo ||
     item.tipoColeta ||
     item.tipoRecebimento ||
+    item.receiptType ||
     item.recebimento?.flowType ||
+    item.recebimento?.fluxo ||
     item.finalTurno?.flowType ||
+    item.finalTurno?.fluxo ||
     item.payloadSnapshot?.flowType ||
+    item.payloadSnapshot?.fluxo ||
+    item.payloadSnapshot?.tipoRecebimento ||
     "";
 
   const normalized = normalizeText(raw).replaceAll("-", "_");
@@ -542,14 +594,28 @@ function inferEntrega(item) {
     item.entrega ||
     item.tipoEntrega ||
     item.recebimento?.deliveryType ||
+    item.recebimento?.entrega ||
     item.finalTurno?.deliveryType ||
+    item.finalTurno?.entrega ||
     item.payloadSnapshot?.deliveryType ||
+    item.payloadSnapshot?.entrega ||
     "—"
   );
 }
 
 function inferTerritorio(item) {
-  return item.territoryLabel || coopProfile?.territoryLabel || pageTerritoryId || "Território";
+  return (
+    item.territoryLabel ||
+    item.territoryId ||
+    item.territory ||
+    item.cooperativa ||
+    item.payloadSnapshot?.territoryLabel ||
+    item.payloadSnapshot?.territoryId ||
+    item.payloadSnapshot?.territory ||
+    coopProfile?.territoryLabel ||
+    pageTerritoryId ||
+    "Território"
+  );
 }
 
 function inferPesoResiduoSecoBruto(item) {
@@ -561,10 +627,16 @@ function inferPesoResiduoSecoBruto(item) {
     item.finalTurno?.residuoSecoKg,
     item.residuoSecoKg,
     item.pesoRecebido,
+    item.peso_recebido,
+    item.totalPesoRecebido,
+    item.totalRecebido,
     item.totalKg,
     item.pesoTotal,
+    item.peso,
+    item.kg,
     item.payloadSnapshot?.pesoRecebido,
-    item.payloadSnapshot?.pesoResiduoSecoKg
+    item.payloadSnapshot?.pesoResiduoSecoKg,
+    item.payloadSnapshot?.totalKg
   );
 }
 
@@ -581,7 +653,8 @@ function inferPesoRejeitoInformado(item) {
     item.naoReciclavelKg,
     item.pesoNaoReciclavelKg,
     item.payloadSnapshot?.rejeito,
-    item.payloadSnapshot?.pesoRejeitoKg
+    item.payloadSnapshot?.pesoRejeitoKg,
+    item.payloadSnapshot?.totalRejeito
   );
 }
 
@@ -594,7 +667,11 @@ function inferNaoComercializado(item) {
     item.pesoNaoComercializadoKg,
     item.naoComercializadoKg,
     item.naoComercializado,
+    item.nao_comercializado,
     item.totalNaoComercializado,
+    item.materialNaoComercializado,
+    item.naoVenda,
+    item.semComercializacao,
     item.payloadSnapshot?.naoComercializado,
     item.payloadSnapshot?.totalNaoComercializado
   );
@@ -625,25 +702,71 @@ function inferTotalRejeitoRegistro(item) {
 }
 
 function inferObservacao(item) {
-  return item.observacao || item.recebimento?.observacao || item.finalTurno?.observacao || "";
+  return (
+    item.observacao ||
+    item.obs ||
+    item.recebimento?.observacao ||
+    item.recebimento?.obs ||
+    item.finalTurno?.observacao ||
+    item.finalTurno?.obs ||
+    item.payloadSnapshot?.observacao ||
+    item.payloadSnapshot?.obs ||
+    ""
+  );
 }
 
 function getQualidade(item) {
   const value =
     item.recebimento?.qualidadeNota ??
+    item.recebimento?.qualidade ??
     item.finalTurno?.qualidadeNota ??
+    item.finalTurno?.qualidade ??
     item.qualidadeNota ??
     item.qualidade ??
     item.notaQualidade ??
+    item.qualityScore ??
     item.payloadSnapshot?.qualidadeNota ??
+    item.payloadSnapshot?.qualidade ??
     "";
 
   if (value === null || value === undefined || value === "") return "";
+
   return String(value);
 }
 
 function getStatus(item) {
-  return String(item.status || "ativo").toLowerCase();
+  return String(
+    item.status ||
+    item.situacao ||
+    item.coletaStatus ||
+    item.decision ||
+    "ativo"
+  ).toLowerCase();
+}
+
+function resolveHumanStatus(item) {
+  const status = normalizeText(getStatus(item));
+
+  if (status.includes("cancel")) return "Cancelado";
+  if (status.includes("edit")) return "Editado";
+  if (status.includes("pend")) return "Pendente";
+  if (status.includes("reje")) return "Rejeitado";
+
+  return "Ativo";
+}
+
+function isActiveCollection(item) {
+  const status = normalizeText(getStatus(item));
+
+  return ![
+    "cancelado",
+    "cancelada",
+    "rejeitado",
+    "rejeitada",
+    "rejected",
+    "rascunho",
+    "draft"
+  ].includes(status);
 }
 
 function getMaterialValue(item, key) {
@@ -653,7 +776,9 @@ function getMaterialValue(item, key) {
     item.materiais,
     item.materials,
     item.recebimento?.materiais,
+    item.recebimento?.materials,
     item.finalTurno?.materiais,
+    item.finalTurno?.materials,
     item.payloadSnapshot?.materiais,
     item.payloadSnapshot?.materials,
     item.recebimento,
@@ -674,7 +799,9 @@ function getMaterialValue(item, key) {
 }
 
 function inferTotalMateriaisRegistro(item) {
-  return MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
+  return MATERIAL_META.reduce((acc, mat) => {
+    return acc + getMaterialValue(item, mat.key);
+  }, 0);
 }
 
 function inferTotalReciclavelRegistro(item) {
@@ -686,12 +813,15 @@ function sortColetasLocally(items) {
   return [...items].sort((a, b) => {
     const aDate = String(inferDateTimeISO(a) || "");
     const bDate = String(inferDateTimeISO(b) || "");
+
     return bDate.localeCompare(aDate);
   });
 }
+
 /* =========================
    EXPORT BASE
 ========================= */
+
 function getExportBaseItems() {
   return Array.isArray(tableFilteredColetas) && tableFilteredColetas.length
     ? tableFilteredColetas
@@ -784,7 +914,6 @@ function buildExportFileStamp() {
 
   return `${yyyy}-${mm}-${dd}_${hh}-${mi}`;
 }
-
 function extractLatLngFromSource(source) {
   if (!source || typeof source !== "object") {
     return {
@@ -906,7 +1035,11 @@ function getColetaPhotoUrls(item = {}) {
       }
 
       if (entry && typeof entry === "object") {
-        const possible = entry.url || entry.downloadURL || entry.photoUrl || entry.imageUrl;
+        const possible =
+          entry.url ||
+          entry.downloadURL ||
+          entry.photoUrl ||
+          entry.imageUrl;
 
         if (typeof possible === "string" && possible.trim()) {
           urls.push(possible.trim());
@@ -919,7 +1052,12 @@ function getColetaPhotoUrls(item = {}) {
 }
 
 function inferCreatorLabel(item = {}) {
-  return item.createdByName || item.createdByPublicCode || item.createdBy || "—";
+  return (
+    item.createdByName ||
+    item.createdByPublicCode ||
+    item.createdBy ||
+    "—"
+  );
 }
 
 function inferParticipantExtraInfo(item = {}) {
@@ -932,58 +1070,9 @@ function inferParticipantExtraInfo(item = {}) {
   );
 }
 
-function ensureCollectionDetailsModal() {
-  let modal = document.getElementById("collectionDetailsModal");
-
-  if (modal) return modal;
-
-  modal = document.createElement("div");
-  modal.id = "collectionDetailsModal";
-  modal.className = "modal modal-scrollable";
-  modal.setAttribute("aria-hidden", "true");
-
-  modal.innerHTML = `
-    <div class="modal-backdrop" data-close="collectionDetailsModal"></div>
-
-    <div class="modal-card modal-card-collection-details">
-      <button
-        class="modal-close"
-        type="button"
-        data-close="collectionDetailsModal"
-        aria-label="Fechar"
-      >×</button>
-
-      <div class="modal-head">
-        <h3>Detalhes da coleta</h3>
-        <p>Visualização completa do registro salvo.</p>
-      </div>
-
-      <div class="modal-body modal-body-scroll" id="collectionDetailsContent"></div>
-    </div>
-  `;
-
-  document.body.appendChild(modal);
-
-  return modal;
-}
-
 /* =========================
-   PERFIL / PARTICIPANTES
+   PARTICIPANTES
 ========================= */
-
-function matchesProfileTerritory(item, profile) {
-  if (!profile?.territoryId) return false;
-
-  const role = normalizeText(profile.role);
-
-  if (role === "admin" || role === "governanca" || role === "gestor") {
-    return true;
-  }
-
-  const itemTerr = normalizeTerritory(item.territoryId || item.territory || "");
-
-  return sameTerritoryValue(itemTerr, profile.territoryId);
-}
 
 function resolveParticipant(item) {
   const participantId = item.participantId || null;
@@ -1010,11 +1099,23 @@ function resolveParticipant(item) {
     item.payloadSnapshot?.participantName ||
     null;
 
-  const fromId = participantId ? participantsMap.get(String(participantId)) : null;
-  const fromParticipantCode = participantCode ? participantsMap.get(String(participantCode)) : null;
-  const fromFamilyCode = familyCode ? participantsMap.get(String(familyCode)) : null;
+  const fromId = participantId
+    ? participantsMap.get(String(participantId))
+    : null;
 
-  const matched = fromId || fromParticipantCode || fromFamilyCode || null;
+  const fromParticipantCode = participantCode
+    ? participantsMap.get(String(participantCode))
+    : null;
+
+  const fromFamilyCode = familyCode
+    ? participantsMap.get(String(familyCode))
+    : null;
+
+  const matched =
+    fromId ||
+    fromParticipantCode ||
+    fromFamilyCode ||
+    null;
 
   const fallbackCode =
     participantCode ||
@@ -1039,14 +1140,30 @@ function resolveParticipant(item) {
   return {
     id: participantId || matched?.id || "",
     code: matched?.participantCode || fallbackCode,
+
     name:
       directName ||
       matched?.name ||
-      (fallbackCode !== "—" ? `Participante ${fallbackCode}` : "Sem participante vinculado"),
-    type: matched?.participantType || matched?.type || "",
-    status: matched?.status || "—",
+      (fallbackCode !== "—"
+        ? `Participante ${fallbackCode}`
+        : "Sem participante vinculado"),
+
+    type:
+      matched?.participantType ||
+      matched?.type ||
+      "",
+
+    status:
+      matched?.status ||
+      "—",
+
     address,
-    localColeta: matched?.localColeta || item.localColeta || "",
+
+    localColeta:
+      matched?.localColeta ||
+      item.localColeta ||
+      "",
+
     lat: coords.lat,
     lng: coords.lng
   };
@@ -1072,19 +1189,23 @@ function showQuickParticipantPreviewByCode(code) {
   els.quickParticipantPreview.classList.remove("hidden");
 
   if (els.quickParticipantName) {
-    els.quickParticipantName.textContent = found.name || "—";
+    els.quickParticipantName.textContent =
+      found.name || "—";
   }
 
   if (els.quickParticipantCode) {
-    els.quickParticipantCode.textContent = found.participantCode || normalized;
+    els.quickParticipantCode.textContent =
+      found.participantCode || normalized;
   }
 
   if (els.quickParticipantType) {
-    els.quickParticipantType.textContent = found.participantType || "—";
+    els.quickParticipantType.textContent =
+      found.participantType || "—";
   }
 
   if (els.quickParticipantStatus) {
-    els.quickParticipantStatus.textContent = found.status || "—";
+    els.quickParticipantStatus.textContent =
+      found.status || "—";
   }
 
   if (els.quickParticipantAddress) {
@@ -1099,6 +1220,10 @@ function showQuickParticipantPreviewByCode(code) {
       "—";
   }
 }
+
+/* =========================
+   PERFIL
+========================= */
 
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
@@ -1116,8 +1241,19 @@ async function getUserProfile(uid) {
 function validateProfile(profile) {
   const role = normalizeText(profile.role);
 
-  if (!["cooperativa", "operador", "usuario", "admin", "governanca", "gestor"].includes(role)) {
-    throw new Error("Acesso permitido somente para perfis autorizados.");
+  if (
+    ![
+      "cooperativa",
+      "operador",
+      "usuario",
+      "admin",
+      "governanca",
+      "gestor"
+    ].includes(role)
+  ) {
+    throw new Error(
+      "Acesso permitido somente para perfis autorizados."
+    );
   }
 
   const isActiveUser =
@@ -1129,39 +1265,54 @@ function validateProfile(profile) {
     throw new Error("Usuário sem acesso ativo.");
   }
 
-  if (!["admin", "governanca", "gestor"].includes(role) && !profile.territoryId) {
-    throw new Error("Usuário sem território vinculado.");
+  if (
+    !["admin", "governanca", "gestor"].includes(role) &&
+    !profile.territoryId
+  ) {
+    throw new Error(
+      "Usuário sem território vinculado."
+    );
   }
 }
 
 function fillUser(profile) {
   if (els.userDisplayName) {
-    els.userDisplayName.textContent = profile.displayName || profile.name || "Usuário";
+    els.userDisplayName.textContent =
+      profile.displayName ||
+      profile.name ||
+      "Usuário";
   }
 
   if (els.userRole) {
-    els.userRole.textContent = profile.role || "cooperativa";
+    els.userRole.textContent =
+      profile.role || "cooperativa";
   }
 
   if (els.userTerritory) {
-    els.userTerritory.textContent = profile.territoryLabel || profile.territoryId || "—";
+    els.userTerritory.textContent =
+      profile.territoryLabel ||
+      profile.territoryId ||
+      "—";
   }
 }
 
 /* =========================
-   BOTÃO ATUALIZAR DADOS PÚBLICOS
+   PUBLICAÇÃO DADOS
 ========================= */
 
 function ensureRefreshButton() {
-  let btn = document.getElementById("btnRefreshPublicStats");
+  let btn =
+    document.getElementById("btnRefreshPublicStats");
 
   if (btn) return btn;
 
-  const topActions = document.querySelector(".top-actions");
+  const topActions =
+    document.querySelector(".top-actions");
 
   if (!topActions) return null;
 
   btn = document.createElement("button");
+
   btn.type = "button";
   btn.id = "btnRefreshPublicStats";
   btn.className = "mini-btn";
@@ -1169,7 +1320,10 @@ function ensureRefreshButton() {
 
   topActions.appendChild(btn);
 
-  btn.addEventListener("click", publishPublicStats);
+  btn.addEventListener(
+    "click",
+    publishPublicStats
+  );
 
   return btn;
 }
@@ -1183,7 +1337,10 @@ async function publishPublicStats() {
       btn.textContent = "Atualizando...";
     }
 
-    const ativos = allColetas.filter((item) => getStatus(item) !== "cancelado");
+    const ativos = allColetas.filter((item) =>
+      isActiveCollection(item)
+    );
+
     const participantSet = new Set();
 
     ativos.forEach((item) => {
@@ -1194,47 +1351,109 @@ async function publishPublicStats() {
       }
     });
 
-    const totalReciclavelKg = ativos.reduce((acc, item) => {
-      return acc + inferTotalReciclavelRegistro(item);
-    }, 0);
+    const totalReciclavelKg =
+      ativos.reduce((acc, item) => {
+        return acc + inferTotalReciclavelRegistro(item);
+      }, 0);
 
     const pontosSet = new Set();
 
     participantsMap.forEach((p) => {
       if (
         p &&
-        sameTerritoryValue(p.territoryId || pageTerritoryId, pageTerritoryId) &&
-        (p.lat || p.lng || p.enderecoCompleto || p.localColeta)
+        sameTerritoryValue(
+          p.territoryId || pageTerritoryId,
+          pageTerritoryId
+        ) &&
+        (
+          p.lat ||
+          p.lng ||
+          p.enderecoCompleto ||
+          p.localColeta
+        )
       ) {
-        pontosSet.add(p.code || p.id || p.name);
+        pontosSet.add(
+          p.code ||
+          p.id ||
+          p.name
+        );
       }
     });
 
     const payload = {
       territoryId: pageTerritoryId,
-      territoryLabel: coopProfile?.territoryLabel || pageTerritoryId,
+
+      territoryLabel:
+        coopProfile?.territoryLabel ||
+        pageTerritoryId,
+
       cooperativaMembersCount: 0,
-      participantsCount: participantSet.size,
-      totalPublicoPessoas: participantSet.size,
-      coletasCount: ativos.length,
-      residuosCount: Number((totalReciclavelKg / 1000).toFixed(1)),
-      pontosCount: pontosSet.size,
-      updatedAt: serverTimestamp()
+
+      participantsCount:
+        participantSet.size,
+
+      totalPublicoPessoas:
+        participantSet.size,
+
+      coletasCount:
+        ativos.length,
+
+      residuosCount:
+        Number(
+          (
+            totalReciclavelKg / 1000
+          ).toFixed(1)
+        ),
+
+      pontosCount:
+        pontosSet.size,
+
+      updatedAt:
+        serverTimestamp()
     };
 
-    await setDoc(doc(db, "dashboard_public_by_cooperativa", pageTerritoryId), payload, { merge: true });
-    await setDoc(doc(db, "publicDashboard", pageTerritoryId), payload, { merge: true });
+    await setDoc(
+      doc(
+        db,
+        "dashboard_public_by_cooperativa",
+        pageTerritoryId
+      ),
+      payload,
+      { merge: true }
+    );
 
-    alert("Dados públicos atualizados com sucesso.");
+    await setDoc(
+      doc(
+        db,
+        "publicDashboard",
+        pageTerritoryId
+      ),
+      payload,
+      { merge: true }
+    );
+
+    alert(
+      "Dados públicos atualizados com sucesso."
+    );
   } catch (error) {
-    console.error("Erro ao atualizar dados públicos:", error);
-    alert("Não foi possível atualizar os dados públicos.");
+    console.error(
+      "Erro ao atualizar dados públicos:",
+      error
+    );
+
+    alert(
+      "Não foi possível atualizar os dados públicos."
+    );
   } finally {
-    const btn = document.getElementById("btnRefreshPublicStats");
+    const btn =
+      document.getElementById(
+        "btnRefreshPublicStats"
+      );
 
     if (btn) {
       btn.disabled = false;
-      btn.textContent = "Atualizar dados públicos";
+      btn.textContent =
+        "Atualizar dados públicos";
     }
   }
 }
@@ -1243,16 +1462,6 @@ async function publishPublicStats() {
    FIRESTORE
 ========================= */
 
-function buildTerritoryQuery(colName) {
-  const aliases = getTerritoryAliases(pageTerritoryId);
-
-  if (!aliases.length) {
-    return query(collection(db, colName));
-  }
-
-  return query(collection(db, colName), where("territoryId", "in", aliases));
-}
-
 function loadParticipantsMap() {
   if (activeParticipantsUnsubscribe) {
     activeParticipantsUnsubscribe();
@@ -1260,74 +1469,144 @@ function loadParticipantsMap() {
   }
 
   activeParticipantsUnsubscribe = onSnapshot(
-    buildTerritoryQuery("participants"),
+    collection(db, "participants"),
+
     (snap) => {
       participantsMap.clear();
 
       snap.forEach((d) => {
         const data = d.data();
-        const coords = extractLatLngFromSource(data);
+
+        if (
+          !itemBelongsToPageTerritory(data)
+        ) {
+          return;
+        }
+
+        const coords =
+          extractLatLngFromSource(data);
 
         const payload = {
           id: d.id,
-          name: data.name || data.participantName || "Sem nome",
-          participantCode: data.participantCode || data.familyCode || data.codigo || d.id,
-          participantType: data.participantType || data.type || "",
-          status: data.status || "",
-          enderecoCompleto: buildAddressFromParticipant(data),
-          rua: data.rua || data.address?.street || "",
-          numero: data.numero || data.address?.number || "",
-          bairro: data.bairro || data.address?.neighborhood || "",
-          cidade: data.cidade || data.address?.city || "",
-          localColeta: data.localColeta || data.address?.localColeta || "",
+
+          name:
+            data.name ||
+            data.participantName ||
+            "Sem nome",
+
+          participantCode:
+            data.participantCode ||
+            data.familyCode ||
+            data.codigo ||
+            d.id,
+
+          participantType:
+            data.participantType ||
+            data.type ||
+            "",
+
+          status:
+            data.status || "",
+
+          enderecoCompleto:
+            buildAddressFromParticipant(data),
+
+          rua:
+            data.rua ||
+            data.address?.street ||
+            "",
+
+          numero:
+            data.numero ||
+            data.address?.number ||
+            "",
+
+          bairro:
+            data.bairro ||
+            data.address?.neighborhood ||
+            "",
+
+          cidade:
+            data.cidade ||
+            data.address?.city ||
+            "",
+
+          localColeta:
+            data.localColeta ||
+            data.address?.localColeta ||
+            "",
+
           lat: coords.lat,
           lng: coords.lng,
-          coords: data.coords || null,
-          territoryId: data.territoryId || ""
+
+          coords:
+            data.coords || null,
+
+          territoryId:
+            data.territoryId || ""
         };
 
         participantsMap.set(d.id, payload);
 
         if (data.participantCode) {
-          participantsMap.set(String(data.participantCode), payload);
+          participantsMap.set(
+            String(data.participantCode),
+            payload
+          );
         }
 
         if (data.familyCode) {
-          participantsMap.set(String(data.familyCode), payload);
+          participantsMap.set(
+            String(data.familyCode),
+            payload
+          );
         }
 
         if (data.codigo) {
-          participantsMap.set(String(data.codigo), payload);
+          participantsMap.set(
+            String(data.codigo),
+            payload
+          );
         }
       });
 
       applyFilters();
     },
+
     (error) => {
-      console.error("Erro ao carregar participantes:", error);
+      console.error(
+        "Erro ao carregar participantes:",
+        error
+      );
     }
   );
 }
+function listenColetas() {
+  if (els.dbStatus) {
+    els.dbStatus.textContent = "conectando…";
+  }
 
-function subscribeToQuery(qRef) {
   if (activeUnsubscribe) {
     activeUnsubscribe();
     activeUnsubscribe = null;
   }
 
   activeUnsubscribe = onSnapshot(
-    qRef,
+    collection(db, "coletas"),
+
     (snapshot) => {
       let loaded = snapshot.docs.map((d) => ({
         id: d.id,
         ...d.data()
       }));
 
+      loaded = loaded.filter(itemBelongsToPageTerritory);
       loaded = sortColetasLocally(loaded);
+
       allColetas = loaded;
 
       if (els.dbStatus) {
-        els.dbStatus.textContent = "conectado";
+        els.dbStatus.textContent = `conectado • ${loaded.length} coletas`;
       }
 
       populateFilters(allColetas);
@@ -1335,6 +1614,7 @@ function subscribeToQuery(qRef) {
       setDefaultDateRange(allColetas);
       applyFilters();
     },
+
     (error) => {
       console.error("Erro ao carregar coletas:", error);
 
@@ -1347,16 +1627,8 @@ function subscribeToQuery(qRef) {
   );
 }
 
-function listenColetas() {
-  if (els.dbStatus) {
-    els.dbStatus.textContent = "conectando…";
-  }
-
-  subscribeToQuery(buildTerritoryQuery("coletas"));
-}
-
 /* =========================
-   FILTROS GERAIS
+   FILTROS
 ========================= */
 
 function populateFilters(items) {
@@ -1381,6 +1653,33 @@ function populateFilters(items) {
         .join("");
 
     els.fEntrega.value = Array.from(entregas).includes(currentEntrega)
+      ? currentEntrega
+      : "__all__";
+  }
+}
+
+function populateTableFilters(items) {
+  const entregas = new Set();
+
+  items.forEach((item) => {
+    const entrega = inferEntrega(item);
+
+    if (entrega && entrega !== "—") {
+      entregas.add(entrega);
+    }
+  });
+
+  const currentEntrega = els.tEntrega?.value || "__all__";
+
+  if (els.tEntrega) {
+    els.tEntrega.innerHTML =
+      `<option value="__all__">Todas</option>` +
+      Array.from(entregas)
+        .sort()
+        .map((e) => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`)
+        .join("");
+
+    els.tEntrega.value = Array.from(entregas).includes(currentEntrega)
       ? currentEntrega
       : "__all__";
   }
@@ -1422,7 +1721,10 @@ function setDefaultDateRange(items) {
   if (!els.fIni || !els.fFim) return;
   if (els.fIni.value || els.fFim.value || !items.length) return;
 
-  const dates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
+  const dates = items
+    .map((item) => inferDateISO(item))
+    .filter(Boolean)
+    .sort();
 
   if (!dates.length) return;
 
@@ -1438,21 +1740,31 @@ function updateTopInfo() {
   const ini = els.fIni?.value || "";
   const fim = els.fFim?.value || "";
 
-  if (els.txtPeriodo) {
-    if (ini && fim) {
-      els.txtPeriodo.textContent = `${formatDateBR(ini)} → ${formatDateBR(fim)}`;
-    } else if (ini) {
-      els.txtPeriodo.textContent = `${formatDateBR(ini)} → hoje`;
-    } else if (fim) {
-      els.txtPeriodo.textContent = `até ${formatDateBR(fim)}`;
-    } else {
-      const dates = filteredColetas.map((item) => inferDateISO(item)).filter(Boolean).sort();
+  if (!els.txtPeriodo) return;
 
-      els.txtPeriodo.textContent = dates.length
-        ? `${formatDateBR(dates[0])} → ${formatDateBR(dates[dates.length - 1])}`
-        : "—";
-    }
+  if (ini && fim) {
+    els.txtPeriodo.textContent = `${formatDateBR(ini)} → ${formatDateBR(fim)}`;
+    return;
   }
+
+  if (ini) {
+    els.txtPeriodo.textContent = `${formatDateBR(ini)} → hoje`;
+    return;
+  }
+
+  if (fim) {
+    els.txtPeriodo.textContent = `até ${formatDateBR(fim)}`;
+    return;
+  }
+
+  const dates = filteredColetas
+    .map((item) => inferDateISO(item))
+    .filter(Boolean)
+    .sort();
+
+  els.txtPeriodo.textContent = dates.length
+    ? `${formatDateBR(dates[0])} → ${formatDateBR(dates[dates.length - 1])}`
+    : "—";
 }
 
 function applyFilters() {
@@ -1522,11 +1834,11 @@ function clearFilters() {
 }
 
 /* =========================
-   KPIs E MATERIAIS
+   KPIs E CARDS
 ========================= */
 
 function renderKpis(items) {
-  const ativos = items.filter((item) => getStatus(item) !== "cancelado");
+  const ativos = items.filter(isActiveCollection);
   const participantIds = new Set();
 
   let residuoSeco = 0;
@@ -1562,19 +1874,17 @@ function sumMaterials(items) {
     totals[mat.key] = 0;
   });
 
-  items
-    .filter((item) => getStatus(item) !== "cancelado")
-    .forEach((item) => {
-      MATERIAL_META.forEach((mat) => {
-        totals[mat.key] += getMaterialValue(item, mat.key);
-      });
+  items.filter(isActiveCollection).forEach((item) => {
+    MATERIAL_META.forEach((mat) => {
+      totals[mat.key] += getMaterialValue(item, mat.key);
     });
+  });
 
   return totals;
 }
 
 function computeExpandedMetrics(items) {
-  const ativos = items.filter((item) => getStatus(item) !== "cancelado");
+  const ativos = items.filter(isActiveCollection);
   const materialTotals = sumMaterials(ativos);
 
   let reciclavelKg = 0;
@@ -1597,20 +1907,17 @@ function computeExpandedMetrics(items) {
     naoComercializadoKg += inferNaoComercializado(item);
 
     const d = inferDateISO(item);
-
-    if (d) {
-      uniqueDays.add(d);
-    }
+    if (d) uniqueDays.add(d);
 
     if (participant.code && participant.code !== "—") {
       participantSet.add(participant.code);
     }
 
-    if (type === "condominio") {
+    if (type === "condominio" || type === "condomínio") {
       condominioSet.add(participant.code || participant.name);
     }
 
-    if (type === "comercio") {
+    if (type === "comercio" || type === "comércio") {
       comercioSet.add(participant.code || participant.name);
     }
 
@@ -1649,82 +1956,6 @@ function computeExpandedMetrics(items) {
   };
 }
 
-function materialSvgIcon(iconId, label = "Material") {
-  const safeLabel = escapeHtml(label);
-
-  const icons = {
-    "plastic-bottle": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M26 5h12v8l-3 4v5h-6v-5l-3-4V5Z" fill="rgba(255,255,255,.92)"/>
-        <path d="M22 22h20c4 0 7 3 7 7v24c0 4-3 7-7 7H22c-4 0-7-3-7-7V29c0-4 3-7 7-7Z" fill="rgba(255,255,255,.82)"/>
-        <path d="M21 34h22v15H21V34Z" fill="currentColor" opacity=".95"/>
-      </svg>
-    `,
-    "glass-bottle": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M26 5h12v13l5 8v25c0 6-5 9-11 9s-11-3-11-9V26l5-8V5Z" fill="rgba(255,255,255,.86)"/>
-        <path d="M25 30h14v22c0 3-3 5-7 5s-7-2-7-5V30Z" fill="currentColor" opacity=".92"/>
-      </svg>
-    `,
-    "metal-can": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <ellipse cx="32" cy="13" rx="17" ry="7" fill="rgba(255,255,255,.9)"/>
-        <path d="M15 13v38c0 4 8 8 17 8s17-4 17-8V13" fill="rgba(255,255,255,.72)"/>
-        <path d="M15 27c0 4 8 7 17 7s17-3 17-7M15 42c0 4 8 7 17 7s17-3 17-7" fill="none" stroke="currentColor" stroke-width="4" opacity=".95"/>
-      </svg>
-    `,
-    "bag-waste": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M23 17c2-8 16-8 18 0" fill="none" stroke="rgba(255,255,255,.94)" stroke-width="5" stroke-linecap="round"/>
-        <path d="M17 22h30l5 31c1 4-2 7-7 7H19c-5 0-8-3-7-7l5-31Z" fill="rgba(255,255,255,.82)"/>
-      </svg>
-    `,
-    "paper-sheet": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M16 6h24l10 10v42H16V6Z" fill="rgba(255,255,255,.88)"/>
-        <path d="M40 6v14h14" fill="none" stroke="currentColor" stroke-width="4" stroke-linejoin="round"/>
-      </svg>
-    `,
-    "cardboard-box": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M10 22 32 10l22 12-22 12L10 22Z" fill="rgba(255,255,255,.9)"/>
-        <path d="M10 22v25l22 12V34L10 22Z" fill="rgba(255,255,255,.76)"/>
-        <path d="M54 22v25L32 59V34l22-12Z" fill="rgba(255,255,255,.62)"/>
-      </svg>
-    `,
-    "foam-cube": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M13 21 32 10l19 11-19 11-19-11Z" fill="rgba(255,255,255,.9)"/>
-        <path d="M13 21v22l19 11V32L13 21Z" fill="rgba(255,255,255,.72)"/>
-        <path d="M51 21v22L32 54V32l19-11Z" fill="rgba(255,255,255,.62)"/>
-      </svg>
-    `,
-    "oil-drop": `
-      <svg viewBox="0 0 64 64" role="img" aria-label="${safeLabel}" focusable="false">
-        <path d="M32 5s18 22 18 36c0 11-8 19-18 19s-18-8-18-19C14 27 32 5 32 5Z" fill="rgba(255,255,255,.86)"/>
-        <path d="M32 16s9 13 9 23c0 5-4 9-9 9s-9-4-9-9c0-10 9-23 9-23Z" fill="currentColor" opacity=".92"/>
-      </svg>
-    `
-  };
-
-  return icons[iconId] || icons["plastic-bottle"];
-}
-
-function materialLogoMarkup(material) {
-  if (!material?.logo) return "";
-
-  return `
-    <div class="mat-logo">
-      <img
-        src="${escapeHtml(material.logo)}"
-        alt="Logo ${escapeHtml(material.label)}"
-        loading="lazy"
-        onerror="this.closest('.mat-logo').style.display='none'"
-      />
-    </div>
-  `;
-}
-
 function renderExpandedPanel(items) {
   const m = computeExpandedMetrics(items);
   const allDates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
@@ -1753,36 +1984,340 @@ function renderExpandedPanel(items) {
   if (els.k_naoComercializadoPct) els.k_naoComercializadoPct.textContent = `${formatNumber(pctNaoComercializado)}%`;
   if (els.k_naoComercializadoKg) els.k_naoComercializadoKg.textContent = formatKg(m.naoComercializadoKg);
 
-  if (els.materialCards) {
-    const totalMateriais = Object.values(m.materialTotals).reduce((acc, v) => acc + v, 0);
+  if (!els.materialCards) return;
 
-    els.materialCards.innerHTML = MATERIAL_META.map((mat) => {
-      const kg = m.materialTotals[mat.key] || 0;
-      const pct = totalMateriais ? (kg / totalMateriais) * 100 : 0;
-      const receita = kg * mat.price;
+  const totalMateriais = Object.values(m.materialTotals).reduce((acc, v) => acc + v, 0);
 
-      return `
-        <article class="material-card professional-card ${mat.isSpecial ? "special-flow-card" : ""}" style="--material-color:${mat.color}">
-          <div class="material-top">
-            <div class="icon-group">
-              <div class="mat-icon professional-icon">
-                ${materialSvgIcon(mat.icon, mat.label)}
-              </div>
-              ${materialLogoMarkup(mat)}
-            </div>
-            <div class="mat-pct">${mat.isSpecial ? "Fluxo especial" : `${formatNumber(pct)}%`}</div>
+  els.materialCards.innerHTML = MATERIAL_META.map((mat) => {
+    const kg = m.materialTotals[mat.key] || 0;
+    const pct = totalMateriais ? (kg / totalMateriais) * 100 : 0;
+    const receita = kg * mat.price;
+
+    return `
+      <article class="material-card professional-card ${mat.isSpecial ? "special-flow-card" : ""}" style="--material-color:${mat.color}">
+        <div class="material-top">
+          <div class="icon-group">
+            <div class="mat-icon professional-icon">${escapeHtml(mat.label).slice(0, 2)}</div>
           </div>
+          <div class="mat-pct">${mat.isSpecial ? "Fluxo especial" : `${formatNumber(pct)}%`}</div>
+        </div>
 
-          <div class="mat-name">${escapeHtml(mat.label)}</div>
-          <div class="mat-kg">${formatNumber(kg)} kg</div>
+        <div class="mat-name">${escapeHtml(mat.label)}</div>
+        <div class="mat-kg">${formatNumber(kg)} kg</div>
 
-          <div class="material-progress" aria-hidden="true">
-            <span style="width:${mat.isSpecial ? 100 : Math.min(pct, 100)}%"></span>
-          </div>
+        <div class="material-progress" aria-hidden="true">
+          <span style="width:${mat.isSpecial ? 100 : Math.min(pct, 100)}%"></span>
+        </div>
 
-          <div class="mat-sub">Receita estimada ≈ ${formatMoneyBR(receita)}</div>
-        </article>
-      `;
-    }).join("");
+        <div class="mat-sub">Receita estimada ≈ ${formatMoneyBR(receita)}</div>
+      </article>
+    `;
+  }).join("");
+}
+
+/* =========================
+   GRÁFICOS
+========================= */
+
+function getChartOptions(type = "bar") {
+  const base = {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: {
+      mode: "index",
+      intersect: false
+    },
+    plugins: {
+      legend: {
+        position: "bottom",
+        labels: {
+          usePointStyle: true,
+          padding: 16
+        }
+      }
+    }
+  };
+
+  if (type === "doughnut" || type === "pie") {
+    return base;
+  }
+
+  return {
+    ...base,
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: {
+          color: "#64748B",
+          maxRotation: 45,
+          minRotation: 0
+        }
+      },
+      y: {
+        beginAtZero: true,
+        grid: { color: "rgba(148,163,184,.15)" },
+        ticks: { color: "#64748B" }
+      }
+    }
+  };
+}
+
+function buildWeightDailySeries(items) {
+  const grouped = new Map();
+
+  items.filter(isActiveCollection).forEach((item) => {
+    const date = inferDateISO(item);
+    if (!date) return;
+
+    const fluxo = inferFluxo(item);
+    const key = `${date}_${fluxo}`;
+
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        date,
+        fluxo,
+        reciclavel: 0,
+        rejeito: 0,
+        quantidade: 0
+      });
+    }
+
+    const current = grouped.get(key);
+
+    current.reciclavel += inferTotalReciclavelRegistro(item);
+    current.rejeito += inferTotalRejeitoRegistro(item);
+    current.quantidade += 1;
+  });
+
+  const ordered = Array.from(grouped.values()).sort((a, b) => {
+    return `${a.date}_${a.fluxo}`.localeCompare(`${b.date}_${b.fluxo}`);
+  });
+
+  return {
+    labels: ordered.map((item) => {
+      const fluxoLabel = item.fluxo === "final_turno" ? "Final turno" : "Recebimento";
+      return `${formatDateBR(item.date)} • ${fluxoLabel}`;
+    }),
+    reciclavel: ordered.map((item) => Number(item.reciclavel.toFixed(2))),
+    rejeito: ordered.map((item) => Number(item.rejeito.toFixed(2))),
+    quantidade: ordered.map((item) => item.quantidade)
+  };
+}
+
+function renderWeightTimeline(items) {
+  const canvas = document.getElementById("weightTimelineChart");
+
+  if (!canvas || typeof Chart === "undefined") return;
+
+  const daily = buildWeightDailySeries(items);
+
+  if (weightTimelineChart) {
+    weightTimelineChart.destroy();
+  }
+
+  weightTimelineChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: daily.labels,
+      datasets: [
+        {
+          label: "Peso do rejeito",
+          data: daily.rejeito,
+          backgroundColor: "rgba(239,107,34,.78)",
+          borderRadius: 8,
+          borderSkipped: false
+        },
+        {
+          label: "Peso do reciclável",
+          data: daily.reciclavel,
+          backgroundColor: "rgba(129,185,42,.82)",
+          borderRadius: 8,
+          borderSkipped: false
+        }
+      ]
+    },
+    options: {
+      ...getChartOptions("bar"),
+      plugins: {
+        ...getChartOptions("bar").plugins,
+        tooltip: {
+          callbacks: {
+            afterBody(context) {
+              const idx = context[0].dataIndex;
+              return `Coletas realizadas: ${daily.quantidade[idx]}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function buildDailySeries(items) {
+  const grouped = new Map();
+
+  items.filter(isActiveCollection).forEach((item) => {
+    const date = inferDateISO(item);
+    if (!date) return;
+
+    grouped.set(date, (grouped.get(date) || 0) + 1);
+  });
+
+  const orderedDates = Array.from(grouped.keys()).sort();
+
+  return {
+    labels: orderedDates.map(formatDateBR),
+    values: orderedDates.map((date) => grouped.get(date))
+  };
+}
+
+function buildFlowSeries(items) {
+  const map = new Map();
+
+  items.filter(isActiveCollection).forEach((item) => {
+    const label = formatFluxoLabel(inferFluxo(item));
+    map.set(label, (map.get(label) || 0) + 1);
+  });
+
+  return {
+    labels: Array.from(map.keys()),
+    values: Array.from(map.values())
+  };
+}
+
+function buildMaterialSeries(items) {
+  const totals = sumMaterials(items);
+  const ordered = MATERIAL_META.map((mat) => ({
+    label: mat.label,
+    value: totals[mat.key] || 0
+  })).filter((item) => item.value > 0);
+
+  return {
+    labels: ordered.map((item) => item.label),
+    values: ordered.map((item) => item.value)
+  };
+}
+
+function buildCollectionPointsSeries(items) {
+  const map = new Map();
+
+  items.filter(isActiveCollection).forEach((item) => {
+    const p = resolveParticipant(item);
+    const key = p.code || p.name || "Sem código";
+
+    map.set(key, (map.get(key) || 0) + 1);
+  });
+
+  const ordered = Array.from(map.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
+
+  return {
+    labels: ordered.map(([label]) => label),
+    values: ordered.map(([, value]) => value)
+  };
+}
+
+function renderCharts(items) {
+  const ctxMain = document.getElementById("mainChart");
+  const ctxA = document.getElementById("secA");
+  const ctxB = document.getElementById("secB");
+  const ctxC = document.getElementById("secC");
+
+  if (typeof Chart === "undefined") return;
+
+  [mainChart, secA, secB, secC].forEach((chart) => {
+    if (chart) chart.destroy();
+  });
+
+  const daily = buildDailySeries(items);
+  const flow = buildFlowSeries(items);
+  const material = buildMaterialSeries(items);
+  const points = buildCollectionPointsSeries(items);
+
+  const mainType = els.chartMainType?.value || "bar";
+  const flowType = els.chartFlowType?.value || "doughnut";
+  const materialType = els.chartDeliveryType?.value || "bar";
+  const pointsType = els.chartTerritoryType?.value || "bar";
+
+  if (ctxMain) {
+    mainChart = new Chart(ctxMain, {
+      type: mainType,
+      data: {
+        labels: daily.labels,
+        datasets: [
+          {
+            label: "Quantidade de coletas",
+            data: daily.values,
+            borderColor: CHART_COLORS.blue,
+            backgroundColor: "rgba(83,172,222,.28)",
+            borderRadius: 8,
+            fill: mainType === "line",
+            tension: 0.35,
+            pointRadius: mainType === "line" ? 4 : 0
+          }
+        ]
+      },
+      options: getChartOptions(mainType)
+    });
+  }
+
+  if (ctxA) {
+    secA = new Chart(ctxA, {
+      type: flowType,
+      data: {
+        labels: flow.labels,
+        datasets: [
+          {
+            label: "Tipos de coleta",
+            data: flow.values,
+            backgroundColor: [
+              "rgba(83,172,222,.82)",
+              "rgba(129,185,42,.82)"
+            ]
+          }
+        ]
+      },
+      options: getChartOptions(flowType)
+    });
+  }
+
+  if (ctxB) {
+    secB = new Chart(ctxB, {
+      type: materialType,
+      data: {
+        labels: material.labels,
+        datasets: [
+          {
+            label: "Materiais coletados",
+            data: material.values,
+            backgroundColor: "rgba(129,185,42,.72)",
+            borderRadius: 8
+          }
+        ]
+      },
+      options: getChartOptions(materialType)
+    });
+  }
+
+  if (ctxC) {
+    secC = new Chart(ctxC, {
+      type: pointsType,
+      data: {
+        labels: points.labels,
+        datasets: [
+          {
+            label: "Pontos de coleta",
+            data: points.values,
+            backgroundColor: "rgba(83,172,222,.30)",
+            borderRadius: 8
+          }
+        ]
+      },
+      options: {
+        ...getChartOptions(pointsType),
+        indexAxis: pointsType === "bar" ? "y" : "x"
+      }
+    });
   }
 }
