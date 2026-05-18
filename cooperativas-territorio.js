@@ -13,6 +13,10 @@ import {
   onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+/* =========================================================
+   CONFIG
+========================================================= */
+
 const bodyConfig = document.body.dataset || {};
 
 function canonicalTerritoryId(value) {
@@ -24,7 +28,9 @@ function canonicalTerritoryId(value) {
 
   if (!raw) return "vila-pinto";
   if (raw === "crgr-vila-pinto") return "vila-pinto";
-  if (raw === "crgr-cooadesc" || raw === "crgr-coadesc" || raw === "coadesc") return "cooadesc";
+  if (raw === "crgr-cooadesc") return "cooadesc";
+  if (raw === "crgr-coadesc") return "cooadesc";
+  if (raw === "coadesc") return "cooadesc";
   if (raw === "crgr-padre-cacique") return "padre-cacique";
 
   return raw;
@@ -32,8 +38,16 @@ function canonicalTerritoryId(value) {
 
 const PAGE_TERRITORY = {
   territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
-  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto"
+  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Vila Pinto",
+  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto",
+  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
+  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
+  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html"
 };
+
+/* =========================================================
+   ELEMENTOS
+========================================================= */
 
 const els = {
   sidebar: document.getElementById("sidebar"),
@@ -43,6 +57,10 @@ const els = {
 
   userNameTop: document.getElementById("userNameTop"),
   accessBanner: document.getElementById("accessBanner"),
+  sidebarHelpText: document.getElementById("sidebarHelpText"),
+
+  syncCoopDashboardBtn: document.getElementById("syncCoopDashboardBtn"),
+  syncCoopDashboardStatus: document.getElementById("syncCoopDashboardStatus"),
 
   indicatorParticipants: document.getElementById("indicatorParticipants"),
   indicatorColetas: document.getElementById("indicatorColetas"),
@@ -53,21 +71,40 @@ const els = {
   indicatorNaoComercializado: document.getElementById("indicatorNaoComercializado"),
   indicatorQualidadeMedia: document.getElementById("indicatorQualidadeMedia"),
 
-  recentColetasTableBody: document.getElementById("recentColetasTableBody"),
+  participantsTotalCount: document.getElementById("participantsTotalCount"),
+  participantsPeopleCount: document.getElementById("participantsPeopleCount"),
+  participantsCondoCount: document.getElementById("participantsCondoCount"),
+
+  noticesList: document.getElementById("noticesList"),
+  territoryCommunications: document.getElementById("territoryCommunications"),
 
   chartColetasMensais: document.getElementById("chartColetasMensais"),
-  chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil")
+  chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil"),
+
+  recentColetasTableBody: document.getElementById("recentColetasTableBody"),
+  exportParticipantsPdfBtn: document.getElementById("exportParticipantsPdfBtn"),
+  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas")
 };
+
+/* =========================================================
+   STATE
+========================================================= */
 
 const STATE = {
   currentUser: null,
   profile: null,
+  isAdmin: false,
+  canEditAll: false,
   participants: [],
   coletas: [],
   approvalRequests: [],
   unsubscribers: [],
   recentLimit: 10
 };
+
+/* =========================================================
+   HELPERS
+========================================================= */
 
 function normalizeText(value) {
   return String(value || "")
@@ -86,8 +123,22 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
+function setText(el, value) {
+  if (!el) return;
+  el.textContent = String(value ?? "");
+}
+
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString("pt-BR");
+}
+
+function formatKg(value) {
+  return `${formatNumber(Math.round(Number(value || 0)))} kg`;
+}
+
 function toNumber(value) {
   if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+
   if (value === null || value === undefined || value === "") return 0;
 
   const parsed = Number(
@@ -101,18 +152,36 @@ function toNumber(value) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function formatNumber(value) {
-  return Number(value || 0).toLocaleString("pt-BR");
-}
-
-function formatKg(value) {
-  return `${formatNumber(Math.round(Number(value || 0)))} kg`;
-}
-
 function animateNumber(el, value, suffix = "") {
   if (!el) return;
-  el.textContent = `${Number(value || 0).toLocaleString("pt-BR")}${suffix}`;
+
+  const target = Number(value || 0);
+  const current = Number(String(el.textContent || "0").replace(/[^\d.-]/g, "")) || 0;
+  const duration = 450;
+  const start = performance.now();
+
+  function frame(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const next = Math.round(current + (target - current) * progress);
+    el.textContent = next.toLocaleString("pt-BR") + suffix;
+
+    if (progress < 1) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
 }
+
+function isAdminUser(role) {
+  return role === "admin";
+}
+
+function isGovernancaUser(role) {
+  return role === "governanca" || role === "gestor";
+}
+
+/* =========================================================
+   TERRITÓRIO
+========================================================= */
 
 function getParticipantCode(item = {}) {
   return String(
@@ -124,19 +193,6 @@ function getParticipantCode(item = {}) {
     item.payloadSnapshot?.codigoParticipante ||
     ""
   ).trim();
-}
-
-function getParticipantName(item = {}) {
-  return (
-    item.participantName ||
-    item.nomeParticipante ||
-    item.nome ||
-    item.name ||
-    item.payloadSnapshot?.participantName ||
-    item.payloadSnapshot?.name ||
-    getParticipantCode(item) ||
-    "-"
-  );
 }
 
 function itemBelongsToTerritory(item = {}) {
@@ -156,11 +212,15 @@ function itemBelongsToTerritory(item = {}) {
     item.payloadSnapshot?.cooperativeId,
     item.payloadSnapshot?.cooperativaId,
     item.payloadSnapshot?.localCrgr
-  ].filter(Boolean).map(canonicalTerritoryId);
+  ]
+    .filter(Boolean)
+    .map(canonicalTerritoryId);
 
   if (PAGE_TERRITORY.territoryId === "vila-pinto") {
     return (
       code.startsWith("VPD") ||
+      code.startsWith("C") ||
+      code === "FAMILIAS" ||
       fields.includes("vila-pinto")
     );
   }
@@ -181,6 +241,37 @@ function itemBelongsToTerritory(item = {}) {
   }
 
   return false;
+}
+
+/* =========================================================
+   PARTICIPANTES / STATUS
+========================================================= */
+
+function getParticipantName(item = {}) {
+  const code = getParticipantCode(item);
+
+  return (
+    item.participantName ||
+    item.nomeParticipante ||
+    item.nome ||
+    item.name ||
+    item.payloadSnapshot?.participantName ||
+    item.payloadSnapshot?.name ||
+    code ||
+    "-"
+  );
+}
+
+function participantType(item = {}) {
+  return normalizeText(
+    item.participantType ||
+    item.tipoParticipante ||
+    item.tipo ||
+    item.localType ||
+    item.codeLocalType ||
+    item.payloadSnapshot?.localType ||
+    item.payloadSnapshot?.codeLocalType
+  );
 }
 
 function isApprovedParticipant(item = {}) {
@@ -229,6 +320,10 @@ function isColetaRealizada(item = {}) {
   ].includes(status);
 }
 
+/* =========================================================
+   DATA / TIPO / STATUS COLETA
+========================================================= */
+
 function getDateValue(item = {}) {
   const possible =
     item.dataColeta ||
@@ -237,6 +332,7 @@ function getDateValue(item = {}) {
     item.opDate ||
     item.createdAt ||
     item.createdAtISO ||
+    item.updatedAt ||
     item.date ||
     item.data ||
     item.payloadSnapshot?.dataColeta ||
@@ -244,11 +340,22 @@ function getDateValue(item = {}) {
     null;
 
   if (!possible) return null;
+
   if (typeof possible?.toDate === "function") return possible.toDate();
+
   if (possible instanceof Date) return possible;
 
-  const parsed = new Date(possible);
-  return Number.isNaN(parsed.getTime()) ? null : parsed;
+  if (typeof possible === "string") {
+    const parsed = new Date(possible);
+
+    if (!Number.isNaN(parsed.getTime())) return parsed;
+
+    const br = possible.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+    if (br) return new Date(`${br[3]}-${br[2]}-${br[1]}T00:00:00`);
+  }
+
+  return null;
 }
 
 function formatDateLabel(item = {}) {
@@ -263,10 +370,14 @@ function getTipoRecebimento(item = {}) {
     item.tipoColeta ||
     item.tipoRecebimento ||
     item.receiptType ||
+    item.tipo ||
+    item.recebimento?.flowType ||
+    item.finalTurno?.flowType ||
     item.localType ||
     item.codeLocalType ||
     item.payloadSnapshot?.flowType ||
     item.payloadSnapshot?.tipoRecebimento ||
+    item.payloadSnapshot?.localType ||
     "recebimento"
   );
 }
@@ -278,7 +389,83 @@ function formatFluxoLabel(value) {
   if (normalized === "final_turno") return "Final do turno";
   if (normalized.includes("final")) return "Final do turno";
 
-  return value || "Recebimento";
+  return value && value !== "-" ? String(value) : "Recebimento";
+}
+
+function getColetaStatusLabel(item = {}) {
+  const raw =
+    item.status ||
+    item.situacao ||
+    item.decision ||
+    item.approvalStatus ||
+    item.coletaStatus ||
+    "Realizada";
+
+  const normalized = normalizeText(raw);
+
+  if (normalized === "approved" || normalized === "aprovado") return "Realizada";
+  if (normalized === "active" || normalized === "ativo") return "Realizada";
+  if (normalized === "pending") return "Pendente";
+  if (normalized === "rejected") return "Rejeitada";
+
+  return String(raw || "Realizada");
+}
+
+function statusBadge(status) {
+  const label = String(status || "Realizada");
+  const normalized = normalizeText(label);
+
+  let className = "status-badge";
+
+  if (normalized.includes("pend")) className += " pendente";
+  if (normalized.includes("cancel") || normalized.includes("reje")) className += " rejeitado";
+  if (normalized.includes("real") || normalized.includes("aprov") || normalized.includes("ativ")) {
+    className += " realizada";
+  }
+
+  return `<span class="${className}">${escapeHtml(label)}</span>`;
+}
+
+/* =========================================================
+   MATERIAIS / PESOS / QUALIDADE
+========================================================= */
+
+function getMateriaisObject(coleta = {}) {
+  return (
+    coleta.materiais ||
+    coleta.materials ||
+    coleta.materiaisInformados ||
+    coleta.recebimento?.materiais ||
+    coleta.recebimento?.materials ||
+    coleta.finalTurno?.materiais ||
+    coleta.finalTurno?.materials ||
+    coleta.payloadSnapshot?.materiais ||
+    coleta.payloadSnapshot?.materials ||
+    coleta.payloadSnapshot?.materiaisInformados ||
+    {}
+  );
+}
+
+function somaMateriais(coleta = {}) {
+  const materiais = getMateriaisObject(coleta);
+
+  if (Array.isArray(materiais)) {
+    return materiais.reduce((acc, item) => {
+      return acc + toNumber(item.peso || item.kg || item.valor || item.quantidade);
+    }, 0);
+  }
+
+  if (typeof materiais === "object" && materiais !== null) {
+    return Object.values(materiais).reduce((acc, value) => {
+      if (typeof value === "object" && value !== null) {
+        return acc + toNumber(value.peso || value.kg || value.valor || value.quantidade);
+      }
+
+      return acc + toNumber(value);
+    }, 0);
+  }
+
+  return 0;
 }
 
 function getPesoRecebido(coleta = {}) {
@@ -291,10 +478,20 @@ function getPesoRecebido(coleta = {}) {
     toNumber(coleta.pesoTotal) ||
     toNumber(coleta.peso) ||
     toNumber(coleta.kg) ||
+
     toNumber(coleta.recebimento?.pesoResiduoSecoKg) ||
+    toNumber(coleta.recebimento?.pesoRecebido) ||
+    toNumber(coleta.recebimento?.totalKg) ||
+
     toNumber(coleta.finalTurno?.pesoResiduoSecoKg) ||
+    toNumber(coleta.finalTurno?.pesoRecebido) ||
+    toNumber(coleta.finalTurno?.totalKg) ||
+
     toNumber(coleta.payloadSnapshot?.pesoRecebido) ||
     toNumber(coleta.payloadSnapshot?.totalKg) ||
+    toNumber(coleta.payloadSnapshot?.pesoResiduoSecoKg) ||
+
+    somaMateriais(coleta) ||
     0
   );
 }
@@ -305,8 +502,13 @@ function getRejeito(coleta = {}) {
     toNumber(coleta.pesoRejeito) ||
     toNumber(coleta.totalRejeito) ||
     toNumber(coleta.rejeitos) ||
+
     toNumber(coleta.recebimento?.pesoRejeitoKg) ||
+    toNumber(coleta.recebimento?.rejeito) ||
+
     toNumber(coleta.finalTurno?.pesoRejeitoKg) ||
+    toNumber(coleta.finalTurno?.rejeito) ||
+
     toNumber(coleta.payloadSnapshot?.rejeito) ||
     toNumber(coleta.payloadSnapshot?.pesoRejeito) ||
     toNumber(coleta.payloadSnapshot?.totalRejeito) ||
@@ -322,8 +524,13 @@ function getNaoComercializado(coleta = {}) {
     toNumber(coleta.materialNaoComercializado) ||
     toNumber(coleta.naoVenda) ||
     toNumber(coleta.semComercializacao) ||
+
     toNumber(coleta.recebimento?.pesoNaoComercializadoKg) ||
+    toNumber(coleta.recebimento?.naoComercializado) ||
+
     toNumber(coleta.finalTurno?.pesoNaoComercializadoKg) ||
+    toNumber(coleta.finalTurno?.naoComercializado) ||
+
     toNumber(coleta.payloadSnapshot?.naoComercializado) ||
     toNumber(coleta.payloadSnapshot?.totalNaoComercializado) ||
     0
@@ -335,35 +542,66 @@ function getQualidade(coleta = {}) {
     toNumber(coleta.qualidade) ||
     toNumber(coleta.notaQualidade) ||
     toNumber(coleta.qualityScore) ||
+
+    toNumber(coleta.recebimento?.qualidade) ||
+    toNumber(coleta.recebimento?.notaQualidade) ||
+    toNumber(coleta.recebimento?.qualidadeNota) ||
+
+    toNumber(coleta.finalTurno?.qualidade) ||
+    toNumber(coleta.finalTurno?.notaQualidade) ||
+    toNumber(coleta.finalTurno?.qualidadeNota) ||
+
     toNumber(coleta.payloadSnapshot?.qualidade) ||
+    toNumber(coleta.payloadSnapshot?.notaQualidade) ||
+    toNumber(coleta.payloadSnapshot?.qualidadeNota) ||
     0
   );
 }
 
-function getColetaStatusLabel(item = {}) {
-  const raw = item.status || item.situacao || item.decision || "Realizada";
-  const normalized = normalizeText(raw);
+function renderMaterialsList(item = {}) {
+  const materiais = getMateriaisObject(item);
 
-  if (normalized === "approved" || normalized === "aprovado") return "Realizada";
-  if (normalized === "active" || normalized === "ativo") return "Realizada";
-  if (normalized === "pending") return "Pendente";
-  if (normalized === "rejected") return "Rejeitada";
+  let entries = [];
 
-  return raw || "Realizada";
+  if (Array.isArray(materiais)) {
+    entries = materiais.map((mat) => [
+      mat.nome || mat.material || mat.tipo || "Material",
+      mat.peso || mat.kg || mat.valor || mat.quantidade || 0
+    ]);
+  } else if (typeof materiais === "object" && materiais !== null) {
+    entries = Object.entries(materiais).map(([name, value]) => {
+      if (typeof value === "object" && value !== null) {
+        return [
+          value.nome || value.material || name,
+          value.peso || value.kg || value.valor || value.quantidade || 0
+        ];
+      }
+
+      return [name, value];
+    });
+  }
+
+  entries = entries.filter(([, value]) => toNumber(value) > 0);
+
+  if (!entries.length) {
+    return `<div class="empty-materials">Nenhum material informado.</div>`;
+  }
+
+  return entries
+    .map(([name, value]) => {
+      return `
+        <div class="material-line">
+          <span>${escapeHtml(name)}</span>
+          <strong>${escapeHtml(formatKg(value))}</strong>
+        </div>
+      `;
+    })
+    .join("");
 }
 
-function statusBadge(status) {
-  const label = String(status || "Realizada");
-  const normalized = normalizeText(label);
-
-  let className = "status-badge";
-
-  if (normalized.includes("pend")) className += " pendente";
-  if (normalized.includes("reje") || normalized.includes("cancel")) className += " rejeitado";
-  if (normalized.includes("real") || normalized.includes("aprov")) className += " realizada";
-
-  return `<span class="${className}">${escapeHtml(label)}</span>`;
-}
+/* =========================================================
+   AUTH
+========================================================= */
 
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
@@ -372,11 +610,29 @@ async function getUserProfile(uid) {
     throw new Error("Usuário não encontrado.");
   }
 
-  return {
+  const data = {
     id: snap.id,
     ...snap.data()
   };
+
+  if (data.territoryId) {
+    data.territoryId = canonicalTerritoryId(data.territoryId);
+  }
+
+  return data;
 }
+
+function validateProfile(profile) {
+  if (!profile) throw new Error("Perfil de usuário inválido.");
+
+  if (profile.status && profile.status !== "active") {
+    throw new Error("Usuário sem acesso ativo.");
+  }
+}
+
+/* =========================================================
+   UI
+========================================================= */
 
 function setupSidebar() {
   function openSidebar() {
@@ -394,6 +650,12 @@ function setupSidebar() {
   els.menuBtn?.addEventListener("click", openSidebar);
   els.mobileOverlay?.addEventListener("click", closeSidebar);
 
+  document.querySelectorAll(".sidebar .nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 1180) closeSidebar();
+    });
+  });
+
   window.addEventListener("resize", () => {
     if (window.innerWidth > 1180) closeSidebar();
   });
@@ -406,31 +668,112 @@ function setupLogout() {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error(error);
+      console.error("Erro ao sair:", error);
+    } finally {
+      window.location.href = "index.html";
     }
+  });
+}
 
-    window.location.href = "index.html";
+function setupTopbarShadow() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+
+  window.addEventListener("scroll", () => {
+    topbar.style.boxShadow =
+      window.scrollY > 8
+        ? "0 10px 28px rgba(15,23,42,.08)"
+        : "0 6px 20px rgba(15,23,42,.04)";
   });
 }
 
 function fillHeader(profile) {
+  const isAdmin = isAdminUser(profile.role);
+  const isGovernanca = isGovernancaUser(profile.role);
+
   const name =
     profile.displayName ||
     profile.name ||
     profile.nome ||
-    "Administrador VP";
+    (isAdmin ? "Administrador VP" : "Usuário");
 
   if (els.userNameTop) {
     els.userNameTop.textContent = name;
   }
 
   if (els.accessBanner) {
-    els.accessBanner.innerHTML = `
-      <strong>Acesso administrativo ativo.</strong>
-      Indicadores vinculados à cooperativa ${PAGE_TERRITORY.cooperativeName}.
-    `;
+    if (isGovernanca) {
+      els.accessBanner.className = "access-banner show admin";
+      els.accessBanner.innerHTML =
+        `<strong>Acesso de governança ativo.</strong> Visualização geral dos indicadores do sistema.`;
+    } else {
+      els.accessBanner.className = "access-banner show cooperativa";
+      els.accessBanner.innerHTML =
+        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa ${PAGE_TERRITORY.cooperativeName}.`;
+    }
+  }
+
+  if (els.sidebarHelpText) {
+    els.sidebarHelpText.textContent =
+      "Dashboard da cooperativa com dados operacionais, participantes e coletas.";
   }
 }
+
+function renderInfoList(container, items) {
+  if (!container) return;
+
+  container.innerHTML = items
+    .map((item) => {
+      return `
+        <article class="info-item">
+          <div class="info-copy">
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${escapeHtml(item.description)}</span>
+          </div>
+          ${item.meta ? `<span class="info-meta">${escapeHtml(item.meta)}</span>` : ""}
+        </article>
+      `;
+    })
+    .join("");
+}
+
+function fillStaticPanels() {
+  renderInfoList(els.noticesList, [
+    {
+      title: "Indicadores atualizados",
+      description: "Os dados do painel são sincronizados com os registros da cooperativa.",
+      meta: "Sistema"
+    },
+    {
+      title: "Acompanhamento operacional",
+      description: "Use o dashboard para acompanhar participantes, coletas e ações pendentes.",
+      meta: "Painel"
+    }
+  ]);
+
+  renderInfoList(els.territoryCommunications, [
+    {
+      title: "Resumo da cooperativa",
+      description: "Painel inicial otimizado para leitura rápida dos principais números.",
+      meta: "Dashboard"
+    },
+    {
+      title: "Dados integrados",
+      description: "Participantes, coletas e solicitações são carregados diretamente do Firebase.",
+      meta: "Firebase"
+    }
+  ]);
+}
+
+function setCoopSyncStatus(text) {
+  if (els.syncCoopDashboardStatus) {
+    els.syncCoopDashboardStatus.textContent = text;
+  }
+}
+
+/* =========================================================
+   FIREBASE
+========================================================= */
 
 function clearUnsubscribers() {
   STATE.unsubscribers.forEach((unsubscribe) => {
@@ -443,65 +786,102 @@ function clearUnsubscribers() {
 }
 
 function listenCollection(collectionName, callback) {
-  const q = query(collection(db, collectionName));
+  try {
+    const q = query(collection(db, collectionName));
 
-  const unsubscribe = onSnapshot(
-    q,
-    (snapshot) => {
-      const docs = snapshot.docs.map((docItem) => ({
-        id: docItem.id,
-        ...docItem.data()
-      }));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const docs = snapshot.docs.map((docItem) => ({
+          id: docItem.id,
+          ...docItem.data()
+        }));
 
-      callback(docs);
-    },
-    (error) => {
-      console.error(`[${collectionName}]`, error);
-      callback([]);
-    }
-  );
+        callback(docs);
+      },
+      (error) => {
+        console.error(`[${collectionName}] Erro ao carregar dados:`, error);
+        callback([]);
+      }
+    );
 
-  STATE.unsubscribers.push(unsubscribe);
+    STATE.unsubscribers.push(unsubscribe);
+  } catch (error) {
+    console.error(`[${collectionName}] Erro ao iniciar listener:`, error);
+    callback([]);
+  }
+}
+
+/* =========================================================
+   KPIs
+========================================================= */
+
+function computeDashboardData() {
+  const approvedParticipants = STATE.participants.filter(isApprovedParticipant);
+  const coletasRealizadas = STATE.coletas.filter(isColetaRealizada);
+
+  const peopleCount = approvedParticipants.filter((item) =>
+    ["morador", "familia", "família", "lideranca", "participante", "user", "usuario", "casa"].includes(participantType(item))
+  ).length;
+
+  const condoCount = approvedParticipants.filter((item) =>
+    ["condominio", "condomínio"].includes(participantType(item))
+  ).length;
+
+  const pesoRecebido = coletasRealizadas.reduce((acc, item) => acc + getPesoRecebido(item), 0);
+  const rejeito = coletasRealizadas.reduce((acc, item) => acc + getRejeito(item), 0);
+  const naoComercializado = coletasRealizadas.reduce((acc, item) => acc + getNaoComercializado(item), 0);
+
+  const qualidadeItens = coletasRealizadas
+    .map(getQualidade)
+    .filter((value) => value > 0);
+
+  const qualidadeMedia = qualidadeItens.length
+    ? (qualidadeItens.reduce((acc, value) => acc + value, 0) / qualidadeItens.length).toFixed(1)
+    : "0";
+
+  return {
+    participants: approvedParticipants.length,
+    people: peopleCount,
+    condos: condoCount,
+    coletas: coletasRealizadas.length,
+    actions: STATE.approvalRequests.length,
+    pesoRecebido,
+    rejeito,
+    naoComercializado,
+    qualidadeMedia
+  };
 }
 
 function updateKpis() {
-  const participants = STATE.participants.length;
-  const coletas = STATE.coletas.length;
+  const data = computeDashboardData();
 
-  const pesoRecebido = STATE.coletas.reduce((acc, item) => acc + getPesoRecebido(item), 0);
-  const rejeito = STATE.coletas.reduce((acc, item) => acc + getRejeito(item), 0);
-  const naoComercializado = STATE.coletas.reduce((acc, item) => acc + getNaoComercializado(item), 0);
+  animateNumber(els.indicatorParticipants, data.participants);
+  animateNumber(els.indicatorColetas, data.coletas);
+  animateNumber(els.indicatorActions, data.actions);
 
-  const qualidadeItens = STATE.coletas.map(getQualidade).filter((v) => v > 0);
+  animateNumber(els.participantsTotalCount, data.participants);
+  animateNumber(els.participantsPeopleCount, data.people);
+  animateNumber(els.participantsCondoCount, data.condos);
 
-  const qualidade = qualidadeItens.length
-    ? (qualidadeItens.reduce((acc, item) => acc + item, 0) / qualidadeItens.length).toFixed(1)
-    : "0";
-
-  animateNumber(els.indicatorParticipants, participants);
-  animateNumber(els.indicatorColetas, coletas);
-  animateNumber(els.indicatorActions, STATE.approvalRequests.length);
-
-  if (els.indicatorPesoRecebido) els.indicatorPesoRecebido.textContent = formatKg(pesoRecebido);
-  if (els.indicatorRejeito) els.indicatorRejeito.textContent = formatKg(rejeito);
-  if (els.indicatorNaoComercializado) els.indicatorNaoComercializado.textContent = formatKg(naoComercializado);
-  if (els.indicatorQualidadeMedia) els.indicatorQualidadeMedia.textContent = qualidade;
+  setText(els.indicatorPesoRecebido, formatKg(data.pesoRecebido));
+  setText(els.indicatorRejeito, formatKg(data.rejeito));
+  setText(els.indicatorNaoComercializado, formatKg(data.naoComercializado));
+  setText(els.indicatorQualidadeMedia, data.qualidadeMedia);
 
   renderRecentColetas();
-
-  updateCharts({
-    participants,
-    coletas,
-    pesoRecebido,
-    rejeito,
-    naoComercializado
-  });
+  updateCharts(data);
 }
+
+/* =========================================================
+   TABELA RECENTE
+========================================================= */
 
 function renderRecentColetas() {
   if (!els.recentColetasTableBody) return;
 
   const recent = [...STATE.coletas]
+    .filter(isColetaRealizada)
     .sort((a, b) => {
       const dateA = getDateValue(a)?.getTime() || 0;
       const dateB = getDateValue(b)?.getTime() || 0;
@@ -524,10 +904,15 @@ function renderRecentColetas() {
       return `
         <tr>
           <td>${escapeHtml(formatDateLabel(item))}</td>
+
           <td>${escapeHtml(getParticipantName(item))}</td>
+
           <td>${escapeHtml(getParticipantCode(item))}</td>
+
           <td>${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</td>
+
           <td>${statusBadge(getColetaStatusLabel(item))}</td>
+
           <td>
             <div class="details-metrics">
               <span><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</span>
@@ -535,6 +920,7 @@ function renderRecentColetas() {
               <span><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</span>
             </div>
           </td>
+
           <td>
             <button
               class="table-action-link"
@@ -556,7 +942,7 @@ function updateLoadMoreButton() {
   const btn = document.getElementById("btnLoadMoreColetas");
   if (!btn) return;
 
-  const total = STATE.coletas.length;
+  const total = STATE.coletas.filter(isColetaRealizada).length;
 
   if (!total) {
     btn.textContent = "Nenhuma coleta disponível";
@@ -584,31 +970,9 @@ function setupLoadMoreColetasButton() {
   });
 }
 
-function renderMaterialsList(item = {}) {
-  const materials =
-    item.materials ||
-    item.materiais ||
-    item.payloadSnapshot?.materials ||
-    item.payloadSnapshot?.materiais ||
-    {};
-
-  const entries = Object.entries(materials);
-
-  if (!entries.length) {
-    return `<div class="empty-materials">Nenhum material informado.</div>`;
-  }
-
-  return entries
-    .map(([name, value]) => {
-      return `
-        <div class="material-line">
-          <span>${escapeHtml(name)}</span>
-          <strong>${escapeHtml(formatKg(value))}</strong>
-        </div>
-      `;
-    })
-    .join("");
-}
+/* =========================================================
+   MODAL COLETA
+========================================================= */
 
 function openColetaModal(item) {
   const old = document.getElementById("coletaDetailsModal");
@@ -633,6 +997,7 @@ function openColetaModal(item) {
         <div class="coleta-info-card"><strong>Código:</strong> ${escapeHtml(getParticipantCode(item))}</div>
         <div class="coleta-info-card"><strong>Tipo:</strong> ${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</div>
         <div class="coleta-info-card"><strong>Status:</strong> ${escapeHtml(getColetaStatusLabel(item))}</div>
+        <div class="coleta-info-card"><strong>Qualidade:</strong> ${escapeHtml(getQualidade(item) || "—")}</div>
         <div class="coleta-info-card"><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</div>
         <div class="coleta-info-card"><strong>Rejeito:</strong> ${escapeHtml(formatKg(getRejeito(item)))}</div>
         <div class="coleta-info-card"><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</div>
@@ -640,7 +1005,9 @@ function openColetaModal(item) {
 
       <div class="coleta-materials-box">
         <h3>Materiais informados</h3>
-        <div class="coleta-materials-list">${renderMaterialsList(item)}</div>
+        <div class="coleta-materials-list">
+          ${renderMaterialsList(item)}
+        </div>
       </div>
     </div>
   `;
@@ -668,31 +1035,49 @@ function setupRecentColetasActions() {
 
     openColetaModal(coleta);
   });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Escape") return;
+
+    const modal = document.getElementById("coletaDetailsModal");
+
+    if (modal) {
+      modal.remove();
+      document.body.classList.remove("modal-open");
+    }
+  });
 }
+
+/* =========================================================
+   GRÁFICOS
+========================================================= */
 
 function buildMonthlyColetasSeries(items = []) {
   const map = new Map();
 
-  items.forEach((item) => {
-    const date = getDateValue(item);
-    if (!date) return;
+  items
+    .filter(isColetaRealizada)
+    .forEach((item) => {
+      const date = getDateValue(item);
+      if (!date) return;
 
-    const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const label = date.toLocaleDateString("pt-BR", {
-      month: "short",
-      year: "2-digit"
-    });
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
 
-    if (!map.has(key)) {
-      map.set(key, {
-        key,
-        label,
-        total: 0
+      const label = date.toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "2-digit"
       });
-    }
 
-    map.get(key).total += 1;
-  });
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          label,
+          total: 0
+        });
+      }
+
+      map.get(key).total += 1;
+    });
 
   return Array.from(map.values())
     .sort((a, b) => a.key.localeCompare(b.key))
@@ -703,16 +1088,19 @@ function updateCharts(data) {
   const monthly = buildMonthlyColetasSeries(STATE.coletas);
 
   const totalLabel = document.getElementById("chartTotalColetasLabel");
-  if (totalLabel) totalLabel.textContent = String(data.coletas || 0);
+
+  if (totalLabel) {
+    totalLabel.textContent = String(data.coletas || 0);
+  }
 
   if (els.chartColetasMensais) {
+    const max = Math.max(...monthly.map((item) => item.total), 1);
+
     if (!monthly.length) {
       els.chartColetasMensais.innerHTML = `
         <div class="empty-chart-message">Sem coletas para exibir.</div>
       `;
     } else {
-      const max = Math.max(...monthly.map((item) => item.total), 1);
-
       els.chartColetasMensais.innerHTML = monthly
         .map((item) => {
           const height = Math.max(8, Math.round((item.total / max) * 100));
@@ -730,44 +1118,27 @@ function updateCharts(data) {
   }
 
   const totalParticipants = Math.max(Number(data.participants || 0), 0);
-
-  const families = STATE.participants.filter((item) => {
-    const type = normalizeText(
-      item.localType ||
-      item.codeLocalType ||
-      item.participantType ||
-      item.tipo ||
-      item.payloadSnapshot?.localType
-    );
-
-    return type === "casa" || type === "familia" || type === "família" || type === "morador";
-  }).length;
-
-  const condos = STATE.participants.filter((item) => {
-    const type = normalizeText(
-      item.localType ||
-      item.codeLocalType ||
-      item.participantType ||
-      item.tipo ||
-      item.payloadSnapshot?.localType
-    );
-
-    return type === "condominio" || type === "condomínio";
-  }).length;
-
-  const others = Math.max(totalParticipants - families - condos, 0);
+  const people = Math.max(Number(data.people || 0), 0);
+  const condos = Math.max(Number(data.condos || 0), 0);
+  const others = Math.max(totalParticipants - people - condos, 0);
   const totalForDonut = Math.max(totalParticipants, 1);
 
-  const p1 = (families / totalForDonut) * 100;
-  const p2 = p1 + (condos / totalForDonut) * 100;
-  const p3 = p2 + (others / totalForDonut) * 100;
+  const peoplePercent = (people / totalForDonut) * 100;
+  const condoPercent = (condos / totalForDonut) * 100;
+  const otherPercent = (others / totalForDonut) * 100;
 
   const donut = document.getElementById("chartParticipantesPerfil");
-  const donutTotal = document.getElementById("chartTotalParticipantesLabel");
+  const chartTotalParticipantesLabel = document.getElementById("chartTotalParticipantesLabel");
 
-  if (donutTotal) donutTotal.textContent = String(totalParticipants);
+  if (chartTotalParticipantesLabel) {
+    chartTotalParticipantesLabel.textContent = String(totalParticipants);
+  }
 
   if (donut) {
+    const p1 = peoplePercent;
+    const p2 = peoplePercent + condoPercent;
+    const p3 = peoplePercent + condoPercent + otherPercent;
+
     donut.style.background = `
       conic-gradient(
         #81B92A 0 ${p1}%,
@@ -784,28 +1155,57 @@ function updateCharts(data) {
 
   const barPeso = document.getElementById("barPesoRecebido");
   const barRejeito = document.getElementById("barRejeito");
-  const barNao = document.getElementById("barNaoComercializado");
+  const barNaoComercializado = document.getElementById("barNaoComercializado");
 
-  const pesoLabel = document.getElementById("barPesoRecebidoLabel");
-  const rejeitoLabel = document.getElementById("barRejeitoLabel");
-  const naoLabel = document.getElementById("barNaoComercializadoLabel");
+  const barPesoLabel = document.getElementById("barPesoRecebidoLabel");
+  const barRejeitoLabel = document.getElementById("barRejeitoLabel");
+  const barNaoComercializadoLabel = document.getElementById("barNaoComercializadoLabel");
 
   if (barPeso) barPeso.style.width = `${Math.max(2, (peso / maxPeso) * 100)}%`;
   if (barRejeito) barRejeito.style.width = `${Math.max(2, (rejeito / maxPeso) * 100)}%`;
-  if (barNao) barNao.style.width = `${Math.max(2, (naoComercializado / maxPeso) * 100)}%`;
+  if (barNaoComercializado) barNaoComercializado.style.width = `${Math.max(2, (naoComercializado / maxPeso) * 100)}%`;
 
-  if (pesoLabel) pesoLabel.textContent = formatKg(peso);
-  if (rejeitoLabel) rejeitoLabel.textContent = formatKg(rejeito);
-  if (naoLabel) naoLabel.textContent = formatKg(naoComercializado);
+  if (barPesoLabel) barPesoLabel.textContent = formatKg(peso);
+  if (barRejeitoLabel) barRejeitoLabel.textContent = formatKg(rejeito);
+  if (barNaoComercializadoLabel) barNaoComercializadoLabel.textContent = formatKg(naoComercializado);
 }
 
-function listenDashboardData() {
+/* =========================================================
+   PERMISSÕES / DADOS
+========================================================= */
+
+function applyPermissionRules(profile) {
+  STATE.isAdmin = isAdminUser(profile.role);
+  STATE.canEditAll = isGovernancaUser(profile.role);
+}
+
+function applyRoleVisibility(profile) {
+  const canManageUsers = isAdminUser(profile.role) || isGovernancaUser(profile.role);
+
+  const userLinks = [
+    document.querySelector('a[href="usuario-cooperativa-vila-pinto.html"]'),
+    document.querySelector('a[href="usuarios.html"]')
+  ].filter(Boolean);
+
+  userLinks.forEach((link) => {
+    link.style.display = canManageUsers ? "" : "none";
+  });
+
+  document.querySelectorAll(".admin-only").forEach((el) => {
+    el.classList.toggle("hidden", !canManageUsers);
+  });
+}
+
+function listenDashboardData(profile) {
   clearUnsubscribers();
 
   listenCollection("participants", (items) => {
     STATE.participants = items
       .filter(itemBelongsToTerritory)
-      .filter(isApprovedParticipant);
+      .filter((item) => {
+        const status = normalizeText(item.approvalStatus || item.status || item.decision);
+        return status !== "rejected" && status !== "rejeitado";
+      });
 
     updateKpis();
   });
@@ -818,11 +1218,14 @@ function listenDashboardData() {
     console.table(
       STATE.coletas.slice(0, 10).map((item) => ({
         id: item.id,
+        data: formatDateLabel(item),
+        tipo: formatFluxoLabel(getTipoRecebimento(item)),
         participante: getParticipantName(item),
         codigo: getParticipantCode(item),
         peso: getPesoRecebido(item),
         rejeito: getRejeito(item),
-        naoComercializado: getNaoComercializado(item)
+        naoComercializado: getNaoComercializado(item),
+        qualidade: getQualidade(item)
       }))
     );
 
@@ -847,11 +1250,36 @@ function listenDashboardData() {
   });
 }
 
+/* =========================================================
+   EXPORTAÇÃO / SINCRONIZAÇÃO
+========================================================= */
+
+function setupExportButton() {
+  els.exportParticipantsPdfBtn?.addEventListener("click", () => {
+    window.print();
+  });
+}
+
+function setupSyncButton() {
+  els.syncCoopDashboardBtn?.addEventListener("click", () => {
+    setCoopSyncStatus(`Atualizado em ${new Date().toLocaleString("pt-BR")}`);
+    updateKpis();
+  });
+}
+
+/* =========================================================
+   BOOT
+========================================================= */
+
 function boot() {
   setupSidebar();
   setupLogout();
+  setupTopbarShadow();
+  setupExportButton();
+  setupSyncButton();
   setupLoadMoreColetasButton();
   setupRecentColetasActions();
+  fillStaticPanels();
 
   onAuthStateChanged(auth, async (user) => {
     try {
@@ -863,15 +1291,21 @@ function boot() {
       STATE.currentUser = user;
 
       const profile = await getUserProfile(user.uid);
+      validateProfile(profile);
+
       STATE.profile = profile;
 
+      applyPermissionRules(profile);
       fillHeader(profile);
-      listenDashboardData();
+      applyRoleVisibility(profile);
+      listenDashboardData(profile);
+
+      setCoopSyncStatus("Indicadores carregados em tempo real.");
 
       document.body.classList.add("dashboard-loaded");
     } catch (error) {
-      console.error("Erro ao carregar painel:", error);
-      alert("Não foi possível carregar o painel.");
+      console.error("Erro ao carregar painel da cooperativa:", error);
+      alert(error.message || "Não foi possível carregar o painel.");
       window.location.href = "login.html";
     }
   });
