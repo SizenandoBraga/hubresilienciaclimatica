@@ -94,11 +94,9 @@ const STATE = {
   profile: null,
   isAdmin: false,
   canEditAll: false,
-
   participants: [],
   coletas: [],
   approvalRequests: [],
-
   unsubscribers: []
 };
 
@@ -136,12 +134,21 @@ function formatKg(value) {
   return `${formatNumber(Math.round(Number(value || 0)))} kg`;
 }
 
+function formatFluxoLabel(value) {
+  const normalized = normalizeText(value).replaceAll("-", "_");
+
+  if (normalized === "recebimento") return "Recebimento";
+  if (normalized === "final_turno") return "Final do turno";
+  if (normalized.includes("final")) return "Final do turno";
+
+  return value && value !== "-" ? value : "Recebimento";
+}
+
 function animateNumber(el, value, suffix = "") {
   if (!el) return;
 
   const target = Number(value || 0);
   const current = Number(String(el.textContent || "0").replace(/[^\d.-]/g, "")) || 0;
-
   const duration = 450;
   const start = performance.now();
 
@@ -151,9 +158,7 @@ function animateNumber(el, value, suffix = "") {
 
     el.textContent = next.toLocaleString("pt-BR") + suffix;
 
-    if (progress < 1) {
-      requestAnimationFrame(frame);
-    }
+    if (progress < 1) requestAnimationFrame(frame);
   }
 
   requestAnimationFrame(frame);
@@ -213,18 +218,12 @@ function participantType(item) {
 }
 
 function toNumber(value) {
-  if (typeof value === "number") {
-    return Number.isFinite(value) ? value : 0;
-  }
-
-  if (value === null || value === undefined || value === "") {
-    return 0;
-  }
-
-  const text = String(value).trim();
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (value === null || value === undefined || value === "") return 0;
 
   const parsed = Number(
-    text
+    String(value)
+      .trim()
       .replace(/\./g, "")
       .replace(",", ".")
       .replace(/[^\d.-]/g, "")
@@ -262,39 +261,39 @@ function getParticipantName(item = {}) {
 
 function getTipoRecebimento(item = {}) {
   return (
+    item.flowType ||
+    item.fluxo ||
+    item.tipoColeta ||
     item.tipoRecebimento ||
     item.receiptType ||
     item.tipo ||
+    item.recebimento?.flowType ||
+    item.finalTurno?.flowType ||
     item.localType ||
     item.codeLocalType ||
+    item.payloadSnapshot?.flowType ||
     item.payloadSnapshot?.tipoRecebimento ||
     item.payloadSnapshot?.localType ||
-    "-"
+    "recebimento"
   );
 }
 
 function getPossibleTerritoryValues(profile) {
   const canonical = canonicalTerritoryId(profile?.territoryId || PAGE_TERRITORY.territoryId);
 
-  if (canonical === "vila-pinto") {
-    return ["vila-pinto", "crgr_vila_pinto", "crgr-vila-pinto"];
-  }
+  if (canonical === "vila-pinto") return ["vila-pinto", "crgr_vila_pinto", "crgr-vila-pinto"];
 
   if (canonical === "cooadesc") {
     return ["cooadesc", "coadesc", "crgr_cooadesc", "crgr_coadesc", "crgr-cooadesc", "crgr-coadesc"];
   }
 
-  if (canonical === "padre-cacique") {
-    return ["padre-cacique", "crgr_padre_cacique", "crgr-padre-cacique"];
-  }
+  if (canonical === "padre-cacique") return ["padre-cacique", "crgr_padre_cacique", "crgr-padre-cacique"];
 
   return [canonical];
 }
 
 function itemBelongsToTerritory(item, profile) {
-  if (isGovernancaUser(profile.role)) {
-    return true;
-  }
+  if (isGovernancaUser(profile.role)) return true;
 
   const possible = getPossibleTerritoryValues(profile).map(canonicalTerritoryId);
 
@@ -319,23 +318,13 @@ function itemBelongsToTerritory(item, profile) {
     .filter(Boolean)
     .map(canonicalTerritoryId);
 
-  if (fields.some((field) => possible.includes(field))) {
-    return true;
-  }
+  if (fields.some((field) => possible.includes(field))) return true;
 
   const participantCode = getParticipantCode(item).toUpperCase();
 
-  if (PAGE_TERRITORY.territoryId === "vila-pinto") {
-    return participantCode.startsWith("VPD");
-  }
-
-  if (PAGE_TERRITORY.territoryId === "cooadesc") {
-    return participantCode.startsWith("COA") || participantCode.startsWith("COO");
-  }
-
-  if (PAGE_TERRITORY.territoryId === "padre-cacique") {
-    return participantCode.startsWith("PC");
-  }
+  if (PAGE_TERRITORY.territoryId === "vila-pinto") return participantCode.startsWith("VPD");
+  if (PAGE_TERRITORY.territoryId === "cooadesc") return participantCode.startsWith("COA") || participantCode.startsWith("COO");
+  if (PAGE_TERRITORY.territoryId === "padre-cacique") return participantCode.startsWith("PC");
 
   return false;
 }
@@ -348,10 +337,7 @@ function deepSumNumbers(obj) {
   if (!obj || typeof obj !== "object") return 0;
 
   return Object.values(obj).reduce((acc, value) => {
-    if (typeof value === "object" && value !== null) {
-      return acc + deepSumNumbers(value);
-    }
-
+    if (typeof value === "object" && value !== null) return acc + deepSumNumbers(value);
     return acc + toNumber(value);
   }, 0);
 }
@@ -367,12 +353,7 @@ function deepFindNumber(obj, keyMatchers = []) {
     const matched = keyMatchers.some((matcher) => normalizedKey.includes(matcher));
 
     if (matched) {
-      if (typeof value === "object" && value !== null) {
-        total += deepSumNumbers(value);
-      } else {
-        total += toNumber(value);
-      }
-
+      total += typeof value === "object" && value !== null ? deepSumNumbers(value) : toNumber(value);
       return;
     }
 
@@ -394,19 +375,22 @@ function getPesoRecebido(coleta = {}) {
     toNumber(coleta.pesoTotal) ||
     toNumber(coleta.peso) ||
     toNumber(coleta.kg) ||
+    toNumber(coleta.recebimento?.pesoResiduoSecoKg) ||
+    toNumber(coleta.finalTurno?.pesoResiduoSecoKg) ||
     toNumber(coleta.payloadSnapshot?.pesoRecebido) ||
     toNumber(coleta.payloadSnapshot?.totalKg);
 
   if (direct) return Math.round(direct);
 
-  const nested = deepFindNumber(coleta, [
-    "pesorecebido",
-    "recebido",
-    "totalkg",
-    "pesototal"
-  ]);
-
-  return Math.round(nested || 0);
+  return Math.round(
+    deepFindNumber(coleta, [
+      "pesorecebido",
+      "recebido",
+      "totalkg",
+      "pesototal",
+      "pesoresiduosecokg"
+    ]) || 0
+  );
 }
 
 function getRejeito(coleta = {}) {
@@ -415,18 +399,20 @@ function getRejeito(coleta = {}) {
     toNumber(coleta.pesoRejeito) ||
     toNumber(coleta.totalRejeito) ||
     toNumber(coleta.rejeitos) ||
+    toNumber(coleta.recebimento?.pesoRejeitoKg) ||
+    toNumber(coleta.finalTurno?.pesoRejeitoKg) ||
     toNumber(coleta.payloadSnapshot?.rejeito) ||
     toNumber(coleta.payloadSnapshot?.pesoRejeito);
 
   if (direct) return Math.round(direct);
 
-  const nested = deepFindNumber(coleta, [
-    "rejeito",
-    "rejeitos",
-    "pesorejeito"
-  ]);
-
-  return Math.round(nested || 0);
+  return Math.round(
+    deepFindNumber(coleta, [
+      "rejeito",
+      "rejeitos",
+      "pesorejeito"
+    ]) || 0
+  );
 }
 
 function getNaoComercializado(coleta = {}) {
@@ -437,18 +423,20 @@ function getNaoComercializado(coleta = {}) {
     toNumber(coleta.materialNaoComercializado) ||
     toNumber(coleta.naoVenda) ||
     toNumber(coleta.semComercializacao) ||
+    toNumber(coleta.recebimento?.pesoNaoComercializadoKg) ||
+    toNumber(coleta.finalTurno?.pesoNaoComercializadoKg) ||
     toNumber(coleta.payloadSnapshot?.naoComercializado) ||
     toNumber(coleta.payloadSnapshot?.totalNaoComercializado);
 
   if (direct) return Math.round(direct);
 
-  const nested = deepFindNumber(coleta, [
-    "naocomercializado",
-    "semcomercializacao",
-    "naovenda"
-  ]);
-
-  return Math.round(nested || 0);
+  return Math.round(
+    deepFindNumber(coleta, [
+      "naocomercializado",
+      "semcomercializacao",
+      "naovenda"
+    ]) || 0
+  );
 }
 
 function getQualidade(coleta = {}) {
@@ -456,6 +444,8 @@ function getQualidade(coleta = {}) {
     toNumber(coleta.qualidade) ||
     toNumber(coleta.notaQualidade) ||
     toNumber(coleta.qualityScore) ||
+    toNumber(coleta.recebimento?.qualidadeNota) ||
+    toNumber(coleta.finalTurno?.qualidadeNota) ||
     toNumber(coleta.payloadSnapshot?.qualidade) ||
     0
   );
@@ -466,6 +456,7 @@ function getDateValue(item = {}) {
     item.dataColeta ||
     item.coletaData ||
     item.dateColeta ||
+    item.opDate ||
     item.data ||
     item.date ||
     item.createdAt ||
@@ -476,27 +467,15 @@ function getDateValue(item = {}) {
     null;
 
   if (!possible) return null;
-
-  if (typeof possible?.toDate === "function") {
-    return possible.toDate();
-  }
-
-  if (possible instanceof Date) {
-    return possible;
-  }
+  if (typeof possible?.toDate === "function") return possible.toDate();
+  if (possible instanceof Date) return possible;
 
   if (typeof possible === "string") {
     const iso = new Date(possible);
-
-    if (!Number.isNaN(iso.getTime())) {
-      return iso;
-    }
+    if (!Number.isNaN(iso.getTime())) return iso;
 
     const br = possible.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-
-    if (br) {
-      return new Date(`${br[3]}-${br[2]}-${br[1]}T00:00:00`);
-    }
+    if (br) return new Date(`${br[3]}-${br[2]}-${br[1]}T00:00:00`);
   }
 
   return null;
@@ -504,9 +483,7 @@ function getDateValue(item = {}) {
 
 function formatDateLabel(item = {}) {
   const date = getDateValue(item);
-
   if (!date) return "-";
-
   return date.toLocaleDateString("pt-BR");
 }
 
@@ -536,30 +513,21 @@ function getColetaStatusLabel(item = {}) {
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
 
-  if (!snap.exists()) {
-    throw new Error("Usuário não encontrado.");
-  }
+  if (!snap.exists()) throw new Error("Usuário não encontrado.");
 
   const data = {
     id: snap.id,
     ...snap.data()
   };
 
-  if (data.territoryId) {
-    data.territoryId = canonicalTerritoryId(data.territoryId);
-  }
+  if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
 
   return data;
 }
 
 function validateProfile(profile) {
-  if (!profile) {
-    throw new Error("Perfil de usuário inválido.");
-  }
-
-  if (profile.status !== "active") {
-    throw new Error("Usuário sem acesso ativo.");
-  }
+  if (!profile) throw new Error("Perfil de usuário inválido.");
+  if (profile.status !== "active") throw new Error("Usuário sem acesso ativo.");
 
   const acceptedRoles = ["admin", "cooperativa", "user", "usuario", "governanca", "gestor"];
 
@@ -594,16 +562,12 @@ function setupSidebar() {
 
   document.querySelectorAll(".sidebar .nav-link").forEach((link) => {
     link.addEventListener("click", () => {
-      if (window.innerWidth <= 1180) {
-        closeSidebar();
-      }
+      if (window.innerWidth <= 1180) closeSidebar();
     });
   });
 
   window.addEventListener("resize", () => {
-    if (window.innerWidth > 1180) {
-      closeSidebar();
-    }
+    if (window.innerWidth > 1180) closeSidebar();
   });
 }
 
@@ -623,7 +587,6 @@ function setupLogout() {
 
 function setupTopbarShadow() {
   const topbar = document.querySelector(".topbar");
-
   if (!topbar) return;
 
   window.addEventListener("scroll", () => {
@@ -644,9 +607,7 @@ function fillHeader(profile) {
     profile.nome ||
     (isAdmin ? "Administrador VP" : "Usuário");
 
-  if (els.userNameTop) {
-    els.userNameTop.textContent = name;
-  }
+  if (els.userNameTop) els.userNameTop.textContent = name;
 
   if (els.accessBanner) {
     if (isGovernanca) {
@@ -729,9 +690,7 @@ function fillStaticPanels() {
 }
 
 function setCoopSyncStatus(text) {
-  if (els.syncCoopDashboardStatus) {
-    els.syncCoopDashboardStatus.textContent = text;
-  }
+  if (els.syncCoopDashboardStatus) els.syncCoopDashboardStatus.textContent = text;
 }
 
 /* =========================================================
@@ -881,7 +840,7 @@ function renderRecentColetas() {
   if (!recent.length) {
     els.recentColetasTableBody.innerHTML = `
       <tr>
-        <td colspan="8">Nenhuma coleta cadastrada.</td>
+        <td colspan="7">Nenhuma coleta cadastrada.</td>
       </tr>
     `;
     return;
@@ -891,27 +850,27 @@ function renderRecentColetas() {
     .map((item) => {
       const participantCode = getParticipantCode(item);
       const participantName = getParticipantName(item);
-
-      const participantDisplay =
-        participantName === participantCode
-          ? participantCode
-          : `${participantName || ""}${participantCode ? " • " + participantCode : ""}`.trim();
+      const tipoRecebimento = formatFluxoLabel(getTipoRecebimento(item));
 
       return `
         <tr>
           <td>${escapeHtml(formatDateLabel(item))}</td>
 
-          <td>${escapeHtml(participantDisplay || "-")}</td>
+          <td>${escapeHtml(participantName || "-")}</td>
 
-          <td>${escapeHtml(getTipoRecebimento(item))}</td>
+          <td>${escapeHtml(participantCode || "-")}</td>
+
+          <td>${escapeHtml(tipoRecebimento)}</td>
 
           <td>${statusBadge(getColetaStatusLabel(item))}</td>
 
-          <td>${escapeHtml(formatKg(getPesoRecebido(item)))}</td>
-
-          <td>${escapeHtml(formatKg(getRejeito(item)))}</td>
-
-          <td>${escapeHtml(formatKg(getNaoComercializado(item)))}</td>
+          <td>
+            <div class="details-metrics">
+              <span><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</span>
+              <span><strong>Rejeito:</strong> ${escapeHtml(formatKg(getRejeito(item)))}</span>
+              <span><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</span>
+            </div>
+          </td>
 
           <td>
             <a class="table-action-link" href="${PAGE_TERRITORY.coletasUrl}">
@@ -1009,8 +968,6 @@ function listenDashboardData(profile) {
         return status !== "rejected" && status !== "rejeitado";
       });
 
-      console.log("[Dashboard] Participantes encontrados:", STATE.participants.length);
-
       updateKpis();
     }
   );
@@ -1030,7 +987,7 @@ function listenDashboardData(profile) {
           data: formatDateLabel(item),
           codigo: getParticipantCode(item),
           participante: getParticipantName(item),
-          tipo: getTipoRecebimento(item),
+          tipo: formatFluxoLabel(getTipoRecebimento(item)),
           pesoRecebido: getPesoRecebido(item),
           rejeito: getRejeito(item),
           naoComercializado: getNaoComercializado(item)
@@ -1056,7 +1013,7 @@ function listenDashboardData(profile) {
 }
 
 /* =========================================================
-   EXPORTAÇÃO
+   EXPORTAÇÃO / SINCRONIZAÇÃO
 ========================================================= */
 
 function setupExportButton() {
@@ -1064,10 +1021,6 @@ function setupExportButton() {
     window.print();
   });
 }
-
-/* =========================================================
-   BOTÃO ATUALIZAR INDICADORES
-========================================================= */
 
 function setupSyncButton() {
   els.syncCoopDashboardBtn?.addEventListener("click", () => {
