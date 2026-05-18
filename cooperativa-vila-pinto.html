@@ -5,16 +5,19 @@
   <meta http-equiv="Content-Language" content="pt-BR" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NSRU • Cooperativa • Vila Pinto</title>
+
+  <title>NSRU • Painel da Cooperativa • Vila Pinto</title>
+
+  <meta name="description" content="Painel administrativo da Cooperativa Vila Pinto com indicadores de participantes, coletas, pesos, rejeitos e dados operacionais em tempo real." />
+  <meta name="theme-color" content="#81B92A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700&display=swap" rel="stylesheet" />
 
   <link rel="icon" type="image/png" href="img/Logo_verde_NSRU.png" />
-<link rel="shortcut icon" href="img/Logo_verde_NSRU.png" />
-<link rel="apple-touch-icon" href="img/Logo_verde_NSRU.png" />
-<meta name="theme-color" content="#81B92A" />
+  <link rel="shortcut icon" href="img/Logo_verde_NSRU.png" />
+  <link rel="apple-touch-icon" href="img/Logo_verde_NSRU.png" />
 
   <link rel="stylesheet" href="cooperativas.css" />
 </head>
@@ -24,6 +27,7 @@
   data-territory-label="Centro de Triagem Vila Pinto"
   data-cooperative-name="Vila Pinto"
   data-participant-url="cadastro-participantes-vila-pinto.html"
+  data-participants-list-url="usuarios-vila-pinto.html"
   data-coletas-url="cadastro-coletas-vila-pinto.html"
 >
   <div class="coop-bg"></div>
@@ -46,10 +50,10 @@
 
         <a class="nav-link active" href="cooperativa-vila-pinto.html">
           <span class="nav-ico">📊</span>
-          <span>Pagina inicial</span>
+          <span>Página inicial</span>
         </a>
 
-          <a class="nav-link" href="cadastro-coletas-vila-pinto.html">
+        <a class="nav-link" href="cadastro-coletas-vila-pinto.html">
           <span class="nav-ico">♻️</span>
           <span>Registro de coletas</span>
         </a>
@@ -59,7 +63,7 @@
           <span>Participantes</span>
         </a>
 
-         <a class="nav-link" href="dashboard-cooperativa.html">
+        <a class="nav-link" href="dashboard-cooperativa.html">
           <span class="nav-ico">📈</span>
           <span>Dashboard</span>
         </a>
@@ -68,10 +72,6 @@
           <span class="nav-ico">👤</span>
           <span>Usuários</span>
         </a>
-
-      
-
-       
 
         <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
           Atualizar indicadores
@@ -139,11 +139,12 @@
             </p>
           </div>
 
-          <div class="dashboard-kpi-grid">
+          <div class="dashboard-kpi-grid dashboard-kpi-grid-main">
+
             <article class="dashboard-kpi-card kpi-green">
-              <span>Participantes</span>
+              <span>Participantes ativos</span>
               <strong id="indicatorParticipants">0</strong>
-              <small>Total de participantes vinculados</small>
+              <small>Total de participantes aprovados</small>
             </article>
 
             <article class="dashboard-kpi-card kpi-blue">
@@ -152,11 +153,147 @@
               <small>Registros de coletas lançados</small>
             </article>
 
-            <article class="dashboard-kpi-card kpi-dark">
-              <span>Ações</span>
+            <a class="dashboard-kpi-card kpi-orange kpi-link" id="pendingParticipantsCard" href="usuarios-vila-pinto.html">
+              <span>Novos participantes</span>
               <strong id="indicatorActions">0</strong>
-              <small>Ações e atualizações registradas</small>
+              <small>Clique para acessar participantes em aprovação</small>
+            </a>
+
+            <article class="dashboard-kpi-card kpi-dark">
+              <span>Documentos</span>
+              <strong id="indicatorDocs">0</strong>
+              <small>Documentos vinculados à cooperativa</small>
             </article>
+
+          </div>
+        </section>
+
+        <section class="dashboard-section dashboard-operational">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Indicadores operacionais</span>
+              <h2>Resumo das coletas</h2>
+            </div>
+
+            <p>
+              Totais consolidados a partir dos registros cadastrados no Firebase.
+            </p>
+          </div>
+
+          <div class="operational-kpi-grid">
+
+            <article class="operational-card">
+              <span>Peso recebido</span>
+              <strong id="indicatorPesoRecebido">0 kg</strong>
+              <small>Total informado nas coletas realizadas</small>
+            </article>
+
+            <article class="operational-card">
+              <span>Rejeito</span>
+              <strong id="indicatorRejeito">0 kg</strong>
+              <small>Material classificado como rejeito</small>
+            </article>
+
+            <article class="operational-card">
+              <span>Não comercializado</span>
+              <strong id="indicatorNaoComercializado">0 kg</strong>
+              <small>Material recebido sem comercialização</small>
+            </article>
+
+            <article class="operational-card">
+              <span>Qualidade média</span>
+              <strong id="indicatorQualidadeMedia">0</strong>
+              <small>Média das notas de qualidade registradas</small>
+            </article>
+
+          </div>
+        </section>
+
+        <section class="dashboard-section quick-actions-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Ações rápidas</span>
+              <h2>Acesso rápido</h2>
+            </div>
+          </div>
+
+          <div class="quick-actions-grid">
+
+            <a class="quick-action-card" href="cadastro-participantes-vila-pinto.html">
+              <span class="quick-action-icon">➕</span>
+              <div>
+                <strong>Cadastrar novo participante</strong>
+                <small>Adicionar participante à base da Vila Pinto</small>
+              </div>
+            </a>
+
+            <a class="quick-action-card" href="usuarios-vila-pinto.html">
+              <span class="quick-action-icon">👥</span>
+              <div>
+                <strong>Visualizar participantes</strong>
+                <small>Conferir aprovados e pendentes</small>
+              </div>
+            </a>
+
+            <a class="quick-action-card" href="cadastro-coletas-vila-pinto.html">
+              <span class="quick-action-icon">♻️</span>
+              <div>
+                <strong>Cadastrar coleta</strong>
+                <small>Registrar uma nova coleta operacional</small>
+              </div>
+            </a>
+
+            <button class="quick-action-card quick-action-button" id="exportParticipantsPdfBtn" type="button">
+              <span class="quick-action-icon">📄</span>
+              <div>
+                <strong>Exportar PDF participantes</strong>
+                <small>Gerar relatório da base atual</small>
+              </div>
+            </button>
+
+          </div>
+        </section>
+
+        <section class="dashboard-section recent-collections-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Coletas recentes</span>
+              <h2>Últimos registros cadastrados</h2>
+            </div>
+
+            <p>
+              Painel rápido para acompanhar os últimos lançamentos e acessar a tela completa de coletas.
+            </p>
+          </div>
+
+          <div class="recent-table-wrap">
+            <table class="recent-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Participante</th>
+                  <th>Código</th>
+                  <th>Tipo</th>
+                  <th>Status</th>
+                  <th>Peso recebido</th>
+                  <th>Rejeito</th>
+                  <th>Não comercializado</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+
+              <tbody id="recentColetasTableBody">
+                <tr>
+                  <td colspan="9">Carregando coletas recentes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="recent-table-footer">
+            <a class="primary-link-button" href="cadastro-coletas-vila-pinto.html">
+              Abrir tabela completa de coletas
+            </a>
           </div>
         </section>
 
@@ -169,11 +306,13 @@
           </div>
 
           <div class="dashboard-chart-grid">
+
             <article class="dashboard-chart-card chart-large">
               <div class="chart-card-head">
                 <h3>Coletas registradas</h3>
                 <span>Mensal</span>
               </div>
+
               <div class="chart-placeholder" id="chartColetasMensais">
                 <div class="fake-chart fake-bars">
                   <span style="height:42%"></span>
@@ -191,6 +330,7 @@
                 <h3>Participantes</h3>
                 <span>Perfil</span>
               </div>
+
               <div class="chart-placeholder" id="chartParticipantesPerfil">
                 <div class="fake-chart fake-donut">
                   <span></span>
@@ -221,9 +361,10 @@
                 </div>
               </div>
             </article>
+
           </div>
         </section>
-
+<!--
         <section class="dashboard-section dashboard-updates-section">
           <div class="section-head">
             <div>
@@ -244,7 +385,7 @@
             </article>
           </div>
         </section>
-
+-->
       </main>
     </div>
   </div>
