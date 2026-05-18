@@ -258,108 +258,121 @@
           </div>
         </section>
 
-       <section class="dashboard-section recent-collections-section">
-  <div class="section-head">
-    <div>
-      <span class="section-tag">Coletas recentes</span>
-      <h2>Últimas coletas cadastradas</h2>
-    </div>
+        <section class="dashboard-section recent-collections-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Coletas recentes</span>
+              <h2>Últimas coletas cadastradas</h2>
+            </div>
 
-    <p>
-      Visualização rápida dos últimos registros. A tabela completa permanece na tela de coletas.
-    </p>
-  </div>
+            <p>
+              Visualização rápida dos últimos registros. A tabela completa permanece na tela de coletas.
+            </p>
+          </div>
 
-  <div class="recent-table-wrap">
-    <table class="recent-table">
-      <thead>
-        <tr>
-          <th>Data</th>
-          <th>Participante</th>
-          <th>Código</th>
-          <th>Tipo de recebimento</th>
-          <th>Status</th>
-          <th>Detalhes</th>
-          <th>Ação</th>
-        </tr>
-      </thead>
+          <div class="recent-table-wrap">
+            <table class="recent-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Participante</th>
+                  <th>Código</th>
+                  <th>Tipo de recebimento</th>
+                  <th>Status</th>
+                  <th>Detalhes</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
 
-      <tbody id="recentColetasTableBody">
-        <tr>
-          <td colspan="7">Carregando coletas recentes...</td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+              <tbody id="recentColetasTableBody">
+                <tr>
+                  <td colspan="7">Carregando coletas recentes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
 
-  <div class="recent-table-footer">
-    <a class="primary-link-button" href="cadastro-coletas-vila-pinto.html">
-      Abrir tabela completa de coletas
-    </a>
-  </div>
-</section>
+          <div class="recent-table-footer">
+            <a class="primary-link-button" href="cadastro-coletas-vila-pinto.html">
+              Abrir tabela completa de coletas
+            </a>
+          </div>
+        </section>
 
         <section class="dashboard-section dashboard-charts-section">
           <div class="section-head">
             <div>
-              <span class="section-tag">Gráficos</span>
-              <h2>Evolução e composição dos dados</h2>
+              <span class="section-tag">Inteligência operacional</span>
+              <h2>Gráficos da cooperativa</h2>
             </div>
+
+            <p>
+              Leitura executiva dos dados carregados em tempo real no Firebase.
+            </p>
           </div>
 
-          <div class="dashboard-chart-grid">
+          <div class="powerbi-grid">
 
-            <article class="dashboard-chart-card chart-large">
-              <div class="chart-card-head">
-                <h3>Coletas registradas</h3>
-                <span>Mensal</span>
+            <article class="powerbi-card powerbi-card-large">
+              <div class="powerbi-card-head">
+                <div>
+                  <span>Mensal</span>
+                  <h3>Coletas realizadas</h3>
+                </div>
+                <strong id="chartTotalColetasLabel">0</strong>
               </div>
 
-              <div class="chart-placeholder" id="chartColetasMensais">
-                <div class="fake-chart fake-bars">
-                  <span style="height:42%"></span>
-                  <span style="height:58%"></span>
-                  <span style="height:34%"></span>
-                  <span style="height:72%"></span>
-                  <span style="height:62%"></span>
-                  <span style="height:86%"></span>
+              <div class="powerbi-bars" id="chartColetasMensais"></div>
+            </article>
+
+            <article class="powerbi-card">
+              <div class="powerbi-card-head">
+                <div>
+                  <span>Perfil</span>
+                  <h3>Participantes</h3>
                 </div>
+              </div>
+
+              <div class="powerbi-donut-wrap">
+                <div class="powerbi-donut" id="chartParticipantesPerfil"></div>
+                <div class="powerbi-donut-center">
+                  <strong id="chartTotalParticipantesLabel">0</strong>
+                  <small>Total</small>
+                </div>
+              </div>
+
+              <div class="powerbi-legend">
+                <span><i class="legend-green"></i>Famílias</span>
+                <span><i class="legend-blue"></i>Condomínios</span>
+                <span><i class="legend-orange"></i>Outros</span>
               </div>
             </article>
 
-            <article class="dashboard-chart-card">
-              <div class="chart-card-head">
-                <h3>Participantes</h3>
-                <span>Perfil</span>
-              </div>
-
-              <div class="chart-placeholder" id="chartParticipantesPerfil">
-                <div class="fake-chart fake-donut">
-                  <span></span>
+            <article class="powerbi-card">
+              <div class="powerbi-card-head">
+                <div>
+                  <span>Operacional</span>
+                  <h3>Composição dos pesos</h3>
                 </div>
               </div>
-            </article>
 
-            <article class="dashboard-chart-card">
-              <div class="chart-card-head">
-                <h3>Indicadores gerais</h3>
-                <span>Resumo</span>
-              </div>
-
-              <div class="mini-indicator-list">
+              <div class="powerbi-horizontal-bars">
                 <div>
-                  <span>Participantes</span>
-                  <strong id="participantsTotalCount">0</strong>
+                  <label>Peso recebido</label>
+                  <span id="barPesoRecebidoLabel">0 kg</span>
+                  <strong><i id="barPesoRecebido"></i></strong>
                 </div>
 
                 <div>
-                  <span>Famílias / moradores</span>
-                  <strong id="participantsPeopleCount">0</strong>
+                  <label>Rejeito</label>
+                  <span id="barRejeitoLabel">0 kg</span>
+                  <strong><i id="barRejeito"></i></strong>
                 </div>
 
                 <div>
-                  <span>Condomínios</span>
-                  <strong id="participantsCondoCount">0</strong>
+                  <label>Não comercializado</label>
+                  <span id="barNaoComercializadoLabel">0 kg</span>
+                  <strong><i id="barNaoComercializado"></i></strong>
                 </div>
               </div>
             </article>
