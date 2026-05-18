@@ -1,11 +1,6 @@
 /* =========================================================
    NSRU • DASHBOARD COOPERATIVA
-   PADRÃO POWER BI PRO
-   CSS COMPLETO • RESPONSIVO • MOBILE FIRST
-========================================================= */
-
-/* =========================================================
-   RESET / VARIÁVEIS
+   CSS COMPLETO • POWER BI PRO • RESPONSIVO
 ========================================================= */
 
 *,
@@ -30,15 +25,13 @@
   --blue-soft:#eaf6fc;
 
   --black:#3C3A39;
-  --black-soft:#575351;
-
   --text:#3C3A39;
   --text-soft:#6c6764;
   --muted:#94a3b8;
 
-  --white:#ffffff;
+  --white:#fff;
   --bg:#f5f6f0;
-  --surface:#ffffff;
+  --surface:#fff;
   --surface-soft:#fafaf8;
 
   --line:rgba(60,58,57,.10);
@@ -122,8 +115,8 @@ img{
   inset:0;
   z-index:-3;
   background:
-    linear-gradient(rgba(60,58,57,.035) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(60,58,57,.035) 1px, transparent 1px);
+    linear-gradient(rgba(60,58,57,.035) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(60,58,57,.035) 1px,transparent 1px);
   background-size:34px 34px;
 }
 
@@ -133,9 +126,9 @@ img{
   z-index:-2;
   opacity:.18;
   background:
-    radial-gradient(circle at top left, rgba(129,185,42,.20), transparent 32%),
-    radial-gradient(circle at 80% 20%, rgba(83,172,222,.18), transparent 34%),
-    radial-gradient(circle at 60% 90%, rgba(239,107,34,.12), transparent 36%);
+    radial-gradient(circle at top left,rgba(129,185,42,.20),transparent 32%),
+    radial-gradient(circle at 80% 20%,rgba(83,172,222,.18),transparent 34%),
+    radial-gradient(circle at 60% 90%,rgba(239,107,34,.12),transparent 36%);
 }
 
 .cursor-glow{
@@ -144,14 +137,13 @@ img{
   width:300px;
   height:300px;
   border-radius:999px;
-  background:radial-gradient(circle, rgba(83,172,222,.14), transparent 70%);
+  background:radial-gradient(circle,rgba(83,172,222,.14),transparent 70%);
   transform:translate(-50%,-50%);
   opacity:0;
-  transition:opacity .2s ease;
 }
 
 /* =========================================================
-   LAYOUT PRINCIPAL
+   LAYOUT
 ========================================================= */
 
 .shell{
@@ -178,16 +170,8 @@ img{
   overflow-y:auto;
   z-index:1000;
   padding:22px;
-  background:
-    linear-gradient(180deg, var(--green), var(--green-dark));
+  background:linear-gradient(180deg,var(--green),var(--green-dark));
   color:#fff;
-}
-
-.side-inner{
-  min-height:100%;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
 }
 
 .sidebar::-webkit-scrollbar{
@@ -199,34 +183,44 @@ img{
   border-radius:999px;
 }
 
+.side-inner{
+  min-height:100%;
+  display:flex!important;
+  flex-direction:column!important;
+  gap:18px;
+}
+
 .brand{
   display:flex;
+  flex-direction:column;
   align-items:center;
-  gap:12px;
+  text-align:center;
+  gap:8px;
   color:#fff;
-  padding:4px 2px 10px;
+  padding:10px 0 18px;
 }
 
 .brand-logo-wrap{
-  width:58px;
-  height:58px;
-  flex:0 0 58px;
+  width:180px;
+  height:auto;
+  background:transparent!important;
+  box-shadow:none!important;
+  border-radius:0!important;
+  padding:0!important;
   display:grid;
   place-items:center;
-  padding:8px;
-  border-radius:18px;
-  background:#fff;
-  box-shadow:0 12px 28px rgba(0,0,0,.12);
 }
 
 .brand-logo{
-  width:100%;
-  height:100%;
+  width:180px;
+  height:auto;
   object-fit:contain;
+  filter:drop-shadow(0 10px 18px rgba(0,0,0,.24));
 }
 
 .brand strong{
   display:block;
+  margin-top:8px;
   font-size:18px;
   line-height:1.1;
   letter-spacing:-.01em;
@@ -237,10 +231,12 @@ img{
   margin-top:4px;
   font-size:13px;
   line-height:1.25;
-  opacity:.86;
+  color:rgba(255,255,255,.86);
 }
 
 .side-section{
+  width:100%;
+  display:block;
   padding:16px;
   border-radius:22px;
   background:rgba(255,255,255,.14);
@@ -285,7 +281,7 @@ img{
 }
 
 /* =========================================================
-   FORMULÁRIOS / CAMPOS
+   FORMULÁRIOS
 ========================================================= */
 
 .field{
@@ -295,8 +291,8 @@ img{
 }
 
 .field.row2{
-  grid-template-columns:1fr 1fr;
-  gap:10px;
+  grid-template-columns:1fr!important;
+  gap:12px;
 }
 
 .field.stack{
@@ -317,7 +313,7 @@ select,
 textarea,
 .read-box{
   width:100%;
-  min-height:42px;
+  min-height:44px;
   padding:10px 12px;
   border-radius:14px;
   border:1px solid rgba(60,58,57,.12);
@@ -349,8 +345,8 @@ textarea:focus{
 .read-box{
   display:flex;
   align-items:center;
-  color:var(--text);
   background:#fff;
+  color:var(--text);
   font-weight:700;
 }
 
@@ -456,7 +452,7 @@ textarea:focus{
 }
 
 /* =========================================================
-   TOPO / HERO
+   TOPO
 ========================================================= */
 
 .top{
@@ -472,8 +468,8 @@ textarea:focus{
   padding:26px;
   border-radius:28px;
   background:
-    linear-gradient(135deg, rgba(255,255,255,.96), rgba(255,255,255,.88)),
-    radial-gradient(circle at top right, rgba(83,172,222,.18), transparent 34%);
+    linear-gradient(135deg,rgba(255,255,255,.96),rgba(255,255,255,.88)),
+    radial-gradient(circle at top right,rgba(83,172,222,.18),transparent 34%);
   border:1px solid var(--line);
   box-shadow:var(--shadow-soft);
 }
@@ -538,12 +534,12 @@ textarea:focus{
 }
 
 .pill-orange{
-  color:var(--orange-dark);
   background:var(--orange-soft);
+  color:var(--orange-dark);
 }
 
 /* =========================================================
-   KPI TOPO
+   KPIs
 ========================================================= */
 
 .kpis{
@@ -621,7 +617,7 @@ textarea:focus{
 }
 
 /* =========================================================
-   PAINÉIS / SEÇÕES
+   PAINÉIS
 ========================================================= */
 
 .panel,
@@ -664,22 +660,8 @@ textarea:focus{
   line-height:1.55;
 }
 
-.section-tag{
-  display:inline-flex;
-  align-items:center;
-  min-height:30px;
-  padding:0 12px;
-  border-radius:999px;
-  background:var(--green);
-  color:#fff;
-  font-size:12px;
-  font-weight:900;
-  text-transform:uppercase;
-  letter-spacing:.05em;
-}
-
 /* =========================================================
-   SEÇÃO 1 • RESUMO DO PROJETO
+   RESUMO DO PROJETO
 ========================================================= */
 
 .project-summary-grid{
@@ -777,7 +759,7 @@ textarea:focus{
 }
 
 /* =========================================================
-   SEÇÃO 2 • MATERIAL CARDS
+   MATERIAIS
 ========================================================= */
 
 .material-cards{
@@ -802,7 +784,7 @@ textarea:focus{
   content:"";
   position:absolute;
   inset:0;
-  background:radial-gradient(circle at top right, color-mix(in srgb, var(--material-color) 18%, transparent), transparent 45%);
+  background:radial-gradient(circle at top right,color-mix(in srgb,var(--material-color) 18%,transparent),transparent 45%);
   pointer-events:none;
 }
 
@@ -827,30 +809,9 @@ textarea:focus{
   display:grid;
   place-items:center;
   border-radius:18px;
-  color:var(--material-color);
+  color:#fff;
   background:var(--material-color);
-}
-
-.mat-icon svg{
-  width:38px;
-  height:38px;
-}
-
-.mat-logo{
-  width:38px;
-  height:38px;
-  display:grid;
-  place-items:center;
-  border-radius:14px;
-  background:#fff;
-  border:1px solid var(--line);
-  padding:6px;
-}
-
-.mat-logo img{
-  width:100%;
-  height:100%;
-  object-fit:contain;
+  font-weight:900;
 }
 
 .mat-pct{
@@ -859,7 +820,7 @@ textarea:focus{
   align-items:center;
   padding:0 10px;
   border-radius:999px;
-  background:color-mix(in srgb, var(--material-color) 14%, white);
+  background:color-mix(in srgb,var(--material-color) 14%,white);
   color:var(--material-color);
   font-size:12px;
   font-weight:900;
@@ -910,7 +871,7 @@ textarea:focus{
 }
 
 /* =========================================================
-   SEÇÃO 3 • REJEITOS
+   REJEITOS
 ========================================================= */
 
 .reject-grid{
@@ -951,7 +912,7 @@ textarea:focus{
 }
 
 /* =========================================================
-   SEÇÃO 4 • GRÁFICOS
+   GRÁFICOS
 ========================================================= */
 
 .charts-side-by-side{
@@ -973,22 +934,10 @@ textarea:focus{
   box-shadow:var(--shadow-soft);
 }
 
-.chart-card-pro::before{
-  content:"";
-  position:absolute;
-  inset:0;
-  background:radial-gradient(circle at top right, rgba(83,172,222,.08), transparent 42%);
-  pointer-events:none;
-}
-
-.chart-card-head-pro{
-  position:relative;
-  z-index:2;
-  display:flex;
-  justify-content:space-between;
-  align-items:flex-start;
-  gap:14px;
-  margin-bottom:18px;
+.chart-title{
+  font-size:18px;
+  font-weight:900;
+  margin-bottom:14px;
 }
 
 .chart-card-head-pro h3{
@@ -1019,6 +968,10 @@ textarea:focus{
   height:360px;
 }
 
+.canvas-wrap.medium{
+  height:360px;
+}
+
 .canvas-wrap canvas,
 .chart-canvas-pro canvas{
   width:100%!important;
@@ -1026,7 +979,7 @@ textarea:focus{
 }
 
 /* =========================================================
-   MAPA / ROTAS
+   MAPA
 ========================================================= */
 
 .route-layout{
@@ -1144,7 +1097,7 @@ textarea:focus{
 }
 
 /* =========================================================
-   TABELA / FILTROS
+   TABELA
 ========================================================= */
 
 .table-section-pro{
@@ -1247,10 +1200,6 @@ textarea:focus{
 .table-pro tbody tr:hover,
 .recent-table tbody tr:hover{
   background:#fbfcf7;
-}
-
-.row-muted{
-  opacity:.58;
 }
 
 .details-metrics{
@@ -1408,49 +1357,23 @@ textarea:focus{
   text-transform:uppercase;
 }
 
-.collection-details-grid{
-  display:grid;
-  gap:14px;
-}
-
+.coleta-modal-grid,
 .collection-details-fields{
   display:grid;
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:10px;
 }
 
+.coleta-info-card{
+  padding:14px;
+  border-radius:16px;
+  background:#fafaf8;
+  border:1px solid var(--line);
+  font-size:14px;
+}
+
 .collection-span-full{
   grid-column:1/-1;
-}
-
-.collection-details-list{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:8px;
-  margin-top:10px;
-}
-
-.collection-details-actions{
-  display:flex;
-  gap:8px;
-  flex-wrap:wrap;
-  margin-top:10px;
-}
-
-.collection-details-summary{
-  cursor:pointer;
-  font-weight:900;
-}
-
-.collection-details-payload{
-  max-height:300px;
-  overflow:auto;
-  margin-top:12px;
-  padding:14px;
-  border-radius:14px;
-  background:#0f172a;
-  color:#e2e8f0;
-  font-size:12px;
 }
 
 /* =========================================================
@@ -1463,38 +1386,6 @@ textarea:focus{
   text-align:center;
   font-size:13px;
   font-weight:700;
-}
-
-/* =========================================================
-   PRINT
-========================================================= */
-
-@media print{
-  .sidebar,
-  .top-actions,
-  .btn,
-  .mini-btn,
-  .table-actions,
-  .cursor-glow,
-  .bg-grid,
-  .noise{
-    display:none!important;
-  }
-
-  .shell{
-    display:block;
-  }
-
-  .main{
-    padding:0;
-  }
-
-  .panel,
-  .top-inner,
-  .kpi{
-    box-shadow:none!important;
-    break-inside:avoid;
-  }
 }
 
 /* =========================================================
@@ -1531,13 +1422,12 @@ textarea:focus{
   }
 
   .side-inner{
-    display:grid;
-    grid-template-columns:1fr 1fr;
-    align-items:start;
+    display:flex!important;
+    flex-direction:column!important;
   }
 
   .brand{
-    grid-column:1/-1;
+    grid-column:auto!important;
   }
 
   .main{
@@ -1578,6 +1468,7 @@ textarea:focus{
     grid-column:span 2;
   }
 
+  .coleta-modal-grid,
   .collection-details-fields{
     grid-template-columns:1fr 1fr;
   }
@@ -1593,10 +1484,6 @@ textarea:focus{
 }
 
 @media(max-width:760px){
-  .side-inner{
-    display:flex;
-  }
-
   .main{
     padding:14px;
     gap:16px;
@@ -1627,10 +1514,6 @@ textarea:focus{
     grid-column:auto;
   }
 
-  .field.row2{
-    grid-template-columns:1fr;
-  }
-
   .table-filters-pro{
     grid-template-columns:1fr;
   }
@@ -1653,8 +1536,8 @@ textarea:focus{
     min-height:360px;
   }
 
+  .coleta-modal-grid,
   .collection-details-fields,
-  .collection-details-list,
   .materials-edit-grid{
     grid-template-columns:1fr;
   }
@@ -1681,15 +1564,14 @@ textarea:focus{
   .kpi,
   .summary-card,
   .material-card,
-  .chart-card-pro{
+  .chart-card{
     padding:14px;
     border-radius:18px;
   }
 
-  .brand-logo-wrap{
-    width:50px;
-    height:50px;
-    flex-basis:50px;
+  .brand-logo-wrap,
+  .brand-logo{
+    width:145px;
   }
 
   .title h1{
@@ -1717,5 +1599,37 @@ textarea:focus{
   .mini-btn,
   .pill{
     justify-content:center;
+  }
+}
+
+/* =========================================================
+   PRINT
+========================================================= */
+
+@media print{
+  .sidebar,
+  .top-actions,
+  .btn,
+  .mini-btn,
+  .table-actions,
+  .cursor-glow,
+  .bg-grid,
+  .noise{
+    display:none!important;
+  }
+
+  .shell{
+    display:block;
+  }
+
+  .main{
+    padding:0;
+  }
+
+  .panel,
+  .top-inner,
+  .kpi{
+    box-shadow:none!important;
+    break-inside:avoid;
   }
 }

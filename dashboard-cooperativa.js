@@ -7,7 +7,6 @@ import {
 import {
   doc,
   getDoc,
-  setDoc,
   collection,
   onSnapshot,
   updateDoc,
@@ -19,14 +18,14 @@ import {
 ========================= */
 
 const MATERIAL_META = [
-  { key: "plasticoKg", label: "Plástico", price: 1.92, color: "#2E7D32" },
-  { key: "vidroKg", label: "Vidro", price: 0.08, color: "#0288D1" },
-  { key: "aluminioMetalKg", label: "Metal / Alumínio", price: 2.9, color: "#757575" },
-  { key: "sacariaKg", label: "Sacaria", price: 0.12, color: "#8D6E63" },
-  { key: "papelMistoKg", label: "Papel misto", price: 0.66, color: "#1565C0" },
-  { key: "papelaoKg", label: "Papelão", price: 0.52, color: "#A65A2A" },
-  { key: "isoporKg", label: "Isopor", price: 0.4, color: "#00ACC1" },
-  { key: "oleoKg", label: "Óleo de cozinha", price: 1.5, color: "#C79200", isSpecial: true }
+  { key: "plasticoKg", label: "Plástico", price: 1.92, color: "#2E7D32", icon: "plastico" },
+  { key: "vidroKg", label: "Vidro", price: 0.08, color: "#0288D1", icon: "vidro" },
+  { key: "aluminioMetalKg", label: "Metal / Alumínio", price: 2.9, color: "#757575", icon: "metal" },
+  { key: "sacariaKg", label: "Sacaria", price: 0.12, color: "#8D6E63", icon: "sacaria" },
+  { key: "papelMistoKg", label: "Papel misto", price: 0.66, color: "#1565C0", icon: "papel" },
+  { key: "papelaoKg", label: "Papelão", price: 0.52, color: "#A65A2A", icon: "papelao" },
+  { key: "isoporKg", label: "Isopor", price: 0.4, color: "#00ACC1", icon: "isopor" },
+  { key: "oleoKg", label: "Óleo de cozinha", price: 1.5, color: "#C79200", icon: "oleo", isSpecial: true }
 ];
 
 const MATERIAL_ALIASES = {
@@ -673,6 +672,82 @@ function sortColetasLocally(items) {
     const bDate = String(inferDateTimeISO(b) || "");
     return bDate.localeCompare(aDate);
   });
+}
+
+/* =========================
+   SVG DOS MATERIAIS
+========================= */
+
+function materialSvgIcon(icon) {
+  const icons = {
+    plastico: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M25 6h14v8l-4 6v5h-6v-5l-4-6V6Z" fill="currentColor" opacity=".95"/>
+        <path d="M20 25h24c4 0 7 3 7 7v20c0 4-3 7-7 7H20c-4 0-7-3-7-7V32c0-4 3-7 7-7Z" fill="currentColor" opacity=".72"/>
+        <path d="M22 38h20v10H22V38Z" fill="#fff" opacity=".85"/>
+      </svg>
+    `,
+
+    vidro: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M26 5h12v14l6 9v22c0 7-5 11-12 11S20 57 20 50V28l6-9V5Z" fill="currentColor" opacity=".78"/>
+        <path d="M26 31h12v18c0 4-2 6-6 6s-6-2-6-6V31Z" fill="#fff" opacity=".82"/>
+      </svg>
+    `,
+
+    metal: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <ellipse cx="32" cy="14" rx="18" ry="7" fill="currentColor" opacity=".95"/>
+        <path d="M14 14v36c0 5 8 9 18 9s18-4 18-9V14" fill="currentColor" opacity=".65"/>
+        <path d="M14 28c0 4 8 7 18 7s18-3 18-7M14 43c0 4 8 7 18 7s18-3 18-7" fill="none" stroke="#fff" stroke-width="4" opacity=".85"/>
+      </svg>
+    `,
+
+    sacaria: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M23 18c2-9 16-9 18 0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
+        <path d="M17 23h30l5 29c1 5-2 8-7 8H19c-5 0-8-3-7-8l5-29Z" fill="currentColor" opacity=".75"/>
+        <path d="M24 36h16M24 45h16" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+      </svg>
+    `,
+
+    papel: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M16 6h28l8 9v43H16V6Z" fill="currentColor" opacity=".78"/>
+        <path d="M43 6v12h11" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
+        <path d="M24 30h20M24 39h20M24 48h14" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".88"/>
+      </svg>
+    `,
+
+    papelao: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M10 22 32 10l22 12-22 12L10 22Z" fill="currentColor" opacity=".95"/>
+        <path d="M10 22v25l22 12V34L10 22Z" fill="currentColor" opacity=".68"/>
+        <path d="M54 22v25L32 59V34l22-12Z" fill="currentColor" opacity=".50"/>
+        <path d="M22 16l22 12" stroke="#fff" stroke-width="4" opacity=".75"/>
+      </svg>
+    `,
+
+    isopor: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M13 21 32 10l19 11-19 11-19-11Z" fill="currentColor" opacity=".9"/>
+        <path d="M13 21v22l19 11V32L13 21Z" fill="currentColor" opacity=".65"/>
+        <path d="M51 21v22L32 54V32l19-11Z" fill="currentColor" opacity=".48"/>
+        <circle cx="25" cy="23" r="2" fill="#fff"/>
+        <circle cx="35" cy="19" r="2" fill="#fff"/>
+        <circle cx="38" cy="28" r="2" fill="#fff"/>
+      </svg>
+    `,
+
+    oleo: `
+      <svg viewBox="0 0 64 64" aria-hidden="true">
+        <path d="M32 5s18 22 18 36c0 11-8 19-18 19s-18-8-18-19C14 27 32 5 32 5Z" fill="currentColor" opacity=".82"/>
+        <path d="M32 18s8 12 8 20c0 5-3 8-8 8s-8-3-8-8c0-8 8-20 8-20Z" fill="#fff" opacity=".85"/>
+      </svg>
+    `
+  };
+
+  return icons[icon] || icons.plastico;
 }
 
 /* =========================
@@ -1324,9 +1399,14 @@ function renderExpandedPanel(items) {
       <article class="material-card professional-card ${mat.isSpecial ? "special-flow-card" : ""}" style="--material-color:${mat.color}">
         <div class="material-top">
           <div class="icon-group">
-            <div class="mat-icon professional-icon">${escapeHtml(mat.label).slice(0, 2)}</div>
+            <div class="mat-icon professional-icon">
+              ${materialSvgIcon(mat.icon)}
+            </div>
           </div>
-          <div class="mat-pct">${mat.isSpecial ? "Fluxo especial" : `${formatNumber(pct)}%`}</div>
+
+          <div class="mat-pct">
+            ${mat.isSpecial ? "Fluxo especial" : `${formatNumber(pct)}%`}
+          </div>
         </div>
 
         <div class="mat-name">${escapeHtml(mat.label)}</div>
