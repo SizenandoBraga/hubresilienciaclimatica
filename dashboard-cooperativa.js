@@ -47,9 +47,18 @@ const CHART_COLORS = {
 };
 
 const COOP_BASES = {
-  "vila-pinto": { lat: -30.048729170292532, lng: -51.15652604283108 },
-  cooadesc: { lat: -30.003, lng: -51.206 },
-  "padre-cacique": { lat: -30.140122365657504, lng: -51.1268772051727 }
+  "vila-pinto": {
+    lat: -30.048729170292532,
+    lng: -51.15652604283108
+  },
+  cooadesc: {
+    lat: -30.003,
+    lng: -51.206
+  },
+  "padre-cacique": {
+    lat: -30.140122365657504,
+    lng: -51.1268772051727
+  }
 };
 
 /* =========================
@@ -164,10 +173,12 @@ const els = {
 
 let coopProfile = null;
 let pageTerritoryId = "";
+
 let allColetas = [];
 let filteredColetas = [];
 let tableFilteredColetas = [];
 let participantsMap = new Map();
+
 let activeEditId = null;
 
 let mainChart = null;
@@ -179,8 +190,13 @@ let weightTimelineChart = null;
 let routeMap = null;
 let routeControl = null;
 let routeMarkersLayer = null;
+
 let activeUnsubscribe = null;
 let activeParticipantsUnsubscribe = null;
+
+/* Paginação da Seção 6 */
+let tablePage = 0;
+const tablePageSize = 10;
 
 /* =========================
    UTILS
@@ -340,409 +356,389 @@ function formatMoneyBR(value) {
     currency: "BRL"
   });
 }
+function toNumber(value) {
 
-function toNumberBR(value) {
-  if (value === null || value === undefined || value === "") return 0;
-  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (typeof value === "number") {
+    return Number.isFinite(value)
+      ? value
+      : 0;
+  }
 
-  const cleaned = String(value)
-    .trim()
-    .replace(/\s/g, "")
-    .replace(/kg|l|litros?|r\$/gi, "")
-    .replace(/\./g, "")
-    .replace(",", ".");
+  if (
+    value === null ||
+    value === undefined ||
+    value === ""
+  ) {
+    return 0;
+  }
 
-  const n = Number(cleaned);
-  return Number.isFinite(n) ? n : 0;
+  const parsed = Number(
+    String(value)
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .replace(/[^\d.-]/g, "")
+  );
+
+  return Number.isFinite(parsed)
+    ? parsed
+    : 0;
 }
 
-function firstNumber(...values) {
-  for (const value of values) {
-    if (value !== null && value !== undefined && value !== "") {
-      const n = toNumberBR(value);
-      if (Number.isFinite(n)) return n;
+function sumAliases(obj, aliases = []) {
+
+  return aliases.reduce(
+    (acc, key) =>
+      acc + toNumber(obj?.[key]),
+    0
+  );
+}
+
+function inferDateISO(item = {}) {
+
+  const candidates = [
+    item.dataColeta,
+    item.date,
+    item.data,
+    item.createdAtISO,
+    item.createdAt?.toDate?.()?.toISOString?.(),
+    item.payloadSnapshot?.dataColeta,
+    item.payloadSnapshot?.date
+  ];
+
+  for (const candidate of candidates) {
+
+    if (!candidate) continue;
+
+    const parsed =
+      candidate instanceof Date
+        ? candidate
+        : new Date(candidate);
+
+    if (!Number.isNaN(parsed.getTime())) {
+
+      return parsed
+        .toISOString()
+        .slice(0, 10);
     }
   }
 
-  return 0;
-}
-
-function firstFinite(...values) {
-  for (const value of values) {
-    const n = Number(value);
-    if (Number.isFinite(n)) return n;
-  }
-
-  return null;
-}
-
-function createdAtToISO(item) {
-  if (item.createdAt?.toDate) return item.createdAt.toDate().toISOString();
-  if (item.updatedAt?.toDate) return item.updatedAt.toDate().toISOString();
-  if (item.createdAtISO) return String(item.createdAtISO);
   return "";
 }
 
-function inferDateISO(item) {
-  if (item.opDate) return String(item.opDate).slice(0, 10);
-  if (item.dataOperacao) return String(item.dataOperacao).slice(0, 10);
-  if (item.operationDate) return String(item.operationDate).slice(0, 10);
-  if (item.dataColeta) return String(item.dataColeta).slice(0, 10);
-  if (item.coletaData) return String(item.coletaData).slice(0, 10);
-  if (item.dateColeta) return String(item.dateColeta).slice(0, 10);
-  if (item.data) return String(item.data).slice(0, 10);
+function inferDateObject(item = {}) {
 
-  if (item.payloadSnapshot?.opDate) return String(item.payloadSnapshot.opDate).slice(0, 10);
-  if (item.payloadSnapshot?.dataOperacao) return String(item.payloadSnapshot.dataOperacao).slice(0, 10);
-  if (item.payloadSnapshot?.dataColeta) return String(item.payloadSnapshot.dataColeta).slice(0, 10);
-  if (item.payloadSnapshot?.data) return String(item.payloadSnapshot.data).slice(0, 10);
+  const iso =
+    inferDateISO(item);
 
-  const iso = createdAtToISO(item);
-  return iso ? iso.slice(0, 10) : "";
+  return iso
+    ? new Date(`${iso}T12:00:00`)
+    : null;
 }
 
-function inferDateTimeISO(item) {
+function inferFluxo(item = {}) {
+
+  const raw = normalizeText(
+    item.flowType ||
+    item.fluxo ||
+    item.tipoFluxo ||
+    item.payloadSnapshot?.flowType
+  );
+
+  if (
+    raw.includes("final") ||
+    raw.includes("turno")
+  ) {
+    return "final_turno";
+  }
+
+  return "recebimento";
+}
+
+function inferEntrega(item = {}) {
+
+  return normalizeText(
+    item.deliveryType ||
+    item.entrega ||
+    item.tipoEntrega ||
+    item.payloadSnapshot?.deliveryType ||
+    "normal"
+  );
+}
+
+function inferObservacao(item = {}) {
+
   return (
-    createdAtToISO(item) ||
-    item.opDate ||
-    item.dataOperacao ||
-    item.operationDate ||
-    item.dataColeta ||
-    item.coletaData ||
-    item.dateColeta ||
-    item.data ||
+    item.observacao ||
+    item.obs ||
+    item.notes ||
+    item.payloadSnapshot?.observacao ||
     ""
   );
 }
 
-function inferFluxo(item) {
-  const raw =
-    item.flowType ||
-    item.fluxo ||
-    item.tipoColeta ||
-    item.tipoRecebimento ||
-    item.receiptType ||
-    item.recebimento?.flowType ||
-    item.recebimento?.fluxo ||
-    item.finalTurno?.flowType ||
-    item.finalTurno?.fluxo ||
-    item.payloadSnapshot?.flowType ||
-    item.payloadSnapshot?.fluxo ||
-    item.payloadSnapshot?.tipoRecebimento ||
-    "";
+function getStatus(item = {}) {
 
-  const normalized = normalizeText(raw).replaceAll("-", "_");
-
-  if (normalized.includes("final")) return "final_turno";
-  if (normalized.includes("receb")) return "recebimento";
-
-  return normalized || "recebimento";
-}
-
-function formatFluxoLabel(value) {
-  const normalized = normalizeText(value).replaceAll("-", "_");
-
-  if (normalized === "final_turno") return "Final do turno";
-  if (normalized === "recebimento") return "Recebimento";
-
-  return value || "Recebimento";
-}
-
-function isFinalTurno(item) {
-  return inferFluxo(item) === "final_turno";
-}
-
-function inferEntrega(item) {
   return (
-    item.deliveryType ||
-    item.entrega ||
-    item.tipoEntrega ||
-    item.recebimento?.deliveryType ||
-    item.recebimento?.entrega ||
-    item.finalTurno?.deliveryType ||
-    item.finalTurno?.entrega ||
-    item.payloadSnapshot?.deliveryType ||
-    item.payloadSnapshot?.entrega ||
-    "—"
-  );
-}
-
-function inferTerritorio(item) {
-  return (
-    item.territoryLabel ||
-    item.territoryId ||
-    item.territory ||
-    item.cooperativa ||
-    item.payloadSnapshot?.territoryLabel ||
-    item.payloadSnapshot?.territoryId ||
-    item.payloadSnapshot?.territory ||
-    coopProfile?.territoryLabel ||
-    pageTerritoryId ||
-    "Território"
-  );
-}
-
-function getStatus(item) {
-  return String(
     item.status ||
     item.situacao ||
-    item.coletaStatus ||
-    item.decision ||
+    item.state ||
     "ativo"
-  ).toLowerCase();
+  );
 }
 
-function isActiveCollection(item) {
-  const status = normalizeText(getStatus(item));
+function resolveHumanStatus(item = {}) {
 
-  return ![
-    "cancelado",
-    "cancelada",
-    "rejeitado",
-    "rejeitada",
-    "rejected",
-    "rascunho",
-    "draft"
-  ].includes(status);
-}
+  const raw =
+    normalizeText(getStatus(item));
 
-function resolveHumanStatus(item) {
-  const status = normalizeText(getStatus(item));
+  if (
+    raw.includes("cancel")
+  ) {
+    return "Cancelado";
+  }
 
-  if (status.includes("cancel")) return "Cancelado";
-  if (status.includes("edit")) return "Editado";
-  if (status.includes("pend")) return "Pendente";
-  if (status.includes("reje")) return "Rejeitado";
+  if (
+    raw.includes("edit")
+  ) {
+    return "Editado";
+  }
 
   return "Ativo";
 }
 
-function inferPesoResiduoSecoBruto(item) {
-  return firstNumber(
-    item.recebimento?.pesoResiduoSecoKg,
-    item.finalTurno?.pesoResiduoSecoKg,
-    item.pesoResiduoSecoKg,
-    item.recebimento?.residuoSecoKg,
-    item.finalTurno?.residuoSecoKg,
-    item.residuoSecoKg,
-    item.pesoRecebido,
-    item.peso_recebido,
-    item.totalPesoRecebido,
-    item.totalRecebido,
-    item.totalKg,
-    item.pesoTotal,
-    item.peso,
-    item.kg,
-    item.payloadSnapshot?.pesoRecebido,
-    item.payloadSnapshot?.pesoResiduoSecoKg,
-    item.payloadSnapshot?.totalKg
+function isActiveCollection(item = {}) {
+
+  const status =
+    normalizeText(
+      getStatus(item)
+    );
+
+  return !(
+    status.includes("cancel")
   );
 }
 
-function inferPesoRejeitoInformado(item) {
-  return firstNumber(
-    item.recebimento?.pesoRejeitoKg,
-    item.finalTurno?.pesoRejeitoKg,
-    item.recebimento?.rejeitoKg,
-    item.finalTurno?.rejeitoKg,
-    item.pesoRejeitoKg,
-    item.rejeitoKg,
-    item.rejeito,
-    item.totalRejeito,
-    item.naoReciclavelKg,
-    item.pesoNaoReciclavelKg,
-    item.payloadSnapshot?.rejeito,
-    item.payloadSnapshot?.pesoRejeitoKg,
-    item.payloadSnapshot?.totalRejeito
-  );
-}
+function resolveParticipant(item = {}) {
 
-function inferNaoComercializado(item) {
-  return firstNumber(
-    item.recebimento?.pesoNaoComercializadoKg,
-    item.finalTurno?.pesoNaoComercializadoKg,
-    item.recebimento?.naoComercializadoKg,
-    item.finalTurno?.naoComercializadoKg,
-    item.pesoNaoComercializadoKg,
-    item.naoComercializadoKg,
-    item.naoComercializado,
-    item.nao_comercializado,
-    item.totalNaoComercializado,
-    item.materialNaoComercializado,
-    item.naoVenda,
-    item.semComercializacao,
-    item.payloadSnapshot?.naoComercializado,
-    item.payloadSnapshot?.totalNaoComercializado
-  );
-}
-
-function getMaterialValue(item, key) {
-  const aliases = MATERIAL_ALIASES[key] || [key];
-
-  const sources = [
-    item.materiais,
-    item.materials,
-    item.recebimento?.materiais,
-    item.recebimento?.materials,
-    item.finalTurno?.materiais,
-    item.finalTurno?.materials,
-    item.payloadSnapshot?.materiais,
-    item.payloadSnapshot?.materials,
-    item.recebimento,
-    item.finalTurno,
-    item.payloadSnapshot,
-    item
-  ].filter(Boolean);
-
-  for (const source of sources) {
-    for (const alias of aliases) {
-      if (source[alias] !== undefined && source[alias] !== null && source[alias] !== "") {
-        return toNumberBR(source[alias]);
-      }
-    }
-  }
-
-  return 0;
-}
-
-function inferTotalMateriaisRegistro(item) {
-  return MATERIAL_META.reduce((acc, mat) => acc + getMaterialValue(item, mat.key), 0);
-}
-
-function inferResiduoSeco(item) {
-  const bruto = inferPesoResiduoSecoBruto(item);
-  const rejeito = inferPesoRejeitoInformado(item);
-  const naoComercializado = inferNaoComercializado(item);
-
-  if (bruto > 0) {
-    return Math.max(0, bruto - rejeito - naoComercializado);
-  }
-
-  return inferTotalMateriaisRegistro(item);
-}
-
-function inferTotalReciclavelRegistro(item) {
-  return inferResiduoSeco(item) || inferTotalMateriaisRegistro(item);
-}
-
-function inferRejeitoNaoReciclavel(item) {
-  return Math.max(0, inferPesoRejeitoInformado(item) - inferNaoComercializado(item));
-}
-
-function inferTotalRejeitoRegistro(item) {
-  return inferPesoRejeitoInformado(item) + inferNaoComercializado(item);
-}
-
-function inferObservacao(item) {
-  return (
-    item.observacao ||
-    item.obs ||
-    item.recebimento?.observacao ||
-    item.recebimento?.obs ||
-    item.finalTurno?.observacao ||
-    item.finalTurno?.obs ||
-    item.payloadSnapshot?.observacao ||
-    item.payloadSnapshot?.obs ||
+  const code = String(
+    item.participantCode ||
+    item.codigoParticipante ||
+    item.codigo ||
+    item.familyCode ||
+    item.payloadSnapshot?.participantCode ||
     ""
+  ).trim();
+
+  const participant =
+    participantsMap.get(code);
+
+  return {
+    code,
+    name:
+      participant?.name ||
+      item.participantName ||
+      item.nomeParticipante ||
+      item.payloadSnapshot?.participantName ||
+      "Participante",
+
+    type:
+      participant?.type ||
+      item.participantType ||
+      "participante",
+
+    address:
+      participant?.address ||
+      item.enderecoCompleto ||
+      item.payloadSnapshot?.enderecoCompleto ||
+      "",
+
+    lat:
+      participant?.lat ||
+      item.lat ||
+      item.payloadSnapshot?.lat ||
+      null,
+
+    lng:
+      participant?.lng ||
+      item.lng ||
+      item.payloadSnapshot?.lng ||
+      null
+  };
+}
+
+function inferMaterialValue(
+  item,
+  key
+) {
+
+  const aliases =
+    MATERIAL_ALIASES[key] || [];
+
+  let total = 0;
+
+  aliases.forEach((alias) => {
+
+    total +=
+      toNumber(item?.[alias]);
+
+    total +=
+      toNumber(
+        item?.payloadSnapshot?.[alias]
+      );
+
+    total +=
+      toNumber(
+        item?.materials?.[alias]
+      );
+
+    total +=
+      toNumber(
+        item?.payloadSnapshot?.materials?.[alias]
+      );
+  });
+
+  return total;
+}
+
+function inferTotalReciclavelRegistro(
+  item
+) {
+
+  return MATERIAL_META.reduce(
+    (acc, material) => {
+
+      if (
+        material.key === "oleoKg"
+      ) {
+        return acc;
+      }
+
+      return (
+        acc +
+        inferMaterialValue(
+          item,
+          material.key
+        )
+      );
+    },
+    0
   );
 }
 
-function getQualidade(item) {
-  const value =
-    item.recebimento?.qualidadeNota ??
-    item.recebimento?.qualidade ??
-    item.finalTurno?.qualidadeNota ??
-    item.finalTurno?.qualidade ??
-    item.qualidadeNota ??
-    item.qualidade ??
-    item.notaQualidade ??
-    item.qualityScore ??
-    item.payloadSnapshot?.qualidadeNota ??
-    item.payloadSnapshot?.qualidade ??
-    "";
+function inferTotalRejeitoRegistro(
+  item
+) {
 
-  if (value === null || value === undefined || value === "") return "—";
-
-  return String(value);
+  return (
+    toNumber(item.rejeitoKg) +
+    toNumber(item.rejeito) +
+    toNumber(item.payloadSnapshot?.rejeitoKg)
+  );
 }
 
-function sortColetasLocally(items) {
-  return [...items].sort((a, b) => {
-    const aDate = String(inferDateTimeISO(a) || "");
-    const bDate = String(inferDateTimeISO(b) || "");
-    return bDate.localeCompare(aDate);
-  });
+function inferNaoComercializado(
+  item
+) {
+
+  return (
+    toNumber(item.naoComercializadoKg) +
+    toNumber(item.naoComercializado) +
+    toNumber(
+      item.payloadSnapshot?.naoComercializadoKg
+    )
+  );
+}
+
+function inferQualidade(item) {
+
+  return (
+    toNumber(item.qualidade) ||
+    toNumber(item.qualidadeMedia) ||
+    toNumber(
+      item.payloadSnapshot?.qualidade
+    ) ||
+    0
+  );
 }
 
 /* =========================
-   SVG DOS MATERIAIS
+   STATUS BADGE
 ========================= */
 
-function materialSvgIcon(icon) {
+function statusBadge(item) {
+
+  const status =
+    resolveHumanStatus(item);
+
+  const cls =
+    normalizeText(status);
+
+  return `
+    <span class="
+      status-badge
+      ${cls}
+    ">
+      ${escapeHtml(status)}
+    </span>
+  `;
+}
+
+/* =========================
+   SVG MATERIAIS
+========================= */
+
+function getMaterialSVG(icon) {
+
   const icons = {
+
     plastico: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M25 6h14v8l-4 6v5h-6v-5l-4-6V6Z" fill="currentColor" opacity=".95"/>
-        <path d="M20 25h24c4 0 7 3 7 7v20c0 4-3 7-7 7H20c-4 0-7-3-7-7V32c0-4 3-7 7-7Z" fill="currentColor" opacity=".72"/>
-        <path d="M22 38h20v10H22V38Z" fill="#fff" opacity=".85"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M8 3H16L18 8V21H6V8L8 3Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M9 8H15" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     `,
 
     vidro: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M26 5h12v14l6 9v22c0 7-5 11-12 11S20 57 20 50V28l6-9V5Z" fill="currentColor" opacity=".78"/>
-        <path d="M26 31h12v18c0 4-2 6-6 6s-6-2-6-6V31Z" fill="#fff" opacity=".82"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M9 2H15V6L17 10V21H7V10L9 6V2Z" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     `,
 
     metal: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <ellipse cx="32" cy="14" rx="18" ry="7" fill="currentColor" opacity=".95"/>
-        <path d="M14 14v36c0 5 8 9 18 9s18-4 18-9V14" fill="currentColor" opacity=".65"/>
-        <path d="M14 28c0 4 8 7 18 7s18-3 18-7M14 43c0 4 8 7 18 7s18-3 18-7" fill="none" stroke="#fff" stroke-width="4" opacity=".85"/>
-      </svg>
-    `,
-
-    sacaria: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M23 18c2-9 16-9 18 0" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"/>
-        <path d="M17 23h30l5 29c1 5-2 8-7 8H19c-5 0-8-3-7-8l5-29Z" fill="currentColor" opacity=".75"/>
-        <path d="M24 36h16M24 45h16" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".85"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M4 7L12 3L20 7V17L12 21L4 17V7Z" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     `,
 
     papel: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M16 6h28l8 9v43H16V6Z" fill="currentColor" opacity=".78"/>
-        <path d="M43 6v12h11" fill="none" stroke="#fff" stroke-width="4" stroke-linejoin="round"/>
-        <path d="M24 30h20M24 39h20M24 48h14" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity=".88"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M7 3H14L18 7V21H7V3Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M14 3V7H18" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     `,
 
     papelao: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M10 22 32 10l22 12-22 12L10 22Z" fill="currentColor" opacity=".95"/>
-        <path d="M10 22v25l22 12V34L10 22Z" fill="currentColor" opacity=".68"/>
-        <path d="M54 22v25L32 59V34l22-12Z" fill="currentColor" opacity=".50"/>
-        <path d="M22 16l22 12" stroke="#fff" stroke-width="4" opacity=".75"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M3 7L12 3L21 7V17L12 21L3 17V7Z" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+    `,
+
+    sacaria: `
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M9 3H15L13 6H11L9 3Z" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M7 6H17L19 11L16 21H8L5 11L7 6Z" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     `,
 
     isopor: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M13 21 32 10l19 11-19 11-19-11Z" fill="currentColor" opacity=".9"/>
-        <path d="M13 21v22l19 11V32L13 21Z" fill="currentColor" opacity=".65"/>
-        <path d="M51 21v22L32 54V32l19-11Z" fill="currentColor" opacity=".48"/>
-        <circle cx="25" cy="23" r="2" fill="#fff"/>
-        <circle cx="35" cy="19" r="2" fill="#fff"/>
-        <circle cx="38" cy="28" r="2" fill="#fff"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     `,
 
     oleo: `
-      <svg viewBox="0 0 64 64" aria-hidden="true">
-        <path d="M32 5s18 22 18 36c0 11-8 19-18 19s-18-8-18-19C14 27 32 5 32 5Z" fill="currentColor" opacity=".82"/>
-        <path d="M32 18s8 12 8 20c0 5-3 8-8 8s-8-3-8-8c0-8 8-20 8-20Z" fill="#fff" opacity=".85"/>
+      <svg viewBox="0 0 24 24" fill="none">
+        <path d="M12 3C12 3 7 9 7 13A5 5 0 0 0 17 13C17 9 12 3 12 3Z" stroke="currentColor" stroke-width="1.8"/>
       </svg>
     `
   };
@@ -751,166 +747,65 @@ function materialSvgIcon(icon) {
 }
 
 /* =========================
-   PARTICIPANTES
+   FILTROS
 ========================= */
 
-function extractLatLngFromSource(source) {
-  if (!source || typeof source !== "object") {
-    return { lat: null, lng: null };
-  }
+function getFilters() {
 
   return {
-    lat: firstFinite(
-      source.lat,
-      source.latitude,
-      source.coords?.lat,
-      source.coords?.latitude,
-      source.location?.lat,
-      source.location?.latitude,
-      source.address?.lat,
-      source.address?.latitude,
-      source.geo?.lat,
-      source.geo?.latitude
-    ),
-    lng: firstFinite(
-      source.lng,
-      source.longitude,
-      source.lon,
-      source.coords?.lng,
-      source.coords?.longitude,
-      source.coords?.lon,
-      source.location?.lng,
-      source.location?.longitude,
-      source.location?.lon,
-      source.address?.lng,
-      source.address?.longitude,
-      source.address?.lon,
-      source.geo?.lng,
-      source.geo?.longitude,
-      source.geo?.lon
-    )
+    participant:
+      normalizeText(
+        els.fParticipantCode?.value
+      ),
+
+    fluxo:
+      els.fFluxo?.value ||
+      "__all__",
+
+    entrega:
+      els.fEntrega?.value ||
+      "__all__",
+
+    ini:
+      els.fIni?.value || "",
+
+    fim:
+      els.fFim?.value || "",
+
+    busca:
+      normalizeText(
+        els.fBusca?.value
+      )
   };
 }
 
-function buildAddressFromParticipant(data = {}) {
-  const nested = data.address || {};
-
-  return (
-    data.enderecoCompleto ||
-    [
-      nested.street,
-      nested.number,
-      nested.neighborhood,
-      nested.city,
-      nested.state
-    ].filter(Boolean).join(", ") ||
-    [
-      data.rua,
-      data.numero,
-      data.bairro,
-      data.cidade,
-      data.uf
-    ].filter(Boolean).join(", ")
-  );
-}
-
-function resolveParticipant(item) {
-  const participantId = item.participantId || null;
-
-  const participantCode =
-    item.participantCode ||
-    item.codigoParticipante ||
-    item.codigo ||
-    item.payloadSnapshot?.participantCode ||
-    null;
-
-  const familyCode =
-    item.familyCode ||
-    item.recebimento?.familyCode ||
-    item.finalTurno?.familyCode ||
-    item.payloadSnapshot?.familyCode ||
-    null;
-
-  const directName =
-    item.participantName ||
-    item.nomeParticipante ||
-    item.name ||
-    item.nome ||
-    item.payloadSnapshot?.participantName ||
-    null;
-
-  const fromId = participantId ? participantsMap.get(String(participantId)) : null;
-  const fromParticipantCode = participantCode ? participantsMap.get(String(participantCode)) : null;
-  const fromFamilyCode = familyCode ? participantsMap.get(String(familyCode)) : null;
-  const matched = fromId || fromParticipantCode || fromFamilyCode || null;
-
-  const fallbackCode = participantCode || familyCode || (isFinalTurno(item) ? "F000" : "—");
-
-  let address = "";
-
-  if (matched) {
-    address =
-      matched.enderecoCompleto ||
-      [
-        matched.rua || "",
-        matched.numero || "",
-        matched.bairro || "",
-        matched.cidade || ""
-      ].filter(Boolean).join(" ");
-  }
-
-  const coords = extractLatLngFromSource(matched || {});
+function getTableFilters() {
 
   return {
-    id: participantId || matched?.id || "",
-    code: matched?.participantCode || fallbackCode,
-    name:
-      directName ||
-      matched?.name ||
-      (fallbackCode !== "—" ? `Participante ${fallbackCode}` : "Sem participante vinculado"),
-    type: matched?.participantType || matched?.type || "",
-    status: matched?.status || "—",
-    address,
-    localColeta: matched?.localColeta || item.localColeta || "",
-    lat: coords.lat,
-    lng: coords.lng
+    search:
+      normalizeText(
+        els.tSearch?.value
+      ),
+
+    fluxo:
+      els.tFluxo?.value ||
+      "__all__",
+
+    entrega:
+      els.tEntrega?.value ||
+      "__all__",
+
+    status:
+      els.tStatus?.value ||
+      "__all__",
+
+    tipoCadastro:
+      els.tTipoCadastro?.value ||
+      "__all__"
   };
 }
-
-function showQuickParticipantPreviewByCode(code) {
-  if (!els.quickParticipantPreview) return;
-
-  const normalized = String(code || "").trim();
-
-  if (!normalized) {
-    els.quickParticipantPreview.classList.add("hidden");
-    return;
-  }
-
-  const found = participantsMap.get(normalized);
-
-  if (!found) {
-    els.quickParticipantPreview.classList.add("hidden");
-    return;
-  }
-
-  els.quickParticipantPreview.classList.remove("hidden");
-
-  if (els.quickParticipantName) els.quickParticipantName.textContent = found.name || "—";
-  if (els.quickParticipantCode) els.quickParticipantCode.textContent = found.participantCode || normalized;
-  if (els.quickParticipantType) els.quickParticipantType.textContent = found.participantType || "—";
-  if (els.quickParticipantStatus) els.quickParticipantStatus.textContent = found.status || "—";
-
-  if (els.quickParticipantAddress) {
-    els.quickParticipantAddress.textContent =
-      found.enderecoCompleto ||
-      [found.rua || "", found.numero || "", found.bairro || "", found.cidade || ""].filter(Boolean).join(" ") ||
-      "—";
-  }
-}
-
 /* =========================
-   PERFIL
+   FIREBASE / PERFIL
 ========================= */
 
 async function getUserProfile(uid) {
@@ -933,34 +828,39 @@ async function getUserProfile(uid) {
 }
 
 function validateProfile(profile) {
-  const isActiveUser =
+  const active =
     profile.status === "active" ||
     profile.status === "aprovado" ||
     profile.active === true ||
     !profile.status;
 
-  if (!isActiveUser) {
+  if (!active) {
     throw new Error("Usuário sem acesso ativo.");
   }
 }
 
 function fillUser(profile) {
   if (els.userDisplayName) {
-    els.userDisplayName.textContent = profile.displayName || profile.name || profile.nome || "Usuário";
+    els.userDisplayName.textContent =
+      profile.displayName ||
+      profile.name ||
+      profile.nome ||
+      "Usuário";
   }
 
   if (els.userRole) {
-    els.userRole.textContent = profile.role || "cooperativa";
+    els.userRole.textContent =
+      profile.role || "cooperativa";
   }
 
   if (els.userTerritory) {
-    els.userTerritory.textContent = profile.territoryLabel || profile.territoryId || pageTerritoryId || "—";
+    els.userTerritory.textContent =
+      profile.territoryLabel ||
+      profile.territoryId ||
+      pageTerritoryId ||
+      "—";
   }
 }
-
-/* =========================
-   FIRESTORE
-========================= */
 
 function loadParticipantsMap() {
   if (activeParticipantsUnsubscribe) {
@@ -970,39 +870,79 @@ function loadParticipantsMap() {
 
   activeParticipantsUnsubscribe = onSnapshot(
     collection(db, "participants"),
-    (snap) => {
+    (snapshot) => {
       participantsMap.clear();
 
-      snap.forEach((d) => {
-        const data = d.data();
+      snapshot.forEach((docItem) => {
+        const data = docItem.data();
 
         if (!itemBelongsToPageTerritory(data)) return;
 
-        const coords = extractLatLngFromSource(data);
+        const code = String(
+          data.participantCode ||
+          data.familyCode ||
+          data.codigo ||
+          docItem.id
+        ).trim();
 
         const payload = {
-          id: d.id,
-          name: data.name || data.participantName || data.nome || "Sem nome",
-          participantCode: data.participantCode || data.familyCode || data.codigo || d.id,
-          participantType: data.participantType || data.type || data.localType || "",
-          status: data.status || data.decision || "",
-          enderecoCompleto: buildAddressFromParticipant(data),
-          rua: data.rua || data.address?.street || "",
-          numero: data.numero || data.address?.number || "",
-          bairro: data.bairro || data.address?.neighborhood || "",
-          cidade: data.cidade || data.address?.city || "",
-          localColeta: data.localColeta || data.address?.localColeta || "",
-          lat: coords.lat,
-          lng: coords.lng,
-          coords: data.coords || null,
-          territoryId: data.territoryId || ""
+          id: docItem.id,
+          code,
+          name:
+            data.name ||
+            data.nome ||
+            data.participantName ||
+            "Sem nome",
+          type:
+            data.participantType ||
+            data.type ||
+            data.localType ||
+            "participante",
+          status:
+            data.status ||
+            data.decision ||
+            "—",
+          address:
+            data.enderecoCompleto ||
+            data.address?.full ||
+            [
+              data.rua,
+              data.numero,
+              data.bairro,
+              data.cidade,
+              data.uf
+            ].filter(Boolean).join(", "),
+          lat:
+            data.lat ||
+            data.latitude ||
+            data.coords?.lat ||
+            null,
+          lng:
+            data.lng ||
+            data.longitude ||
+            data.coords?.lng ||
+            null,
+          territoryId:
+            data.territoryId || ""
         };
 
-        participantsMap.set(d.id, payload);
+        participantsMap.set(docItem.id, payload);
 
-        if (data.participantCode) participantsMap.set(String(data.participantCode), payload);
-        if (data.familyCode) participantsMap.set(String(data.familyCode), payload);
-        if (data.codigo) participantsMap.set(String(data.codigo), payload);
+        if (code) {
+          participantsMap.set(code, payload);
+        }
+
+        if (data.participantCode) {
+          participantsMap.set(String(data.participantCode), payload);
+        }
+
+        if (data.familyCode) {
+          participantsMap.set(String(data.familyCode), payload);
+        }
+
+        if (data.codigo) {
+          participantsMap.set(String(data.codigo), payload);
+        }
       });
 
       applyFilters();
@@ -1026,31 +966,38 @@ function listenColetas() {
   activeUnsubscribe = onSnapshot(
     collection(db, "coletas"),
     (snapshot) => {
-      let loaded = snapshot.docs.map((d) => ({
-        id: d.id,
-        ...d.data()
+      let loaded = snapshot.docs.map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
       }));
 
       const totalOriginal = loaded.length;
 
-      loaded = loaded.filter(itemBelongsToPageTerritory);
-      loaded = sortColetasLocally(loaded);
+      loaded = loaded
+        .filter(itemBelongsToPageTerritory)
+        .sort((a, b) => {
+          const dateA = inferDateObject(a)?.getTime() || 0;
+          const dateB = inferDateObject(b)?.getTime() || 0;
+          return dateB - dateA;
+        });
 
       allColetas = loaded;
 
       if (els.dbStatus) {
-        els.dbStatus.textContent = `conectado • ${loaded.length}/${totalOriginal} coletas`;
+        els.dbStatus.textContent =
+          `conectado • ${loaded.length}/${totalOriginal} coletas`;
       }
 
       populateFilters(allColetas);
-      populateTableFilters(allColetas);
       setDefaultDateRange(allColetas);
       applyFilters();
     },
     (error) => {
       console.error("Erro ao carregar coletas:", error);
 
-      if (els.dbStatus) els.dbStatus.textContent = "erro";
+      if (els.dbStatus) {
+        els.dbStatus.textContent = "erro";
+      }
 
       alert("Não foi possível carregar os registros das coletas.");
     }
@@ -1058,94 +1005,58 @@ function listenColetas() {
 }
 
 /* =========================
-   FILTROS
+   FILTROS PRINCIPAIS
 ========================= */
 
-function populateFilters(items) {
+function populateFilters(items = []) {
   const entregas = new Set();
 
   items.forEach((item) => {
     const entrega = inferEntrega(item);
-    if (entrega && entrega !== "—") entregas.add(entrega);
+    if (entrega && entrega !== "__all__") {
+      entregas.add(entrega);
+    }
   });
 
-  const currentEntrega = els.fEntrega?.value || "__all__";
-
-  if (els.fEntrega) {
-    els.fEntrega.innerHTML =
-      `<option value="__all__">Todos</option>` +
+  const buildOptions = (current, placeholder) => {
+    const options =
+      `<option value="__all__">${placeholder}</option>` +
       Array.from(entregas)
         .sort()
-        .map((e) => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`)
+        .map((item) => {
+          return `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`;
+        })
         .join("");
 
-    els.fEntrega.value = Array.from(entregas).includes(currentEntrega)
-      ? currentEntrega
-      : "__all__";
-  }
-}
-
-function populateTableFilters(items) {
-  const entregas = new Set();
-
-  items.forEach((item) => {
-    const entrega = inferEntrega(item);
-    if (entrega && entrega !== "—") entregas.add(entrega);
-  });
-
-  const currentEntrega = els.tEntrega?.value || "__all__";
-
-  if (els.tEntrega) {
-    els.tEntrega.innerHTML =
-      `<option value="__all__">Todas</option>` +
-      Array.from(entregas)
-        .sort()
-        .map((e) => `<option value="${escapeHtml(e)}">${escapeHtml(e)}</option>`)
-        .join("");
-
-    els.tEntrega.value = Array.from(entregas).includes(currentEntrega)
-      ? currentEntrega
-      : "__all__";
-  }
-}
-
-function getSearchTarget(item, participant, searchType) {
-  const familyCode =
-    item.familyCode ||
-    item.recebimento?.familyCode ||
-    item.finalTurno?.familyCode ||
-    "";
-
-  const targets = {
-    participant: `${participant.name} ${item.participantName || ""}`,
-    code: `${participant.code} ${item.participantCode || ""} ${familyCode}`,
-    creator: `${item.createdByName || ""} ${item.createdByPublicCode || ""} ${item.createdBy || ""}`,
-    obs: `${inferObservacao(item)}`,
-    delivery: `${inferEntrega(item)}`,
-    flow: `${inferFluxo(item)} ${formatFluxoLabel(inferFluxo(item))}`
+    return {
+      options,
+      value: entregas.has(current) ? current : "__all__"
+    };
   };
 
-  if (searchType === "all") {
-    return [
-      participant.name,
-      participant.code,
-      familyCode,
-      item.createdByName,
-      inferEntrega(item),
-      inferFluxo(item),
-      formatFluxoLabel(inferFluxo(item)),
-      inferObservacao(item)
-    ].join(" ");
+  if (els.fEntrega) {
+    const current = els.fEntrega.value || "__all__";
+    const result = buildOptions(current, "Todos");
+    els.fEntrega.innerHTML = result.options;
+    els.fEntrega.value = result.value;
   }
 
-  return targets[searchType] || "";
+  if (els.tEntrega) {
+    const current = els.tEntrega.value || "__all__";
+    const result = buildOptions(current, "Todas");
+    els.tEntrega.innerHTML = result.options;
+    els.tEntrega.value = result.value;
+  }
 }
 
-function setDefaultDateRange(items) {
+function setDefaultDateRange(items = []) {
   if (!els.fIni || !els.fFim) return;
-  if (els.fIni.value || els.fFim.value || !items.length) return;
+  if (els.fIni.value || els.fFim.value) return;
 
-  const dates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
+  const dates = items
+    .map(inferDateISO)
+    .filter(Boolean)
+    .sort();
 
   if (!dates.length) return;
 
@@ -1153,73 +1064,103 @@ function setDefaultDateRange(items) {
   els.fFim.value = dates[dates.length - 1];
 }
 
-function updateTopInfo() {
-  if (els.txtRegistrosTopo) {
-    els.txtRegistrosTopo.textContent = String(filteredColetas.length);
-  }
+function showQuickParticipantPreviewByCode(code) {
+  if (!els.quickParticipantPreview) return;
 
-  const ini = els.fIni?.value || "";
-  const fim = els.fFim?.value || "";
+  const normalized = String(code || "").trim();
 
-  if (!els.txtPeriodo) return;
-
-  if (ini && fim) {
-    els.txtPeriodo.textContent = `${formatDateBR(ini)} → ${formatDateBR(fim)}`;
+  if (!normalized) {
+    els.quickParticipantPreview.classList.add("hidden");
     return;
   }
 
-  if (ini) {
-    els.txtPeriodo.textContent = `${formatDateBR(ini)} → hoje`;
+  const participant = participantsMap.get(normalized);
+
+  if (!participant) {
+    els.quickParticipantPreview.classList.add("hidden");
     return;
   }
 
-  if (fim) {
-    els.txtPeriodo.textContent = `até ${formatDateBR(fim)}`;
-    return;
+  els.quickParticipantPreview.classList.remove("hidden");
+
+  if (els.quickParticipantName) {
+    els.quickParticipantName.textContent = participant.name || "—";
   }
 
-  const dates = filteredColetas.map((item) => inferDateISO(item)).filter(Boolean).sort();
+  if (els.quickParticipantCode) {
+    els.quickParticipantCode.textContent = participant.code || normalized;
+  }
 
-  els.txtPeriodo.textContent = dates.length
-    ? `${formatDateBR(dates[0])} → ${formatDateBR(dates[dates.length - 1])}`
-    : "—";
+  if (els.quickParticipantType) {
+    els.quickParticipantType.textContent = participant.type || "—";
+  }
+
+  if (els.quickParticipantStatus) {
+    els.quickParticipantStatus.textContent = participant.status || "—";
+  }
+
+  if (els.quickParticipantAddress) {
+    els.quickParticipantAddress.textContent = participant.address || "—";
+  }
 }
 
 function applyFilters() {
-  const participantCode = String(els.fParticipantCode?.value || "").trim();
-  const fluxo = els.fFluxo?.value || "__all__";
-  const entrega = els.fEntrega?.value || "__all__";
-  const ini = els.fIni?.value || "";
-  const fim = els.fFim?.value || "";
-  const busca = normalizeText(els.fBusca?.value || "");
-  const searchType = els.fSearchType?.value || "all";
+  const filters = getFilters();
 
-  showQuickParticipantPreviewByCode(participantCode);
+  showQuickParticipantPreviewByCode(filters.participant);
 
   filteredColetas = allColetas.filter((item) => {
     const participant = resolveParticipant(item);
-    const searchTarget = normalizeText(getSearchTarget(item, participant, searchType));
-    const itemDate = inferDateISO(item);
+    const date = inferDateISO(item);
+    const fluxo = inferFluxo(item);
+    const entrega = inferEntrega(item);
 
-    if (participantCode) {
-      const codeHaystack = [
+    if (filters.participant) {
+      const haystack = normalizeText([
         participant.code,
-        item.participantCode || "",
-        item.codigoParticipante || "",
-        item.codigo || "",
-        item.familyCode || "",
-        item.recebimento?.familyCode || "",
-        item.finalTurno?.familyCode || ""
-      ].map(String).join(" ");
+        participant.name,
+        item.participantCode,
+        item.codigoParticipante,
+        item.familyCode
+      ].join(" "));
 
-      if (!normalizeText(codeHaystack).includes(normalizeText(participantCode))) return false;
+      if (!haystack.includes(filters.participant)) {
+        return false;
+      }
     }
 
-    if (fluxo !== "__all__" && inferFluxo(item) !== fluxo) return false;
-    if (entrega !== "__all__" && inferEntrega(item) !== entrega) return false;
-    if (ini && itemDate && itemDate < ini) return false;
-    if (fim && itemDate && itemDate > fim) return false;
-    if (busca && !searchTarget.includes(busca)) return false;
+    if (filters.fluxo !== "__all__" && fluxo !== filters.fluxo) {
+      return false;
+    }
+
+    if (filters.entrega !== "__all__" && entrega !== filters.entrega) {
+      return false;
+    }
+
+    if (filters.ini && date && date < filters.ini) {
+      return false;
+    }
+
+    if (filters.fim && date && date > filters.fim) {
+      return false;
+    }
+
+    if (filters.busca) {
+      const haystack = normalizeText([
+        participant.name,
+        participant.code,
+        participant.address,
+        fluxo,
+        entrega,
+        getStatus(item),
+        inferObservacao(item),
+        JSON.stringify(item)
+      ].join(" "));
+
+      if (!haystack.includes(filters.busca)) {
+        return false;
+      }
+    }
 
     return true;
   });
@@ -1240,7 +1181,6 @@ function clearFilters() {
   if (els.fIni) els.fIni.value = "";
   if (els.fFim) els.fFim.value = "";
   if (els.fBusca) els.fBusca.value = "";
-  if (els.fSearchType) els.fSearchType.value = "all";
 
   if (els.quickParticipantPreview) {
     els.quickParticipantPreview.classList.add("hidden");
@@ -1249,122 +1189,144 @@ function clearFilters() {
   applyFilters();
 }
 
+function updateTopInfo() {
+  if (els.txtRegistrosTopo) {
+    els.txtRegistrosTopo.textContent = String(filteredColetas.length);
+  }
+
+  if (!els.txtPeriodo) return;
+
+  const dates = filteredColetas
+    .map(inferDateISO)
+    .filter(Boolean)
+    .sort();
+
+  if (!dates.length) {
+    els.txtPeriodo.textContent = "—";
+    return;
+  }
+
+  els.txtPeriodo.textContent =
+    `${formatDateBR(dates[0])} → ${formatDateBR(dates[dates.length - 1])}`;
+}
+
 /* =========================
-   KPIs E CARDS
+   KPIs / CARDS
 ========================= */
 
-function renderKpis(items) {
+function renderKpis(items = []) {
   const ativos = items.filter(isActiveCollection);
-  const participantIds = new Set();
+  const participantes = new Set();
 
-  let residuoSeco = 0;
-  let rejeitoTotal = 0;
+  let reciclavel = 0;
+  let rejeito = 0;
   let finalTurno = 0;
 
   ativos.forEach((item) => {
-    const p = resolveParticipant(item);
+    const participant = resolveParticipant(item);
 
-    if (p.code && p.code !== "—") participantIds.add(p.code);
+    if (participant.code) {
+      participantes.add(participant.code);
+    }
 
-    residuoSeco += inferTotalReciclavelRegistro(item);
-    rejeitoTotal += inferTotalRejeitoRegistro(item);
+    reciclavel += inferTotalReciclavelRegistro(item);
+    rejeito += inferTotalRejeitoRegistro(item);
 
-    if (isFinalTurno(item)) finalTurno += 1;
+    if (inferFluxo(item) === "final_turno") {
+      finalTurno += 1;
+    }
   });
 
   if (els.k_totalColetas) els.k_totalColetas.textContent = String(ativos.length);
-  if (els.k_participantes) els.k_participantes.textContent = String(participantIds.size);
-  if (els.k_residuoSeco) els.k_residuoSeco.textContent = formatNumber(residuoSeco);
-  if (els.k_rejeito) els.k_rejeito.textContent = formatNumber(rejeitoTotal);
+  if (els.k_participantes) els.k_participantes.textContent = String(participantes.size);
+  if (els.k_residuoSeco) els.k_residuoSeco.textContent = formatNumber(reciclavel);
+  if (els.k_rejeito) els.k_rejeito.textContent = formatNumber(rejeito);
   if (els.k_finalTurno) els.k_finalTurno.textContent = String(finalTurno);
 }
 
-function sumMaterials(items) {
-  const totals = {};
+function computeExpandedMetrics(items = []) {
+  const ativos = items.filter(isActiveCollection);
+  const materialTotals = {};
 
   MATERIAL_META.forEach((mat) => {
-    totals[mat.key] = 0;
+    materialTotals[mat.key] = 0;
   });
 
-  items.filter(isActiveCollection).forEach((item) => {
-    MATERIAL_META.forEach((mat) => {
-      totals[mat.key] += getMaterialValue(item, mat.key);
-    });
-  });
-
-  return totals;
-}
-
-function computeExpandedMetrics(items) {
-  const ativos = items.filter(isActiveCollection);
-  const materialTotals = sumMaterials(ativos);
+  const dias = new Set();
+  const participantes = new Set();
+  const condominios = new Set();
+  const comercios = new Set();
 
   let reciclavelKg = 0;
-  let rejeitoNaoReciclavelKg = 0;
+  let rejeitoKg = 0;
   let naoComercializadoKg = 0;
-
-  const uniqueDays = new Set();
-  const participantSet = new Set();
-  const condominioSet = new Set();
-  const comercioSet = new Set();
-
   let entregaVoluntaria = 0;
+  let receitaTotal = 0;
 
   ativos.forEach((item) => {
     const participant = resolveParticipant(item);
-    const type = normalizeText(participant.type);
+    const date = inferDateISO(item);
+    const tipo = normalizeText(participant.type);
+
+    if (date) dias.add(date);
+    if (participant.code) participantes.add(participant.code);
+
+    if (tipo.includes("condominio") || tipo.includes("condomínio")) {
+      condominios.add(participant.code || participant.name);
+    }
+
+    if (tipo.includes("comercio") || tipo.includes("comércio")) {
+      comercios.add(participant.code || participant.name);
+    }
+
+    if (inferEntrega(item).includes("volunt")) {
+      entregaVoluntaria += 1;
+    }
+
+    MATERIAL_META.forEach((mat) => {
+      const kg = inferMaterialValue(item, mat.key);
+      materialTotals[mat.key] += kg;
+      receitaTotal += kg * mat.price;
+    });
 
     reciclavelKg += inferTotalReciclavelRegistro(item);
-    rejeitoNaoReciclavelKg += inferRejeitoNaoReciclavel(item);
+    rejeitoKg += inferTotalRejeitoRegistro(item);
     naoComercializadoKg += inferNaoComercializado(item);
-
-    const d = inferDateISO(item);
-    if (d) uniqueDays.add(d);
-
-    if (participant.code && participant.code !== "—") participantSet.add(participant.code);
-    if (type === "condominio" || type === "condomínio") condominioSet.add(participant.code || participant.name);
-    if (type === "comercio" || type === "comércio") comercioSet.add(participant.code || participant.name);
-
-    if (normalizeText(inferEntrega(item)).includes("volunt")) entregaVoluntaria += 1;
   });
 
-  const rejeitoTotalKg = rejeitoNaoReciclavelKg + naoComercializadoKg;
-  const totalGeral = reciclavelKg + rejeitoTotalKg;
-
+  const totalGeral = reciclavelKg + rejeitoKg;
   const reciclavelPct = totalGeral ? (reciclavelKg / totalGeral) * 100 : 0;
-  const rejeitoPct = totalGeral ? (rejeitoTotalKg / totalGeral) * 100 : 0;
-
-  let receitaTotal = 0;
-
-  MATERIAL_META.forEach((mat) => {
-    receitaTotal += (materialTotals[mat.key] || 0) * mat.price;
-  });
+  const rejeitoPct = totalGeral ? (rejeitoKg / totalGeral) * 100 : 0;
+  const naoComercializadoPct = rejeitoKg ? (naoComercializadoKg / rejeitoKg) * 100 : 0;
+  const rejeitoNaoReciclavelKg = Math.max(0, rejeitoKg - naoComercializadoKg);
+  const rejeitoNaoReciclavelPct = rejeitoKg ? (rejeitoNaoReciclavelKg / rejeitoKg) * 100 : 0;
 
   return {
     materialTotals,
     reciclavelKg,
-    rejeitoKg: rejeitoTotalKg,
-    rejeitoNaoReciclavelKg,
+    rejeitoKg,
     naoComercializadoKg,
+    naoComercializadoPct,
+    rejeitoNaoReciclavelKg,
+    rejeitoNaoReciclavelPct,
     reciclavelPct,
     rejeitoPct,
     receitaTotal,
-    totalDiasProjeto: uniqueDays.size,
+    totalDiasProjeto: dias.size,
     operacoesRealizadas: ativos.length,
-    participantesProjeto: participantSet.size,
-    condominiosParticipantes: condominioSet.size,
-    comercioParticipantes: comercioSet.size,
+    participantesProjeto: participantes.size,
+    condominiosParticipantes: condominios.size,
+    comercioParticipantes: comercios.size,
     entregaVoluntaria
   };
 }
 
-function renderExpandedPanel(items) {
+function renderExpandedPanel(items = []) {
   const m = computeExpandedMetrics(items);
-  const allDates = items.map((item) => inferDateISO(item)).filter(Boolean).sort();
-  const projectStart = allDates.length ? formatDateBR(allDates[0]) : "—";
+  const dates = items.map(inferDateISO).filter(Boolean).sort();
 
   if (els.k_totalDiasProjeto) els.k_totalDiasProjeto.textContent = String(m.totalDiasProjeto);
-  if (els.k_inicioProjeto) els.k_inicioProjeto.textContent = `Início: ${projectStart}`;
+  if (els.k_inicioProjeto) els.k_inicioProjeto.textContent = `Início: ${dates[0] ? formatDateBR(dates[0]) : "—"}`;
   if (els.k_operacoesRealizadas) els.k_operacoesRealizadas.textContent = String(m.operacoesRealizadas);
   if (els.k_participantesProjeto) els.k_participantesProjeto.textContent = String(m.participantesProjeto);
   if (els.k_condominiosParticipantes) els.k_condominiosParticipantes.textContent = String(m.condominiosParticipantes);
@@ -1377,18 +1339,14 @@ function renderExpandedPanel(items) {
   if (els.k_totalRejeitoKg) els.k_totalRejeitoKg.textContent = formatNumber(m.rejeitoKg);
   if (els.k_totalRejeitoPct) els.k_totalRejeitoPct.textContent = `${formatNumber(m.rejeitoPct)}%`;
 
-  const rejeitoBase = m.rejeitoKg;
-  const pctNaoReciclavel = rejeitoBase ? (m.rejeitoNaoReciclavelKg / rejeitoBase) * 100 : 0;
-  const pctNaoComercializado = rejeitoBase ? (m.naoComercializadoKg / rejeitoBase) * 100 : 0;
-
-  if (els.k_rejeitoNaoReciclavelPct) els.k_rejeitoNaoReciclavelPct.textContent = `${formatNumber(pctNaoReciclavel)}%`;
+  if (els.k_rejeitoNaoReciclavelPct) els.k_rejeitoNaoReciclavelPct.textContent = `${formatNumber(m.rejeitoNaoReciclavelPct)}%`;
   if (els.k_rejeitoNaoReciclavelKg) els.k_rejeitoNaoReciclavelKg.textContent = formatKg(m.rejeitoNaoReciclavelKg);
-  if (els.k_naoComercializadoPct) els.k_naoComercializadoPct.textContent = `${formatNumber(pctNaoComercializado)}%`;
+  if (els.k_naoComercializadoPct) els.k_naoComercializadoPct.textContent = `${formatNumber(m.naoComercializadoPct)}%`;
   if (els.k_naoComercializadoKg) els.k_naoComercializadoKg.textContent = formatKg(m.naoComercializadoKg);
 
   if (!els.materialCards) return;
 
-  const totalMateriais = Object.values(m.materialTotals).reduce((acc, v) => acc + v, 0);
+  const totalMateriais = Object.values(m.materialTotals).reduce((acc, value) => acc + value, 0);
 
   els.materialCards.innerHTML = MATERIAL_META.map((mat) => {
     const kg = m.materialTotals[mat.key] || 0;
@@ -1400,7 +1358,7 @@ function renderExpandedPanel(items) {
         <div class="material-top">
           <div class="icon-group">
             <div class="mat-icon professional-icon">
-              ${materialSvgIcon(mat.icon)}
+              ${getMaterialSVG(mat.icon)}
             </div>
           </div>
 
@@ -1421,7 +1379,6 @@ function renderExpandedPanel(items) {
     `;
   }).join("");
 }
-
 /* =========================
    GRÁFICOS
 ========================= */
@@ -1430,34 +1387,52 @@ function getChartOptions(type = "bar") {
   const base = {
     responsive: true,
     maintainAspectRatio: false,
-    interaction: { mode: "index", intersect: false },
+    interaction: {
+      mode: "index",
+      intersect: false
+    },
     plugins: {
       legend: {
         position: "bottom",
-        labels: { usePointStyle: true, padding: 16 }
+        labels: {
+          usePointStyle: true,
+          padding: 16
+        }
       }
     }
   };
 
-  if (type === "doughnut" || type === "pie") return base;
+  if (type === "doughnut" || type === "pie") {
+    return base;
+  }
 
   return {
     ...base,
     scales: {
       x: {
-        grid: { display: false },
-        ticks: { color: "#64748B", maxRotation: 45, minRotation: 0 }
+        grid: {
+          display: false
+        },
+        ticks: {
+          color: "#64748B",
+          maxRotation: 45,
+          minRotation: 0
+        }
       },
       y: {
         beginAtZero: true,
-        grid: { color: "rgba(148,163,184,.15)" },
-        ticks: { color: "#64748B" }
+        grid: {
+          color: "rgba(148,163,184,.15)"
+        },
+        ticks: {
+          color: "#64748B"
+        }
       }
     }
   };
 }
 
-function buildWeightDailySeries(items) {
+function buildWeightDailySeries(items = []) {
   const grouped = new Map();
 
   items.filter(isActiveCollection).forEach((item) => {
@@ -1478,6 +1453,7 @@ function buildWeightDailySeries(items) {
     }
 
     const current = grouped.get(key);
+
     current.reciclavel += inferTotalReciclavelRegistro(item);
     current.rejeito += inferTotalRejeitoRegistro(item);
     current.quantidade += 1;
@@ -1489,7 +1465,11 @@ function buildWeightDailySeries(items) {
 
   return {
     labels: ordered.map((item) => {
-      const fluxoLabel = item.fluxo === "final_turno" ? "Final turno" : "Recebimento";
+      const fluxoLabel =
+        item.fluxo === "final_turno"
+          ? "Final turno"
+          : "Recebimento";
+
       return `${formatDateBR(item.date)} • ${fluxoLabel}`;
     }),
     reciclavel: ordered.map((item) => Number(item.reciclavel.toFixed(2))),
@@ -1498,14 +1478,16 @@ function buildWeightDailySeries(items) {
   };
 }
 
-function renderWeightTimeline(items) {
+function renderWeightTimeline(items = []) {
   const canvas = document.getElementById("weightTimelineChart");
 
   if (!canvas || typeof Chart === "undefined") return;
 
   const daily = buildWeightDailySeries(items);
 
-  if (weightTimelineChart) weightTimelineChart.destroy();
+  if (weightTimelineChart) {
+    weightTimelineChart.destroy();
+  }
 
   weightTimelineChart = new Chart(canvas, {
     type: "bar",
@@ -1545,7 +1527,7 @@ function renderWeightTimeline(items) {
   });
 }
 
-function buildDailySeries(items) {
+function buildDailySeries(items = []) {
   const grouped = new Map();
 
   items.filter(isActiveCollection).forEach((item) => {
@@ -1563,11 +1545,15 @@ function buildDailySeries(items) {
   };
 }
 
-function buildFlowSeries(items) {
+function buildFlowSeries(items = []) {
   const map = new Map();
 
   items.filter(isActiveCollection).forEach((item) => {
-    const label = formatFluxoLabel(inferFluxo(item));
+    const label =
+      inferFluxo(item) === "final_turno"
+        ? "Final do turno"
+        : "Recebimento";
+
     map.set(label, (map.get(label) || 0) + 1);
   });
 
@@ -1577,8 +1563,18 @@ function buildFlowSeries(items) {
   };
 }
 
-function buildMaterialSeries(items) {
-  const totals = sumMaterials(items);
+function buildMaterialSeries(items = []) {
+  const totals = {};
+
+  MATERIAL_META.forEach((mat) => {
+    totals[mat.key] = 0;
+  });
+
+  items.filter(isActiveCollection).forEach((item) => {
+    MATERIAL_META.forEach((mat) => {
+      totals[mat.key] += inferMaterialValue(item, mat.key);
+    });
+  });
 
   const ordered = MATERIAL_META.map((mat) => ({
     label: mat.label,
@@ -1591,16 +1587,19 @@ function buildMaterialSeries(items) {
   };
 }
 
-function buildCollectionPointsSeries(items) {
+function buildCollectionPointsSeries(items = []) {
   const map = new Map();
 
   items.filter(isActiveCollection).forEach((item) => {
-    const p = resolveParticipant(item);
-    const key = p.code || p.name || "Sem código";
+    const participant = resolveParticipant(item);
+    const key = participant.code || participant.name || "Sem código";
+
     map.set(key, (map.get(key) || 0) + 1);
   });
 
-  const ordered = Array.from(map.entries()).sort((a, b) => b[1] - a[1]).slice(0, 12);
+  const ordered = Array.from(map.entries())
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 12);
 
   return {
     labels: ordered.map(([label]) => label),
@@ -1608,13 +1607,13 @@ function buildCollectionPointsSeries(items) {
   };
 }
 
-function renderCharts(items) {
+function renderCharts(items = []) {
+  if (typeof Chart === "undefined") return;
+
   const ctxMain = document.getElementById("mainChart");
   const ctxA = document.getElementById("secA");
   const ctxB = document.getElementById("secB");
   const ctxC = document.getElementById("secC");
-
-  if (typeof Chart === "undefined") return;
 
   [mainChart, secA, secB, secC].forEach((chart) => {
     if (chart) chart.destroy();
@@ -1661,7 +1660,10 @@ function renderCharts(items) {
           {
             label: "Tipos de coleta",
             data: flow.values,
-            backgroundColor: ["rgba(83,172,222,.82)", "rgba(129,185,42,.82)"]
+            backgroundColor: [
+              "rgba(83,172,222,.82)",
+              "rgba(129,185,42,.82)"
+            ]
           }
         ]
       },
@@ -1710,21 +1712,65 @@ function renderCharts(items) {
 }
 
 /* =========================
-   TABELA
+   TABELA PAGINADA
 ========================= */
 
-function getTableFilters() {
-  return {
-    search: normalizeText(els.tSearch?.value || ""),
-    fluxo: els.tFluxo?.value || "__all__",
-    entrega: els.tEntrega?.value || "__all__",
-    status: els.tStatus?.value || "__all__",
-    tipoCadastro: els.tTipoCadastro?.value || "__all__"
-  };
+function getCurrentPageSlice(items = []) {
+  const start = tablePage * tablePageSize;
+  const end = start + tablePageSize;
+
+  return items.slice(start, end);
+}
+
+function updateTablePagination(total = 0) {
+  const indicator = document.getElementById("tablePageIndicator");
+  const btnPrev = document.getElementById("btnPrevColetas");
+  const btnNext = document.getElementById("btnNextColetas");
+
+  const start = total === 0 ? 0 : tablePage * tablePageSize + 1;
+  const end = Math.min((tablePage + 1) * tablePageSize, total);
+
+  if (indicator) {
+    indicator.textContent =
+      total > 0
+        ? `Mostrando ${start}-${end} de ${total}`
+        : "Nenhuma coleta";
+  }
+
+  if (btnPrev) {
+    btnPrev.disabled = tablePage === 0;
+  }
+
+  if (btnNext) {
+    btnNext.disabled = end >= total;
+  }
+}
+
+function setupTablePagination() {
+  const btnPrev = document.getElementById("btnPrevColetas");
+  const btnNext = document.getElementById("btnNextColetas");
+
+  btnPrev?.addEventListener("click", () => {
+    if (tablePage <= 0) return;
+
+    tablePage--;
+    renderTable(tableFilteredColetas);
+  });
+
+  btnNext?.addEventListener("click", () => {
+    const totalPages = Math.ceil(tableFilteredColetas.length / tablePageSize);
+
+    if (tablePage >= totalPages - 1) return;
+
+    tablePage++;
+    renderTable(tableFilteredColetas);
+  });
 }
 
 function applyTableFilters() {
   const filters = getTableFilters();
+
+  tablePage = 0;
 
   tableFilteredColetas = filteredColetas.filter((item) => {
     const participant = resolveParticipant(item);
@@ -1742,9 +1788,27 @@ function applyTableFilters() {
     }
 
     if (filters.tipoCadastro !== "__all__") {
-      if (filters.tipoCadastro === "condominio" && !tipo.includes("condominio") && !tipo.includes("condomínio")) return false;
-      if (filters.tipoCadastro === "comercio" && !tipo.includes("comercio") && !tipo.includes("comércio")) return false;
-      if (filters.tipoCadastro === "participante" && (tipo.includes("condominio") || tipo.includes("comercio"))) return false;
+      if (
+        filters.tipoCadastro === "condominio" &&
+        !tipo.includes("condominio") &&
+        !tipo.includes("condomínio")
+      ) return false;
+
+      if (
+        filters.tipoCadastro === "comercio" &&
+        !tipo.includes("comercio") &&
+        !tipo.includes("comércio")
+      ) return false;
+
+      if (
+        filters.tipoCadastro === "participante" &&
+        (
+          tipo.includes("condominio") ||
+          tipo.includes("condomínio") ||
+          tipo.includes("comercio") ||
+          tipo.includes("comércio")
+        )
+      ) return false;
     }
 
     if (filters.search) {
@@ -1775,35 +1839,26 @@ function clearTableFilters() {
   if (els.tStatus) els.tStatus.value = "__all__";
   if (els.tTipoCadastro) els.tTipoCadastro.value = "__all__";
 
+  tablePage = 0;
   tableFilteredColetas = [...filteredColetas];
+
   renderTable(tableFilteredColetas);
 }
 
-function statusBadge(item) {
-  const status = normalizeText(getStatus(item));
-
-  if (status.includes("cancel")) {
-    return `<span class="status-badge rejeitado">Cancelado</span>`;
-  }
-
-  if (status.includes("edit")) {
-    return `<span class="status-badge pendente">Editado</span>`;
-  }
-
-  return `<span class="status-badge realizada">Ativo</span>`;
-}
-
-function renderTable(items) {
+function renderTable(items = []) {
   if (!els.tableColetasBody) return;
 
-  if (!items.length) {
+  const total = items.length;
+  const pageItems = getCurrentPageSlice(items);
+
+  if (!pageItems.length) {
     els.tableColetasBody.innerHTML = `
       <tr>
         <td colspan="7">Nenhum registro encontrado.</td>
       </tr>
     `;
   } else {
-    els.tableColetasBody.innerHTML = items.map((item) => {
+    els.tableColetasBody.innerHTML = pageItems.map((item) => {
       const participant = resolveParticipant(item);
 
       return `
@@ -1831,9 +1886,19 @@ function renderTable(items) {
     }).join("");
   }
 
-  if (els.tableVisibleCount) els.tableVisibleCount.textContent = String(items.length);
-  if (els.tableFilteredCount) els.tableFilteredCount.textContent = String(filteredColetas.length);
-  if (els.tableLastUpdate) els.tableLastUpdate.textContent = formatDateTimeBR(new Date());
+  if (els.tableVisibleCount) {
+    els.tableVisibleCount.textContent = String(pageItems.length);
+  }
+
+  if (els.tableFilteredCount) {
+    els.tableFilteredCount.textContent = String(total);
+  }
+
+  if (els.tableLastUpdate) {
+    els.tableLastUpdate.textContent = formatDateTimeBR(new Date());
+  }
+
+  updateTablePagination(total);
 }
 
 /* =========================
@@ -1852,12 +1917,15 @@ function ensureCollectionDetailsModal() {
 
   modal.innerHTML = `
     <div class="modal-backdrop" data-close="collectionDetailsModal"></div>
+
     <div class="modal-card modal-card-collection-details">
       <button class="modal-close" type="button" data-close="collectionDetailsModal" aria-label="Fechar">×</button>
+
       <div class="modal-head">
         <h3>Detalhes da coleta</h3>
         <p>Visualização completa do registro salvo.</p>
       </div>
+
       <div class="modal-body modal-body-scroll" id="collectionDetailsContent"></div>
     </div>
   `;
@@ -1877,7 +1945,7 @@ function openCollectionDetails(id) {
   const content = document.getElementById("collectionDetailsContent");
 
   const materialRows = MATERIAL_META.map((mat) => {
-    const kg = getMaterialValue(item, mat.key);
+    const kg = inferMaterialValue(item, mat.key);
 
     return `
       <div class="coleta-info-card">
@@ -1894,7 +1962,7 @@ function openCollectionDetails(id) {
       <div class="coleta-info-card"><strong>Participante:</strong> ${escapeHtml(participant.name)}</div>
       <div class="coleta-info-card"><strong>Código:</strong> ${escapeHtml(participant.code)}</div>
       <div class="coleta-info-card"><strong>Status:</strong> ${escapeHtml(resolveHumanStatus(item))}</div>
-      <div class="coleta-info-card"><strong>Qualidade:</strong> ${escapeHtml(getQualidade(item))}</div>
+      <div class="coleta-info-card"><strong>Qualidade:</strong> ${escapeHtml(String(inferQualidade(item) || "—"))}</div>
       <div class="coleta-info-card"><strong>Peso reciclável:</strong> ${escapeHtml(formatKg(inferTotalReciclavelRegistro(item)))}</div>
       <div class="coleta-info-card"><strong>Rejeito:</strong> ${escapeHtml(formatKg(inferTotalRejeitoRegistro(item)))}</div>
       <div class="coleta-info-card"><strong>Não comercializado:</strong> ${escapeHtml(formatKg(inferNaoComercializado(item)))}</div>
@@ -1902,6 +1970,7 @@ function openCollectionDetails(id) {
     </div>
 
     <h3 style="margin:18px 0 10px;">Materiais informados</h3>
+
     <div class="coleta-modal-grid collection-details-fields">
       ${materialRows}
     </div>
@@ -1928,19 +1997,19 @@ function openEditModal(id) {
   if (els.editParticipantName) els.editParticipantName.textContent = `${participant.name} • ${participant.code}`;
   if (els.editFluxo) els.editFluxo.value = inferFluxo(item);
   if (els.editEntrega) els.editEntrega.value = inferEntrega(item) === "—" ? "" : inferEntrega(item);
-  if (els.editPesoBase) els.editPesoBase.value = inferPesoResiduoSecoBruto(item) || "";
-  if (els.editQualidade) els.editQualidade.value = getQualidade(item) === "—" ? "" : getQualidade(item);
-  if (els.editRejeito) els.editRejeito.value = inferPesoRejeitoInformado(item) || "";
+  if (els.editPesoBase) els.editPesoBase.value = inferTotalReciclavelRegistro(item) || "";
+  if (els.editQualidade) els.editQualidade.value = inferQualidade(item) || "";
+  if (els.editRejeito) els.editRejeito.value = inferTotalRejeitoRegistro(item) || "";
   if (els.editNaoComercializado) els.editNaoComercializado.value = inferNaoComercializado(item) || "";
 
-  if (els.editPlasticoKg) els.editPlasticoKg.value = getMaterialValue(item, "plasticoKg") || "";
-  if (els.editVidroKg) els.editVidroKg.value = getMaterialValue(item, "vidroKg") || "";
-  if (els.editAluminioMetalKg) els.editAluminioMetalKg.value = getMaterialValue(item, "aluminioMetalKg") || "";
-  if (els.editSacariaKg) els.editSacariaKg.value = getMaterialValue(item, "sacariaKg") || "";
-  if (els.editPapelMistoKg) els.editPapelMistoKg.value = getMaterialValue(item, "papelMistoKg") || "";
-  if (els.editPapelaoKg) els.editPapelaoKg.value = getMaterialValue(item, "papelaoKg") || "";
-  if (els.editIsoporKg) els.editIsoporKg.value = getMaterialValue(item, "isoporKg") || "";
-  if (els.editOleoKg) els.editOleoKg.value = getMaterialValue(item, "oleoKg") || "";
+  if (els.editPlasticoKg) els.editPlasticoKg.value = inferMaterialValue(item, "plasticoKg") || "";
+  if (els.editVidroKg) els.editVidroKg.value = inferMaterialValue(item, "vidroKg") || "";
+  if (els.editAluminioMetalKg) els.editAluminioMetalKg.value = inferMaterialValue(item, "aluminioMetalKg") || "";
+  if (els.editSacariaKg) els.editSacariaKg.value = inferMaterialValue(item, "sacariaKg") || "";
+  if (els.editPapelMistoKg) els.editPapelMistoKg.value = inferMaterialValue(item, "papelMistoKg") || "";
+  if (els.editPapelaoKg) els.editPapelaoKg.value = inferMaterialValue(item, "papelaoKg") || "";
+  if (els.editIsoporKg) els.editIsoporKg.value = inferMaterialValue(item, "isoporKg") || "";
+  if (els.editOleoKg) els.editOleoKg.value = inferMaterialValue(item, "oleoKg") || "";
   if (els.editObs) els.editObs.value = inferObservacao(item);
 
   els.editModal.classList.add("show");
@@ -1953,19 +2022,23 @@ async function saveEdit() {
 
   const payload = {
     fluxo: els.editFluxo?.value || "recebimento",
+    flowType: els.editFluxo?.value || "recebimento",
     entrega: els.editEntrega?.value || "",
-    pesoRecebido: toNumberBR(els.editPesoBase?.value),
+    deliveryType: els.editEntrega?.value || "",
+    pesoRecebido: toNumber(els.editPesoBase?.value),
     qualidade: els.editQualidade?.value || "",
-    rejeito: toNumberBR(els.editRejeito?.value),
-    naoComercializado: toNumberBR(els.editNaoComercializado?.value),
-    plasticoKg: toNumberBR(els.editPlasticoKg?.value),
-    vidroKg: toNumberBR(els.editVidroKg?.value),
-    aluminioMetalKg: toNumberBR(els.editAluminioMetalKg?.value),
-    sacariaKg: toNumberBR(els.editSacariaKg?.value),
-    papelMistoKg: toNumberBR(els.editPapelMistoKg?.value),
-    papelaoKg: toNumberBR(els.editPapelaoKg?.value),
-    isoporKg: toNumberBR(els.editIsoporKg?.value),
-    oleoKg: toNumberBR(els.editOleoKg?.value),
+    rejeito: toNumber(els.editRejeito?.value),
+    rejeitoKg: toNumber(els.editRejeito?.value),
+    naoComercializado: toNumber(els.editNaoComercializado?.value),
+    naoComercializadoKg: toNumber(els.editNaoComercializado?.value),
+    plasticoKg: toNumber(els.editPlasticoKg?.value),
+    vidroKg: toNumber(els.editVidroKg?.value),
+    aluminioMetalKg: toNumber(els.editAluminioMetalKg?.value),
+    sacariaKg: toNumber(els.editSacariaKg?.value),
+    papelMistoKg: toNumber(els.editPapelMistoKg?.value),
+    papelaoKg: toNumber(els.editPapelaoKg?.value),
+    isoporKg: toNumber(els.editIsoporKg?.value),
+    oleoKg: toNumber(els.editOleoKg?.value),
     observacao: els.editObs?.value || "",
     status: "editado",
     updatedAt: serverTimestamp()
@@ -1974,7 +2047,6 @@ async function saveEdit() {
   await updateDoc(doc(db, "coletas", activeEditId), payload);
 
   closeModal("editModal");
-
   activeEditId = null;
 }
 
@@ -2011,21 +2083,21 @@ function initMap() {
     .bindPopup("Cooperativa");
 }
 
-function renderCollectionPoints(items) {
+function renderCollectionPoints(items = []) {
   if (!els.collectionPointsGrid) return;
 
   const pointsMap = new Map();
 
   items.filter(isActiveCollection).forEach((item) => {
-    const p = resolveParticipant(item);
+    const participant = resolveParticipant(item);
 
-    if (!p.lat || !p.lng) return;
+    if (!participant.lat || !participant.lng) return;
 
-    const key = p.code || p.name;
+    const key = participant.code || participant.name;
 
     if (!pointsMap.has(key)) {
       pointsMap.set(key, {
-        ...p,
+        ...participant,
         count: 0
       });
     }
@@ -2036,21 +2108,25 @@ function renderCollectionPoints(items) {
   const points = Array.from(pointsMap.values());
 
   if (!points.length) {
-    els.collectionPointsGrid.innerHTML = `<div class="empty-materials">Nenhum ponto com coordenadas localizado.</div>`;
+    els.collectionPointsGrid.innerHTML = `
+      <div class="empty-materials">
+        Nenhum ponto com coordenadas localizado.
+      </div>
+    `;
   } else {
-    els.collectionPointsGrid.innerHTML = points.map((p) => `
-      <button type="button" class="point-card" data-route-code="${escapeHtml(p.code)}">
-        <span class="point-code">${escapeHtml(p.code)}</span>
-        <h4>${escapeHtml(p.name)}</h4>
-        <div class="point-address">${escapeHtml(p.address || p.localColeta || "Sem endereço informado")}</div>
+    els.collectionPointsGrid.innerHTML = points.map((point) => `
+      <button type="button" class="point-card" data-route-code="${escapeHtml(point.code)}">
+        <span class="point-code">${escapeHtml(point.code)}</span>
+        <h4>${escapeHtml(point.name)}</h4>
+        <div class="point-address">${escapeHtml(point.address || "Sem endereço informado")}</div>
         <div class="point-meta">
-          <span class="point-chip">${p.count} coleta(s)</span>
+          <span class="point-chip">${point.count} coleta(s)</span>
         </div>
       </button>
     `).join("");
   }
 
-  if (!routeMap || !routeMarkersLayer) return;
+  if (!routeMap || !routeMarkersLayer || typeof L === "undefined") return;
 
   routeMarkersLayer.clearLayers();
 
@@ -2060,16 +2136,16 @@ function renderCollectionPoints(items) {
     .addTo(routeMarkersLayer)
     .bindPopup("Cooperativa");
 
-  points.forEach((p) => {
-    L.marker([p.lat, p.lng])
+  points.forEach((point) => {
+    L.marker([point.lat, point.lng])
       .addTo(routeMarkersLayer)
-      .bindPopup(`${p.name}<br>${p.code}`);
+      .bindPopup(`${point.name}<br>${point.code}`);
   });
 
   if (points.length) {
     const bounds = L.latLngBounds([
       [base.lat, base.lng],
-      ...points.map((p) => [p.lat, p.lng])
+      ...points.map((point) => [point.lat, point.lng])
     ]);
 
     routeMap.fitBounds(bounds, {
@@ -2079,7 +2155,9 @@ function renderCollectionPoints(items) {
 }
 
 function renderRouteToPoint(code) {
-  const point = Array.from(participantsMap.values()).find((p) => String(p.participantCode) === String(code));
+  const point = Array.from(participantsMap.values()).find((participant) => {
+    return String(participant.code) === String(code);
+  });
 
   if (!point || !point.lat || !point.lng || !routeMap || typeof L === "undefined") return;
 
@@ -2091,7 +2169,7 @@ function renderRouteToPoint(code) {
   }
 
   if (els.routeOriginLabel) els.routeOriginLabel.textContent = "Cooperativa";
-  if (els.routeDestLabel) els.routeDestLabel.textContent = `${point.name} • ${point.participantCode}`;
+  if (els.routeDestLabel) els.routeDestLabel.textContent = `${point.name} • ${point.code}`;
   if (els.routeDistanceLabel) els.routeDistanceLabel.textContent = "calculando…";
   if (els.routeTimeLabel) els.routeTimeLabel.textContent = "calculando…";
 
@@ -2133,7 +2211,7 @@ function getExportBaseItems() {
     : filteredColetas;
 }
 
-function getExportRows(items) {
+function getExportRows(items = []) {
   return items.map((item) => {
     const participant = resolveParticipant(item);
 
@@ -2143,19 +2221,16 @@ function getExportRows(items) {
       Código: participant.code || "—",
       Fluxo: formatFluxoLabel(inferFluxo(item)),
       Entrega: inferEntrega(item),
-      Território: inferTerritorio(item),
-      Tipo: participant.type || "—",
       Status: resolveHumanStatus(item),
       "Reciclável kg": Number(inferTotalReciclavelRegistro(item) || 0),
       "Rejeito kg": Number(inferTotalRejeitoRegistro(item) || 0),
-      "Não reciclável kg": Number(inferRejeitoNaoReciclavel(item) || 0),
       "Não comercializado kg": Number(inferNaoComercializado(item) || 0),
-      Qualidade: getQualidade(item) || "—",
+      Qualidade: inferQualidade(item) || "—",
       Observação: inferObservacao(item) || ""
     };
 
     MATERIAL_META.forEach((mat) => {
-      row[mat.label] = Number(getMaterialValue(item, mat.key) || 0);
+      row[mat.label] = Number(inferMaterialValue(item, mat.key) || 0);
     });
 
     return row;
@@ -2224,7 +2299,7 @@ async function exportPDF() {
 }
 
 /* =========================
-   MODAIS
+   MODAIS / EVENTOS
 ========================= */
 
 function closeModal(id) {
@@ -2236,10 +2311,6 @@ function closeModal(id) {
   modal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
 }
-
-/* =========================
-   EVENTOS
-========================= */
 
 function bindEvents() {
   els.btnAplicar?.addEventListener("click", applyFilters);
@@ -2278,7 +2349,7 @@ function bindEvents() {
     }
   });
 
-  document.addEventListener("click", async (event) => {
+  document.addEventListener("click", (event) => {
     const closeBtn = event.target.closest("[data-close]");
 
     if (closeBtn) {
@@ -2322,6 +2393,7 @@ function bindEvents() {
 
 function boot() {
   bindEvents();
+  setupTablePagination();
   initMap();
 
   const yearEl = document.getElementById("year");
