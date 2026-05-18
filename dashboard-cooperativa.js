@@ -13,37 +13,163 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
+/* =========================================================
+   DASHBOARD COOPERATIVA • NSRU
+   JS COMPLETO • FIREBASE + FILTROS + GRÁFICOS + TABELA
+   Atualizado com:
+   - correção do formatFluxoLabel
+   - datas Firebase Timestamp
+   - filtro de território mais tolerante
+   - materiais SVG
+   - tabela paginada de 10 em 10
+   - proteção contra erros de renderização
+========================================================= */
+
 /* =========================
-   CONFIG
+   CONFIGURAÇÕES
 ========================= */
 
 const MATERIAL_META = [
-  { key: "plasticoKg", label: "Plástico", price: 1.92, color: "#2E7D32", icon: "plastico" },
-  { key: "vidroKg", label: "Vidro", price: 0.08, color: "#0288D1", icon: "vidro" },
-  { key: "aluminioMetalKg", label: "Metal / Alumínio", price: 2.9, color: "#757575", icon: "metal" },
-  { key: "sacariaKg", label: "Sacaria", price: 0.12, color: "#8D6E63", icon: "sacaria" },
-  { key: "papelMistoKg", label: "Papel misto", price: 0.66, color: "#1565C0", icon: "papel" },
-  { key: "papelaoKg", label: "Papelão", price: 0.52, color: "#A65A2A", icon: "papelao" },
-  { key: "isoporKg", label: "Isopor", price: 0.4, color: "#00ACC1", icon: "isopor" },
-  { key: "oleoKg", label: "Óleo de cozinha", price: 1.5, color: "#C79200", icon: "oleo", isSpecial: true }
+  {
+    key: "plasticoKg",
+    label: "Plástico",
+    price: 1.92,
+    color: "#2E7D32",
+    icon: "plastico"
+  },
+  {
+    key: "vidroKg",
+    label: "Vidro",
+    price: 0.08,
+    color: "#0288D1",
+    icon: "vidro"
+  },
+  {
+    key: "aluminioMetalKg",
+    label: "Metal / Alumínio",
+    price: 2.9,
+    color: "#757575",
+    icon: "metal"
+  },
+  {
+    key: "sacariaKg",
+    label: "Sacaria",
+    price: 0.12,
+    color: "#8D6E63",
+    icon: "sacaria"
+  },
+  {
+    key: "papelMistoKg",
+    label: "Papel misto",
+    price: 0.66,
+    color: "#1565C0",
+    icon: "papel"
+  },
+  {
+    key: "papelaoKg",
+    label: "Papelão",
+    price: 0.52,
+    color: "#A65A2A",
+    icon: "papelao"
+  },
+  {
+    key: "isoporKg",
+    label: "Isopor",
+    price: 0.4,
+    color: "#00ACC1",
+    icon: "isopor"
+  },
+  {
+    key: "oleoKg",
+    label: "Óleo de cozinha",
+    price: 1.5,
+    color: "#C79200",
+    icon: "oleo",
+    isSpecial: true
+  }
 ];
 
 const MATERIAL_ALIASES = {
-  plasticoKg: ["plasticoKg", "plastico", "pesoPlasticoKg", "plasticoPesoKg"],
-  vidroKg: ["vidroKg", "vidro", "pesoVidroKg", "vidroPesoKg"],
-  aluminioMetalKg: ["aluminioMetalKg", "metalKg", "aluminioKg", "metalAluminioKg", "pesoMetalKg", "pesoAluminioKg"],
-  sacariaKg: ["sacariaKg", "sacaria", "pesoSacariaKg"],
-  papelMistoKg: ["papelMistoKg", "papelKg", "papelMisto", "pesoPapelMistoKg", "pesoPapelKg"],
-  papelaoKg: ["papelaoKg", "papelao", "papelãoKg", "pesoPapelaoKg"],
-  isoporKg: ["isoporKg", "isopor", "pesoIsoporKg"],
-  oleoKg: ["oleoKg", "oleo", "óleoKg", "oleoCozinhaKg", "oleoDeCozinhaKg", "litrosOleo", "oleoLitros"]
+  plasticoKg: [
+    "plasticoKg",
+    "plastico",
+    "plástico",
+    "pesoPlasticoKg",
+    "pesoPlásticoKg",
+    "plasticoPesoKg",
+    "plastico_total",
+    "plasticoTotal"
+  ],
+  vidroKg: [
+    "vidroKg",
+    "vidro",
+    "pesoVidroKg",
+    "vidroPesoKg",
+    "vidro_total",
+    "vidroTotal"
+  ],
+  aluminioMetalKg: [
+    "aluminioMetalKg",
+    "aluminioKg",
+    "alumínioKg",
+    "metalKg",
+    "metal",
+    "aluminio",
+    "alumínio",
+    "metalAluminioKg",
+    "metalAlumínioKg",
+    "pesoMetalKg",
+    "pesoAluminioKg",
+    "pesoAlumínioKg"
+  ],
+  sacariaKg: [
+    "sacariaKg",
+    "sacaria",
+    "pesoSacariaKg"
+  ],
+  papelMistoKg: [
+    "papelMistoKg",
+    "papelMisto",
+    "papelKg",
+    "papel",
+    "pesoPapelMistoKg",
+    "pesoPapelKg"
+  ],
+  papelaoKg: [
+    "papelaoKg",
+    "papelãoKg",
+    "papelao",
+    "papelão",
+    "pesoPapelaoKg",
+    "pesoPapelãoKg"
+  ],
+  isoporKg: [
+    "isoporKg",
+    "isopor",
+    "pesoIsoporKg"
+  ],
+  oleoKg: [
+    "oleoKg",
+    "óleoKg",
+    "oleo",
+    "óleo",
+    "oleoCozinhaKg",
+    "óleoCozinhaKg",
+    "oleoDeCozinhaKg",
+    "óleoDeCozinhaKg",
+    "litrosOleo",
+    "litrosÓleo",
+    "oleoLitros",
+    "óleoLitros"
+  ]
 };
 
 const CHART_COLORS = {
   blue: "#53ACDE",
   green: "#81B92A",
   orange: "#EF6B22",
-  dark: "#3C3A39"
+  dark: "#3C3A39",
+  muted: "#94A3B8"
 };
 
 const COOP_BASES = {
@@ -52,6 +178,10 @@ const COOP_BASES = {
     lng: -51.15652604283108
   },
   cooadesc: {
+    lat: -30.003,
+    lng: -51.206
+  },
+  coadesc: {
     lat: -30.003,
     lng: -51.206
   },
@@ -125,8 +255,8 @@ const els = {
 
   materialCards: document.getElementById("materialCards"),
   collectionPointsGrid: document.getElementById("collectionPointsGrid"),
-  tableColetasBody: document.getElementById("tableColetasBody"),
 
+  tableColetasBody: document.getElementById("tableColetasBody"),
   tableVisibleCount: document.getElementById("tableVisibleCount"),
   tableFilteredCount: document.getElementById("tableFilteredCount"),
   tableLastUpdate: document.getElementById("tableLastUpdate"),
@@ -139,8 +269,9 @@ const els = {
   btnApplyTableFilters: document.getElementById("btnApplyTableFilters"),
   btnClearTableFilters: document.getElementById("btnClearTableFilters"),
 
-  photoModal: document.getElementById("photoModal"),
-  photoModalImg: document.getElementById("photoModalImg"),
+  btnPrevColetas: document.getElementById("btnPrevColetas"),
+  btnNextColetas: document.getElementById("btnNextColetas"),
+  tablePageIndicator: document.getElementById("tablePageIndicator"),
 
   routeOriginLabel: document.getElementById("routeOriginLabel"),
   routeDestLabel: document.getElementById("routeDestLabel"),
@@ -155,6 +286,7 @@ const els = {
   editQualidade: document.getElementById("editQualidade"),
   editRejeito: document.getElementById("editRejeito"),
   editNaoComercializado: document.getElementById("editNaoComercializado"),
+
   editPlasticoKg: document.getElementById("editPlasticoKg"),
   editVidroKg: document.getElementById("editVidroKg"),
   editAluminioMetalKg: document.getElementById("editAluminioMetalKg"),
@@ -163,6 +295,7 @@ const els = {
   editPapelaoKg: document.getElementById("editPapelaoKg"),
   editIsoporKg: document.getElementById("editIsoporKg"),
   editOleoKg: document.getElementById("editOleoKg"),
+
   editObs: document.getElementById("editObs"),
   btnSaveEdit: document.getElementById("btnSaveEdit")
 };
@@ -194,12 +327,11 @@ let routeMarkersLayer = null;
 let activeUnsubscribe = null;
 let activeParticipantsUnsubscribe = null;
 
-/* Paginação da Seção 6 */
 let tablePage = 0;
 const tablePageSize = 10;
 
 /* =========================
-   UTILS
+   UTILITÁRIOS GERAIS
 ========================= */
 
 function normalizeText(value) {
@@ -212,96 +344,13 @@ function normalizeText(value) {
 
 function normalizeTerritory(value) {
   return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/_/g, "-")
-    .replace(/\s+/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/--+/g, "-")
     .trim();
-}
-
-function getTerritoryAliases(value) {
-  const v = normalizeTerritory(value);
-
-  if (v === "vila-pinto" || v === "crgr-vila-pinto") {
-    return ["vila-pinto", "crgr-vila-pinto"];
-  }
-
-  if (["cooadesc", "coadesc", "crgr-cooadesc", "crgr-coadesc"].includes(v)) {
-    return ["cooadesc", "coadesc", "crgr-cooadesc", "crgr-coadesc"];
-  }
-
-  if (v === "padre-cacique" || v === "crgr-padre-cacique") {
-    return ["padre-cacique", "crgr-padre-cacique"];
-  }
-
-  return v ? [v] : [];
-}
-
-function sameTerritoryValue(a, b) {
-  return getTerritoryAliases(b).includes(normalizeTerritory(a));
-}
-
-function resolvePageTerritory(profile) {
-  const bodyTerritory = normalizeTerritory(document.body?.dataset?.territoryId || "");
-  const urlTerritory = normalizeTerritory(new URLSearchParams(window.location.search).get("territory") || "");
-  const userTerritory = normalizeTerritory(profile?.territoryId || "");
-
-  return bodyTerritory || urlTerritory || userTerritory || "vila-pinto";
-}
-
-function itemBelongsToPageTerritory(item = {}) {
-  const aliases = getTerritoryAliases(pageTerritoryId);
-
-  if (!aliases.length) return true;
-
-  const code = String(
-    item.participantCode ||
-    item.codigoParticipante ||
-    item.codigo ||
-    item.familyCode ||
-    item.code ||
-    item.payloadSnapshot?.participantCode ||
-    item.payloadSnapshot?.codigoParticipante ||
-    item.payloadSnapshot?.familyCode ||
-    ""
-  ).trim().toUpperCase();
-
-  const territoryFields = [
-    item.territoryId,
-    item.territory,
-    item.territorio,
-    item.cooperativeId,
-    item.cooperativaId,
-    item.cooperativeName,
-    item.cooperativa,
-    item.localCrgr,
-    item.crgr,
-    item.payloadSnapshot?.territoryId,
-    item.payloadSnapshot?.territory,
-    item.payloadSnapshot?.territorio,
-    item.payloadSnapshot?.cooperativeId,
-    item.payloadSnapshot?.cooperativaId,
-    item.payloadSnapshot?.cooperativa,
-    item.payloadSnapshot?.localCrgr,
-    item.payloadSnapshot?.crgr
-  ].filter(Boolean);
-
-  if (territoryFields.some((value) => aliases.includes(normalizeTerritory(value)))) {
-    return true;
-  }
-
-  if (aliases.includes("vila-pinto")) {
-    return code.startsWith("VPD") || code.startsWith("C") || code.startsWith("F");
-  }
-
-  if (aliases.includes("cooadesc") || aliases.includes("coadesc")) {
-    return code.startsWith("COA") || code.startsWith("COO");
-  }
-
-  if (aliases.includes("padre-cacique")) {
-    return code.startsWith("PC") || code.startsWith("PCA") || code.startsWith("PDC");
-  }
-
-  return false;
 }
 
 function escapeHtml(value) {
@@ -311,32 +360,6 @@ function escapeHtml(value) {
     .replaceAll(">", "&gt;")
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
-}
-
-function formatDateBR(value) {
-  if (!value) return "—";
-
-  try {
-    const date = typeof value === "string" ? new Date(`${value}T12:00:00`) : value;
-    return new Intl.DateTimeFormat("pt-BR").format(date);
-  } catch {
-    return "—";
-  }
-}
-
-function formatDateTimeBR(value) {
-  if (!value) return "—";
-
-  try {
-    const date = typeof value === "string" ? new Date(value) : value;
-
-    return new Intl.DateTimeFormat("pt-BR", {
-      dateStyle: "short",
-      timeStyle: "short"
-    }).format(date);
-  } catch {
-    return "—";
-  }
 }
 
 function formatNumber(value) {
@@ -356,97 +379,370 @@ function formatMoneyBR(value) {
     currency: "BRL"
   });
 }
-function toNumber(value) {
 
+function toNumber(value) {
   if (typeof value === "number") {
-    return Number.isFinite(value)
-      ? value
-      : 0;
+    return Number.isFinite(value) ? value : 0;
   }
 
-  if (
-    value === null ||
-    value === undefined ||
-    value === ""
-  ) {
+  if (value === null || value === undefined || value === "") {
     return 0;
   }
 
+  const text = String(value)
+    .trim()
+    .replace(/\s/g, "")
+    .replace(/kg|kgs|quilo|quilos|litros?|l|r\$/gi, "");
+
+  const normalized = text.includes(",")
+    ? text.replace(/\./g, "").replace(",", ".")
+    : text;
+
   const parsed = Number(
-    String(value)
-      .replace(/\./g, "")
-      .replace(",", ".")
-      .replace(/[^\d.-]/g, "")
+    normalized.replace(/[^\d.-]/g, "")
   );
 
-  return Number.isFinite(parsed)
-    ? parsed
-    : 0;
+  return Number.isFinite(parsed) ? parsed : 0;
 }
 
-function sumAliases(obj, aliases = []) {
+function firstNumber(...values) {
+  for (const value of values) {
+    const parsed = toNumber(value);
 
-  return aliases.reduce(
-    (acc, key) =>
-      acc + toNumber(obj?.[key]),
-    0
-  );
+    if (parsed !== 0) {
+      return parsed;
+    }
+  }
+
+  return 0;
 }
 
-function inferDateISO(item = {}) {
+function firstText(...values) {
+  for (const value of values) {
+    const text = String(value ?? "").trim();
 
-  const candidates = [
-    item.dataColeta,
-    item.date,
-    item.data,
-    item.createdAtISO,
-    item.createdAt?.toDate?.()?.toISOString?.(),
-    item.payloadSnapshot?.dataColeta,
-    item.payloadSnapshot?.date
-  ];
-
-  for (const candidate of candidates) {
-
-    if (!candidate) continue;
-
-    const parsed =
-      candidate instanceof Date
-        ? candidate
-        : new Date(candidate);
-
-    if (!Number.isNaN(parsed.getTime())) {
-
-      return parsed
-        .toISOString()
-        .slice(0, 10);
+    if (text) {
+      return text;
     }
   }
 
   return "";
 }
 
-function inferDateObject(item = {}) {
+function firstFinite(...values) {
+  for (const value of values) {
+    const number = Number(value);
 
-  const iso =
-    inferDateISO(item);
+    if (Number.isFinite(number)) {
+      return number;
+    }
+  }
 
-  return iso
-    ? new Date(`${iso}T12:00:00`)
-    : null;
+  return null;
 }
 
-function inferFluxo(item = {}) {
+function dateToDateObject(value) {
+  if (!value) return null;
 
-  const raw = normalizeText(
-    item.flowType ||
-    item.fluxo ||
-    item.tipoFluxo ||
-    item.payloadSnapshot?.flowType
-  );
+  if (typeof value?.toDate === "function") {
+    const date = value.toDate();
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  if (value instanceof Date) {
+    return Number.isNaN(value.getTime()) ? null : value;
+  }
+
+  if (typeof value === "number") {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const raw = String(value).trim();
+
+  if (!raw) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(raw)) {
+    const date = new Date(`${raw}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  const parsed = new Date(raw);
+
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed;
+  }
+
+  const brMatch = raw.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+
+  if (brMatch) {
+    const [, dd, mm, yyyy] = brMatch;
+    const date = new Date(`${yyyy}-${mm}-${dd}T12:00:00`);
+    return Number.isNaN(date.getTime()) ? null : date;
+  }
+
+  return null;
+}
+
+function dateToISO(value) {
+  const date = dateToDateObject(value);
+
+  if (!date) return "";
+
+  return date.toISOString().slice(0, 10);
+}
+
+function inferDateObject(item = {}) {
+  const candidates = [
+    item.opDate,
+    item.dataOperacao,
+    item.operationDate,
+    item.dataColeta,
+    item.coletaData,
+    item.dateColeta,
+    item.date,
+    item.data,
+    item.createdAt,
+    item.updatedAt,
+    item.createdAtISO,
+    item.payloadSnapshot?.opDate,
+    item.payloadSnapshot?.dataOperacao,
+    item.payloadSnapshot?.operationDate,
+    item.payloadSnapshot?.dataColeta,
+    item.payloadSnapshot?.coletaData,
+    item.payloadSnapshot?.date,
+    item.payloadSnapshot?.data,
+    item.recebimento?.dataColeta,
+    item.finalTurno?.dataColeta
+  ];
+
+  for (const candidate of candidates) {
+    const date = dateToDateObject(candidate);
+
+    if (date) return date;
+  }
+
+  return null;
+}
+
+function inferDateISO(item = {}) {
+  const date = inferDateObject(item);
+  return date ? date.toISOString().slice(0, 10) : "";
+}
+
+function formatDateBR(value) {
+  const date = typeof value === "string" && /^\d{4}-\d{2}-\d{2}$/.test(value)
+    ? new Date(`${value}T12:00:00`)
+    : dateToDateObject(value);
+
+  if (!date) return "—";
+
+  return new Intl.DateTimeFormat("pt-BR").format(date);
+}
+
+function formatDateTimeBR(value) {
+  const date = dateToDateObject(value);
+
+  if (!date) return "—";
+
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  }).format(date);
+}
+
+function setDbStatus(text) {
+  if (els.dbStatus) {
+    els.dbStatus.textContent = text;
+  }
+}
+
+/* =========================
+   TERRITÓRIO
+========================= */
+
+function getTerritoryAliases(value) {
+  const v = normalizeTerritory(value);
+
+  if (!v) return [];
 
   if (
-    raw.includes("final") ||
-    raw.includes("turno")
+    v === "vila-pinto" ||
+    v === "crgr-vila-pinto" ||
+    v === "vp"
+  ) {
+    return [
+      "vila-pinto",
+      "crgr-vila-pinto",
+      "vp",
+      "vila pinto"
+    ];
+  }
+
+  if (
+    v === "cooadesc" ||
+    v === "coadesc" ||
+    v === "crgr-cooadesc" ||
+    v === "crgr-coadesc"
+  ) {
+    return [
+      "cooadesc",
+      "coadesc",
+      "crgr-cooadesc",
+      "crgr-coadesc"
+    ];
+  }
+
+  if (
+    v === "padre-cacique" ||
+    v === "crgr-padre-cacique" ||
+    v === "padre"
+  ) {
+    return [
+      "padre-cacique",
+      "crgr-padre-cacique",
+      "padre",
+      "padre cacique"
+    ];
+  }
+
+  return [v];
+}
+
+function resolvePageTerritory(profile = {}) {
+  const bodyTerritory = normalizeTerritory(
+    document.body?.dataset?.territoryId || ""
+  );
+
+  const urlTerritory = normalizeTerritory(
+    new URLSearchParams(window.location.search).get("territory") || ""
+  );
+
+  const profileTerritory = normalizeTerritory(
+    profile.territoryId ||
+    profile.territory ||
+    profile.cooperativeId ||
+    ""
+  );
+
+  return bodyTerritory || urlTerritory || profileTerritory || "vila-pinto";
+}
+
+function itemBelongsToPageTerritory(item = {}) {
+  const aliases = getTerritoryAliases(pageTerritoryId);
+
+  if (!aliases.length) return true;
+
+  const code = String(
+    item.participantCode ||
+    item.codigoParticipante ||
+    item.codigo ||
+    item.familyCode ||
+    item.code ||
+    item.payloadSnapshot?.participantCode ||
+    item.payloadSnapshot?.codigoParticipante ||
+    item.payloadSnapshot?.familyCode ||
+    item.recebimento?.participantCode ||
+    item.finalTurno?.participantCode ||
+    ""
+  ).trim().toUpperCase();
+
+  const territoryFields = [
+    item.territoryId,
+    item.territory,
+    item.territorio,
+    item.territoryLabel,
+    item.cooperativeId,
+    item.cooperativaId,
+    item.cooperativeName,
+    item.cooperativa,
+    item.localCrgr,
+    item.crgr,
+    item.payloadSnapshot?.territoryId,
+    item.payloadSnapshot?.territory,
+    item.payloadSnapshot?.territorio,
+    item.payloadSnapshot?.territoryLabel,
+    item.payloadSnapshot?.cooperativeId,
+    item.payloadSnapshot?.cooperativaId,
+    item.payloadSnapshot?.cooperativa,
+    item.payloadSnapshot?.localCrgr,
+    item.payloadSnapshot?.crgr
+  ].filter(Boolean);
+
+  const hasTerritoryMatch = territoryFields.some((field) => {
+    const normalized = normalizeTerritory(field);
+    return aliases.includes(normalized);
+  });
+
+  if (hasTerritoryMatch) return true;
+
+  if (aliases.includes("vila-pinto")) {
+    return (
+      code.startsWith("VPD") ||
+      code.startsWith("VP") ||
+      code.startsWith("C") ||
+      code.startsWith("F")
+    );
+  }
+
+  if (aliases.includes("cooadesc") || aliases.includes("coadesc")) {
+    return (
+      code.startsWith("COA") ||
+      code.startsWith("COO") ||
+      code.startsWith("CD")
+    );
+  }
+
+  if (aliases.includes("padre-cacique")) {
+    return (
+      code.startsWith("PC") ||
+      code.startsWith("PCA") ||
+      code.startsWith("PDC")
+    );
+  }
+
+  /*
+    Fallback de segurança:
+    se o documento não tem território nem código reconhecido,
+    não bloqueia a renderização. Isso evita tela vazia por falta
+    de padronização nos documentos antigos.
+  */
+  if (!territoryFields.length && !code) {
+    return true;
+  }
+
+  return false;
+}
+
+/* =========================
+   FLUXO / ENTREGA / STATUS
+========================= */
+
+function inferFluxo(item = {}) {
+  const raw = firstText(
+    item.flowType,
+    item.fluxo,
+    item.tipoFluxo,
+    item.tipoColeta,
+    item.tipoRecebimento,
+    item.receiptType,
+    item.payloadSnapshot?.flowType,
+    item.payloadSnapshot?.fluxo,
+    item.payloadSnapshot?.tipoFluxo,
+    item.payloadSnapshot?.tipoColeta,
+    item.payloadSnapshot?.tipoRecebimento,
+    item.recebimento?.flowType,
+    item.recebimento?.fluxo,
+    item.finalTurno?.flowType,
+    item.finalTurno?.fluxo
+  );
+
+  const normalized = normalizeText(raw).replaceAll("-", "_");
+
+  if (
+    normalized.includes("final") ||
+    normalized.includes("turno") ||
+    normalized === "final_turno"
   ) {
     return "final_turno";
   }
@@ -454,614 +750,277 @@ function inferFluxo(item = {}) {
   return "recebimento";
 }
 
-function inferEntrega(item = {}) {
+function formatFluxoLabel(value) {
+  const normalized = normalizeText(value).replaceAll("-", "_");
 
-  return normalizeText(
-    item.deliveryType ||
-    item.entrega ||
-    item.tipoEntrega ||
-    item.payloadSnapshot?.deliveryType ||
-    "normal"
+  if (normalized === "final_turno") return "Final do turno";
+  if (normalized === "recebimento") return "Recebimento";
+
+  return value || "Recebimento";
+}
+
+function inferEntrega(item = {}) {
+  const raw = firstText(
+    item.deliveryType,
+    item.entrega,
+    item.tipoEntrega,
+    item.payloadSnapshot?.deliveryType,
+    item.payloadSnapshot?.entrega,
+    item.payloadSnapshot?.tipoEntrega,
+    item.recebimento?.deliveryType,
+    item.recebimento?.entrega,
+    item.finalTurno?.deliveryType,
+    item.finalTurno?.entrega
   );
+
+  return raw || "Normal";
+}
+
+function inferEntregaKey(item = {}) {
+  return normalizeText(inferEntrega(item));
 }
 
 function inferObservacao(item = {}) {
-
-  return (
-    item.observacao ||
-    item.obs ||
-    item.notes ||
-    item.payloadSnapshot?.observacao ||
-    ""
+  return firstText(
+    item.observacao,
+    item.obs,
+    item.notes,
+    item.anotacao,
+    item.payloadSnapshot?.observacao,
+    item.payloadSnapshot?.obs,
+    item.recebimento?.observacao,
+    item.finalTurno?.observacao
   );
 }
 
 function getStatus(item = {}) {
-
-  return (
-    item.status ||
-    item.situacao ||
-    item.state ||
+  return firstText(
+    item.status,
+    item.situacao,
+    item.state,
+    item.coletaStatus,
+    item.decision,
+    item.approvalStatus,
     "ativo"
   );
 }
 
 function resolveHumanStatus(item = {}) {
+  const raw = normalizeText(getStatus(item));
 
-  const raw =
-    normalizeText(getStatus(item));
-
-  if (
-    raw.includes("cancel")
-  ) {
-    return "Cancelado";
-  }
-
-  if (
-    raw.includes("edit")
-  ) {
-    return "Editado";
-  }
+  if (raw.includes("cancel")) return "Cancelado";
+  if (raw.includes("edit")) return "Editado";
+  if (raw.includes("pend")) return "Pendente";
+  if (raw.includes("reje") || raw.includes("reject")) return "Rejeitado";
 
   return "Ativo";
 }
 
 function isActiveCollection(item = {}) {
+  const status = normalizeText(getStatus(item));
 
-  const status =
-    normalizeText(
-      getStatus(item)
-    );
-
-  return !(
-    status.includes("cancel")
-  );
+  return ![
+    "cancelado",
+    "cancelada",
+    "rejeitado",
+    "rejeitada",
+    "rejected",
+    "rascunho",
+    "draft"
+  ].includes(status);
 }
 
-function resolveParticipant(item = {}) {
-
-  const code = String(
-    item.participantCode ||
-    item.codigoParticipante ||
-    item.codigo ||
-    item.familyCode ||
-    item.payloadSnapshot?.participantCode ||
-    ""
-  ).trim();
-
-  const participant =
-    participantsMap.get(code);
-
-  return {
-    code,
-    name:
-      participant?.name ||
-      item.participantName ||
-      item.nomeParticipante ||
-      item.payloadSnapshot?.participantName ||
-      "Participante",
-
-    type:
-      participant?.type ||
-      item.participantType ||
-      "participante",
-
-    address:
-      participant?.address ||
-      item.enderecoCompleto ||
-      item.payloadSnapshot?.enderecoCompleto ||
-      "",
-
-    lat:
-      participant?.lat ||
-      item.lat ||
-      item.payloadSnapshot?.lat ||
-      null,
-
-    lng:
-      participant?.lng ||
-      item.lng ||
-      item.payloadSnapshot?.lng ||
-      null
-  };
-}
-
-function inferMaterialValue(
-  item,
-  key
-) {
-
-  const aliases =
-    MATERIAL_ALIASES[key] || [];
-
-  let total = 0;
-
-  aliases.forEach((alias) => {
-
-    total +=
-      toNumber(item?.[alias]);
-
-    total +=
-      toNumber(
-        item?.payloadSnapshot?.[alias]
-      );
-
-    total +=
-      toNumber(
-        item?.materials?.[alias]
-      );
-
-    total +=
-      toNumber(
-        item?.payloadSnapshot?.materials?.[alias]
-      );
-  });
-
-  return total;
-}
-
-function inferTotalReciclavelRegistro(
-  item
-) {
-
-  return MATERIAL_META.reduce(
-    (acc, material) => {
-
-      if (
-        material.key === "oleoKg"
-      ) {
-        return acc;
-      }
-
-      return (
-        acc +
-        inferMaterialValue(
-          item,
-          material.key
-        )
-      );
-    },
-    0
-  );
-}
-
-function inferTotalRejeitoRegistro(
-  item
-) {
-
-  return (
-    toNumber(item.rejeitoKg) +
-    toNumber(item.rejeito) +
-    toNumber(item.payloadSnapshot?.rejeitoKg)
-  );
-}
-
-function inferNaoComercializado(
-  item
-) {
-
-  return (
-    toNumber(item.naoComercializadoKg) +
-    toNumber(item.naoComercializado) +
-    toNumber(
-      item.payloadSnapshot?.naoComercializadoKg
-    )
-  );
-}
-
-function inferQualidade(item) {
-
-  return (
-    toNumber(item.qualidade) ||
-    toNumber(item.qualidadeMedia) ||
-    toNumber(
-      item.payloadSnapshot?.qualidade
-    ) ||
-    0
-  );
-}
-
-/* =========================
-   STATUS BADGE
-========================= */
-
-function statusBadge(item) {
-
-  const status =
-    resolveHumanStatus(item);
-
-  const cls =
-    normalizeText(status);
+function statusBadge(item = {}) {
+  const status = resolveHumanStatus(item);
+  const cls = normalizeText(status);
 
   return `
-    <span class="
-      status-badge
-      ${cls}
-    ">
+    <span class="status-badge ${cls}">
       ${escapeHtml(status)}
     </span>
   `;
 }
-
 /* =========================
-   SVG MATERIAIS
+   PARTICIPANTES
 ========================= */
 
-function getMaterialSVG(icon) {
+function extractLatLngFromSource(source = {}) {
+  if (!source || typeof source !== "object") {
+    return {
+      lat: null,
+      lng: null
+    };
+  }
 
-  const icons = {
+  const lat = firstFinite(
+    source.lat,
+    source.latitude,
+    source.coords?.lat,
+    source.coords?.latitude,
+    source.location?.lat,
+    source.location?.latitude,
+    source.address?.lat,
+    source.address?.latitude,
+    source.geo?.lat,
+    source.geo?.latitude,
+    source.payloadSnapshot?.lat,
+    source.payloadSnapshot?.latitude
+  );
 
-    plastico: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M8 3H16L18 8V21H6V8L8 3Z" stroke="currentColor" stroke-width="1.8"/>
-        <path d="M9 8H15" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `,
-
-    vidro: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M9 2H15V6L17 10V21H7V10L9 6V2Z" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `,
-
-    metal: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M4 7L12 3L20 7V17L12 21L4 17V7Z" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `,
-
-    papel: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M7 3H14L18 7V21H7V3Z" stroke="currentColor" stroke-width="1.8"/>
-        <path d="M14 3V7H18" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `,
-
-    papelao: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M3 7L12 3L21 7V17L12 21L3 17V7Z" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `,
-
-    sacaria: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M9 3H15L13 6H11L9 3Z" stroke="currentColor" stroke-width="1.8"/>
-        <path d="M7 6H17L19 11L16 21H8L5 11L7 6Z" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `,
-
-    isopor: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `,
-
-    oleo: `
-      <svg viewBox="0 0 24 24" fill="none">
-        <path d="M12 3C12 3 7 9 7 13A5 5 0 0 0 17 13C17 9 12 3 12 3Z" stroke="currentColor" stroke-width="1.8"/>
-      </svg>
-    `
-  };
-
-  return icons[icon] || icons.plastico;
-}
-
-/* =========================
-   FILTROS
-========================= */
-
-function getFilters() {
+  const lng = firstFinite(
+    source.lng,
+    source.longitude,
+    source.lon,
+    source.coords?.lng,
+    source.coords?.longitude,
+    source.coords?.lon,
+    source.location?.lng,
+    source.location?.longitude,
+    source.location?.lon,
+    source.address?.lng,
+    source.address?.longitude,
+    source.address?.lon,
+    source.geo?.lng,
+    source.geo?.longitude,
+    source.geo?.lon,
+    source.payloadSnapshot?.lng,
+    source.payloadSnapshot?.longitude,
+    source.payloadSnapshot?.lon
+  );
 
   return {
-    participant:
-      normalizeText(
-        els.fParticipantCode?.value
-      ),
-
-    fluxo:
-      els.fFluxo?.value ||
-      "__all__",
-
-    entrega:
-      els.fEntrega?.value ||
-      "__all__",
-
-    ini:
-      els.fIni?.value || "",
-
-    fim:
-      els.fFim?.value || "",
-
-    busca:
-      normalizeText(
-        els.fBusca?.value
-      )
+    lat,
+    lng
   };
 }
 
-function getTableFilters() {
+function buildAddressFromParticipant(data = {}) {
+  const nested = data.address || {};
+
+  return firstText(
+    data.enderecoCompleto,
+    data.fullAddress,
+    data.addressText,
+    nested.full,
+    nested.enderecoCompleto,
+    [
+      nested.street,
+      nested.number,
+      nested.neighborhood,
+      nested.city,
+      nested.state
+    ].filter(Boolean).join(", "),
+    [
+      data.rua,
+      data.numero,
+      data.bairro,
+      data.cidade,
+      data.uf
+    ].filter(Boolean).join(", ")
+  );
+}
+
+function getParticipantCodeFromItem(item = {}) {
+  return firstText(
+    item.participantCode,
+    item.codigoParticipante,
+    item.codigo,
+    item.familyCode,
+    item.code,
+    item.payloadSnapshot?.participantCode,
+    item.payloadSnapshot?.codigoParticipante,
+    item.payloadSnapshot?.familyCode,
+    item.recebimento?.participantCode,
+    item.recebimento?.codigoParticipante,
+    item.recebimento?.familyCode,
+    item.finalTurno?.participantCode,
+    item.finalTurno?.codigoParticipante,
+    item.finalTurno?.familyCode
+  );
+}
+
+function resolveParticipant(item = {}) {
+  const participantId = firstText(
+    item.participantId,
+    item.participantUID,
+    item.payloadSnapshot?.participantId
+  );
+
+  const participantCode = getParticipantCodeFromItem(item);
+
+  const directName = firstText(
+    item.participantName,
+    item.nomeParticipante,
+    item.name,
+    item.nome,
+    item.payloadSnapshot?.participantName,
+    item.payloadSnapshot?.nomeParticipante,
+    item.recebimento?.participantName,
+    item.finalTurno?.participantName
+  );
+
+  const directType = firstText(
+    item.participantType,
+    item.tipoCadastro,
+    item.localType,
+    item.codeLocalType,
+    item.payloadSnapshot?.participantType,
+    item.payloadSnapshot?.tipoCadastro,
+    item.payloadSnapshot?.localType,
+    item.recebimento?.participantType,
+    item.finalTurno?.participantType
+  );
+
+  const fromId = participantId
+    ? participantsMap.get(String(participantId))
+    : null;
+
+  const fromCode = participantCode
+    ? participantsMap.get(String(participantCode))
+    : null;
+
+  const matched = fromId || fromCode || null;
+
+  const coords = extractLatLngFromSource(matched || item);
 
   return {
-    search:
-      normalizeText(
-        els.tSearch?.value
+    id: participantId || matched?.id || "",
+    code: matched?.code || matched?.participantCode || participantCode || "—",
+    name:
+      directName ||
+      matched?.name ||
+      matched?.nome ||
+      (
+        participantCode
+          ? `Participante ${participantCode}`
+          : "Sem participante vinculado"
       ),
-
-    fluxo:
-      els.tFluxo?.value ||
-      "__all__",
-
-    entrega:
-      els.tEntrega?.value ||
-      "__all__",
-
+    type:
+      matched?.type ||
+      matched?.participantType ||
+      directType ||
+      "participante",
     status:
-      els.tStatus?.value ||
-      "__all__",
-
-    tipoCadastro:
-      els.tTipoCadastro?.value ||
-      "__all__"
+      matched?.status ||
+      matched?.decision ||
+      "—",
+    address:
+      matched?.address ||
+      matched?.enderecoCompleto ||
+      firstText(
+        item.enderecoCompleto,
+        item.payloadSnapshot?.enderecoCompleto,
+        item.recebimento?.enderecoCompleto,
+        item.finalTurno?.enderecoCompleto
+      ),
+    localColeta:
+      matched?.localColeta ||
+      item.localColeta ||
+      item.payloadSnapshot?.localColeta ||
+      "",
+    lat: coords.lat,
+    lng: coords.lng
   };
-}
-/* =========================
-   FIREBASE / PERFIL
-========================= */
-
-async function getUserProfile(uid) {
-  const snap = await getDoc(doc(db, "users", uid));
-
-  if (!snap.exists()) {
-    return {
-      id: uid,
-      name: auth.currentUser?.email || "Usuário",
-      role: "admin",
-      status: "active",
-      territoryId: document.body?.dataset?.territoryId || "vila-pinto"
-    };
-  }
-
-  return {
-    id: snap.id,
-    ...snap.data()
-  };
-}
-
-function validateProfile(profile) {
-  const active =
-    profile.status === "active" ||
-    profile.status === "aprovado" ||
-    profile.active === true ||
-    !profile.status;
-
-  if (!active) {
-    throw new Error("Usuário sem acesso ativo.");
-  }
-}
-
-function fillUser(profile) {
-  if (els.userDisplayName) {
-    els.userDisplayName.textContent =
-      profile.displayName ||
-      profile.name ||
-      profile.nome ||
-      "Usuário";
-  }
-
-  if (els.userRole) {
-    els.userRole.textContent =
-      profile.role || "cooperativa";
-  }
-
-  if (els.userTerritory) {
-    els.userTerritory.textContent =
-      profile.territoryLabel ||
-      profile.territoryId ||
-      pageTerritoryId ||
-      "—";
-  }
-}
-
-function loadParticipantsMap() {
-  if (activeParticipantsUnsubscribe) {
-    activeParticipantsUnsubscribe();
-    activeParticipantsUnsubscribe = null;
-  }
-
-  activeParticipantsUnsubscribe = onSnapshot(
-    collection(db, "participants"),
-    (snapshot) => {
-      participantsMap.clear();
-
-      snapshot.forEach((docItem) => {
-        const data = docItem.data();
-
-        if (!itemBelongsToPageTerritory(data)) return;
-
-        const code = String(
-          data.participantCode ||
-          data.familyCode ||
-          data.codigo ||
-          docItem.id
-        ).trim();
-
-        const payload = {
-          id: docItem.id,
-          code,
-          name:
-            data.name ||
-            data.nome ||
-            data.participantName ||
-            "Sem nome",
-          type:
-            data.participantType ||
-            data.type ||
-            data.localType ||
-            "participante",
-          status:
-            data.status ||
-            data.decision ||
-            "—",
-          address:
-            data.enderecoCompleto ||
-            data.address?.full ||
-            [
-              data.rua,
-              data.numero,
-              data.bairro,
-              data.cidade,
-              data.uf
-            ].filter(Boolean).join(", "),
-          lat:
-            data.lat ||
-            data.latitude ||
-            data.coords?.lat ||
-            null,
-          lng:
-            data.lng ||
-            data.longitude ||
-            data.coords?.lng ||
-            null,
-          territoryId:
-            data.territoryId || ""
-        };
-
-        participantsMap.set(docItem.id, payload);
-
-        if (code) {
-          participantsMap.set(code, payload);
-        }
-
-        if (data.participantCode) {
-          participantsMap.set(String(data.participantCode), payload);
-        }
-
-        if (data.familyCode) {
-          participantsMap.set(String(data.familyCode), payload);
-        }
-
-        if (data.codigo) {
-          participantsMap.set(String(data.codigo), payload);
-        }
-      });
-
-      applyFilters();
-    },
-    (error) => {
-      console.error("Erro ao carregar participantes:", error);
-    }
-  );
-}
-
-function listenColetas() {
-  if (els.dbStatus) {
-    els.dbStatus.textContent = "conectando…";
-  }
-
-  if (activeUnsubscribe) {
-    activeUnsubscribe();
-    activeUnsubscribe = null;
-  }
-
-  activeUnsubscribe = onSnapshot(
-    collection(db, "coletas"),
-    (snapshot) => {
-      let loaded = snapshot.docs.map((docItem) => ({
-        id: docItem.id,
-        ...docItem.data()
-      }));
-
-      const totalOriginal = loaded.length;
-
-      loaded = loaded
-        .filter(itemBelongsToPageTerritory)
-        .sort((a, b) => {
-          const dateA = inferDateObject(a)?.getTime() || 0;
-          const dateB = inferDateObject(b)?.getTime() || 0;
-          return dateB - dateA;
-        });
-
-      allColetas = loaded;
-
-      if (els.dbStatus) {
-        els.dbStatus.textContent =
-          `conectado • ${loaded.length}/${totalOriginal} coletas`;
-      }
-
-      populateFilters(allColetas);
-      setDefaultDateRange(allColetas);
-      applyFilters();
-    },
-    (error) => {
-      console.error("Erro ao carregar coletas:", error);
-
-      if (els.dbStatus) {
-        els.dbStatus.textContent = "erro";
-      }
-
-      alert("Não foi possível carregar os registros das coletas.");
-    }
-  );
-}
-
-/* =========================
-   FILTROS PRINCIPAIS
-========================= */
-
-function populateFilters(items = []) {
-  const entregas = new Set();
-
-  items.forEach((item) => {
-    const entrega = inferEntrega(item);
-    if (entrega && entrega !== "__all__") {
-      entregas.add(entrega);
-    }
-  });
-
-  const buildOptions = (current, placeholder) => {
-    const options =
-      `<option value="__all__">${placeholder}</option>` +
-      Array.from(entregas)
-        .sort()
-        .map((item) => {
-          return `<option value="${escapeHtml(item)}">${escapeHtml(item)}</option>`;
-        })
-        .join("");
-
-    return {
-      options,
-      value: entregas.has(current) ? current : "__all__"
-    };
-  };
-
-  if (els.fEntrega) {
-    const current = els.fEntrega.value || "__all__";
-    const result = buildOptions(current, "Todos");
-    els.fEntrega.innerHTML = result.options;
-    els.fEntrega.value = result.value;
-  }
-
-  if (els.tEntrega) {
-    const current = els.tEntrega.value || "__all__";
-    const result = buildOptions(current, "Todas");
-    els.tEntrega.innerHTML = result.options;
-    els.tEntrega.value = result.value;
-  }
-}
-
-function setDefaultDateRange(items = []) {
-  if (!els.fIni || !els.fFim) return;
-  if (els.fIni.value || els.fFim.value) return;
-
-  const dates = items
-    .map(inferDateISO)
-    .filter(Boolean)
-    .sort();
-
-  if (!dates.length) return;
-
-  els.fIni.value = dates[0];
-  els.fFim.value = dates[dates.length - 1];
 }
 
 function showQuickParticipantPreviewByCode(code) {
@@ -1104,74 +1063,448 @@ function showQuickParticipantPreviewByCode(code) {
   }
 }
 
-function applyFilters() {
-  const filters = getFilters();
+/* =========================
+   MATERIAIS / PESOS
+========================= */
 
-  showQuickParticipantPreviewByCode(filters.participant);
+function getMaterialSources(item = {}) {
+  return [
+    item.materiais,
+    item.materials,
+    item.material,
+    item.recebimento?.materiais,
+    item.recebimento?.materials,
+    item.finalTurno?.materiais,
+    item.finalTurno?.materials,
+    item.payloadSnapshot?.materiais,
+    item.payloadSnapshot?.materials,
+    item.payloadSnapshot?.material,
+    item.recebimento,
+    item.finalTurno,
+    item.payloadSnapshot,
+    item
+  ].filter(Boolean);
+}
 
-  filteredColetas = allColetas.filter((item) => {
-    const participant = resolveParticipant(item);
-    const date = inferDateISO(item);
-    const fluxo = inferFluxo(item);
-    const entrega = inferEntrega(item);
+function inferMaterialValue(item = {}, key) {
+  const aliases = MATERIAL_ALIASES[key] || [key];
+  const sources = getMaterialSources(item);
 
-    if (filters.participant) {
-      const haystack = normalizeText([
-        participant.code,
-        participant.name,
-        item.participantCode,
-        item.codigoParticipante,
-        item.familyCode
-      ].join(" "));
+  let total = 0;
 
-      if (!haystack.includes(filters.participant)) {
-        return false;
-      }
-    }
-
-    if (filters.fluxo !== "__all__" && fluxo !== filters.fluxo) {
-      return false;
-    }
-
-    if (filters.entrega !== "__all__" && entrega !== filters.entrega) {
-      return false;
-    }
-
-    if (filters.ini && date && date < filters.ini) {
-      return false;
-    }
-
-    if (filters.fim && date && date > filters.fim) {
-      return false;
-    }
-
-    if (filters.busca) {
-      const haystack = normalizeText([
-        participant.name,
-        participant.code,
-        participant.address,
-        fluxo,
-        entrega,
-        getStatus(item),
-        inferObservacao(item),
-        JSON.stringify(item)
-      ].join(" "));
-
-      if (!haystack.includes(filters.busca)) {
-        return false;
-      }
-    }
-
-    return true;
+  sources.forEach((source) => {
+    aliases.forEach((alias) => {
+      total += toNumber(source?.[alias]);
+    });
   });
 
-  updateTopInfo();
-  renderKpis(filteredColetas);
-  renderExpandedPanel(filteredColetas);
-  renderWeightTimeline(filteredColetas);
-  renderCharts(filteredColetas);
-  renderCollectionPoints(filteredColetas);
-  applyTableFilters();
+  return total;
+}
+
+function inferTotalMateriaisRegistro(item = {}) {
+  return MATERIAL_META.reduce((acc, material) => {
+    return acc + inferMaterialValue(item, material.key);
+  }, 0);
+}
+
+function inferPesoRecebidoBruto(item = {}) {
+  return firstNumber(
+    item.pesoRecebido,
+    item.peso_recebido,
+    item.totalPesoRecebido,
+    item.totalRecebido,
+    item.pesoResiduoSecoKg,
+    item.residuoSecoKg,
+    item.totalKg,
+    item.pesoTotal,
+    item.peso,
+    item.kg,
+    item.recebimento?.pesoRecebido,
+    item.recebimento?.pesoResiduoSecoKg,
+    item.recebimento?.residuoSecoKg,
+    item.finalTurno?.pesoRecebido,
+    item.finalTurno?.pesoResiduoSecoKg,
+    item.finalTurno?.residuoSecoKg,
+    item.payloadSnapshot?.pesoRecebido,
+    item.payloadSnapshot?.pesoResiduoSecoKg,
+    item.payloadSnapshot?.residuoSecoKg,
+    item.payloadSnapshot?.totalKg
+  );
+}
+
+function inferRejeitoInformado(item = {}) {
+  return firstNumber(
+    item.rejeitoKg,
+    item.pesoRejeitoKg,
+    item.rejeito,
+    item.totalRejeito,
+    item.naoReciclavelKg,
+    item.pesoNaoReciclavelKg,
+    item.recebimento?.rejeitoKg,
+    item.recebimento?.pesoRejeitoKg,
+    item.recebimento?.rejeito,
+    item.finalTurno?.rejeitoKg,
+    item.finalTurno?.pesoRejeitoKg,
+    item.finalTurno?.rejeito,
+    item.payloadSnapshot?.rejeitoKg,
+    item.payloadSnapshot?.pesoRejeitoKg,
+    item.payloadSnapshot?.rejeito,
+    item.payloadSnapshot?.totalRejeito
+  );
+}
+
+function inferNaoComercializado(item = {}) {
+  return firstNumber(
+    item.naoComercializadoKg,
+    item.pesoNaoComercializadoKg,
+    item.naoComercializado,
+    item.nao_comercializado,
+    item.totalNaoComercializado,
+    item.materialNaoComercializado,
+    item.naoVenda,
+    item.semComercializacao,
+    item.recebimento?.naoComercializadoKg,
+    item.recebimento?.pesoNaoComercializadoKg,
+    item.recebimento?.naoComercializado,
+    item.finalTurno?.naoComercializadoKg,
+    item.finalTurno?.pesoNaoComercializadoKg,
+    item.finalTurno?.naoComercializado,
+    item.payloadSnapshot?.naoComercializadoKg,
+    item.payloadSnapshot?.pesoNaoComercializadoKg,
+    item.payloadSnapshot?.naoComercializado,
+    item.payloadSnapshot?.totalNaoComercializado
+  );
+}
+
+function inferTotalReciclavelRegistro(item = {}) {
+  const materialTotalSemOleo = MATERIAL_META.reduce((acc, material) => {
+    if (material.key === "oleoKg") return acc;
+    return acc + inferMaterialValue(item, material.key);
+  }, 0);
+
+  if (materialTotalSemOleo > 0) {
+    return materialTotalSemOleo;
+  }
+
+  const bruto = inferPesoRecebidoBruto(item);
+  const rejeito = inferRejeitoInformado(item);
+  const naoComercializado = inferNaoComercializado(item);
+
+  if (bruto > 0) {
+    return Math.max(0, bruto - rejeito - naoComercializado);
+  }
+
+  return 0;
+}
+
+function inferTotalRejeitoRegistro(item = {}) {
+  return inferRejeitoInformado(item) + inferNaoComercializado(item);
+}
+
+function inferRejeitoNaoReciclavel(item = {}) {
+  return Math.max(0, inferRejeitoInformado(item) - inferNaoComercializado(item));
+}
+
+function inferQualidade(item = {}) {
+  const raw = firstText(
+    item.qualidade,
+    item.qualidadeNota,
+    item.qualidadeMedia,
+    item.notaQualidade,
+    item.qualityScore,
+    item.recebimento?.qualidade,
+    item.recebimento?.qualidadeNota,
+    item.finalTurno?.qualidade,
+    item.finalTurno?.qualidadeNota,
+    item.payloadSnapshot?.qualidade,
+    item.payloadSnapshot?.qualidadeNota,
+    item.payloadSnapshot?.qualidadeMedia
+  );
+
+  if (raw === "") return 0;
+
+  return toNumber(raw);
+}
+
+function getMaterialTotals(items = []) {
+  const totals = {};
+
+  MATERIAL_META.forEach((material) => {
+    totals[material.key] = 0;
+  });
+
+  items.filter(isActiveCollection).forEach((item) => {
+    MATERIAL_META.forEach((material) => {
+      totals[material.key] += inferMaterialValue(item, material.key);
+    });
+  });
+
+  return totals;
+}
+
+/* =========================
+   SVG DOS MATERIAIS
+========================= */
+
+function getMaterialSVG(icon) {
+  const icons = {
+    plastico: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M8 3H16L18 8V21H6V8L8 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9 8H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <path d="M9 13H15V17H9V13Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+      </svg>
+    `,
+
+    vidro: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 2H15V6L17 10V21H7V10L9 6V2Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9 11H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+
+    metal: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <ellipse cx="12" cy="6" rx="7" ry="3" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M5 6V18C5 19.7 8.1 21 12 21C15.9 21 19 19.7 19 18V6" stroke="currentColor" stroke-width="1.8"/>
+        <path d="M5 12C5 13.7 8.1 15 12 15C15.9 15 19 13.7 19 12" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+    `,
+
+    papel: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M7 3H14L18 7V21H7V3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M14 3V7H18" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9 12H16M9 16H16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+
+    papelao: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M3 7L12 3L21 7V17L12 21L3 17V7Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M3 7L12 11L21 7" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M12 11V21" stroke="currentColor" stroke-width="1.8"/>
+      </svg>
+    `,
+
+    sacaria: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M9 3H15L13 6H11L9 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M7 6H17L19 11L16 21H8L5 11L7 6Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M9 13H15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+      </svg>
+    `,
+
+    isopor: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="1.8"/>
+        <circle cx="9" cy="9" r="1" fill="currentColor"/>
+        <circle cx="15" cy="9" r="1" fill="currentColor"/>
+        <circle cx="12" cy="15" r="1" fill="currentColor"/>
+      </svg>
+    `,
+
+    oleo: `
+      <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+        <path d="M12 3C12 3 7 9 7 13A5 5 0 0 0 17 13C17 9 12 3 12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M12 9C12 9 10 12 10 14A2 2 0 0 0 14 14C14 12 12 9 12 9Z" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+    `
+  };
+
+  return icons[icon] || icons.plastico;
+}
+
+/* =========================
+   FILTROS
+========================= */
+
+function getFilters() {
+  return {
+    participant: normalizeText(els.fParticipantCode?.value || ""),
+    fluxo: els.fFluxo?.value || "__all__",
+    entrega: els.fEntrega?.value || "__all__",
+    ini: els.fIni?.value || "",
+    fim: els.fFim?.value || "",
+    busca: normalizeText(els.fBusca?.value || ""),
+    searchType: els.fSearchType?.value || "all"
+  };
+}
+
+function getTableFilters() {
+  return {
+    search: normalizeText(els.tSearch?.value || ""),
+    fluxo: els.tFluxo?.value || "__all__",
+    entrega: els.tEntrega?.value || "__all__",
+    status: els.tStatus?.value || "__all__",
+    tipoCadastro: els.tTipoCadastro?.value || "__all__"
+  };
+}
+
+function populateFilters(items = []) {
+  const entregas = new Set();
+
+  items.forEach((item) => {
+    const entrega = inferEntrega(item);
+
+    if (entrega && entrega !== "Normal") {
+      entregas.add(entrega);
+    }
+  });
+
+  const renderEntregaOptions = (selectEl, placeholder) => {
+    if (!selectEl) return;
+
+    const current = selectEl.value || "__all__";
+
+    selectEl.innerHTML = `
+      <option value="__all__">${placeholder}</option>
+      ${Array.from(entregas)
+        .sort((a, b) => a.localeCompare(b, "pt-BR"))
+        .map((entrega) => {
+          return `<option value="${escapeHtml(entrega)}">${escapeHtml(entrega)}</option>`;
+        })
+        .join("")}
+    `;
+
+    const hasCurrent = Array.from(entregas).includes(current);
+    selectEl.value = hasCurrent ? current : "__all__";
+  };
+
+  renderEntregaOptions(els.fEntrega, "Todos");
+  renderEntregaOptions(els.tEntrega, "Todas");
+}
+
+function setDefaultDateRange(items = []) {
+  if (!els.fIni || !els.fFim) return;
+  if (els.fIni.value || els.fFim.value) return;
+
+  const dates = items
+    .map(inferDateISO)
+    .filter(Boolean)
+    .sort();
+
+  if (!dates.length) return;
+
+  els.fIni.value = dates[0];
+  els.fFim.value = dates[dates.length - 1];
+}
+
+function getSearchTarget(item, participant, searchType) {
+  const base = {
+    participant: [
+      participant.name,
+      item.participantName,
+      item.nomeParticipante
+    ],
+    code: [
+      participant.code,
+      item.participantCode,
+      item.codigoParticipante,
+      item.codigo,
+      item.familyCode
+    ],
+    creator: [
+      item.createdBy,
+      item.createdByName,
+      item.createdByPublicCode,
+      item.createdByEmail
+    ],
+    obs: [
+      inferObservacao(item)
+    ],
+    delivery: [
+      inferEntrega(item),
+      inferEntregaKey(item)
+    ],
+    flow: [
+      inferFluxo(item),
+      formatFluxoLabel(inferFluxo(item))
+    ],
+    all: [
+      participant.name,
+      participant.code,
+      participant.address,
+      participant.type,
+      inferFluxo(item),
+      formatFluxoLabel(inferFluxo(item)),
+      inferEntrega(item),
+      inferObservacao(item),
+      getStatus(item),
+      JSON.stringify(item)
+    ]
+  };
+
+  return normalizeText((base[searchType] || base.all).join(" "));
+}
+
+function applyFilters() {
+  try {
+    const filters = getFilters();
+
+    showQuickParticipantPreviewByCode(filters.participant);
+
+    filteredColetas = allColetas.filter((item) => {
+      const participant = resolveParticipant(item);
+      const date = inferDateISO(item);
+      const fluxo = inferFluxo(item);
+      const entrega = inferEntrega(item);
+
+      if (filters.participant) {
+        const codeTarget = normalizeText([
+          participant.code,
+          participant.name,
+          item.participantCode,
+          item.codigoParticipante,
+          item.codigo,
+          item.familyCode,
+          item.payloadSnapshot?.participantCode,
+          item.payloadSnapshot?.familyCode
+        ].join(" "));
+
+        if (!codeTarget.includes(filters.participant)) {
+          return false;
+        }
+      }
+
+      if (filters.fluxo !== "__all__" && fluxo !== filters.fluxo) {
+        return false;
+      }
+
+      if (filters.entrega !== "__all__" && entrega !== filters.entrega) {
+        return false;
+      }
+
+      if (filters.ini && date && date < filters.ini) {
+        return false;
+      }
+
+      if (filters.fim && date && date > filters.fim) {
+        return false;
+      }
+
+      if (filters.busca) {
+        const searchTarget = getSearchTarget(item, participant, filters.searchType);
+
+        if (!searchTarget.includes(filters.busca)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    updateTopInfo();
+    renderKpis(filteredColetas);
+    renderExpandedPanel(filteredColetas);
+    renderWeightTimeline(filteredColetas);
+    renderCharts(filteredColetas);
+    renderCollectionPoints(filteredColetas);
+    applyTableFilters();
+  } catch (error) {
+    console.error("Erro ao aplicar filtros:", error);
+    setDbStatus("erro nos filtros");
+  }
 }
 
 function clearFilters() {
@@ -1181,6 +1514,7 @@ function clearFilters() {
   if (els.fIni) els.fIni.value = "";
   if (els.fFim) els.fFim.value = "";
   if (els.fBusca) els.fBusca.value = "";
+  if (els.fSearchType) els.fSearchType.value = "all";
 
   if (els.quickParticipantPreview) {
     els.quickParticipantPreview.classList.add("hidden");
@@ -1206,12 +1540,205 @@ function updateTopInfo() {
     return;
   }
 
-  els.txtPeriodo.textContent =
-    `${formatDateBR(dates[0])} → ${formatDateBR(dates[dates.length - 1])}`;
+  els.txtPeriodo.textContent = `${formatDateBR(dates[0])} → ${formatDateBR(dates[dates.length - 1])}`;
 }
 
 /* =========================
-   KPIs / CARDS
+   FIREBASE / PERFIL
+========================= */
+
+async function getUserProfile(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+
+  if (!snap.exists()) {
+    return {
+      id: uid,
+      name: auth.currentUser?.email || "Usuário",
+      role: "admin",
+      status: "active",
+      territoryId: document.body?.dataset?.territoryId || "vila-pinto"
+    };
+  }
+
+  return {
+    id: snap.id,
+    ...snap.data()
+  };
+}
+
+function validateProfile(profile = {}) {
+  const active =
+    profile.status === "active" ||
+    profile.status === "aprovado" ||
+    profile.active === true ||
+    profile.ativo === true ||
+    !profile.status;
+
+  if (!active) {
+    throw new Error("Usuário sem acesso ativo.");
+  }
+}
+
+function fillUser(profile = {}) {
+  if (els.userDisplayName) {
+    els.userDisplayName.textContent = firstText(
+      profile.displayName,
+      profile.name,
+      profile.nome,
+      auth.currentUser?.email,
+      "Usuário"
+    );
+  }
+
+  if (els.userRole) {
+    els.userRole.textContent = profile.role || "cooperativa";
+  }
+
+  if (els.userTerritory) {
+    els.userTerritory.textContent = firstText(
+      profile.territoryLabel,
+      profile.territoryId,
+      pageTerritoryId,
+      "—"
+    );
+  }
+}
+
+function loadParticipantsMap() {
+  if (activeParticipantsUnsubscribe) {
+    activeParticipantsUnsubscribe();
+    activeParticipantsUnsubscribe = null;
+  }
+
+  activeParticipantsUnsubscribe = onSnapshot(
+    collection(db, "participants"),
+    (snapshot) => {
+      participantsMap.clear();
+
+      snapshot.forEach((docItem) => {
+        const data = docItem.data();
+
+        if (!itemBelongsToPageTerritory(data)) return;
+
+        const code = firstText(
+          data.participantCode,
+          data.familyCode,
+          data.codigo,
+          data.code,
+          docItem.id
+        );
+
+        const coords = extractLatLngFromSource(data);
+
+        const payload = {
+          id: docItem.id,
+          code,
+          participantCode: code,
+          name: firstText(
+            data.name,
+            data.nome,
+            data.participantName,
+            data.razaoSocial,
+            "Sem nome"
+          ),
+          type: firstText(
+            data.participantType,
+            data.tipoCadastro,
+            data.type,
+            data.localType,
+            "participante"
+          ),
+          status: firstText(
+            data.status,
+            data.decision,
+            "—"
+          ),
+          address: buildAddressFromParticipant(data),
+          localColeta: data.localColeta || "",
+          lat: coords.lat,
+          lng: coords.lng,
+          territoryId: data.territoryId || ""
+        };
+
+        participantsMap.set(docItem.id, payload);
+
+        [
+          code,
+          data.participantCode,
+          data.familyCode,
+          data.codigo,
+          data.code
+        ].forEach((key) => {
+          const normalizedKey = String(key || "").trim();
+
+          if (normalizedKey) {
+            participantsMap.set(normalizedKey, payload);
+          }
+        });
+      });
+
+      applyFilters();
+    },
+    (error) => {
+      console.error("Erro ao carregar participantes:", error);
+      setDbStatus("erro participantes");
+    }
+  );
+}
+
+function listenColetas() {
+  setDbStatus("conectando…");
+
+  if (activeUnsubscribe) {
+    activeUnsubscribe();
+    activeUnsubscribe = null;
+  }
+
+  activeUnsubscribe = onSnapshot(
+    collection(db, "coletas"),
+    (snapshot) => {
+      let loaded = snapshot.docs.map((docItem) => {
+        return {
+          id: docItem.id,
+          ...docItem.data()
+        };
+      });
+
+      const totalOriginal = loaded.length;
+
+      loaded = loaded
+        .filter(itemBelongsToPageTerritory)
+        .sort((a, b) => {
+          const dateA = inferDateObject(a)?.getTime() || 0;
+          const dateB = inferDateObject(b)?.getTime() || 0;
+
+          return dateB - dateA;
+        });
+
+      allColetas = loaded;
+
+      setDbStatus(`conectado • ${loaded.length}/${totalOriginal} coletas`);
+
+      populateFilters(allColetas);
+      setDefaultDateRange(allColetas);
+      applyFilters();
+    },
+    (error) => {
+      console.error("Erro ao carregar coletas:", error);
+      setDbStatus("erro coletas");
+
+      if (els.tableColetasBody) {
+        els.tableColetasBody.innerHTML = `
+          <tr>
+            <td colspan="7">Erro ao carregar coletas do Firebase.</td>
+          </tr>
+        `;
+      }
+    }
+  );
+}
+/* =========================
+   KPIs / RESUMOS / CARDS
 ========================= */
 
 function renderKpis(items = []) {
@@ -1221,11 +1748,13 @@ function renderKpis(items = []) {
   let reciclavel = 0;
   let rejeito = 0;
   let finalTurno = 0;
+  let qualidadeTotal = 0;
+  let qualidadeQtd = 0;
 
   ativos.forEach((item) => {
     const participant = resolveParticipant(item);
 
-    if (participant.code) {
+    if (participant.code && participant.code !== "—") {
       participantes.add(participant.code);
     }
 
@@ -1235,6 +1764,13 @@ function renderKpis(items = []) {
     if (inferFluxo(item) === "final_turno") {
       finalTurno += 1;
     }
+
+    const qualidade = inferQualidade(item);
+
+    if (qualidade > 0) {
+      qualidadeTotal += qualidade;
+      qualidadeQtd += 1;
+    }
   });
 
   if (els.k_totalColetas) els.k_totalColetas.textContent = String(ativos.length);
@@ -1242,15 +1778,18 @@ function renderKpis(items = []) {
   if (els.k_residuoSeco) els.k_residuoSeco.textContent = formatNumber(reciclavel);
   if (els.k_rejeito) els.k_rejeito.textContent = formatNumber(rejeito);
   if (els.k_finalTurno) els.k_finalTurno.textContent = String(finalTurno);
+
+  const qualidadeMedia = qualidadeQtd ? qualidadeTotal / qualidadeQtd : 0;
+  const elQualidadeMedia = document.getElementById("indicatorQualidadeMedia");
+
+  if (elQualidadeMedia) {
+    elQualidadeMedia.textContent = qualidadeMedia ? formatNumber(qualidadeMedia) : "0";
+  }
 }
 
 function computeExpandedMetrics(items = []) {
   const ativos = items.filter(isActiveCollection);
-  const materialTotals = {};
-
-  MATERIAL_META.forEach((mat) => {
-    materialTotals[mat.key] = 0;
-  });
+  const materialTotals = getMaterialTotals(ativos);
 
   const dias = new Set();
   const participantes = new Set();
@@ -1259,6 +1798,7 @@ function computeExpandedMetrics(items = []) {
 
   let reciclavelKg = 0;
   let rejeitoKg = 0;
+  let rejeitoNaoReciclavelKg = 0;
   let naoComercializadoKg = 0;
   let entregaVoluntaria = 0;
   let receitaTotal = 0;
@@ -1269,7 +1809,10 @@ function computeExpandedMetrics(items = []) {
     const tipo = normalizeText(participant.type);
 
     if (date) dias.add(date);
-    if (participant.code) participantes.add(participant.code);
+
+    if (participant.code && participant.code !== "—") {
+      participantes.add(participant.code);
+    }
 
     if (tipo.includes("condominio") || tipo.includes("condomínio")) {
       condominios.add(participant.code || participant.name);
@@ -1279,38 +1822,48 @@ function computeExpandedMetrics(items = []) {
       comercios.add(participant.code || participant.name);
     }
 
-    if (inferEntrega(item).includes("volunt")) {
+    if (inferEntregaKey(item).includes("volunt")) {
       entregaVoluntaria += 1;
     }
 
-    MATERIAL_META.forEach((mat) => {
-      const kg = inferMaterialValue(item, mat.key);
-      materialTotals[mat.key] += kg;
-      receitaTotal += kg * mat.price;
-    });
-
     reciclavelKg += inferTotalReciclavelRegistro(item);
     rejeitoKg += inferTotalRejeitoRegistro(item);
+    rejeitoNaoReciclavelKg += inferRejeitoNaoReciclavel(item);
     naoComercializadoKg += inferNaoComercializado(item);
   });
 
+  MATERIAL_META.forEach((material) => {
+    receitaTotal += (materialTotals[material.key] || 0) * material.price;
+  });
+
   const totalGeral = reciclavelKg + rejeitoKg;
-  const reciclavelPct = totalGeral ? (reciclavelKg / totalGeral) * 100 : 0;
-  const rejeitoPct = totalGeral ? (rejeitoKg / totalGeral) * 100 : 0;
-  const naoComercializadoPct = rejeitoKg ? (naoComercializadoKg / rejeitoKg) * 100 : 0;
-  const rejeitoNaoReciclavelKg = Math.max(0, rejeitoKg - naoComercializadoKg);
-  const rejeitoNaoReciclavelPct = rejeitoKg ? (rejeitoNaoReciclavelKg / rejeitoKg) * 100 : 0;
+
+  const reciclavelPct = totalGeral
+    ? (reciclavelKg / totalGeral) * 100
+    : 0;
+
+  const rejeitoPct = totalGeral
+    ? (rejeitoKg / totalGeral) * 100
+    : 0;
+
+  const rejeitoNaoReciclavelPct = rejeitoKg
+    ? (rejeitoNaoReciclavelKg / rejeitoKg) * 100
+    : 0;
+
+  const naoComercializadoPct = rejeitoKg
+    ? (naoComercializadoKg / rejeitoKg) * 100
+    : 0;
 
   return {
     materialTotals,
     reciclavelKg,
     rejeitoKg,
-    naoComercializadoKg,
-    naoComercializadoPct,
     rejeitoNaoReciclavelKg,
-    rejeitoNaoReciclavelPct,
+    naoComercializadoKg,
     reciclavelPct,
     rejeitoPct,
+    rejeitoNaoReciclavelPct,
+    naoComercializadoPct,
     receitaTotal,
     totalDiasProjeto: dias.size,
     operacoesRealizadas: ativos.length,
@@ -1323,10 +1876,17 @@ function computeExpandedMetrics(items = []) {
 
 function renderExpandedPanel(items = []) {
   const m = computeExpandedMetrics(items);
-  const dates = items.map(inferDateISO).filter(Boolean).sort();
+  const dates = items
+    .map(inferDateISO)
+    .filter(Boolean)
+    .sort();
 
   if (els.k_totalDiasProjeto) els.k_totalDiasProjeto.textContent = String(m.totalDiasProjeto);
-  if (els.k_inicioProjeto) els.k_inicioProjeto.textContent = `Início: ${dates[0] ? formatDateBR(dates[0]) : "—"}`;
+
+  if (els.k_inicioProjeto) {
+    els.k_inicioProjeto.textContent = `Início: ${dates[0] ? formatDateBR(dates[0]) : "—"}`;
+  }
+
   if (els.k_operacoesRealizadas) els.k_operacoesRealizadas.textContent = String(m.operacoesRealizadas);
   if (els.k_participantesProjeto) els.k_participantesProjeto.textContent = String(m.participantesProjeto);
   if (els.k_condominiosParticipantes) els.k_condominiosParticipantes.textContent = String(m.condominiosParticipantes);
@@ -1336,49 +1896,75 @@ function renderExpandedPanel(items = []) {
   if (els.k_totalReciclavelKg) els.k_totalReciclavelKg.textContent = formatNumber(m.reciclavelKg);
   if (els.k_totalReciclavelPct) els.k_totalReciclavelPct.textContent = `${formatNumber(m.reciclavelPct)}%`;
   if (els.k_receitaTotal) els.k_receitaTotal.textContent = formatMoneyBR(m.receitaTotal);
+
   if (els.k_totalRejeitoKg) els.k_totalRejeitoKg.textContent = formatNumber(m.rejeitoKg);
   if (els.k_totalRejeitoPct) els.k_totalRejeitoPct.textContent = `${formatNumber(m.rejeitoPct)}%`;
 
-  if (els.k_rejeitoNaoReciclavelPct) els.k_rejeitoNaoReciclavelPct.textContent = `${formatNumber(m.rejeitoNaoReciclavelPct)}%`;
-  if (els.k_rejeitoNaoReciclavelKg) els.k_rejeitoNaoReciclavelKg.textContent = formatKg(m.rejeitoNaoReciclavelKg);
-  if (els.k_naoComercializadoPct) els.k_naoComercializadoPct.textContent = `${formatNumber(m.naoComercializadoPct)}%`;
-  if (els.k_naoComercializadoKg) els.k_naoComercializadoKg.textContent = formatKg(m.naoComercializadoKg);
+  if (els.k_rejeitoNaoReciclavelPct) {
+    els.k_rejeitoNaoReciclavelPct.textContent = `${formatNumber(m.rejeitoNaoReciclavelPct)}%`;
+  }
 
+  if (els.k_rejeitoNaoReciclavelKg) {
+    els.k_rejeitoNaoReciclavelKg.textContent = formatKg(m.rejeitoNaoReciclavelKg);
+  }
+
+  if (els.k_naoComercializadoPct) {
+    els.k_naoComercializadoPct.textContent = `${formatNumber(m.naoComercializadoPct)}%`;
+  }
+
+  if (els.k_naoComercializadoKg) {
+    els.k_naoComercializadoKg.textContent = formatKg(m.naoComercializadoKg);
+  }
+
+  renderMaterialCards(m);
+}
+
+function renderMaterialCards(metrics) {
   if (!els.materialCards) return;
 
-  const totalMateriais = Object.values(m.materialTotals).reduce((acc, value) => acc + value, 0);
+  const totalMateriais = Object.values(metrics.materialTotals)
+    .reduce((acc, value) => acc + value, 0);
 
-  els.materialCards.innerHTML = MATERIAL_META.map((mat) => {
-    const kg = m.materialTotals[mat.key] || 0;
+  els.materialCards.innerHTML = MATERIAL_META.map((material) => {
+    const kg = metrics.materialTotals[material.key] || 0;
     const pct = totalMateriais ? (kg / totalMateriais) * 100 : 0;
-    const receita = kg * mat.price;
+    const receita = kg * material.price;
 
     return `
-      <article class="material-card professional-card ${mat.isSpecial ? "special-flow-card" : ""}" style="--material-color:${mat.color}">
+      <article
+        class="material-card professional-card ${material.isSpecial ? "special-flow-card" : ""}"
+        style="--material-color:${escapeHtml(material.color)}"
+      >
         <div class="material-top">
           <div class="icon-group">
             <div class="mat-icon professional-icon">
-              ${getMaterialSVG(mat.icon)}
+              ${getMaterialSVG(material.icon)}
             </div>
           </div>
 
           <div class="mat-pct">
-            ${mat.isSpecial ? "Fluxo especial" : `${formatNumber(pct)}%`}
+            ${material.isSpecial ? "Fluxo especial" : `${formatNumber(pct)}%`}
           </div>
         </div>
 
-        <div class="mat-name">${escapeHtml(mat.label)}</div>
-        <div class="mat-kg">${formatNumber(kg)} kg</div>
+        <div class="mat-name">${escapeHtml(material.label)}</div>
 
-        <div class="material-progress" aria-hidden="true">
-          <span style="width:${mat.isSpecial ? 100 : Math.min(pct, 100)}%"></span>
+        <div class="mat-kg">
+          ${formatNumber(kg)} kg
         </div>
 
-        <div class="mat-sub">Receita estimada ≈ ${formatMoneyBR(receita)}</div>
+        <div class="material-progress" aria-hidden="true">
+          <span style="width:${material.isSpecial ? 100 : Math.min(pct, 100)}%"></span>
+        </div>
+
+        <div class="mat-sub">
+          Receita estimada ≈ ${formatMoneyBR(receita)}
+        </div>
       </article>
     `;
   }).join("");
 }
+
 /* =========================
    GRÁFICOS
 ========================= */
@@ -1397,6 +1983,16 @@ function getChartOptions(type = "bar") {
         labels: {
           usePointStyle: true,
           padding: 16
+        }
+      },
+      tooltip: {
+        callbacks: {
+          label(context) {
+            const label = context.dataset.label || "";
+            const value = context.raw ?? 0;
+
+            return `${label}: ${formatNumber(value)}`;
+          }
         }
       }
     }
@@ -1432,99 +2028,10 @@ function getChartOptions(type = "bar") {
   };
 }
 
-function buildWeightDailySeries(items = []) {
-  const grouped = new Map();
-
-  items.filter(isActiveCollection).forEach((item) => {
-    const date = inferDateISO(item);
-    if (!date) return;
-
-    const fluxo = inferFluxo(item);
-    const key = `${date}_${fluxo}`;
-
-    if (!grouped.has(key)) {
-      grouped.set(key, {
-        date,
-        fluxo,
-        reciclavel: 0,
-        rejeito: 0,
-        quantidade: 0
-      });
-    }
-
-    const current = grouped.get(key);
-
-    current.reciclavel += inferTotalReciclavelRegistro(item);
-    current.rejeito += inferTotalRejeitoRegistro(item);
-    current.quantidade += 1;
-  });
-
-  const ordered = Array.from(grouped.values()).sort((a, b) => {
-    return `${a.date}_${a.fluxo}`.localeCompare(`${b.date}_${b.fluxo}`);
-  });
-
-  return {
-    labels: ordered.map((item) => {
-      const fluxoLabel =
-        item.fluxo === "final_turno"
-          ? "Final turno"
-          : "Recebimento";
-
-      return `${formatDateBR(item.date)} • ${fluxoLabel}`;
-    }),
-    reciclavel: ordered.map((item) => Number(item.reciclavel.toFixed(2))),
-    rejeito: ordered.map((item) => Number(item.rejeito.toFixed(2))),
-    quantidade: ordered.map((item) => item.quantidade)
-  };
-}
-
-function renderWeightTimeline(items = []) {
-  const canvas = document.getElementById("weightTimelineChart");
-
-  if (!canvas || typeof Chart === "undefined") return;
-
-  const daily = buildWeightDailySeries(items);
-
-  if (weightTimelineChart) {
-    weightTimelineChart.destroy();
+function destroyChart(chart) {
+  if (chart && typeof chart.destroy === "function") {
+    chart.destroy();
   }
-
-  weightTimelineChart = new Chart(canvas, {
-    type: "bar",
-    data: {
-      labels: daily.labels,
-      datasets: [
-        {
-          label: "Peso do rejeito",
-          data: daily.rejeito,
-          backgroundColor: "rgba(239,107,34,.78)",
-          borderRadius: 8,
-          borderSkipped: false
-        },
-        {
-          label: "Peso do reciclável",
-          data: daily.reciclavel,
-          backgroundColor: "rgba(129,185,42,.82)",
-          borderRadius: 8,
-          borderSkipped: false
-        }
-      ]
-    },
-    options: {
-      ...getChartOptions("bar"),
-      plugins: {
-        ...getChartOptions("bar").plugins,
-        tooltip: {
-          callbacks: {
-            afterBody(context) {
-              const idx = context[0].dataIndex;
-              return `Coletas realizadas: ${daily.quantidade[idx]}`;
-            }
-          }
-        }
-      }
-    }
-  });
 }
 
 function buildDailySeries(items = []) {
@@ -1532,6 +2039,7 @@ function buildDailySeries(items = []) {
 
   items.filter(isActiveCollection).forEach((item) => {
     const date = inferDateISO(item);
+
     if (!date) return;
 
     grouped.set(date, (grouped.get(date) || 0) + 1);
@@ -1545,15 +2053,53 @@ function buildDailySeries(items = []) {
   };
 }
 
+function buildWeightDailySeries(items = []) {
+  const grouped = new Map();
+
+  items.filter(isActiveCollection).forEach((item) => {
+    const date = inferDateISO(item);
+
+    if (!date) return;
+
+    const fluxo = inferFluxo(item);
+    const key = `${date}_${fluxo}`;
+
+    if (!grouped.has(key)) {
+      grouped.set(key, {
+        date,
+        fluxo,
+        reciclavel: 0,
+        rejeito: 0,
+        naoComercializado: 0,
+        quantidade: 0
+      });
+    }
+
+    const current = grouped.get(key);
+
+    current.reciclavel += inferTotalReciclavelRegistro(item);
+    current.rejeito += inferTotalRejeitoRegistro(item);
+    current.naoComercializado += inferNaoComercializado(item);
+    current.quantidade += 1;
+  });
+
+  const ordered = Array.from(grouped.values())
+    .sort((a, b) => `${a.date}_${a.fluxo}`.localeCompare(`${b.date}_${b.fluxo}`));
+
+  return {
+    labels: ordered.map((item) => `${formatDateBR(item.date)} • ${formatFluxoLabel(item.fluxo)}`),
+    reciclavel: ordered.map((item) => Number(item.reciclavel.toFixed(2))),
+    rejeito: ordered.map((item) => Number(item.rejeito.toFixed(2))),
+    naoComercializado: ordered.map((item) => Number(item.naoComercializado.toFixed(2))),
+    quantidade: ordered.map((item) => item.quantidade)
+  };
+}
+
 function buildFlowSeries(items = []) {
   const map = new Map();
 
   items.filter(isActiveCollection).forEach((item) => {
-    const label =
-      inferFluxo(item) === "final_turno"
-        ? "Final do turno"
-        : "Recebimento";
-
+    const label = formatFluxoLabel(inferFluxo(item));
     map.set(label, (map.get(label) || 0) + 1);
   });
 
@@ -1564,26 +2110,18 @@ function buildFlowSeries(items = []) {
 }
 
 function buildMaterialSeries(items = []) {
-  const totals = {};
+  const totals = getMaterialTotals(items);
 
-  MATERIAL_META.forEach((mat) => {
-    totals[mat.key] = 0;
-  });
-
-  items.filter(isActiveCollection).forEach((item) => {
-    MATERIAL_META.forEach((mat) => {
-      totals[mat.key] += inferMaterialValue(item, mat.key);
-    });
-  });
-
-  const ordered = MATERIAL_META.map((mat) => ({
-    label: mat.label,
-    value: totals[mat.key] || 0
-  })).filter((item) => item.value > 0);
+  const ordered = MATERIAL_META.map((material) => {
+    return {
+      label: material.label,
+      value: totals[material.key] || 0
+    };
+  }).filter((item) => item.value > 0);
 
   return {
     labels: ordered.map((item) => item.label),
-    values: ordered.map((item) => item.value)
+    values: ordered.map((item) => Number(item.value.toFixed(2)))
   };
 }
 
@@ -1607,6 +2145,63 @@ function buildCollectionPointsSeries(items = []) {
   };
 }
 
+function renderWeightTimeline(items = []) {
+  const canvas = document.getElementById("weightTimelineChart");
+
+  if (!canvas || typeof Chart === "undefined") return;
+
+  const daily = buildWeightDailySeries(items);
+
+  destroyChart(weightTimelineChart);
+
+  weightTimelineChart = new Chart(canvas, {
+    type: "bar",
+    data: {
+      labels: daily.labels,
+      datasets: [
+        {
+          label: "Peso reciclável",
+          data: daily.reciclavel,
+          backgroundColor: "rgba(129,185,42,.82)",
+          borderRadius: 8,
+          borderSkipped: false
+        },
+        {
+          label: "Rejeito",
+          data: daily.rejeito,
+          backgroundColor: "rgba(239,107,34,.78)",
+          borderRadius: 8,
+          borderSkipped: false
+        },
+        {
+          label: "Não comercializado",
+          data: daily.naoComercializado,
+          backgroundColor: "rgba(83,172,222,.58)",
+          borderRadius: 8,
+          borderSkipped: false
+        }
+      ]
+    },
+    options: {
+      ...getChartOptions("bar"),
+      plugins: {
+        ...getChartOptions("bar").plugins,
+        tooltip: {
+          callbacks: {
+            label(context) {
+              return `${context.dataset.label}: ${formatKg(context.raw)}`;
+            },
+            afterBody(context) {
+              const idx = context[0]?.dataIndex || 0;
+              return `Coletas realizadas: ${daily.quantidade[idx] || 0}`;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 function renderCharts(items = []) {
   if (typeof Chart === "undefined") return;
 
@@ -1615,9 +2210,10 @@ function renderCharts(items = []) {
   const ctxB = document.getElementById("secB");
   const ctxC = document.getElementById("secC");
 
-  [mainChart, secA, secB, secC].forEach((chart) => {
-    if (chart) chart.destroy();
-  });
+  destroyChart(mainChart);
+  destroyChart(secA);
+  destroyChart(secB);
+  destroyChart(secC);
 
   const daily = buildDailySeries(items);
   const flow = buildFlowSeries(items);
@@ -1662,7 +2258,8 @@ function renderCharts(items = []) {
             data: flow.values,
             backgroundColor: [
               "rgba(83,172,222,.82)",
-              "rgba(129,185,42,.82)"
+              "rgba(129,185,42,.82)",
+              "rgba(239,107,34,.78)"
             ]
           }
         ]
@@ -1685,7 +2282,19 @@ function renderCharts(items = []) {
           }
         ]
       },
-      options: getChartOptions(materialType)
+      options: {
+        ...getChartOptions(materialType),
+        plugins: {
+          ...getChartOptions(materialType).plugins,
+          tooltip: {
+            callbacks: {
+              label(context) {
+                return `${context.dataset.label}: ${formatKg(context.raw)}`;
+              }
+            }
+          }
+        }
+      }
     });
   }
 
@@ -1696,7 +2305,7 @@ function renderCharts(items = []) {
         labels: points.labels,
         datasets: [
           {
-            label: "Pontos de coleta",
+            label: "Coletas por participante",
             data: points.values,
             backgroundColor: "rgba(83,172,222,.30)",
             borderRadius: 8
@@ -1710,9 +2319,8 @@ function renderCharts(items = []) {
     });
   }
 }
-
 /* =========================
-   TABELA PAGINADA
+   TABELA PAGINADA • SEÇÃO 6
 ========================= */
 
 function getCurrentPageSlice(items = []) {
@@ -1723,41 +2331,33 @@ function getCurrentPageSlice(items = []) {
 }
 
 function updateTablePagination(total = 0) {
-  const indicator = document.getElementById("tablePageIndicator");
-  const btnPrev = document.getElementById("btnPrevColetas");
-  const btnNext = document.getElementById("btnNextColetas");
-
   const start = total === 0 ? 0 : tablePage * tablePageSize + 1;
   const end = Math.min((tablePage + 1) * tablePageSize, total);
 
-  if (indicator) {
-    indicator.textContent =
-      total > 0
-        ? `Mostrando ${start}-${end} de ${total}`
-        : "Nenhuma coleta";
+  if (els.tablePageIndicator) {
+    els.tablePageIndicator.textContent = total
+      ? `Mostrando ${start}-${end} de ${total}`
+      : "Nenhuma coleta";
   }
 
-  if (btnPrev) {
-    btnPrev.disabled = tablePage === 0;
+  if (els.btnPrevColetas) {
+    els.btnPrevColetas.disabled = tablePage === 0;
   }
 
-  if (btnNext) {
-    btnNext.disabled = end >= total;
+  if (els.btnNextColetas) {
+    els.btnNextColetas.disabled = end >= total;
   }
 }
 
 function setupTablePagination() {
-  const btnPrev = document.getElementById("btnPrevColetas");
-  const btnNext = document.getElementById("btnNextColetas");
-
-  btnPrev?.addEventListener("click", () => {
+  els.btnPrevColetas?.addEventListener("click", () => {
     if (tablePage <= 0) return;
 
     tablePage--;
     renderTable(tableFilteredColetas);
   });
 
-  btnNext?.addEventListener("click", () => {
+  els.btnNextColetas?.addEventListener("click", () => {
     const totalPages = Math.ceil(tableFilteredColetas.length / tablePageSize);
 
     if (tablePage >= totalPages - 1) return;
@@ -1779,12 +2379,22 @@ function applyTableFilters() {
     const status = normalizeText(getStatus(item));
     const tipo = normalizeText(participant.type);
 
-    if (filters.fluxo !== "__all__" && fluxo !== filters.fluxo) return false;
-    if (filters.entrega !== "__all__" && entrega !== filters.entrega) return false;
+    if (filters.fluxo !== "__all__" && fluxo !== filters.fluxo) {
+      return false;
+    }
+
+    if (filters.entrega !== "__all__" && entrega !== filters.entrega) {
+      return false;
+    }
 
     if (filters.status !== "__all__") {
-      if (filters.status === "ativo" && !isActiveCollection(item)) return false;
-      if (filters.status !== "ativo" && !status.includes(filters.status)) return false;
+      if (filters.status === "ativo" && !isActiveCollection(item)) {
+        return false;
+      }
+
+      if (filters.status !== "ativo" && !status.includes(filters.status)) {
+        return false;
+      }
     }
 
     if (filters.tipoCadastro !== "__all__") {
@@ -1792,13 +2402,17 @@ function applyTableFilters() {
         filters.tipoCadastro === "condominio" &&
         !tipo.includes("condominio") &&
         !tipo.includes("condomínio")
-      ) return false;
+      ) {
+        return false;
+      }
 
       if (
         filters.tipoCadastro === "comercio" &&
         !tipo.includes("comercio") &&
         !tipo.includes("comércio")
-      ) return false;
+      ) {
+        return false;
+      }
 
       if (
         filters.tipoCadastro === "participante" &&
@@ -1808,22 +2422,41 @@ function applyTableFilters() {
           tipo.includes("comercio") ||
           tipo.includes("comércio")
         )
-      ) return false;
+      ) {
+        return false;
+      }
+
+      if (
+        filters.tipoCadastro === "outro" &&
+        (
+          tipo.includes("participante") ||
+          tipo.includes("condominio") ||
+          tipo.includes("condomínio") ||
+          tipo.includes("comercio") ||
+          tipo.includes("comércio")
+        )
+      ) {
+        return false;
+      }
     }
 
     if (filters.search) {
-      const haystack = normalizeText([
+      const searchTarget = normalizeText([
         participant.name,
         participant.code,
         participant.address,
+        participant.type,
         fluxo,
+        formatFluxoLabel(fluxo),
         entrega,
         resolveHumanStatus(item),
         inferObservacao(item),
         JSON.stringify(item)
       ].join(" "));
 
-      if (!haystack.includes(filters.search)) return false;
+      if (!searchTarget.includes(filters.search)) {
+        return false;
+      }
     }
 
     return true;
@@ -1860,25 +2493,65 @@ function renderTable(items = []) {
   } else {
     els.tableColetasBody.innerHTML = pageItems.map((item) => {
       const participant = resolveParticipant(item);
+      const dateLabel = formatDateBR(inferDateISO(item));
+      const fluxoLabel = formatFluxoLabel(inferFluxo(item));
+      const reciclavel = inferTotalReciclavelRegistro(item);
+      const rejeito = inferTotalRejeitoRegistro(item);
+      const naoComercializado = inferNaoComercializado(item);
 
       return `
         <tr>
-          <td>${escapeHtml(formatDateBR(inferDateISO(item)))}</td>
-          <td>${escapeHtml(participant.name)}</td>
-          <td>${escapeHtml(participant.code)}</td>
-          <td>${escapeHtml(formatFluxoLabel(inferFluxo(item)))}</td>
-          <td>${statusBadge(item)}</td>
+          <td>${escapeHtml(dateLabel)}</td>
+
           <td>
-            <div class="details-metrics">
-              <span><strong>Reciclável:</strong> ${escapeHtml(formatKg(inferTotalReciclavelRegistro(item)))}</span>
-              <span><strong>Rejeito:</strong> ${escapeHtml(formatKg(inferTotalRejeitoRegistro(item)))}</span>
-              <span><strong>Não comercializado:</strong> ${escapeHtml(formatKg(inferNaoComercializado(item)))}</span>
+            <strong>${escapeHtml(participant.name)}</strong>
+            <div style="font-size:12px;color:#6c6764;margin-top:4px;">
+              ${escapeHtml(participant.type || "participante")}
             </div>
           </td>
+
+          <td>${escapeHtml(participant.code)}</td>
+
+          <td>${escapeHtml(fluxoLabel)}</td>
+
+          <td>${statusBadge(item)}</td>
+
+          <td>
+            <div class="details-metrics">
+              <span>
+                <strong>Reciclável:</strong>
+                ${escapeHtml(formatKg(reciclavel))}
+              </span>
+
+              <span>
+                <strong>Rejeito:</strong>
+                ${escapeHtml(formatKg(rejeito))}
+              </span>
+
+              <span>
+                <strong>Não comercializado:</strong>
+                ${escapeHtml(formatKg(naoComercializado))}
+              </span>
+            </div>
+          </td>
+
           <td>
             <div class="table-actions">
-              <button type="button" class="table-action-link" data-view="${escapeHtml(item.id)}">Ver coleta</button>
-              <button type="button" class="action-btn edit" data-edit="${escapeHtml(item.id)}">Editar</button>
+              <button
+                type="button"
+                class="table-action-link"
+                data-view="${escapeHtml(item.id)}"
+              >
+                Ver coleta
+              </button>
+
+              <button
+                type="button"
+                class="action-btn edit"
+                data-edit="${escapeHtml(item.id)}"
+              >
+                Editar
+              </button>
             </div>
           </td>
         </tr>
@@ -1919,7 +2592,14 @@ function ensureCollectionDetailsModal() {
     <div class="modal-backdrop" data-close="collectionDetailsModal"></div>
 
     <div class="modal-card modal-card-collection-details">
-      <button class="modal-close" type="button" data-close="collectionDetailsModal" aria-label="Fechar">×</button>
+      <button
+        class="modal-close"
+        type="button"
+        data-close="collectionDetailsModal"
+        aria-label="Fechar"
+      >
+        ×
+      </button>
 
       <div class="modal-head">
         <h3>Detalhes da coleta</h3>
@@ -1935,6 +2615,19 @@ function ensureCollectionDetailsModal() {
   return modal;
 }
 
+function renderMaterialDetails(item = {}) {
+  return MATERIAL_META.map((material) => {
+    const kg = inferMaterialValue(item, material.key);
+
+    return `
+      <div class="coleta-info-card">
+        <strong>${escapeHtml(material.label)}:</strong>
+        ${escapeHtml(formatKg(kg))}
+      </div>
+    `;
+  }).join("");
+}
+
 function openCollectionDetails(id) {
   const item = allColetas.find((coleta) => String(coleta.id) === String(id));
 
@@ -1944,35 +2637,85 @@ function openCollectionDetails(id) {
   const modal = ensureCollectionDetailsModal();
   const content = document.getElementById("collectionDetailsContent");
 
-  const materialRows = MATERIAL_META.map((mat) => {
-    const kg = inferMaterialValue(item, mat.key);
-
-    return `
-      <div class="coleta-info-card">
-        <strong>${escapeHtml(mat.label)}:</strong>
-        ${escapeHtml(formatKg(kg))}
-      </div>
-    `;
-  }).join("");
+  const rawDate = inferDateObject(item);
 
   content.innerHTML = `
     <div class="coleta-modal-grid collection-details-fields">
-      <div class="coleta-info-card"><strong>Data:</strong> ${escapeHtml(formatDateBR(inferDateISO(item)))}</div>
-      <div class="coleta-info-card"><strong>Fluxo:</strong> ${escapeHtml(formatFluxoLabel(inferFluxo(item)))}</div>
-      <div class="coleta-info-card"><strong>Participante:</strong> ${escapeHtml(participant.name)}</div>
-      <div class="coleta-info-card"><strong>Código:</strong> ${escapeHtml(participant.code)}</div>
-      <div class="coleta-info-card"><strong>Status:</strong> ${escapeHtml(resolveHumanStatus(item))}</div>
-      <div class="coleta-info-card"><strong>Qualidade:</strong> ${escapeHtml(String(inferQualidade(item) || "—"))}</div>
-      <div class="coleta-info-card"><strong>Peso reciclável:</strong> ${escapeHtml(formatKg(inferTotalReciclavelRegistro(item)))}</div>
-      <div class="coleta-info-card"><strong>Rejeito:</strong> ${escapeHtml(formatKg(inferTotalRejeitoRegistro(item)))}</div>
-      <div class="coleta-info-card"><strong>Não comercializado:</strong> ${escapeHtml(formatKg(inferNaoComercializado(item)))}</div>
-      <div class="coleta-info-card collection-span-full"><strong>Observação:</strong> ${escapeHtml(inferObservacao(item) || "—")}</div>
+      <div class="coleta-info-card">
+        <strong>Data:</strong>
+        ${escapeHtml(formatDateBR(rawDate))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Fluxo:</strong>
+        ${escapeHtml(formatFluxoLabel(inferFluxo(item)))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Entrega:</strong>
+        ${escapeHtml(inferEntrega(item))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Participante:</strong>
+        ${escapeHtml(participant.name)}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Código:</strong>
+        ${escapeHtml(participant.code)}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Tipo cadastro:</strong>
+        ${escapeHtml(participant.type || "participante")}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Status:</strong>
+        ${escapeHtml(resolveHumanStatus(item))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Qualidade:</strong>
+        ${escapeHtml(String(inferQualidade(item) || "—"))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Peso bruto:</strong>
+        ${escapeHtml(formatKg(inferPesoRecebidoBruto(item)))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Peso reciclável:</strong>
+        ${escapeHtml(formatKg(inferTotalReciclavelRegistro(item)))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Rejeito total:</strong>
+        ${escapeHtml(formatKg(inferTotalRejeitoRegistro(item)))}
+      </div>
+
+      <div class="coleta-info-card">
+        <strong>Não comercializado:</strong>
+        ${escapeHtml(formatKg(inferNaoComercializado(item)))}
+      </div>
+
+      <div class="coleta-info-card collection-span-full">
+        <strong>Endereço/local:</strong>
+        ${escapeHtml(participant.address || participant.localColeta || "—")}
+      </div>
+
+      <div class="coleta-info-card collection-span-full">
+        <strong>Observação:</strong>
+        ${escapeHtml(inferObservacao(item) || "—")}
+      </div>
     </div>
 
     <h3 style="margin:18px 0 10px;">Materiais informados</h3>
 
     <div class="coleta-modal-grid collection-details-fields">
-      ${materialRows}
+      ${renderMaterialDetails(item)}
     </div>
   `;
 
@@ -1994,12 +2737,15 @@ function openEditModal(id) {
 
   const participant = resolveParticipant(item);
 
-  if (els.editParticipantName) els.editParticipantName.textContent = `${participant.name} • ${participant.code}`;
+  if (els.editParticipantName) {
+    els.editParticipantName.textContent = `${participant.name} • ${participant.code}`;
+  }
+
   if (els.editFluxo) els.editFluxo.value = inferFluxo(item);
-  if (els.editEntrega) els.editEntrega.value = inferEntrega(item) === "—" ? "" : inferEntrega(item);
-  if (els.editPesoBase) els.editPesoBase.value = inferTotalReciclavelRegistro(item) || "";
+  if (els.editEntrega) els.editEntrega.value = inferEntrega(item) === "Normal" ? "" : inferEntrega(item);
+  if (els.editPesoBase) els.editPesoBase.value = inferPesoRecebidoBruto(item) || "";
   if (els.editQualidade) els.editQualidade.value = inferQualidade(item) || "";
-  if (els.editRejeito) els.editRejeito.value = inferTotalRejeitoRegistro(item) || "";
+  if (els.editRejeito) els.editRejeito.value = inferRejeitoInformado(item) || "";
   if (els.editNaoComercializado) els.editNaoComercializado.value = inferNaoComercializado(item) || "";
 
   if (els.editPlasticoKg) els.editPlasticoKg.value = inferMaterialValue(item, "plasticoKg") || "";
@@ -2020,13 +2766,18 @@ function openEditModal(id) {
 async function saveEdit() {
   if (!activeEditId) return;
 
+  const fluxo = els.editFluxo?.value || "recebimento";
+  const entrega = els.editEntrega?.value || "";
+
   const payload = {
-    fluxo: els.editFluxo?.value || "recebimento",
-    flowType: els.editFluxo?.value || "recebimento",
-    entrega: els.editEntrega?.value || "",
-    deliveryType: els.editEntrega?.value || "",
+    fluxo,
+    flowType: fluxo,
+    entrega,
+    deliveryType: entrega,
     pesoRecebido: toNumber(els.editPesoBase?.value),
+    pesoResiduoSecoKg: toNumber(els.editPesoBase?.value),
     qualidade: els.editQualidade?.value || "",
+    qualidadeNota: els.editQualidade?.value || "",
     rejeito: toNumber(els.editRejeito?.value),
     rejeitoKg: toNumber(els.editRejeito?.value),
     naoComercializado: toNumber(els.editNaoComercializado?.value),
@@ -2044,10 +2795,15 @@ async function saveEdit() {
     updatedAt: serverTimestamp()
   };
 
-  await updateDoc(doc(db, "coletas", activeEditId), payload);
+  try {
+    await updateDoc(doc(db, "coletas", activeEditId), payload);
 
-  closeModal("editModal");
-  activeEditId = null;
+    closeModal("editModal");
+    activeEditId = null;
+  } catch (error) {
+    console.error("Erro ao salvar edição:", error);
+    alert("Erro ao salvar edição da coleta.");
+  }
 }
 
 /* =========================
@@ -2058,6 +2814,7 @@ function getCoopBase() {
   const aliases = getTerritoryAliases(pageTerritoryId);
 
   if (aliases.includes("cooadesc")) return COOP_BASES.cooadesc;
+  if (aliases.includes("coadesc")) return COOP_BASES.coadesc;
   if (aliases.includes("padre-cacique")) return COOP_BASES["padre-cacique"];
 
   return COOP_BASES["vila-pinto"];
@@ -2114,16 +2871,27 @@ function renderCollectionPoints(items = []) {
       </div>
     `;
   } else {
-    els.collectionPointsGrid.innerHTML = points.map((point) => `
-      <button type="button" class="point-card" data-route-code="${escapeHtml(point.code)}">
-        <span class="point-code">${escapeHtml(point.code)}</span>
-        <h4>${escapeHtml(point.name)}</h4>
-        <div class="point-address">${escapeHtml(point.address || "Sem endereço informado")}</div>
-        <div class="point-meta">
-          <span class="point-chip">${point.count} coleta(s)</span>
-        </div>
-      </button>
-    `).join("");
+    els.collectionPointsGrid.innerHTML = points.map((point) => {
+      return `
+        <button
+          type="button"
+          class="point-card"
+          data-route-code="${escapeHtml(point.code)}"
+        >
+          <span class="point-code">${escapeHtml(point.code)}</span>
+
+          <h4>${escapeHtml(point.name)}</h4>
+
+          <div class="point-address">
+            ${escapeHtml(point.address || point.localColeta || "Sem endereço informado")}
+          </div>
+
+          <div class="point-meta">
+            <span class="point-chip">${point.count} coleta(s)</span>
+          </div>
+        </button>
+      `;
+    }).join("");
   }
 
   if (!routeMap || !routeMarkersLayer || typeof L === "undefined") return;
@@ -2139,7 +2907,7 @@ function renderCollectionPoints(items = []) {
   points.forEach((point) => {
     L.marker([point.lat, point.lng])
       .addTo(routeMarkersLayer)
-      .bindPopup(`${point.name}<br>${point.code}`);
+      .bindPopup(`${escapeHtml(point.name)}<br>${escapeHtml(point.code)}`);
   });
 
   if (points.length) {
@@ -2196,8 +2964,13 @@ function renderRouteToPoint(code) {
 
     if (!route) return;
 
-    if (els.routeDistanceLabel) els.routeDistanceLabel.textContent = `${formatNumber(route.summary.totalDistance / 1000)} km`;
-    if (els.routeTimeLabel) els.routeTimeLabel.textContent = `${formatNumber(route.summary.totalTime / 60)} min`;
+    if (els.routeDistanceLabel) {
+      els.routeDistanceLabel.textContent = `${formatNumber(route.summary.totalDistance / 1000)} km`;
+    }
+
+    if (els.routeTimeLabel) {
+      els.routeTimeLabel.textContent = `${formatNumber(route.summary.totalTime / 60)} min`;
+    }
   });
 }
 
@@ -2222,6 +2995,7 @@ function getExportRows(items = []) {
       Fluxo: formatFluxoLabel(inferFluxo(item)),
       Entrega: inferEntrega(item),
       Status: resolveHumanStatus(item),
+      "Peso bruto kg": Number(inferPesoRecebidoBruto(item) || 0),
       "Reciclável kg": Number(inferTotalReciclavelRegistro(item) || 0),
       "Rejeito kg": Number(inferTotalRejeitoRegistro(item) || 0),
       "Não comercializado kg": Number(inferNaoComercializado(item) || 0),
@@ -2229,8 +3003,8 @@ function getExportRows(items = []) {
       Observação: inferObservacao(item) || ""
     };
 
-    MATERIAL_META.forEach((mat) => {
-      row[mat.label] = Number(inferMaterialValue(item, mat.key) || 0);
+    MATERIAL_META.forEach((material) => {
+      row[material.label] = Number(inferMaterialValue(item, material.key) || 0);
     });
 
     return row;
@@ -2271,13 +3045,13 @@ async function exportPDF() {
 
   const { jsPDF } = window.jspdf;
 
+  const rows = getExportRows(getExportBaseItems());
+
   const pdf = new jsPDF({
     orientation: "landscape",
     unit: "pt",
     format: "a4"
   });
-
-  const rows = getExportRows(getExportBaseItems());
 
   pdf.setFontSize(16);
   pdf.text("Dashboard de Coletas Seletivas", 40, 40);
@@ -2290,8 +3064,12 @@ async function exportPDF() {
       startY: 80,
       head: [Object.keys(rows[0] || {})],
       body: rows.map((row) => Object.values(row)),
-      styles: { fontSize: 8 },
-      headStyles: { fillColor: [129, 185, 42] }
+      styles: {
+        fontSize: 8
+      },
+      headStyles: {
+        fillColor: [129, 185, 42]
+      }
     });
   }
 
@@ -2340,14 +3118,7 @@ function bindEvents() {
     if (event.key === "Enter") applyTableFilters();
   });
 
-  els.btnSaveEdit?.addEventListener("click", async () => {
-    try {
-      await saveEdit();
-    } catch (error) {
-      console.error(error);
-      alert("Erro ao salvar edição.");
-    }
-  });
+  els.btnSaveEdit?.addEventListener("click", saveEdit);
 
   document.addEventListener("click", (event) => {
     const closeBtn = event.target.closest("[data-close]");
@@ -2422,9 +3193,16 @@ function boot() {
       listenColetas();
     } catch (error) {
       console.error("Erro ao iniciar dashboard:", error);
+      setDbStatus("erro");
 
-      if (els.dbStatus) {
-        els.dbStatus.textContent = "erro";
+      if (els.tableColetasBody) {
+        els.tableColetasBody.innerHTML = `
+          <tr>
+            <td colspan="7">
+              Erro ao iniciar o dashboard. Verifique o console do navegador.
+            </td>
+          </tr>
+        `;
       }
 
       alert(error.message || "Não foi possível carregar o dashboard.");
