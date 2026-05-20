@@ -1082,6 +1082,7 @@ function getSortedRealizadas() {
 }
 
 function renderRecentColetas() {
+
   if (!els.recentColetasTableBody) return;
 
   const all = getSortedRealizadas();
@@ -1090,53 +1091,128 @@ function renderRecentColetas() {
   const end = start + STATE.recentPageSize;
 
   const pageItems =
-    els.btnPrevColetas || els.btnNextColetas || els.tablePageIndicator
-      ? all.slice(start, end)
-      : all.slice(0, STATE.recentLimit);
+    all.slice(start, end);
 
   if (!pageItems.length) {
+
     els.recentColetasTableBody.innerHTML = `
       <tr>
-        <td colspan="7">Nenhuma coleta cadastrada.</td>
+        <td colspan="7" class="table-empty">
+          Nenhuma coleta cadastrada.
+        </td>
       </tr>
     `;
 
-    updateLoadMoreButton();
     updateTablePagination(all.length);
     return;
   }
 
   els.recentColetasTableBody.innerHTML = pageItems
     .map((item) => {
+
+      const participante =
+        getParticipantName(item);
+
+      const codigo =
+        getParticipantCode(item);
+
+      const data =
+        formatDateLabel(item);
+
+      const fluxo =
+        formatFluxoLabel(
+          getTipoRecebimento(item)
+        );
+
+      const status =
+        getColetaStatusLabel(item);
+
+      const reciclavel =
+        formatKg(getPesoRecebido(item));
+
+      const rejeito =
+        formatKg(getRejeito(item));
+
+      const naoComercializado =
+        formatKg(getNaoComercializado(item));
+
       return `
         <tr>
-          <td>${escapeHtml(formatDateLabel(item))}</td>
-          <td>${escapeHtml(getParticipantName(item))}</td>
-          <td>${escapeHtml(getParticipantCode(item))}</td>
-          <td>${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</td>
-          <td>${statusBadge(getColetaStatusLabel(item))}</td>
-          <td>
-            <div class="details-metrics">
-              <span><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</span>
-              <span><strong>Rejeito:</strong> ${escapeHtml(formatKg(getRejeito(item)))}</span>
-              <span><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</span>
-            </div>
+
+          <td class="td-date">
+            ${escapeHtml(data)}
           </td>
-          <td>
+
+          <td class="td-user">
+            <strong>
+              ${escapeHtml(participante)}
+            </strong>
+
+            <span>
+              participante
+            </span>
+          </td>
+
+          <td class="td-code">
+            ${escapeHtml(codigo)}
+          </td>
+
+          <td class="td-flow">
+            ${escapeHtml(fluxo)}
+          </td>
+
+          <td class="td-status">
+            ${statusBadge(status)}
+          </td>
+
+          <td class="td-details">
+
+            <div class="table-detail-tags">
+
+              <span class="detail-tag success">
+                Reciclável:
+                ${escapeHtml(reciclavel)}
+              </span>
+
+              <span class="detail-tag danger">
+                Rejeito:
+                ${escapeHtml(rejeito)}
+              </span>
+
+              <span class="detail-tag warning">
+                Não comercializado:
+                ${escapeHtml(naoComercializado)}
+              </span>
+
+            </div>
+
+          </td>
+
+          <td class="td-actions">
+
             <button
-              class="table-action-link"
+              class="table-btn dark"
               type="button"
               data-view-coleta="${escapeHtml(item.id)}"
             >
               Ver coleta
             </button>
+
+            <button
+              class="table-btn dark outline"
+              type="button"
+              data-edit-coleta="${escapeHtml(item.id)}"
+            >
+              Editar
+            </button>
+
           </td>
+
         </tr>
       `;
     })
     .join("");
 
-  updateLoadMoreButton();
   updateTablePagination(all.length);
 }
 
