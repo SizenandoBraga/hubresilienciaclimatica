@@ -688,52 +688,44 @@ document.addEventListener("DOMContentLoaded", () => {
           ...docItem.data()
         }));
 
-        const validSummaries = summaries.filter((item) => {
-          const territoryId = canonicalTerritoryId(item.territoryId || item.id || item.code);
-          const count = Number(item.crgrsCount ?? 1);
+       const validSummaries = summaries.filter((item) => {
+  const territoryId = canonicalTerritoryId(item.territoryId || item.id || item.code);
+  const count = Number(item.crgrsCount ?? 1);
 
-          return isValidCrgrId(territoryId) && count > 0;
-        });
+  return isValidCrgrId(territoryId) && count > 0;
+});
 
-        if (!summaries.length) {
-          STATE.metrics = {
-            users: 0,
-            coletas: 0,
-            approvals: 0,
-            crgrs: FALLBACK_CRGRS.length,
-            alerts: 0
-          };
+const uniqueCrgrs = new Set(
+  validSummaries.map((item) =>
+    canonicalTerritoryId(item.territoryId || item.id || item.code)
+  )
+);
 
-          renderMetrics(STATE.metrics);
-          return;
-        }
+const totals = validSummaries.reduce(
+  (acc, item) => {
+    acc.users += Number(item.usersCount ?? item.participantsCount ?? 0);
+    acc.coletas += Number(item.coletasCount ?? 0);
+    acc.approvals += Number(item.approvalsCount ?? 0);
+    acc.alerts += Number(item.alertsCount ?? 0);
+    return acc;
+  },
+  {
+    users: 0,
+    coletas: 0,
+    approvals: 0,
+    alerts: 0
+  }
+);
 
-        const totals = validSummaries.reduce(
-          (acc, item) => {
-            acc.users += Number(item.usersCount ?? item.participantsCount ?? 0);
-            acc.coletas += Number(item.coletasCount ?? 0);
-            acc.approvals += Number(item.approvalsCount ?? 0);
-            acc.alerts += Number(item.alertsCount ?? 0);
-            return acc;
-          },
-          {
-            users: 0,
-            coletas: 0,
-            approvals: 0,
-            alerts: 0
-          }
-        );
+const activeCrgrs = uniqueCrgrs.size || 3;
 
-        const activeCrgrs = validSummaries.length || FALLBACK_CRGRS.length;
-
-        STATE.metrics = {
-          users: totals.users,
-          coletas: totals.coletas,
-          approvals: totals.approvals,
-          crgrs: activeCrgrs,
-          alerts: totals.alerts
-        };
-
+   STATE.metrics = {
+  users: totals.users,
+  coletas: totals.coletas,
+  approvals: totals.approvals,
+  crgrs: Math.min(activeCrgrs, 3),
+  alerts: totals.alerts
+};
         renderMetrics(STATE.metrics);
       }
 
