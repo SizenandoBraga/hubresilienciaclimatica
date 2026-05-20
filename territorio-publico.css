@@ -1,4 +1,31 @@
 /* =========================================================
+   TERRITÓRIO PÚBLICO • VILA PINTO
+========================================================= */
+
+:root{
+  --green:#81B92A;
+  --green-dark:#5f8d19;
+  --blue:#53ACDE;
+  --orange:#EF6B22;
+
+  --black:#2f2c2b;
+  --black-2:#3f3a3a;
+
+  --text:#5e5956;
+  --text-soft:#6b6663;
+
+  --line:rgba(60,58,57,.10);
+
+  --bg:#f6f7f3;
+  --card:#ffffff;
+
+  --shadow-soft:
+    0 24px 60px rgba(0,0,0,.08);
+
+  --container:1320px;
+}
+
+/* =========================================================
    RESET
 ========================================================= */
 
@@ -13,76 +40,36 @@ html{
 }
 
 body{
+  position:relative;
+
   font-family:"Archivo Condensed",sans-serif;
-  background:#f5f6f0;
-  color:#3C3A39;
+
+  background:var(--bg);
+
+  color:var(--black);
+
   overflow-x:hidden;
-  -webkit-font-smoothing:antialiased;
-  text-rendering:optimizeLegibility;
-}
-
-img{
-  max-width:100%;
-  display:block;
-}
-
-a{
-  text-decoration:none;
-  color:inherit;
 }
 
 /* =========================================================
-   TOKENS
-========================================================= */
-
-:root{
-
-  --green:#81B92A;
-  --green-dark:#5f8d19;
-
-  --orange:#EF6B22;
-
-  --blue:#53ACDE;
-
-  --black:#3C3A39;
-  --black-soft:#575351;
-
-  --text:#6c6764;
-
-  --bg:#f5f6f0;
-  --white:#ffffff;
-
-  --radius-md:24px;
-  --radius-lg:34px;
-  --radius-xl:42px;
-
-  --shadow-soft:
-    0 10px 24px rgba(0,0,0,.06);
-
-  --shadow-medium:
-    0 18px 40px rgba(0,0,0,.08);
-
-  --shadow-strong:
-    0 30px 70px rgba(0,0,0,.12);
-
-  --container:1240px;
-}
-
-/* =========================================================
-   BACKGROUND
+   FUNDOS
 ========================================================= */
 
 .bg-grid{
   position:fixed;
   inset:0;
 
-  z-index:-3;
-
   background-image:
-    linear-gradient(rgba(0,0,0,.018) 1px,transparent 1px),
-    linear-gradient(90deg,rgba(0,0,0,.018) 1px,transparent 1px);
+    linear-gradient(rgba(0,0,0,.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,0,0,.025) 1px, transparent 1px);
 
-  background-size:34px 34px;
+  background-size:36px 36px;
+
+  opacity:.32;
+
+  pointer-events:none;
+
+  z-index:-4;
 }
 
 .bg-orb{
@@ -90,33 +77,46 @@ a{
 
   border-radius:999px;
 
-  filter:blur(120px);
+  filter:blur(90px);
 
   opacity:.18;
 
-  z-index:-2;
-
   pointer-events:none;
+
+  z-index:-3;
 }
 
 .orb-1{
+  top:-180px;
+  left:-140px;
+
   width:420px;
   height:420px;
 
-  background:#81B92A;
-
-  top:-120px;
-  left:-120px;
+  background:var(--green);
 }
 
 .orb-2{
-  width:380px;
-  height:380px;
+  right:-160px;
+  bottom:-180px;
 
-  background:#53ACDE;
+  width:420px;
+  height:420px;
 
-  bottom:-120px;
-  right:-120px;
+  background:var(--blue);
+}
+
+.noise{
+  position:fixed;
+  inset:0;
+
+  background-image:url("https://www.transparenttextures.com/patterns/noise.png");
+
+  opacity:.035;
+
+  pointer-events:none;
+
+  z-index:-2;
 }
 
 /* =========================================================
@@ -124,515 +124,9 @@ a{
 ========================================================= */
 
 .container{
-  width:min(var(--container),calc(100% - 32px));
+  width:min(var(--container),calc(100% - 10%));
+
   margin:0 auto;
-}
-
-/* =========================================================
-   HERO SLIDER
-========================================================= */
-
-.hero-territory-slider{
-  position:relative;
-
-  padding:40px 0 26px;
-
-  background:
-    radial-gradient(circle at top left,
-      rgba(255,255,255,.16),
-      transparent 32%),
-    linear-gradient(135deg,#81B92A 0%,#5f8d19 100%);
-}
-
-.territory-presentation{
-  position:relative;
-
-  min-height:640px;
-
-  border-radius:42px;
-
-  overflow:hidden;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.985),
-      rgba(255,255,255,.94)
-    );
-
-  border:1px solid rgba(255,255,255,.68);
-
-  box-shadow:
-    0 32px 70px rgba(0,0,0,.10),
-    inset 0 1px 0 rgba(255,255,255,.92);
-}
-
-/* =========================================================
-   SLIDES
-========================================================= */
-
-.territory-slide{
-  position:absolute;
-  inset:0;
-
-  display:none;
-
-  align-items:center;
-
-  padding:72px;
-}
-
-.territory-slide.is-active{
-  display:flex;
-
-  animation:territoryFade .55s ease both;
-}
-
-@keyframes territoryFade{
-
-  from{
-    opacity:0;
-    transform:translateY(8px);
-  }
-
-  to{
-    opacity:1;
-    transform:translateY(0);
-  }
-}
-
-.territory-slide-content{
-  max-width:980px;
-}
-
-/* =========================================================
-   TITLES
-========================================================= */
-
-.territory-slide h1,
-.territory-slide h2{
-  margin-bottom:24px;
-
-  font-size:clamp(44px,5vw,78px);
-
-  line-height:.95;
-
-  letter-spacing:-2px;
-
-  color:#3C3A39;
-}
-
-/* =========================================================
-   LEAD
-========================================================= */
-
-.territory-slide-lead{
-  margin-bottom:22px;
-
-  max-width:860px;
-
-  font-size:clamp(22px,2vw,30px);
-
-  line-height:1.44;
-
-  color:#575351;
-}
-
-/* =========================================================
-   PARAGRAPHS
-========================================================= */
-
-.territory-slide p:not(.territory-slide-lead){
-  max-width:860px;
-
-  font-size:20px;
-
-  line-height:1.74;
-
-  color:#6c6764;
-}
-
-/* =========================================================
-   DOTS
-========================================================= */
-
-.territory-slider-dots{
-  position:absolute;
-
-  left:50%;
-  bottom:28px;
-
-  transform:translateX(-50%);
-
-  display:flex;
-  align-items:center;
-  gap:10px;
-
-  z-index:10;
-}
-
-.territory-dot{
-  width:10px;
-  height:10px;
-
-  border:0;
-  border-radius:999px;
-
-  background:rgba(60,58,57,.22);
-
-  cursor:pointer;
-
-  transition:.2s ease;
-}
-
-.territory-dot.is-active{
-  width:34px;
-
-  background:#81B92A;
-}
-
-/* =========================================================
-   STATS
-========================================================= */
-
-.stats-section{
-  position:relative;
-
-  margin-top:-34px;
-
-  padding:0 0 34px;
-
-  z-index:4;
-}
-
-.stats-grid{
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-
-  gap:18px;
-}
-
-.stat-card{
-  position:relative;
-
-  min-height:150px;
-
-  padding:22px;
-
-  border-radius:30px;
-
-  overflow:hidden;
-
-  background:rgba(255,255,255,.96);
-
-  border:1px solid rgba(255,255,255,.7);
-
-  box-shadow:
-    0 18px 40px rgba(0,0,0,.08),
-    inset 0 1px 0 rgba(255,255,255,.95);
-
-  display:flex;
-  flex-direction:column;
-  justify-content:space-between;
-}
-
-.stat-card:nth-child(1){
-  border-top:8px solid #81B92A;
-}
-
-.stat-card:nth-child(2){
-  border-top:8px solid #EF6B22;
-}
-
-.stat-card:nth-child(3){
-  border-top:8px solid #53ACDE;
-}
-
-.stat-card:nth-child(4){
-  border-top:8px solid #3C3A39;
-}
-
-.stat-label{
-  font-size:14px;
-  font-weight:800;
-
-  text-transform:uppercase;
-
-  color:#6c6764;
-}
-
-.stat-value{
-  font-size:clamp(38px,4vw,58px);
-
-  line-height:.94;
-
-  letter-spacing:-2px;
-
-  color:#3C3A39;
-}
-
-.stat-note{
-  font-size:14px;
-
-  line-height:1.45;
-
-  color:#6c6764;
-}
-
-/* =========================================================
-   CONTENT
-========================================================= */
-
-.content-section{
-  padding:0 0 48px;
-}
-
-.panel{
-  position:relative;
-
-  padding:36px;
-
-  border-radius:36px;
-
-  overflow:hidden;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.98),
-      rgba(255,255,255,.94)
-    );
-
-  border:1px solid rgba(255,255,255,.7);
-
-  box-shadow:
-    0 24px 50px rgba(0,0,0,.08),
-    inset 0 1px 0 rgba(255,255,255,.95);
-}
-
-.panel-head{
-  margin-bottom:24px;
-}
-
-.panel-head h2{
-  font-size:clamp(34px,3vw,50px);
-
-  line-height:1;
-
-  letter-spacing:-1px;
-
-  color:#3C3A39;
-}
-
-.territory-text{
-  display:grid;
-  gap:18px;
-
-  max-width:980px;
-}
-
-.territory-text p{
-  font-size:19px;
-
-  line-height:1.74;
-
-  color:#6c6764;
-}
-
-/* =========================================================
-   MOBILE
-========================================================= */
-
-@media(max-width:980px){
-
-  .territory-presentation{
-    min-height:720px;
-  }
-
-  .territory-slide{
-    padding:52px;
-  }
-
-  .stats-grid{
-    grid-template-columns:repeat(2,minmax(0,1fr));
-  }
-}
-
-@media(max-width:768px){
-
-  html,
-  body{
-    overflow-x:hidden;
-  }
-
-  .container{
-    width:calc(100% - 20px);
-  }
-
-  .hero-territory-slider{
-    padding:18px 0;
-  }
-
-  .territory-presentation{
-    min-height:760px;
-
-    border-radius:28px;
-  }
-
-  .territory-slide{
-    padding:28px 22px 88px;
-  }
-
-  .territory-slide h1,
-  .territory-slide h2{
-    margin-bottom:18px;
-
-    font-size:34px;
-
-    line-height:1.02;
-
-    letter-spacing:-1px;
-  }
-
-  .territory-slide-lead{
-    margin-bottom:18px;
-
-    font-size:17px;
-
-    line-height:1.64;
-  }
-
-  .territory-slide p:not(.territory-slide-lead){
-    font-size:15.8px;
-
-    line-height:1.74;
-  }
-
-  .territory-slider-dots{
-    bottom:18px;
-  }
-
-  .territory-dot.is-active{
-    width:28px;
-  }
-
-  .stats-section{
-    margin-top:-22px;
-
-    padding-bottom:24px;
-  }
-
-  .stats-grid{
-    grid-template-columns:1fr;
-
-    gap:12px;
-  }
-
-  .stat-card{
-    min-height:128px;
-
-    padding:20px;
-
-    border-radius:22px;
-  }
-
-  .stat-value{
-    font-size:42px;
-  }
-
-  .content-section{
-    padding-bottom:28px;
-  }
-
-  .panel{
-    padding:24px 18px;
-
-    border-radius:24px;
-  }
-
-  .panel-head{
-    margin-bottom:18px;
-  }
-
-  .panel-head h2{
-    font-size:30px;
-
-    line-height:1.04;
-  }
-
-  .territory-text{
-    gap:16px;
-  }
-
-  .territory-text p{
-    font-size:15.8px;
-
-    line-height:1.72;
-  }
-}
-
-@media(max-width:420px){
-
-  .territory-presentation{
-    min-height:790px;
-  }
-
-  .territory-slide h1,
-  .territory-slide h2{
-    font-size:30px;
-  }
-
-  .territory-slide-lead{
-    font-size:16px;
-  }
-
-  .territory-slide p:not(.territory-slide-lead){
-    font-size:15px;
-  }
-
-  .stat-value{
-    font-size:38px;
-  }
-
-  .panel-head h2{
-    font-size:26px;
-  }
-}
-
-@media(max-width:360px){
-
-  .container{
-    width:calc(100% - 14px);
-  }
-
-  .territory-slide{
-    padding:24px 16px 84px;
-  }
-
-  .territory-slide h1,
-  .territory-slide h2{
-    font-size:27px;
-  }
-
-  .territory-slide-lead{
-    font-size:15.5px;
-  }
-
-  .territory-slide p:not(.territory-slide-lead){
-    font-size:14.6px;
-  }
-
-  .panel{
-    padding:22px 16px;
-  }
-
-  .panel-head h2{
-    font-size:24px;
-  }
-
-  .territory-text p{
-    font-size:14.8px;
-  }
 }
 
 /* =========================================================
@@ -641,36 +135,73 @@ a{
 
 .territory-hero-static{
   position:relative;
-  padding:48px 0 36px;
+
+  padding:54px 0 40px;
+
   background:
     radial-gradient(circle at top left,
-      rgba(255,255,255,.16),
-      transparent 32%),
-    linear-gradient(135deg,#81B92A 0%,#5f8d19 100%);
+      rgba(255,255,255,.18),
+      transparent 34%),
+
+    radial-gradient(circle at bottom right,
+      rgba(83,172,222,.18),
+      transparent 30%),
+
+    linear-gradient(
+      135deg,
+      #81B92A 0%,
+      #6aa11e 52%,
+      #5f8d19 100%
+    );
+}
+
+.territory-hero-static::before{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  background:
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,.08),
+      transparent 30%
+    );
+
+  pointer-events:none;
 }
 
 .territory-hero-inner{
-  width:min(var(--container),calc(100% - 32px));
+  width:min(var(--container),calc(100% - 10%));
+
   margin:0 auto;
 }
 
 .territory-hero-static .territory-slide{
   position:relative;
+
   display:flex;
   align-items:center;
+
   min-height:560px;
+
   padding:72px;
+
   border-radius:42px;
+
   overflow:hidden;
+
   background:
     linear-gradient(
       135deg,
       rgba(255,255,255,.985),
       rgba(255,255,255,.94)
     );
-  border:1px solid rgba(255,255,255,.68);
+
+  border:1px solid rgba(255,255,255,.75);
+
   box-shadow:
-    0 32px 70px rgba(0,0,0,.10),
+    0 34px 80px rgba(0,0,0,.12),
     inset 0 1px 0 rgba(255,255,255,.92);
 }
 
@@ -679,59 +210,395 @@ a{
 }
 
 .territory-hero-static .territory-slide-content h1{
-  margin-bottom:26px;
-  font-size:clamp(48px,5vw,82px);
+  margin-bottom:28px;
+
+  font-size:clamp(52px,5vw,84px);
+
   line-height:.94;
-  letter-spacing:-2.4px;
-  color:#3C3A39;
+
+  letter-spacing:-2.5px;
+
+  color:#2e2b2a;
+
+  text-shadow:
+    0 2px 12px rgba(0,0,0,.04);
+
+  font-weight:800;
 }
 
 .territory-hero-static .territory-slide-lead{
   margin-bottom:24px;
+
   max-width:820px;
-  font-size:clamp(22px,2vw,31px);
-  line-height:1.48;
-  color:#575351;
+
+  font-size:clamp(23px,2vw,31px);
+
+  line-height:1.5;
+
+  color:#4d4a48;
+
+  font-weight:600;
 }
 
 .territory-hero-static .territory-slide p:not(.territory-slide-lead){
   max-width:860px;
+
   font-size:20px;
-  line-height:1.78;
-  color:#6c6764;
+
+  line-height:1.82;
+
+  color:#625d5a;
+}
+
+/* =========================================================
+   ESTATÍSTICAS
+========================================================= */
+
+.stats-section{
+  padding:42px 0 20px;
+}
+
+.stats-grid{
+  display:grid;
+
+  grid-template-columns:repeat(4,minmax(0,1fr));
+
+  gap:20px;
+}
+
+.stat-card{
+  position:relative;
+
+  padding:28px;
+
+  border-radius:30px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.985),
+      rgba(255,255,255,.94)
+    );
+
+  border:1px solid rgba(255,255,255,.75);
+
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.08);
+
+  overflow:hidden;
+
+  transition:
+    transform .22s ease,
+    box-shadow .22s ease;
+}
+
+.stat-card:hover{
+  transform:translateY(-6px);
+
+  box-shadow:
+    0 28px 60px rgba(0,0,0,.12);
+}
+
+.stat-card::before{
+  content:"";
+
+  position:absolute;
+  top:0;
+  left:0;
+
+  width:100%;
+  height:6px;
+
+  background:
+    linear-gradient(
+      90deg,
+      var(--green),
+      var(--blue)
+    );
+}
+
+.stat-label{
+  display:block;
+
+  margin-bottom:18px;
+
+  font-size:13px;
+
+  font-weight:800;
+
+  letter-spacing:.08em;
+
+  text-transform:uppercase;
+
+  color:#5f5a57;
+}
+
+.stat-value{
+  display:block;
+
+  margin-bottom:10px;
+
+  font-size:clamp(44px,3vw,60px);
+
+  line-height:1;
+
+  letter-spacing:-2px;
+
+  color:#2f2c2b;
+
+  text-shadow:
+    0 2px 10px rgba(0,0,0,.04);
+}
+
+.stat-note{
+  font-size:16px;
+
+  line-height:1.65;
+
+  color:#6b6663;
+}
+
+/* =========================================================
+   CONTEÚDO
+========================================================= */
+
+.content-section{
+  padding:34px 0 70px;
+}
+
+.territory-layout{
+  display:grid;
+}
+
+.panel{
+  position:relative;
+
+  width:100%;
+
+  border-radius:38px;
+
+  padding:42px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.985),
+      rgba(255,255,255,.955)
+    );
+
+  border:1px solid rgba(255,255,255,.75);
+
+  box-shadow:
+    0 24px 60px rgba(0,0,0,.08),
+    inset 0 1px 0 rgba(255,255,255,.95);
+
+  overflow:hidden;
+}
+
+.panel::before{
+  content:"";
+
+  position:absolute;
+  inset:0;
+
+  background:
+    radial-gradient(
+      circle at top right,
+      rgba(129,185,42,.06),
+      transparent 34%
+    );
+
+  pointer-events:none;
+}
+
+.panel-head{
+  position:relative;
+
+  margin-bottom:34px;
+}
+
+.panel-head h2{
+  position:relative;
+
+  color:#2f2c2b;
+
+  font-size:clamp(36px,3vw,54px);
+
+  line-height:1;
+
+  letter-spacing:-2px;
+
+  font-weight:800;
+}
+
+.panel-head h2::after{
+  content:"";
+
+  display:block;
+
+  width:76px;
+  height:6px;
+
+  margin-top:16px;
+
+  border-radius:999px;
+
+  background:
+    linear-gradient(
+      90deg,
+      #81B92A,
+      #53ACDE
+    );
+
+  box-shadow:
+    0 8px 18px rgba(129,185,42,.22);
+}
+
+/* =========================================================
+   TEXTO
+========================================================= */
+
+.territory-text{
+  display:grid;
+
+  gap:24px;
+}
+
+.territory-text p{
+  position:relative;
+
+  color:#5e5956;
+
+  font-size:20px;
+
+  line-height:1.94;
+
+  letter-spacing:.1px;
+
+  font-weight:400;
+}
+
+.territory-text p strong{
+  color:var(--green);
+}
+
+/* =========================================================
+   RESPONSIVO
+========================================================= */
+
+@media(max-width:1180px){
+
+  .stats-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+  }
+}
+
+@media(max-width:980px){
+
+  .territory-hero-static .territory-slide{
+    min-height:620px;
+
+    padding:54px;
+  }
 }
 
 @media(max-width:768px){
+
+  .container,
+  .territory-hero-inner{
+    width:calc(100% - 20px);
+  }
 
   .territory-hero-static{
     padding:20px 0 22px;
   }
 
-  .territory-hero-inner{
-    width:calc(100% - 20px);
-  }
-
   .territory-hero-static .territory-slide{
     min-height:680px;
+
     padding:34px 24px;
+
     border-radius:28px;
   }
 
   .territory-hero-static .territory-slide-content h1{
     margin-bottom:18px;
+
     font-size:36px;
+
     line-height:1.02;
+
     letter-spacing:-1px;
   }
 
   .territory-hero-static .territory-slide-lead{
     margin-bottom:18px;
+
     font-size:18px;
-    line-height:1.7;
+
+    line-height:1.72;
   }
 
   .territory-hero-static .territory-slide p:not(.territory-slide-lead){
     font-size:15.8px;
+
     line-height:1.76;
+  }
+
+  .stats-grid{
+    grid-template-columns:1fr;
+  }
+
+  .panel{
+    padding:28px 22px;
+
+    border-radius:28px;
+  }
+
+  .panel-head{
+    margin-bottom:24px;
+  }
+
+  .panel-head h2{
+    font-size:34px;
+  }
+
+  .territory-text{
+    gap:18px;
+  }
+
+  .territory-text p{
+    font-size:16px;
+
+    line-height:1.84;
+  }
+}
+
+@media(max-width:420px){
+
+  .territory-hero-static .territory-slide{
+    min-height:720px;
+
+    padding:28px 20px;
+  }
+
+  .territory-hero-static .territory-slide-content h1{
+    font-size:31px;
+  }
+
+  .territory-hero-static .territory-slide-lead{
+    font-size:16px;
+  }
+
+  .territory-hero-static .territory-slide p:not(.territory-slide-lead){
+    font-size:15px;
+  }
+
+  .stat-card{
+    padding:24px;
+  }
+
+  .stat-value{
+    font-size:42px;
   }
 }
