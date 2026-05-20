@@ -329,30 +329,53 @@ function isColetaRealizada(item = {}) {
 
 function getDateValue(item = {}) {
   const possible =
+    item.opDate ||
+    item.dataOperacao ||
+    item.operationDate ||
     item.dataColeta ||
     item.coletaData ||
     item.dateColeta ||
-    item.opDate ||
-    item.createdAt ||
     item.createdAtISO ||
+    item.updatedAtISO ||
+    item.createdAt ||
     item.updatedAt ||
     item.date ||
     item.data ||
+    item.payloadSnapshot?.opDate ||
+    item.payloadSnapshot?.dataOperacao ||
+    item.payloadSnapshot?.operationDate ||
     item.payloadSnapshot?.dataColeta ||
+    item.payloadSnapshot?.createdAtISO ||
     item.payloadSnapshot?.data ||
+    item.recebimento?.dataColeta ||
+    item.finalTurno?.dataColeta ||
     null;
 
   if (!possible) return null;
 
   if (typeof possible?.toDate === "function") return possible.toDate();
+
+  if (typeof possible?.seconds === "number") {
+    return new Date(possible.seconds * 1000);
+  }
+
   if (possible instanceof Date) return possible;
 
   if (typeof possible === "string") {
+    const brDateTime = possible.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
+
+    if (brDateTime) {
+      return new Date(
+        Number(brDateTime[3]),
+        Number(brDateTime[2]) - 1,
+        Number(brDateTime[1]),
+        Number(brDateTime[4] || 0),
+        Number(brDateTime[5] || 0)
+      );
+    }
+
     const parsed = new Date(possible);
     if (!Number.isNaN(parsed.getTime())) return parsed;
-
-    const br = possible.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-    if (br) return new Date(`${br[3]}-${br[2]}-${br[1]}T00:00:00`);
   }
 
   return null;
@@ -984,10 +1007,15 @@ function renderRecentColetas() {
       return `
         <tr>
           <td>${escapeHtml(formatDateLabel(item))}</td>
+
           <td>${escapeHtml(getParticipantName(item))}</td>
+
           <td>${escapeHtml(getParticipantCode(item))}</td>
+
           <td>${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</td>
+
           <td>${statusBadge(getColetaStatusLabel(item))}</td>
+
           <td>
             <div class="details-metrics">
               <span><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</span>
@@ -995,6 +1023,7 @@ function renderRecentColetas() {
               <span><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</span>
             </div>
           </td>
+
           <td>
             <button
               class="table-action-link"
@@ -1287,9 +1316,15 @@ function listenDashboardData(profile) {
   listenCollection("coletas", (items) => {
     STATE.coletas = items
       .filter(itemBelongsToTerritory)
-      .filter(isColetaRealizada);
+      .filter(isColetaRealizada)
+      .sort((a, b) => {
+        const dateA = getDateValue(a)?.getTime() || 0;
+        const dateB = getDateValue(b)?.getTime() || 0;
+        return dateB - dateA;
+      });
 
     updateKpis();
+    renderRecentColetas();
   });
 
   listenCollection("approvalRequests", (items) => {
@@ -1315,6 +1350,7 @@ function setupSyncButton() {
   els.syncCoopDashboardBtn?.addEventListener("click", () => {
     setCoopSyncStatus(`Atualizado em ${new Date().toLocaleString("pt-BR")}`);
     updateKpis();
+    renderRecentColetas();
   });
 }
 
