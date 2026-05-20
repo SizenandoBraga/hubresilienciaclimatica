@@ -205,42 +205,76 @@ function itemBelongsToTerritory(item = {}) {
     item.territoryId,
     item.territory,
     item.territorio,
+    item.territoryLabel,
     item.cooperativeId,
     item.cooperativaId,
     item.cooperativeName,
     item.cooperativa,
     item.localCrgr,
+    item.crgr,
     item.payloadSnapshot?.territoryId,
     item.payloadSnapshot?.territory,
+    item.payloadSnapshot?.territorio,
+    item.payloadSnapshot?.territoryLabel,
     item.payloadSnapshot?.cooperativeId,
     item.payloadSnapshot?.cooperativaId,
-    item.payloadSnapshot?.localCrgr
+    item.payloadSnapshot?.cooperativa,
+    item.payloadSnapshot?.localCrgr,
+    item.payloadSnapshot?.crgr,
+    item.recebimento?.territoryId,
+    item.recebimento?.territory,
+    item.recebimento?.cooperativeId,
+    item.finalTurno?.territoryId,
+    item.finalTurno?.territory,
+    item.finalTurno?.cooperativeId
   ]
     .filter(Boolean)
     .map(canonicalTerritoryId);
 
+  if (fields.includes(PAGE_TERRITORY.territoryId)) {
+    return true;
+  }
+
   if (PAGE_TERRITORY.territoryId === "vila-pinto") {
-    return (
+    if (
       code.startsWith("VPD") ||
+      code.startsWith("VP") ||
       code.startsWith("C") ||
-      code === "FAMILIAS" ||
-      fields.includes("vila-pinto")
-    );
+      code.startsWith("F") ||
+      code === "FAMILIAS"
+    ) {
+      return true;
+    }
   }
 
   if (PAGE_TERRITORY.territoryId === "cooadesc") {
-    return (
+    if (
       code.startsWith("COA") ||
       code.startsWith("COO") ||
-      fields.includes("cooadesc")
-    );
+      code.startsWith("CD")
+    ) {
+      return true;
+    }
   }
 
   if (PAGE_TERRITORY.territoryId === "padre-cacique") {
-    return (
+    if (
       code.startsWith("PC") ||
-      fields.includes("padre-cacique")
-    );
+      code.startsWith("PCA") ||
+      code.startsWith("PDC")
+    ) {
+      return true;
+    }
+  }
+
+  /*
+    IMPORTANTE:
+    Se a coleta não tiver território nem código,
+    não bloqueia a tabela. Isso evita que coletas novas
+    fiquem fora por falta de padronização no cadastro.
+  */
+  if (!fields.length && !code) {
+    return true;
   }
 
   return false;
@@ -1313,19 +1347,34 @@ function listenDashboardData(profile) {
     updateKpis();
   });
 
-  listenCollection("coletas", (items) => {
-    STATE.coletas = items
-      .filter(itemBelongsToTerritory)
-      .filter(isColetaRealizada)
-      .sort((a, b) => {
-        const dateA = getDateValue(a)?.getTime() || 0;
-        const dateB = getDateValue(b)?.getTime() || 0;
-        return dateB - dateA;
-      });
+ listenCollection("coletas", (items) => {
+  STATE.coletas = items
+    .filter(isColetaRealizada)
+    .filter(itemBelongsToTerritory)
+    .sort((a, b) => {
+      const dateA = getDateValue(a)?.getTime() || 0;
+      const dateB = getDateValue(b)?.getTime() || 0;
+      return dateB - dateA;
+    });
 
-    updateKpis();
-    renderRecentColetas();
-  });
+  console.table(
+    STATE.coletas.map((item) => ({
+      id: item.id,
+      data: formatDateLabel(item),
+      codigo: getParticipantCode(item),
+      participante: getParticipantName(item),
+      territorio:
+        item.territoryId ||
+        item.territory ||
+        item.cooperativeId ||
+        item.payloadSnapshot?.territoryId ||
+        "-"
+    }))
+  );
+
+  updateKpis();
+  renderRecentColetas();
+});
 
   listenCollection("approvalRequests", (items) => {
     STATE.approvalRequests = items
