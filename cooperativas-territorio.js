@@ -81,7 +81,10 @@ const els = {
   chartColetasMensais: document.getElementById("chartColetasMensais"),
   chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil"),
 
-  recentColetasTableBody: document.getElementById("recentColetasTableBody"),
+  recentColetasTableBody:
+    document.getElementById("recentColetasTableBody") ||
+    document.getElementById("latestColetasBody"),
+
   exportParticipantsPdfBtn: document.getElementById("exportParticipantsPdfBtn"),
   btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas")
 };
@@ -165,9 +168,7 @@ function animateNumber(el, value, suffix = "") {
 
     el.textContent = next.toLocaleString("pt-BR") + suffix;
 
-    if (progress < 1) {
-      requestAnimationFrame(frame);
-    }
+    if (progress < 1) requestAnimationFrame(frame);
   }
 
   requestAnimationFrame(frame);
@@ -344,16 +345,13 @@ function getDateValue(item = {}) {
   if (!possible) return null;
 
   if (typeof possible?.toDate === "function") return possible.toDate();
-
   if (possible instanceof Date) return possible;
 
   if (typeof possible === "string") {
     const parsed = new Date(possible);
-
     if (!Number.isNaN(parsed.getTime())) return parsed;
 
     const br = possible.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
-
     if (br) return new Date(`${br[3]}-${br[2]}-${br[1]}T00:00:00`);
   }
 
@@ -547,23 +545,20 @@ function getPesoRecebido(coleta = {}) {
     toNumber(coleta.peso_recebido) ||
     toNumber(coleta.totalPesoRecebido) ||
     toNumber(coleta.totalRecebido) ||
+    toNumber(coleta.totalRecebidoKg) ||
     toNumber(coleta.totalKg) ||
     toNumber(coleta.pesoTotal) ||
     toNumber(coleta.peso) ||
     toNumber(coleta.kg) ||
-
     toNumber(coleta.recebimento?.pesoResiduoSecoKg) ||
     toNumber(coleta.recebimento?.pesoRecebido) ||
     toNumber(coleta.recebimento?.totalKg) ||
-
     toNumber(coleta.finalTurno?.pesoResiduoSecoKg) ||
     toNumber(coleta.finalTurno?.pesoRecebido) ||
     toNumber(coleta.finalTurno?.totalKg) ||
-
     toNumber(coleta.payloadSnapshot?.pesoRecebido) ||
     toNumber(coleta.payloadSnapshot?.totalKg) ||
     toNumber(coleta.payloadSnapshot?.pesoResiduoSecoKg) ||
-
     somaMateriais(coleta) ||
     0
   );
@@ -574,14 +569,13 @@ function getRejeito(coleta = {}) {
     toNumber(coleta.rejeito) ||
     toNumber(coleta.pesoRejeito) ||
     toNumber(coleta.totalRejeito) ||
+    toNumber(coleta.totalRejeitoKg) ||
+    toNumber(coleta.rejeitoKg) ||
     toNumber(coleta.rejeitos) ||
-
     toNumber(coleta.recebimento?.pesoRejeitoKg) ||
     toNumber(coleta.recebimento?.rejeito) ||
-
     toNumber(coleta.finalTurno?.pesoRejeitoKg) ||
     toNumber(coleta.finalTurno?.rejeito) ||
-
     toNumber(coleta.payloadSnapshot?.rejeito) ||
     toNumber(coleta.payloadSnapshot?.pesoRejeito) ||
     toNumber(coleta.payloadSnapshot?.totalRejeito) ||
@@ -594,16 +588,15 @@ function getNaoComercializado(coleta = {}) {
     toNumber(coleta.naoComercializado) ||
     toNumber(coleta.nao_comercializado) ||
     toNumber(coleta.totalNaoComercializado) ||
+    toNumber(coleta.totalNaoComercializadoKg) ||
+    toNumber(coleta.naoComercializadoKg) ||
     toNumber(coleta.materialNaoComercializado) ||
     toNumber(coleta.naoVenda) ||
     toNumber(coleta.semComercializacao) ||
-
     toNumber(coleta.recebimento?.pesoNaoComercializadoKg) ||
     toNumber(coleta.recebimento?.naoComercializado) ||
-
     toNumber(coleta.finalTurno?.pesoNaoComercializadoKg) ||
     toNumber(coleta.finalTurno?.naoComercializado) ||
-
     toNumber(coleta.payloadSnapshot?.naoComercializado) ||
     toNumber(coleta.payloadSnapshot?.totalNaoComercializado) ||
     0
@@ -615,15 +608,12 @@ function getQualidade(coleta = {}) {
     toNumber(coleta.qualidade) ||
     toNumber(coleta.notaQualidade) ||
     toNumber(coleta.qualityScore) ||
-
     toNumber(coleta.recebimento?.qualidade) ||
     toNumber(coleta.recebimento?.notaQualidade) ||
     toNumber(coleta.recebimento?.qualidadeNota) ||
-
     toNumber(coleta.finalTurno?.qualidade) ||
     toNumber(coleta.finalTurno?.notaQualidade) ||
     toNumber(coleta.finalTurno?.qualidadeNota) ||
-
     toNumber(coleta.payloadSnapshot?.qualidade) ||
     toNumber(coleta.payloadSnapshot?.notaQualidade) ||
     toNumber(coleta.payloadSnapshot?.qualidadeNota) ||
@@ -651,7 +641,6 @@ function renderMaterialsList(item = {}) {
   }
 
   const materiais = getMateriaisObject(item);
-
   let entries = [];
 
   if (Array.isArray(materiais)) {
@@ -995,15 +984,10 @@ function renderRecentColetas() {
       return `
         <tr>
           <td>${escapeHtml(formatDateLabel(item))}</td>
-
           <td>${escapeHtml(getParticipantName(item))}</td>
-
           <td>${escapeHtml(getParticipantCode(item))}</td>
-
           <td>${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</td>
-
           <td>${statusBadge(getColetaStatusLabel(item))}</td>
-
           <td>
             <div class="details-metrics">
               <span><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</span>
@@ -1011,7 +995,6 @@ function renderRecentColetas() {
               <span><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</span>
             </div>
           </td>
-
           <td>
             <button
               class="table-action-link"
@@ -1030,7 +1013,7 @@ function renderRecentColetas() {
 }
 
 function updateLoadMoreButton() {
-  const btn = document.getElementById("btnLoadMoreColetas");
+  const btn = els.btnLoadMoreColetas || document.getElementById("btnLoadMoreColetas");
   if (!btn) return;
 
   const total = STATE.coletas.filter(isColetaRealizada).length;
@@ -1052,7 +1035,7 @@ function updateLoadMoreButton() {
 }
 
 function setupLoadMoreColetasButton() {
-  const btn = document.getElementById("btnLoadMoreColetas");
+  const btn = els.btnLoadMoreColetas || document.getElementById("btnLoadMoreColetas");
   if (!btn) return;
 
   btn.addEventListener("click", () => {
@@ -1306,20 +1289,6 @@ function listenDashboardData(profile) {
       .filter(itemBelongsToTerritory)
       .filter(isColetaRealizada);
 
-    console.table(
-      STATE.coletas.slice(0, 10).map((item) => ({
-        id: item.id,
-        data: formatDateLabel(item),
-        tipo: formatFluxoLabel(getTipoRecebimento(item)),
-        participante: getParticipantName(item),
-        codigo: getParticipantCode(item),
-        peso: getPesoRecebido(item),
-        rejeito: getRejeito(item),
-        naoComercializado: getNaoComercializado(item),
-        qualidade: getQualidade(item)
-      }))
-    );
-
     updateKpis();
   });
 
@@ -1327,15 +1296,6 @@ function listenDashboardData(profile) {
     STATE.approvalRequests = items
       .filter(itemBelongsToTerritory)
       .filter(isPendingParticipant);
-
-    console.table(
-      STATE.approvalRequests.map((item) => ({
-        id: item.id,
-        nome: getParticipantName(item),
-        codigo: getParticipantCode(item),
-        status: item.status || item.decision || item.approvalStatus
-      }))
-    );
 
     updateKpis();
   });
