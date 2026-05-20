@@ -23,15 +23,33 @@ function canonicalTerritoryId(value) {
   const raw = String(value || "")
     .trim()
     .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replaceAll("_", "-")
     .replace(/\s+/g, "-");
 
   if (!raw) return "vila-pinto";
-  if (raw === "crgr-vila-pinto") return "vila-pinto";
-  if (raw === "crgr-cooadesc") return "cooadesc";
-  if (raw === "crgr-coadesc") return "cooadesc";
-  if (raw === "coadesc") return "cooadesc";
-  if (raw === "crgr-padre-cacique") return "padre-cacique";
+
+  if (raw === "crgr-vila-pinto" || raw === "vila-pinto" || raw === "vp") {
+    return "vila-pinto";
+  }
+
+  if (
+    raw === "crgr-cooadesc" ||
+    raw === "crgr-coadesc" ||
+    raw === "cooadesc" ||
+    raw === "coadesc"
+  ) {
+    return "cooadesc";
+  }
+
+  if (
+    raw === "crgr-padre-cacique" ||
+    raw === "padre-cacique" ||
+    raw === "padre"
+  ) {
+    return "padre-cacique";
+  }
 
   return raw;
 }
@@ -86,7 +104,11 @@ const els = {
     document.getElementById("latestColetasBody"),
 
   exportParticipantsPdfBtn: document.getElementById("exportParticipantsPdfBtn"),
-  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas")
+
+  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas"),
+  btnPrevColetas: document.getElementById("btnPrevColetas"),
+  btnNextColetas: document.getElementById("btnNextColetas"),
+  tablePageIndicator: document.getElementById("tablePageIndicator")
 };
 
 /* =========================================================
@@ -98,10 +120,15 @@ const STATE = {
   profile: null,
   isAdmin: false,
   canEditAll: false,
+
   participants: [],
   coletas: [],
   approvalRequests: [],
+
   unsubscribers: [],
+
+  recentPage: 0,
+  recentPageSize: 10,
   recentLimit: 10
 };
 
@@ -132,11 +159,14 @@ function setText(el, value) {
 }
 
 function formatNumber(value) {
-  return Number(value || 0).toLocaleString("pt-BR");
+  return Number(value || 0).toLocaleString("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 1
+  });
 }
 
 function formatKg(value) {
-  return `${formatNumber(Math.round(Number(value || 0)))} kg`;
+  return `${formatNumber(Number(value || 0))} kg`;
 }
 
 function toNumber(value) {
@@ -146,12 +176,23 @@ function toNumber(value) {
   const parsed = Number(
     String(value)
       .trim()
+      .replace(/\s/g, "")
+      .replace(/kg|kgs|quilo|quilos|litros?|r\$/gi, "")
       .replace(/\./g, "")
       .replace(",", ".")
       .replace(/[^\d.-]/g, "")
   );
 
   return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function firstText(...values) {
+  for (const value of values) {
+    const text = String(value ?? "").trim();
+    if (text) return text;
+  }
+
+  return "";
 }
 
 function animateNumber(el, value, suffix = "") {
@@ -192,8 +233,12 @@ function getParticipantCode(item = {}) {
     item.codigoParticipante ||
     item.codigo ||
     item.code ||
+    item.familyCode ||
     item.payloadSnapshot?.participantCode ||
     item.payloadSnapshot?.codigoParticipante ||
+    item.payloadSnapshot?.familyCode ||
+    item.recebimento?.participantCode ||
+    item.finalTurno?.participantCode ||
     ""
   ).trim();
 }
@@ -290,6 +335,8 @@ function getParticipantName(item = {}) {
     item.name ||
     item.payloadSnapshot?.participantName ||
     item.payloadSnapshot?.name ||
+    item.recebimento?.participantName ||
+    item.finalTurno?.participantName ||
     code ||
     "-"
   );
@@ -299,9 +346,12 @@ function participantType(item = {}) {
   return normalizeText(
     item.participantType ||
     item.tipoParticipante ||
+    item.tipoCadastro ||
     item.tipo ||
     item.localType ||
     item.codeLocalType ||
+    item.payloadSnapshot?.participantType ||
+    item.payloadSnapshot?.tipoCadastro ||
     item.payloadSnapshot?.localType ||
     item.payloadSnapshot?.codeLocalType
   );
@@ -315,7 +365,8 @@ function isApprovedParticipant(item = {}) {
     status === "aprovado" ||
     status === "active" ||
     status === "ativo" ||
-    item.active === true
+    item.active === true ||
+    item.ativo === true
   );
 }
 
@@ -425,10 +476,13 @@ function getTipoRecebimento(item = {}) {
     item.receiptType ||
     item.tipo ||
     item.recebimento?.flowType ||
+    item.recebimento?.fluxo ||
     item.finalTurno?.flowType ||
+    item.finalTurno?.fluxo ||
     item.localType ||
     item.codeLocalType ||
     item.payloadSnapshot?.flowType ||
+    item.payloadSnapshot?.fluxo ||
     item.payloadSnapshot?.tipoRecebimento ||
     item.payloadSnapshot?.localType ||
     "recebimento"
@@ -464,8 +518,12 @@ function getColetaStatusLabel(item = {}) {
   return String(raw || "Realizada");
 }
 
-function statusBadge(status) {
-  const label = String(status || "Realizada");
+function statusBadge(statusOrItem) {
+  const label =
+    typeof statusOrItem === "object"
+      ? getColetaStatusLabel(statusOrItem)
+      : String(statusOrItem || "Realizada");
+
   const normalized = normalizeText(label);
 
   let className = "status-badge";
@@ -558,7 +616,15 @@ function getFinalTurnoMateriais(item = {}) {
       toNumber(item.finalTurno?.isoporKg) ||
       toNumber(item.finalTurno?.isopor) ||
       toNumber(item.payloadSnapshot?.isoporKg) ||
-      toNumber(item.payloadSnapshot?.isopor)
+      toNumber(item.payloadSnapshot?.isopor),
+
+    "Óleo":
+      toNumber(item.oleoKg) ||
+      toNumber(item.oleo) ||
+      toNumber(item.finalTurno?.oleoKg) ||
+      toNumber(item.finalTurno?.oleo) ||
+      toNumber(item.payloadSnapshot?.oleoKg) ||
+      toNumber(item.payloadSnapshot?.oleo)
   };
 }
 
@@ -677,8 +743,7 @@ function getQualidade(coleta = {}) {
 function renderMaterialsList(item = {}) {
   const fixedMaterials = getFinalTurnoMateriais(item);
 
-  const fixedEntries = Object.entries(fixedMaterials)
-    .filter(([, value]) => toNumber(value) > 0);
+  const fixedEntries = Object.entries(fixedMaterials).filter(([, value]) => toNumber(value) > 0);
 
   if (fixedEntries.length) {
     return fixedEntries
@@ -830,9 +895,7 @@ function fillHeader(profile) {
     profile.nome ||
     (isAdmin ? "Administrador VP" : "Usuário");
 
-  if (els.userNameTop) {
-    els.userNameTop.textContent = name;
-  }
+  setText(els.userNameTop, name);
 
   if (els.accessBanner) {
     if (isGovernanca) {
@@ -899,9 +962,7 @@ function fillStaticPanels() {
 }
 
 function setCoopSyncStatus(text) {
-  if (els.syncCoopDashboardStatus) {
-    els.syncCoopDashboardStatus.textContent = text;
-  }
+  setText(els.syncCoopDashboardStatus, text);
 }
 
 /* =========================================================
@@ -1007,45 +1068,53 @@ function updateKpis() {
 }
 
 /* =========================================================
-   TABELA RECENTE
+   TABELA RECENTE COM PAGINAÇÃO
 ========================================================= */
 
-function renderRecentColetas() {
-  if (!els.recentColetasTableBody) return;
-
-  const recent = [...STATE.coletas]
+function getSortedRealizadas() {
+  return [...STATE.coletas]
     .filter(isColetaRealizada)
     .sort((a, b) => {
       const dateA = getDateValue(a)?.getTime() || 0;
       const dateB = getDateValue(b)?.getTime() || 0;
       return dateB - dateA;
-    })
-    .slice(0, STATE.recentLimit);
+    });
+}
 
-  if (!recent.length) {
+function renderRecentColetas() {
+  if (!els.recentColetasTableBody) return;
+
+  const all = getSortedRealizadas();
+
+  const start = STATE.recentPage * STATE.recentPageSize;
+  const end = start + STATE.recentPageSize;
+
+  const pageItems =
+    els.btnPrevColetas || els.btnNextColetas || els.tablePageIndicator
+      ? all.slice(start, end)
+      : all.slice(0, STATE.recentLimit);
+
+  if (!pageItems.length) {
     els.recentColetasTableBody.innerHTML = `
       <tr>
         <td colspan="7">Nenhuma coleta cadastrada.</td>
       </tr>
     `;
+
     updateLoadMoreButton();
+    updateTablePagination(all.length);
     return;
   }
 
-  els.recentColetasTableBody.innerHTML = recent
+  els.recentColetasTableBody.innerHTML = pageItems
     .map((item) => {
       return `
         <tr>
           <td>${escapeHtml(formatDateLabel(item))}</td>
-
           <td>${escapeHtml(getParticipantName(item))}</td>
-
           <td>${escapeHtml(getParticipantCode(item))}</td>
-
           <td>${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</td>
-
           <td>${statusBadge(getColetaStatusLabel(item))}</td>
-
           <td>
             <div class="details-metrics">
               <span><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</span>
@@ -1053,7 +1122,6 @@ function renderRecentColetas() {
               <span><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</span>
             </div>
           </td>
-
           <td>
             <button
               class="table-action-link"
@@ -1069,13 +1137,51 @@ function renderRecentColetas() {
     .join("");
 
   updateLoadMoreButton();
+  updateTablePagination(all.length);
+}
+
+function updateTablePagination(total) {
+  const start = total === 0 ? 0 : STATE.recentPage * STATE.recentPageSize + 1;
+  const end = Math.min((STATE.recentPage + 1) * STATE.recentPageSize, total);
+
+  if (els.tablePageIndicator) {
+    els.tablePageIndicator.textContent =
+      total > 0 ? `Mostrando ${start}-${end} de ${total}` : "Nenhuma coleta";
+  }
+
+  if (els.btnPrevColetas) {
+    els.btnPrevColetas.disabled = STATE.recentPage <= 0;
+  }
+
+  if (els.btnNextColetas) {
+    els.btnNextColetas.disabled = end >= total;
+  }
+}
+
+function setupTablePagination() {
+  els.btnPrevColetas?.addEventListener("click", () => {
+    if (STATE.recentPage <= 0) return;
+
+    STATE.recentPage -= 1;
+    renderRecentColetas();
+  });
+
+  els.btnNextColetas?.addEventListener("click", () => {
+    const total = getSortedRealizadas().length;
+    const totalPages = Math.ceil(total / STATE.recentPageSize);
+
+    if (STATE.recentPage >= totalPages - 1) return;
+
+    STATE.recentPage += 1;
+    renderRecentColetas();
+  });
 }
 
 function updateLoadMoreButton() {
   const btn = els.btnLoadMoreColetas || document.getElementById("btnLoadMoreColetas");
   if (!btn) return;
 
-  const total = STATE.coletas.filter(isColetaRealizada).length;
+  const total = getSortedRealizadas().length;
 
   if (!total) {
     btn.textContent = "Nenhuma coleta disponível";
@@ -1329,7 +1435,7 @@ function applyRoleVisibility(profile) {
   });
 }
 
-function listenDashboardData(profile) {
+function listenDashboardData() {
   clearUnsubscribers();
 
   listenCollection("participants", (items) => {
@@ -1343,34 +1449,21 @@ function listenDashboardData(profile) {
     updateKpis();
   });
 
- listenCollection("coletas", (items) => {
-  STATE.coletas = items
-    .filter(isColetaRealizada)
-    .filter(itemBelongsToTerritory)
-    .sort((a, b) => {
-      const dateA = getDateValue(a)?.getTime() || 0;
-      const dateB = getDateValue(b)?.getTime() || 0;
-      return dateB - dateA;
-    });
+  listenCollection("coletas", (items) => {
+    STATE.coletas = items
+      .filter(isColetaRealizada)
+      .filter(itemBelongsToTerritory)
+      .sort((a, b) => {
+        const dateA = getDateValue(a)?.getTime() || 0;
+        const dateB = getDateValue(b)?.getTime() || 0;
+        return dateB - dateA;
+      });
 
-  console.table(
-    STATE.coletas.map((item) => ({
-      id: item.id,
-      data: formatDateLabel(item),
-      codigo: getParticipantCode(item),
-      participante: getParticipantName(item),
-      territorio:
-        item.territoryId ||
-        item.territory ||
-        item.cooperativeId ||
-        item.payloadSnapshot?.territoryId ||
-        "-"
-    }))
-  );
+    STATE.recentPage = 0;
 
-  updateKpis();
-  renderRecentColetas();
-});
+    updateKpis();
+    renderRecentColetas();
+  });
 
   listenCollection("approvalRequests", (items) => {
     STATE.approvalRequests = items
@@ -1410,6 +1503,7 @@ function boot() {
   setupExportButton();
   setupSyncButton();
   setupLoadMoreColetasButton();
+  setupTablePagination();
   setupRecentColetasActions();
   fillStaticPanels();
 
@@ -1430,7 +1524,7 @@ function boot() {
       applyPermissionRules(profile);
       fillHeader(profile);
       applyRoleVisibility(profile);
-      listenDashboardData(profile);
+      listenDashboardData();
 
       setCoopSyncStatus("Indicadores carregados em tempo real.");
 
