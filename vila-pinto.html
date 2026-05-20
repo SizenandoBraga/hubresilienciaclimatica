@@ -2,26 +2,30 @@
 <html lang="pt-BR" translate="no">
 <head>
   <meta charset="utf-8" />
-  <meta http-equiv="Content-Language" content="pt-BR">
-  <meta name="google" content="notranslate">
+  <meta http-equiv="Content-Language" content="pt-BR" />
+  <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <title>Território Vila Pinto • Núcleo de Soluções para Resíduos Urbanos</title>
+
   <meta
     name="description"
     content="Conheça a Cooperativa de Triagem e o Centro de Educação Ambiental da Vila Pinto, no território da Bonja, em Porto Alegre."
   />
   <meta name="theme-color" content="#81B92A" />
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="icon" type="image/png" href="img/Logo_verde_NSRU.png" />
+  <link rel="shortcut icon" href="img/Logo_verde_NSRU.png" />
+  <link rel="apple-touch-icon" href="img/Logo_verde_NSRU.png" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link
-    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700&display=swap"
+    href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;600;700;800&display=swap"
     rel="stylesheet"
   />
 
-  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-  <link rel="stylesheet" href="/territorio-publico.css" />
+  <link rel="stylesheet" href="territorio-publico.css" />
   <link rel="stylesheet" href="header-publico.css" />
   <link rel="stylesheet" href="footer-publico.css" />
 </head>
@@ -44,12 +48,6 @@
   data-coletas="8"
   data-volume="364.8"
   data-pontos="1"
-  data-map-center-lat="-30.048729170292532"
-  data-map-center-lng="-51.15652604283108"
-  data-map-zoom="15"
-  data-marker-lat="-30.048729170292532"
-  data-marker-lng="-51.15652604283108"
-  data-marker-popup="<div style='font-family:Archivo Condensed,sans-serif;'><strong>Vila Pinto</strong><br>Cooperativa de Triagem e Centro de Educação Ambiental<br>Porto Alegre • RS</div>"
 >
   <div class="bg-grid"></div>
   <div class="bg-orb orb-1"></div>
@@ -60,55 +58,32 @@
 
   <main>
 
-    <!-- HERO -->
     <section class="hero-territory">
-  <div class="container hero-grid">
-    <div class="hero-copy">
+      <div class="container hero-grid">
+        <div class="hero-copy">
+          <span class="section-kicker">Território ativo</span>
 
-      <h1 id="territoryHeroTitle">
-        Cooperativa de Triagem e Centro de Educação Ambiental da Vila Pinto
-      </h1>
+          <h1 id="territoryHeroTitle">
+            Cooperativa de Triagem e Centro de Educação Ambiental da Vila Pinto
+          </h1>
 
-      <p class="hero-lead" id="territoryHeroLead">
-        A Vila Pinto integra o território da Bonja, em Porto Alegre, e representa um espaço de
-        organização comunitária, reciclagem, educação ambiental e desenvolvimento local.
-      </p>
+          <p class="hero-lead" id="territoryHeroLead">
+            A Vila Pinto integra o território da Bonja, em Porto Alegre, e representa um espaço de
+            organização comunitária, reciclagem, educação ambiental e desenvolvimento local.
+          </p>
 
-      <div class="hero-summary">
-        <p>
-          Localizada no bairro Bom Jesus, a cooperativa atua como elo entre sustentabilidade ambiental,
-          inclusão produtiva e fortalecimento territorial, gerando trabalho, renda e impacto social direto
-          na comunidade.
-        </p>
-
-       
-      </div>
-
-     
-    </div>
-
-    <!--<aside class="hero-panel">
-      <div class="hero-panel-card">
-        <div class="mini-top">
-          <span class="mini-badge">Território ativo</span>
-          <span class="mini-status"></span>
+          <div class="hero-summary">
+            <p>
+              Localizada no bairro Bom Jesus, a cooperativa atua como elo entre sustentabilidade ambiental,
+              inclusão produtiva e fortalecimento territorial, gerando trabalho, renda e impacto social direto
+              na comunidade.
+            </p>
+          </div>
         </div>
-
-        <h2>Resumo do território</h2>
-
-        <ul class="territory-meta">
-          <li><strong>Nome:</strong> <span id="territoryLabelText">Cooperativa de Triagem Vila Pinto</span></li>
-          <li><strong>Região:</strong> <span id="territoryRegionText">Bairro Bom Jesus • Porto Alegre / RS</span></li>
-          <li><strong>Perfil:</strong> <span id="territoryProfileText">Cooperativa de triagem e educação ambiental</span></li>
-          <li><strong>Foco:</strong> <span id="territoryFocusText">Gestão de resíduos, economia circular e fortalecimento comunitário</span></li>
-        </ul>
       </div>
-    </aside>
-  </div>
-</section>-->
+    </section>
 
-    <!-- INDICADORES -->
-    <section id="stats-section"  class="stats-section">
+    <section id="stats-section" class="stats-section">
       <div class="container">
         <div class="stats-grid">
           <article class="stat-card">
@@ -138,30 +113,32 @@
       </div>
     </section>
 
-  
-
-    <!-- TEXTO INSTITUCIONAL -->
     <section class="content-section">
       <div class="container territory-layout">
         <section class="panel panel-main">
           <div class="panel-head">
             <div>
-            
-              <h2>Leitura territorial</h2>
+              <span class="section-kicker">Leitura territorial</span>
+              <h2>Cooperativa, território e circularidade</h2>
             </div>
           </div>
 
           <div class="territory-text">
             <p>
-              A atuação da cooperativa está profundamente conectada à realidade da Bonja, um território com alta densidade, diversidade social e desafios estruturais, mas também com grande capacidade de mobilização e inovação comunitária.
+              A atuação da cooperativa está profundamente conectada à realidade da Bonja, um território
+              com alta densidade, diversidade social e desafios estruturais, mas também com grande
+              capacidade de mobilização e inovação comunitária.
             </p>
 
             <p>
-              Essa proximidade permite soluções mais eficientes, baseadas no conhecimento local e na articulação entre diferentes atores.
+              Essa proximidade permite soluções mais eficientes, baseadas no conhecimento local e na
+              articulação entre diferentes atores.
             </p>
 
             <p>
-              A Vila Pinto representa um modelo concreto de como cooperativas podem operar como infraestruturas essenciais da economia circular, fortalecendo cadeias de reciclagem ao mesmo tempo em que promovem cidadania e transformação social.
+              A Vila Pinto representa um modelo concreto de como cooperativas podem operar como
+              infraestruturas essenciais da economia circular, fortalecendo cadeias de reciclagem ao mesmo
+              tempo em que promovem cidadania e transformação social.
             </p>
 
             <p>
@@ -169,52 +146,15 @@
             </p>
           </div>
         </section>
-
-       
       </div>
     </section>
-
-    <!-- MAPA 
-    <section class="content-section">
-      <div class="container territory-layout">
-        <section class="panel panel-main">
-          <div class="panel-head">
-            <div>
-              <span class="section-kicker">Mapa territorial</span>
-              <h2>Localização e presença no território</h2>
-            </div>
-          </div>
-
-          <div id="map" class="territory-map" aria-label="Mapa do território Vila Pinto"></div>
-        </section>
-
-        <aside class="panel side-stack">
-          <div class="mini-panel">
-            <span class="section-kicker">Território</span>
-            <h3>Bom Jesus / Bonja</h3>
-            <p>
-              A localização da Vila Pinto reforça sua relação direta com a dinâmica social, comunitária e ambiental do território.
-            </p>
-          </div>
-
-          <div class="mini-panel">
-            <span class="section-kicker">Atuação</span>
-            <h3>Resíduos e comunidade</h3>
-            <p>
-              A presença territorial fortalece a triagem, a educação ambiental, a geração de renda e a articulação com redes locais.
-            </p>
-          </div>
-        </aside>
-      </div>
-    </section>-->
 
   </main>
 
   <div id="site-footer"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="header-publico.js"></script>
   <script src="footer-publico.js"></script>
-  <script type="module" src="/territorio-publico.js"></script>
+  <script type="module" src="territorio-publico.js"></script>
 </body>
 </html>
