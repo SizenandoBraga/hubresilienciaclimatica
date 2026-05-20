@@ -1706,8 +1706,112 @@ listenCollection("coletas", (items) => {
 
 function setupExportButton() {
   els.exportParticipantsPdfBtn?.addEventListener("click", () => {
-    window.print();
+    exportParticipantsListPdf();
   });
+}
+
+function exportParticipantsListPdf() {
+  const participants = STATE.participants
+    .filter(isApprovedParticipant)
+    .sort((a, b) => getParticipantName(a).localeCompare(getParticipantName(b), "pt-BR"));
+
+  const rows = participants.map((item) => `
+    <tr>
+      <td>${escapeHtml(getParticipantName(item))}</td>
+      <td>${escapeHtml(getParticipantCode(item))}</td>
+      <td>${escapeHtml(getParticipantTypeLabel(item))}</td>
+      <td>${escapeHtml(item.participantPhone || item.phone || item.telefone || "-")}</td>
+      <td>${escapeHtml(item.enderecoCompleto || item.address || item.payloadSnapshot?.enderecoCompleto || "-")}</td>
+    </tr>
+  `).join("");
+
+  const printWindow = window.open("", "_blank", "width=1100,height=800");
+
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>Lista de Participantes - ${escapeHtml(PAGE_TERRITORY.cooperativeName)}</title>
+      <style>
+        body{
+          font-family: Arial, sans-serif;
+          padding:24px;
+          color:#222;
+        }
+
+        h1{
+          margin:0;
+          font-size:24px;
+        }
+
+        p{
+          margin:6px 0 18px;
+          color:#555;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          font-size:12px;
+        }
+
+        th,td{
+          border:1px solid #ddd;
+          padding:8px;
+          text-align:left;
+          vertical-align:top;
+        }
+
+        th{
+          background:#81B92A;
+          color:#fff;
+          font-weight:700;
+        }
+
+        tr:nth-child(even){
+          background:#f7f7f7;
+        }
+      </style>
+    </head>
+
+    <body>
+      <h1>Lista de Participantes</h1>
+      <p>
+        ${escapeHtml(PAGE_TERRITORY.cooperativeName)} • 
+        Total: ${participants.length} participante(s) • 
+        Emitido em ${new Date().toLocaleString("pt-BR")}
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Participante</th>
+            <th>Código</th>
+            <th>Tipo</th>
+            <th>Telefone</th>
+            <th>Endereço</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `
+            <tr>
+              <td colspan="5">Nenhum participante aprovado encontrado.</td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+
+      <script>
+        window.onload = () => {
+          window.print();
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
 }
 
 function setupSyncButton() {
