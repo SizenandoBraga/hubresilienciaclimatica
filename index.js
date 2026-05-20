@@ -9,6 +9,12 @@ document.addEventListener("DOMContentLoaded", () => {
     zoom: 11
   };
 
+  const VALID_CRGR_IDS = [
+    "vila-pinto",
+    "cooadesc",
+    "padre-cacique"
+  ];
+
   const $ = (selector, scope = document) => scope.querySelector(selector);
   const $$ = (selector, scope = document) => Array.from(scope.querySelectorAll(selector));
 
@@ -89,8 +95,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function toNumberOrNull(value) {
     if (value === null || value === undefined || value === "") return null;
-    const n = Number(value);
-    return Number.isFinite(n) ? n : null;
+
+    const number = Number(value);
+    return Number.isFinite(number) ? number : null;
   }
 
   function isReducedMotion() {
@@ -116,11 +123,58 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/\s+/g, "-");
 
     if (!raw) return "";
-    if (raw === "crgr-vila-pinto") return "vila-pinto";
-    if (raw === "crgr-coadesc" || raw === "crgr-cooadesc") return "cooadesc";
-    if (raw === "crgr-padre-cacique") return "padre-cacique";
+
+    if (
+      raw === "vilapinto" ||
+      raw === "vila-pinto" ||
+      raw === "crgr-vila-pinto" ||
+      raw === "crgr-vilapinto"
+    ) {
+      return "vila-pinto";
+    }
+
+    if (
+      raw === "coadesc" ||
+      raw === "cooadesc" ||
+      raw === "crgr-coadesc" ||
+      raw === "crgr-cooadesc"
+    ) {
+      return "cooadesc";
+    }
+
+    if (
+      raw === "padrecacique" ||
+      raw === "padre-cacique" ||
+      raw === "crgr-padre-cacique"
+    ) {
+      return "padre-cacique";
+    }
 
     return raw;
+  }
+
+  function isValidCrgrId(value) {
+    return VALID_CRGR_IDS.includes(canonicalTerritoryId(value));
+  }
+
+  function getValidCrgrs(items = []) {
+    const mapByTerritory = new Map();
+
+    items.forEach((item) => {
+      const territoryId = canonicalTerritoryId(item.territoryId || item.code || item.id);
+
+      if (!isValidCrgrId(territoryId)) return;
+      if (!Number.isFinite(item.lat) || !Number.isFinite(item.lng)) return;
+
+      if (!mapByTerritory.has(territoryId)) {
+        mapByTerritory.set(territoryId, {
+          ...item,
+          territoryId
+        });
+      }
+    });
+
+    return Array.from(mapByTerritory.values());
   }
 
   function initCursorGlow() {
@@ -142,7 +196,9 @@ document.addEventListener("DOMContentLoaded", () => {
       mouseY = event.clientY;
       cursorGlow.style.opacity = "1";
 
-      if (!rafId) rafId = requestAnimationFrame(updateGlowPosition);
+      if (!rafId) {
+        rafId = requestAnimationFrame(updateGlowPosition);
+      }
     });
 
     window.addEventListener("mouseleave", () => {
@@ -201,7 +257,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!detail.open) return;
 
         items.forEach((other) => {
-          if (other !== detail) other.open = false;
+          if (other !== detail) {
+            other.open = false;
+          }
         });
       });
     });
@@ -259,6 +317,7 @@ document.addEventListener("DOMContentLoaded", () => {
       stopAuto();
 
       if (isReducedMotion()) return;
+
       intervalId = setInterval(next, delay);
     }
 
@@ -336,6 +395,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return raw
       .map((item, index) => {
         const territoryId = canonicalTerritoryId(item.territoryId || item.code || item.id);
+
         const name =
           item.name ||
           item.title ||
@@ -475,11 +535,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!mapEl || typeof window.L === "undefined") return null;
 
     if (!map) {
+      const isMobile = window.matchMedia("(max-width: 768px)").matches;
+
       map = window.L.map(mapEl, {
         zoomControl: true,
         scrollWheelZoom: false,
-        dragging: true,
-        tap: true
+        dragging: !isMobile,
+        touchZoom: false,
+        doubleClickZoom: false,
+        boxZoom: false,
+        keyboard: false,
+        tap: false
       }).setView([INITIAL_MAP_VIEW.lat, INITIAL_MAP_VIEW.lng], INITIAL_MAP_VIEW.zoom);
 
       window.L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -501,9 +567,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     mapMarkers = [];
 
-    const validPoints = crgrs.filter(
-      (item) => Number.isFinite(item.lat) && Number.isFinite(item.lng)
-    );
+    const validPoints = getValidCrgrs(crgrs);
 
     if (!validPoints.length) {
       mapInstance.setView([INITIAL_MAP_VIEW.lat, INITIAL_MAP_VIEW.lng], INITIAL_MAP_VIEW.zoom);
@@ -587,7 +651,9 @@ document.addEventListener("DOMContentLoaded", () => {
         ...crgrs
       ]);
 
-      STATE.crgrs = normalized.length ? normalized : FALLBACK_CRGRS;
+      const validNormalized = getValidCrgrs(normalized);
+
+      STATE.crgrs = validNormalized.length ? validNormalized : FALLBACK_CRGRS;
 
       renderMap(STATE.crgrs);
     } catch (error) {
@@ -622,12 +688,19 @@ document.addEventListener("DOMContentLoaded", () => {
           ...docItem.data()
         }));
 
+        const validSummaries = summaries.filter((item) => {
+          const territoryId = canonicalTerritoryId(item.territoryId || item.id || item.code);
+          const count = Number(item.crgrsCount ?? 1);
+
+          return isValidCrgrId(territoryId) && count > 0;
+        });
+
         if (!summaries.length) {
           STATE.metrics = {
             users: 0,
             coletas: 0,
             approvals: 0,
-            crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
+            crgrs: FALLBACK_CRGRS.length,
             alerts: 0
           };
 
@@ -635,7 +708,7 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        const totals = summaries.reduce(
+        const totals = validSummaries.reduce(
           (acc, item) => {
             acc.users += Number(item.usersCount ?? item.participantsCount ?? 0);
             acc.coletas += Number(item.coletasCount ?? 0);
@@ -651,20 +724,13 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         );
 
-        const activeCrgrs = summaries.filter((item) => {
-          const count = Number(item.crgrsCount ?? 1);
-          return count > 0;
-        }).length;
+        const activeCrgrs = validSummaries.length || FALLBACK_CRGRS.length;
 
         STATE.metrics = {
           users: totals.users,
           coletas: totals.coletas,
           approvals: totals.approvals,
-          crgrs:
-            activeCrgrs ||
-            summaries.length ||
-            STATE.crgrs.length ||
-            FALLBACK_CRGRS.length,
+          crgrs: activeCrgrs,
           alerts: totals.alerts
         };
 
@@ -689,7 +755,7 @@ document.addEventListener("DOMContentLoaded", () => {
               users: 0,
               coletas: 0,
               approvals: 0,
-              crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
+              crgrs: FALLBACK_CRGRS.length,
               alerts: 0
             };
 
@@ -704,7 +770,7 @@ document.addEventListener("DOMContentLoaded", () => {
         users: 0,
         coletas: 0,
         approvals: 0,
-        crgrs: STATE.crgrs.length || FALLBACK_CRGRS.length,
+        crgrs: FALLBACK_CRGRS.length,
         alerts: 0
       });
     }
