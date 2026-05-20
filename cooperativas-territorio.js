@@ -29,27 +29,9 @@ function canonicalTerritoryId(value) {
     .replace(/\s+/g, "-");
 
   if (!raw) return "vila-pinto";
-
-  if (raw === "crgr-vila-pinto" || raw === "vila-pinto" || raw === "vp") {
-    return "vila-pinto";
-  }
-
-  if (
-    raw === "crgr-cooadesc" ||
-    raw === "crgr-coadesc" ||
-    raw === "cooadesc" ||
-    raw === "coadesc"
-  ) {
-    return "cooadesc";
-  }
-
-  if (
-    raw === "crgr-padre-cacique" ||
-    raw === "padre-cacique" ||
-    raw === "padre"
-  ) {
-    return "padre-cacique";
-  }
+  if (raw === "crgr-vila-pinto" || raw === "vila-pinto" || raw === "vp") return "vila-pinto";
+  if (raw === "crgr-cooadesc" || raw === "crgr-coadesc" || raw === "cooadesc" || raw === "coadesc") return "cooadesc";
+  if (raw === "crgr-padre-cacique" || raw === "padre-cacique" || raw === "padre") return "padre-cacique";
 
   return raw;
 }
@@ -100,15 +82,28 @@ const els = {
   chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil"),
 
   recentColetasTableBody:
+    document.getElementById("tableColetasBody") ||
     document.getElementById("recentColetasTableBody") ||
     document.getElementById("latestColetasBody"),
 
-  exportParticipantsPdfBtn: document.getElementById("exportParticipantsPdfBtn"),
+  tableVisibleCount: document.getElementById("tableVisibleCount"),
+  tableFilteredCount: document.getElementById("tableFilteredCount"),
+  tableLastUpdate: document.getElementById("tableLastUpdate"),
 
-  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas"),
+  tSearch: document.getElementById("tSearch"),
+  tFluxo: document.getElementById("tFluxo"),
+  tEntrega: document.getElementById("tEntrega"),
+  tStatus: document.getElementById("tStatus"),
+  tTipoCadastro: document.getElementById("tTipoCadastro"),
+  btnApplyTableFilters: document.getElementById("btnApplyTableFilters"),
+  btnClearTableFilters: document.getElementById("btnClearTableFilters"),
+
   btnPrevColetas: document.getElementById("btnPrevColetas"),
   btnNextColetas: document.getElementById("btnNextColetas"),
-  tablePageIndicator: document.getElementById("tablePageIndicator")
+  tablePageIndicator: document.getElementById("tablePageIndicator"),
+
+  exportParticipantsPdfBtn: document.getElementById("exportParticipantsPdfBtn"),
+  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas")
 };
 
 /* =========================================================
@@ -120,13 +115,10 @@ const STATE = {
   profile: null,
   isAdmin: false,
   canEditAll: false,
-
   participants: [],
   coletas: [],
   approvalRequests: [],
-
   unsubscribers: [],
-
   recentPage: 0,
   recentPageSize: 10,
   recentLimit: 10
@@ -161,7 +153,7 @@ function setText(el, value) {
 function formatNumber(value) {
   return Number(value || 0).toLocaleString("pt-BR", {
     minimumFractionDigits: 0,
-    maximumFractionDigits: 1
+    maximumFractionDigits: 2
   });
 }
 
@@ -184,15 +176,6 @@ function toNumber(value) {
   );
 
   return Number.isFinite(parsed) ? parsed : 0;
-}
-
-function firstText(...values) {
-  for (const value of values) {
-    const text = String(value ?? "").trim();
-    if (text) return text;
-  }
-
-  return "";
 }
 
 function animateNumber(el, value, suffix = "") {
@@ -294,18 +277,14 @@ function itemBelongsToTerritory(item = {}) {
       code.startsWith("C") ||
       code.startsWith("F") ||
       code === "FAMILIAS"
-    ) {
-      return true;
-    }
+    ) return true;
 
     if (
       code.startsWith("COA") ||
       code.startsWith("COO") ||
       code.startsWith("PC") ||
       code.startsWith("PCA")
-    ) {
-      return false;
-    }
+    ) return false;
 
     return true;
   }
@@ -355,6 +334,17 @@ function participantType(item = {}) {
     item.payloadSnapshot?.localType ||
     item.payloadSnapshot?.codeLocalType
   );
+}
+
+function getParticipantTypeLabel(item = {}) {
+  const type = participantType(item);
+
+  if (type.includes("condominio")) return "condomínio";
+  if (type.includes("comercio")) return "comércio";
+  if (type.includes("casa")) return "participante";
+  if (type.includes("familia")) return "participante";
+
+  return type || "participante";
 }
 
 function isApprovedParticipant(item = {}) {
@@ -467,6 +457,13 @@ function formatDateLabel(item = {}) {
   return date ? date.toLocaleDateString("pt-BR") : "-";
 }
 
+function formatDateTimeLabel(date = new Date()) {
+  return date.toLocaleString("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  });
+}
+
 function getTipoRecebimento(item = {}) {
   return (
     item.flowType ||
@@ -489,6 +486,14 @@ function getTipoRecebimento(item = {}) {
   );
 }
 
+function inferFluxoKey(item = {}) {
+  const normalized = normalizeText(getTipoRecebimento(item)).replaceAll("-", "_");
+
+  if (normalized.includes("final") || normalized.includes("turno")) return "final_turno";
+
+  return "recebimento";
+}
+
 function formatFluxoLabel(value) {
   const normalized = normalizeText(value).replaceAll("-", "_");
 
@@ -497,6 +502,21 @@ function formatFluxoLabel(value) {
   if (normalized.includes("final")) return "Final do turno";
 
   return value && value !== "-" ? String(value) : "Recebimento";
+}
+
+function getEntrega(item = {}) {
+  return (
+    item.deliveryType ||
+    item.entrega ||
+    item.tipoEntrega ||
+    item.payloadSnapshot?.deliveryType ||
+    item.payloadSnapshot?.entrega ||
+    item.recebimento?.deliveryType ||
+    item.recebimento?.entrega ||
+    item.finalTurno?.deliveryType ||
+    item.finalTurno?.entrega ||
+    "Normal"
+  );
 }
 
 function getColetaStatusLabel(item = {}) {
@@ -510,19 +530,22 @@ function getColetaStatusLabel(item = {}) {
 
   const normalized = normalizeText(raw);
 
-  if (normalized === "approved" || normalized === "aprovado") return "Realizada";
-  if (normalized === "active" || normalized === "ativo") return "Realizada";
+  if (normalized === "approved" || normalized === "aprovado") return "Ativo";
+  if (normalized === "active" || normalized === "ativo") return "Ativo";
+  if (normalized === "realizada") return "Ativo";
+  if (normalized === "editado") return "Editado";
   if (normalized === "pending") return "Pendente";
   if (normalized === "rejected") return "Rejeitada";
+  if (normalized === "cancelado") return "Cancelado";
 
-  return String(raw || "Realizada");
+  return String(raw || "Ativo");
 }
 
 function statusBadge(statusOrItem) {
   const label =
     typeof statusOrItem === "object"
       ? getColetaStatusLabel(statusOrItem)
-      : String(statusOrItem || "Realizada");
+      : String(statusOrItem || "Ativo");
 
   const normalized = normalizeText(label);
 
@@ -533,6 +556,8 @@ function statusBadge(statusOrItem) {
   if (normalized.includes("real") || normalized.includes("aprov") || normalized.includes("ativ")) {
     className += " realizada";
   }
+
+  if (normalized.includes("edit")) className += " pendente";
 
   return `<span class="${className}">${escapeHtml(label)}</span>`;
 }
@@ -1068,6 +1093,124 @@ function updateKpis() {
 }
 
 /* =========================================================
+   FILTROS DA TABELA
+========================================================= */
+
+function getTableFilters() {
+  return {
+    search: normalizeText(els.tSearch?.value || ""),
+    fluxo: els.tFluxo?.value || "__all__",
+    entrega: els.tEntrega?.value || "__all__",
+    status: els.tStatus?.value || "__all__",
+    tipoCadastro: els.tTipoCadastro?.value || "__all__"
+  };
+}
+
+function populateEntregaFilter(items = []) {
+  if (!els.tEntrega) return;
+
+  const currentValue = els.tEntrega.value || "__all__";
+  const entregas = new Set();
+
+  items.forEach((item) => {
+    const entrega = getEntrega(item);
+    if (entrega && entrega !== "Normal") entregas.add(entrega);
+  });
+
+  els.tEntrega.innerHTML = `
+    <option value="__all__">Todas</option>
+    ${Array.from(entregas)
+      .sort((a, b) => a.localeCompare(b, "pt-BR"))
+      .map((entrega) => `<option value="${escapeHtml(entrega)}">${escapeHtml(entrega)}</option>`)
+      .join("")}
+  `;
+
+  if ([...entregas].includes(currentValue)) {
+    els.tEntrega.value = currentValue;
+  }
+}
+
+function applyTableFilterToItems(items = []) {
+  const filters = getTableFilters();
+
+  return items.filter((item) => {
+    const fluxo = inferFluxoKey(item);
+    const entrega = getEntrega(item);
+    const status = normalizeText(getColetaStatusLabel(item));
+    const tipo = participantType(item);
+
+    if (filters.fluxo !== "__all__" && fluxo !== filters.fluxo) return false;
+    if (filters.entrega !== "__all__" && entrega !== filters.entrega) return false;
+
+    if (filters.status !== "__all__") {
+      if (filters.status === "ativo" && !status.includes("ativ")) return false;
+      if (filters.status === "editado" && !status.includes("edit")) return false;
+      if (filters.status === "cancelado" && !status.includes("cancel")) return false;
+    }
+
+    if (filters.tipoCadastro !== "__all__") {
+      if (filters.tipoCadastro === "participante") {
+        if (tipo.includes("condominio") || tipo.includes("comercio")) return false;
+      }
+
+      if (filters.tipoCadastro === "condominio" && !tipo.includes("condominio")) return false;
+      if (filters.tipoCadastro === "comercio" && !tipo.includes("comercio")) return false;
+
+      if (filters.tipoCadastro === "outro") {
+        if (
+          tipo.includes("participante") ||
+          tipo.includes("familia") ||
+          tipo.includes("casa") ||
+          tipo.includes("condominio") ||
+          tipo.includes("comercio")
+        ) return false;
+      }
+    }
+
+    if (filters.search) {
+      const haystack = normalizeText([
+        getParticipantName(item),
+        getParticipantCode(item),
+        getParticipantTypeLabel(item),
+        formatFluxoLabel(getTipoRecebimento(item)),
+        getEntrega(item),
+        getColetaStatusLabel(item),
+        JSON.stringify(item)
+      ].join(" "));
+
+      if (!haystack.includes(filters.search)) return false;
+    }
+
+    return true;
+  });
+}
+
+function setupTableFilters() {
+  els.btnApplyTableFilters?.addEventListener("click", () => {
+    STATE.recentPage = 0;
+    renderRecentColetas();
+  });
+
+  els.btnClearTableFilters?.addEventListener("click", () => {
+    if (els.tSearch) els.tSearch.value = "";
+    if (els.tFluxo) els.tFluxo.value = "__all__";
+    if (els.tEntrega) els.tEntrega.value = "__all__";
+    if (els.tStatus) els.tStatus.value = "__all__";
+    if (els.tTipoCadastro) els.tTipoCadastro.value = "__all__";
+
+    STATE.recentPage = 0;
+    renderRecentColetas();
+  });
+
+  els.tSearch?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      STATE.recentPage = 0;
+      renderRecentColetas();
+    }
+  });
+}
+
+/* =========================================================
    TABELA RECENTE COM PAGINAÇÃO
 ========================================================= */
 
@@ -1082,114 +1225,63 @@ function getSortedRealizadas() {
 }
 
 function renderRecentColetas() {
-
   if (!els.recentColetasTableBody) return;
 
   const all = getSortedRealizadas();
+  const filtered = applyTableFilterToItems(all);
 
   const start = STATE.recentPage * STATE.recentPageSize;
   const end = start + STATE.recentPageSize;
-
-  const pageItems =
-    all.slice(start, end);
+  const pageItems = filtered.slice(start, end);
 
   if (!pageItems.length) {
-
     els.recentColetasTableBody.innerHTML = `
       <tr>
-        <td colspan="7" class="table-empty">
-          Nenhuma coleta cadastrada.
-        </td>
+        <td colspan="7" class="table-empty">Nenhuma coleta encontrada.</td>
       </tr>
     `;
 
-    updateTablePagination(all.length);
+    updateTableCounters(0, filtered.length);
+    updateTablePagination(filtered.length);
     return;
   }
 
   els.recentColetasTableBody.innerHTML = pageItems
     .map((item) => {
-
-      const participante =
-        getParticipantName(item);
-
-      const codigo =
-        getParticipantCode(item);
-
-      const data =
-        formatDateLabel(item);
-
-      const fluxo =
-        formatFluxoLabel(
-          getTipoRecebimento(item)
-        );
-
-      const status =
-        getColetaStatusLabel(item);
-
-      const reciclavel =
-        formatKg(getPesoRecebido(item));
-
-      const rejeito =
-        formatKg(getRejeito(item));
-
-      const naoComercializado =
-        formatKg(getNaoComercializado(item));
+      const participante = getParticipantName(item);
+      const codigo = getParticipantCode(item);
+      const data = formatDateLabel(item);
+      const fluxo = formatFluxoLabel(getTipoRecebimento(item));
+      const status = getColetaStatusLabel(item);
+      const reciclavel = formatKg(getPesoRecebido(item));
+      const rejeito = formatKg(getRejeito(item));
+      const naoComercializado = formatKg(getNaoComercializado(item));
+      const tipo = getParticipantTypeLabel(item);
 
       return `
         <tr>
-
-          <td class="td-date">
-            ${escapeHtml(data)}
-          </td>
+          <td class="td-date">${escapeHtml(data)}</td>
 
           <td class="td-user">
-            <strong>
-              ${escapeHtml(participante)}
-            </strong>
-
-            <span>
-              participante
-            </span>
+            <strong>${escapeHtml(participante)}</strong>
+            <span>${escapeHtml(tipo)}</span>
           </td>
 
-          <td class="td-code">
-            ${escapeHtml(codigo)}
-          </td>
+          <td class="td-code">${escapeHtml(codigo)}</td>
 
-          <td class="td-flow">
-            ${escapeHtml(fluxo)}
-          </td>
+          <td class="td-flow">${escapeHtml(fluxo)}</td>
 
-          <td class="td-status">
-            ${statusBadge(status)}
-          </td>
+          <td class="td-status">${statusBadge(status)}</td>
 
           <td class="td-details">
-
             <div class="table-detail-tags">
-
-              <span class="detail-tag success">
-                Reciclável:
-                ${escapeHtml(reciclavel)}
-              </span>
-
-              <span class="detail-tag danger">
-                Rejeito:
-                ${escapeHtml(rejeito)}
-              </span>
-
-              <span class="detail-tag warning">
-                Não comercializado:
-                ${escapeHtml(naoComercializado)}
-              </span>
-
+              <span class="detail-tag success">Reciclável: ${escapeHtml(reciclavel)}</span>
+              <span class="detail-tag danger">Rejeito: ${escapeHtml(rejeito)}</span>
+              <span class="detail-tag warning">Não comercializado: ${escapeHtml(naoComercializado)}</span>
             </div>
-
           </td>
 
           <td class="td-actions">
-
             <button
               class="table-btn dark"
               type="button"
@@ -1205,15 +1297,20 @@ function renderRecentColetas() {
             >
               Editar
             </button>
-
           </td>
-
         </tr>
       `;
     })
     .join("");
 
-  updateTablePagination(all.length);
+  updateTableCounters(pageItems.length, filtered.length);
+  updateTablePagination(filtered.length);
+}
+
+function updateTableCounters(visible, filtered) {
+  setText(els.tableVisibleCount, visible);
+  setText(els.tableFilteredCount, filtered);
+  setText(els.tableLastUpdate, formatDateTimeLabel(new Date()));
 }
 
 function updateTablePagination(total) {
@@ -1243,7 +1340,7 @@ function setupTablePagination() {
   });
 
   els.btnNextColetas?.addEventListener("click", () => {
-    const total = getSortedRealizadas().length;
+    const total = applyTableFilterToItems(getSortedRealizadas()).length;
     const totalPages = Math.ceil(total / STATE.recentPageSize);
 
     if (STATE.recentPage >= totalPages - 1) return;
@@ -1257,22 +1354,7 @@ function updateLoadMoreButton() {
   const btn = els.btnLoadMoreColetas || document.getElementById("btnLoadMoreColetas");
   if (!btn) return;
 
-  const total = getSortedRealizadas().length;
-
-  if (!total) {
-    btn.textContent = "Nenhuma coleta disponível";
-    btn.disabled = true;
-    return;
-  }
-
-  if (STATE.recentLimit >= total) {
-    btn.textContent = "Todas as coletas já estão visíveis";
-    btn.disabled = true;
-    return;
-  }
-
-  btn.textContent = "Visualizar mais 10 coletas";
-  btn.disabled = false;
+  btn.style.display = "none";
 }
 
 function setupLoadMoreColetasButton() {
@@ -1309,8 +1391,10 @@ function openColetaModal(item) {
       <div class="coleta-modal-grid">
         <div class="coleta-info-card"><strong>Data:</strong> ${escapeHtml(formatDateLabel(item))}</div>
         <div class="coleta-info-card"><strong>Fluxo:</strong> ${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</div>
+        <div class="coleta-info-card"><strong>Entrega:</strong> ${escapeHtml(getEntrega(item))}</div>
         <div class="coleta-info-card"><strong>Participante:</strong> ${escapeHtml(getParticipantName(item))}</div>
         <div class="coleta-info-card"><strong>Código:</strong> ${escapeHtml(getParticipantCode(item))}</div>
+        <div class="coleta-info-card"><strong>Tipo cadastro:</strong> ${escapeHtml(getParticipantTypeLabel(item))}</div>
         <div class="coleta-info-card"><strong>Status:</strong> ${escapeHtml(getColetaStatusLabel(item))}</div>
         <div class="coleta-info-card"><strong>Qualidade:</strong> ${escapeHtml(getQualidade(item) || "—")}</div>
         <div class="coleta-info-card"><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</div>
@@ -1340,15 +1424,24 @@ function openColetaModal(item) {
 
 function setupRecentColetasActions() {
   document.addEventListener("click", (event) => {
-    const button = event.target.closest("[data-view-coleta]");
-    if (!button) return;
+    const viewButton = event.target.closest("[data-view-coleta]");
 
-    const coletaId = button.dataset.viewColeta;
-    const coleta = STATE.coletas.find((item) => String(item.id) === String(coletaId));
+    if (viewButton) {
+      const coletaId = viewButton.dataset.viewColeta;
+      const coleta = STATE.coletas.find((item) => String(item.id) === String(coletaId));
 
-    if (!coleta) return;
+      if (!coleta) return;
 
-    openColetaModal(coleta);
+      openColetaModal(coleta);
+      return;
+    }
+
+    const editButton = event.target.closest("[data-edit-coleta]");
+
+    if (editButton) {
+      const coletaId = editButton.dataset.editColeta;
+      window.location.href = `${PAGE_TERRITORY.coletasUrl}?edit=${encodeURIComponent(coletaId)}`;
+    }
   });
 
   document.addEventListener("keydown", (event) => {
@@ -1536,6 +1629,7 @@ function listenDashboardData() {
       });
 
     STATE.recentPage = 0;
+    populateEntregaFilter(STATE.coletas);
 
     updateKpis();
     renderRecentColetas();
@@ -1580,6 +1674,7 @@ function boot() {
   setupSyncButton();
   setupLoadMoreColetasButton();
   setupTablePagination();
+  setupTableFilters();
   setupRecentColetasActions();
   fillStaticPanels();
 
