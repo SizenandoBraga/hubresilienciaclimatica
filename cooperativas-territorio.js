@@ -231,11 +231,18 @@ function itemBelongsToTerritory(item = {}) {
     .filter(Boolean)
     .map(canonicalTerritoryId);
 
-  if (fields.includes(PAGE_TERRITORY.territoryId)) {
-    return true;
-  }
+  const current = PAGE_TERRITORY.territoryId;
 
-  if (PAGE_TERRITORY.territoryId === "vila-pinto") {
+  if (fields.includes(current)) return true;
+
+  const hasOtherTerritory = fields.some((field) =>
+    ["vila-pinto", "cooadesc", "padre-cacique"].includes(field) &&
+    field !== current
+  );
+
+  if (hasOtherTerritory) return false;
+
+  if (current === "vila-pinto") {
     if (
       code.startsWith("VPD") ||
       code.startsWith("VP") ||
@@ -245,39 +252,28 @@ function itemBelongsToTerritory(item = {}) {
     ) {
       return true;
     }
-  }
 
-  if (PAGE_TERRITORY.territoryId === "cooadesc") {
     if (
       code.startsWith("COA") ||
       code.startsWith("COO") ||
-      code.startsWith("CD")
-    ) {
-      return true;
-    }
-  }
-
-  if (PAGE_TERRITORY.territoryId === "padre-cacique") {
-    if (
       code.startsWith("PC") ||
-      code.startsWith("PCA") ||
-      code.startsWith("PDC")
+      code.startsWith("PCA")
     ) {
-      return true;
+      return false;
     }
-  }
 
-  /*
-    IMPORTANTE:
-    Se a coleta não tiver território nem código,
-    não bloqueia a tabela. Isso evita que coletas novas
-    fiquem fora por falta de padronização no cadastro.
-  */
-  if (!fields.length && !code) {
     return true;
   }
 
-  return false;
+  if (current === "cooadesc") {
+    return code.startsWith("COA") || code.startsWith("COO") || code.startsWith("CD");
+  }
+
+  if (current === "padre-cacique") {
+    return code.startsWith("PC") || code.startsWith("PCA") || code.startsWith("PDC");
+  }
+
+  return true;
 }
 
 /* =========================================================
