@@ -37,32 +37,22 @@
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
   <div class="app-shell">
-    <aside class="sidebar" id="sidebar">
+
+    <aside class="sidebar sidebar-sticky" id="sidebar">
       <div class="sidebar-top">
         <a class="brand" href="index.html" aria-label="Ir para a página inicial">
           <div class="brand-mark">
             <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
           </div>
         </a>
-
-        
       </div>
 
       <nav class="sidebar-nav">
         <div class="nav-label">Menu</div>
 
         <a class="nav-link active" href="cooperativa-cooadesc.html">
-          <span class="nav-ico">🏠</span>
-          <span>Painel inicial</span>
-        </a>
-
-        <a class="nav-link" href="usuarios-cooadesc.html">
-          <span class="nav-ico">👥</span>
-          <span>Gestão de Participantes</span>
-        </a>
-         <a class="nav-link" href="usuario-cooperativa-coadesc.html">
-          <span class="nav-ico">👥</span>
-          <span>Gestão de Usuários</span>
+          <span class="nav-ico">📊</span>
+          <span>Página inicial</span>
         </a>
 
         <a class="nav-link" href="cadastro-coletas-cooadesc.html">
@@ -70,27 +60,27 @@
           <span>Registro de coletas</span>
         </a>
 
-       <a class="nav-link" href="dashbooard-cooperativa-cooadesc.html">
-          <span class="nav-ico">📊</span>
-          <span>Dashboard da cooperativa</span>
+        <a class="nav-link" href="usuarios-cooadesc.html">
+          <span class="nav-ico">👥</span>
+          <span>Participantes</span>
         </a>
 
-        <a class="nav-link" href="moodle.html">
-          <span class="nav-ico">📚</span>
-          <span>Conteúdos</span>
+        <a class="nav-link" href="dashboard-cooperativa.html">
+          <span class="nav-ico">📈</span>
+          <span>Dashboard</span>
         </a>
 
-        <a class="nav-link" href="moodle.html">
-          <span class="nav-ico">📄</span>
-          <span>Documentos</span>
+        <a class="nav-link" href="usuario-cooperativa-cooadesc.html">
+          <span class="nav-ico">👤</span>
+          <span>Usuários</span>
         </a>
 
         <button class="coop-nav-btn coop-nav-btn-update" id="syncCoopDashboardBtn" type="button">
-          Atualizar indicadores da cooperativa
+          Atualizar indicadores
         </button>
 
         <div class="coop-sync-box">
-          <span class="coop-sync-label">Indicadores públicos da cooperativa</span>
+          <span class="coop-sync-label">Indicadores públicos</span>
           <small id="syncCoopDashboardStatus">Aguardando verificação...</small>
         </div>
 
@@ -104,12 +94,13 @@
 
       <div class="sidebar-help">
         <p id="sidebarHelpText">
-          Área vinculada à cooperativa logada. Os dados são filtrados automaticamente conforme o perfil do usuário.
+          Dashboard da cooperativa com dados operacionais, participantes e coletas.
         </p>
       </div>
     </aside>
 
     <div class="content-area">
+
       <header class="topbar">
         <div class="topbar-left">
           <button class="menu-btn" id="menuBtn" aria-label="Abrir menu">☰</button>
@@ -118,356 +109,297 @@
             <div class="topbar-brand-mark">
               <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
             </div>
+
             <div class="topbar-brand-copy">
-              <strong>Núcleo de Soluções para Resíduos Urbanos</strong>
-              <span>Plataforma • Cooperativas</span>
+              <strong>Painel da Cooperativa COOADESC</strong>
+              <span>Indicadores operacionais e atualizações</span>
             </div>
           </a>
         </div>
 
         <div class="topbar-right">
-          <div class="topbar-pill topbar-territory">
-            <span class="dot"></span>
-            <span id="territoryNameTop">Coadesc</span>
-          </div>
-
-          <div class="topbar-pill coop-pill">
-            <span>🏭</span>
-            <span id="cooperativeNameTop">Coadesc</span>
-          </div>
-
-          <div class="topbar-pill role-pill" id="rolePill">
-            <span>🔐</span>
-            <span id="roleNameTop">Perfil</span>
-          </div>
-
           <div class="topbar-pill user-pill">
             <span class="user-icon">👤</span>
-            <span id="userNameTop">Usuário</span>
+            <span id="userNameTop">Administrador VP</span>
           </div>
         </div>
       </header>
 
       <main class="coop-main" id="painel-inicial">
+
         <section class="access-banner" id="accessBanner"></section>
 
-        <section class="coop-hero">
-          <div class="hero-badge">Área logada da cooperativa</div>
-          <h1>Bem-vinda(o) ao painel da Coadesc</h1>
-          <p>
-            Seu espaço para acessar conteúdos, acompanhar ações da cooperativa, registrar coletas realizadas
-            e visualizar indicadores operacionais do território.
-          </p>
+        <section class="dashboard-section dashboard-home">
+          <div class="section-head dashboard-home-head">
+            <div>
+              <span class="section-tag">Dashboard inicial</span>
+              <h1>Visão geral da cooperativa</h1>
+            </div>
+
+            <p>
+              Acompanhe os principais números da COOADESC em tempo real.
+            </p>
+          </div>
+
+          <div class="dashboard-kpi-grid dashboard-kpi-grid-main">
+
+            <article class="dashboard-kpi-card kpi-green">
+              <span>Participantes ativos</span>
+              <strong id="indicatorParticipants">0</strong>
+              <small>Total de participantes aprovados</small>
+            </article>
+
+            <article class="dashboard-kpi-card kpi-blue">
+              <span>Coletas realizadas</span>
+              <strong id="indicatorColetas">0</strong>
+              <small>Registros de coletas cadastrados</small>
+            </article>
+
+            <a
+              class="dashboard-kpi-card kpi-orange kpi-link"
+              id="pendingParticipantsCard"
+              href="usuarios-cooadesc.html"
+            >
+              <span>Novos participantes</span>
+              <strong id="indicatorActions">0</strong>
+              <small>Clique para acessar participantes em aprovação</small>
+            </a>
+
+          </div>
         </section>
 
-        <section class="dashboard-section">
+        <section class="dashboard-section dashboard-operational">
           <div class="section-head">
             <div>
-              <span class="section-tag">Painel da cooperativa</span>
-              <h2>Acessos e materiais da cooperativa</h2>
+              <span class="section-tag">Indicadores operacionais</span>
+              <h2>Resumo das coletas</h2>
             </div>
+
             <p>
-              Espaço para conteúdos, documentos, avisos importantes e acesso rápido ao registro de coletas.
+              Totais consolidados a partir das coletas cadastradas no Firebase.
             </p>
           </div>
 
-          <div class="quick-grid quick-grid-three">
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📘</span>
-              </div>
-              <h3>Conteúdos</h3>
-              <p>Cartilhas, vídeos, materiais operacionais e referências por tema.</p>
-              <a href="moodle.html">Acessar conteúdos →</a>
+          <div class="operational-kpi-grid">
+
+            <article class="operational-card">
+              <span>Peso recebido</span>
+              <strong id="indicatorPesoRecebido">0 kg</strong>
+              <small>Total informado após recebimento</small>
             </article>
 
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Acesso rápido</span>
-                <span class="quick-icon">📄</span>
-              </div>
-              <h3>Documentos</h3>
-              <p>PDFs, atas, relatórios e arquivos institucionais.</p>
-              <a href="moodle.html">Abrir documentos →</a>
+            <article class="operational-card">
+              <span>Rejeito</span>
+              <strong id="indicatorRejeito">0 kg</strong>
+              <small>Material classificado como rejeito</small>
             </article>
 
-            <article class="quick-card">
-              <div class="quick-card-top">
-                <span class="mini-badge">Operação</span>
-                <span class="quick-icon">♻️</span>
-              </div>
-              <h3>Registro de coletas</h3>
-              <p>Lance as coletas realizadas e envie os números para o dashboard.</p>
-              <a href="cadastro-coletas-cooadesc.html">Registrar coletas →</a>
+            <article class="operational-card">
+              <span>Não comercializado</span>
+              <strong id="indicatorNaoComercializado">0 kg</strong>
+              <small>Material recebido sem comercialização</small>
             </article>
+
+            <article class="operational-card">
+              <span>Qualidade média</span>
+              <strong id="indicatorQualidadeMedia">0</strong>
+              <small>Média das notas de qualidade registradas</small>
+            </article>
+
+          </div>
+        </section>
+
+        <section class="dashboard-section quick-actions-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Ações rápidas</span>
+              <h2>Acesso rápido</h2>
+            </div>
           </div>
 
-          <div class="panel-grid">
-            <article class="panel-card">
-              <div class="panel-card-head">
-                <h3>📢 Avisos importantes</h3>
+          <div class="quick-actions-grid">
+
+            <a class="quick-action-card" href="cadastro-participantes-cooadesc.html">
+              <span class="quick-action-icon">➕</span>
+              <div>
+                <strong>Cadastrar novo participante</strong>
+                <small>Adicionar participante à base da COOADESC  </small>
               </div>
+            </a>
+
+            <a class="quick-action-card" href="usuarios-cooadesc.html">
+              <span class="quick-action-icon">👥</span>
+              <div>
+                <strong>Visualizar participantes</strong>
+                <small>Conferir aprovados, ativos e pendentes</small>
+              </div>
+            </a>
+
+            <a class="quick-action-card" href="cadastro-coletas-cooadesc.html">
+              <span class="quick-action-icon">♻️</span>
+              <div>
+                <strong>Cadastrar coleta</strong>
+                <small>Registrar nova coleta operacional</small>
+              </div>
+            </a>
+
+            <button class="quick-action-card quick-action-button" id="exportParticipantsPdfBtn" type="button">
+              <span class="quick-action-icon">📄</span>
+              <div>
+                <strong>Exportar PDF participantes</strong>
+                <small>Gerar relatório da base atual</small>
+              </div>
+            </button>
+
+          </div>
+        </section>
+
+        <section class="dashboard-section recent-collections-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Coletas recentes</span>
+              <h2>Últimas coletas cadastradas</h2>
+            </div>
+
+            <p>
+              Visualização rápida dos últimos registros. Clique em “Ver coleta” para abrir os detalhes completos.
+            </p>
+          </div>
+
+          <div class="recent-table-wrap">
+            <table class="recent-table">
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Participante</th>
+                  <th>Código</th>
+                  <th>Tipo de recebimento</th>
+                  <th>Status</th>
+                  <th>Detalhes</th>
+                  <th>Ação</th>
+                </tr>
+              </thead>
+
+              <tbody id="recentColetasTableBody">
+                <tr>
+                  <td colspan="7">Carregando coletas recentes...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="recent-table-footer">
+            <button class="primary-link-button" id="btnLoadMoreColetas" type="button">
+              Visualizar mais coletas
+            </button>
+          </div>
+        </section>
+
+        <section class="dashboard-section dashboard-charts-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Inteligência operacional</span>
+              <h2>Gráficos da cooperativa</h2>
+            </div>
+
+            <p>
+              Leitura executiva dos dados carregados em tempo real no Firebase.
+            </p>
+          </div>
+
+          <div class="powerbi-grid">
+
+            <article class="powerbi-card powerbi-card-large">
+              <div class="powerbi-card-head">
+                <div>
+                  <span>Mensal</span>
+                  <h3>Coletas realizadas</h3>
+                </div>
+                <strong id="chartTotalColetasLabel">0</strong>
+              </div>
+
+              <div class="powerbi-bars" id="chartColetasMensais"></div>
+            </article>
+
+            <article class="powerbi-card">
+              <div class="powerbi-card-head">
+                <div>
+                  <span>Perfil</span>
+                  <h3>Participantes</h3>
+                </div>
+              </div>
+
+              <div class="powerbi-donut-wrap">
+                <div class="powerbi-donut" id="chartParticipantesPerfil"></div>
+                <div class="powerbi-donut-center">
+                  <strong id="chartTotalParticipantesLabel">0</strong>
+                  <small>Total</small>
+                </div>
+              </div>
+
+              <div class="powerbi-legend">
+                <span><i class="legend-green"></i>Famílias</span>
+                <span><i class="legend-blue"></i>Condomínios</span>
+                <span><i class="legend-orange"></i>Outros</span>
+              </div>
+            </article>
+
+            <article class="powerbi-card">
+              <div class="powerbi-card-head">
+                <div>
+                  <span>Operacional</span>
+                  <h3>Composição dos pesos</h3>
+                </div>
+              </div>
+
+              <div class="powerbi-horizontal-bars">
+                <div>
+                  <label>Peso recebido</label>
+                  <span id="barPesoRecebidoLabel">0 kg</span>
+                  <strong><i id="barPesoRecebido"></i></strong>
+                </div>
+
+                <div>
+                  <label>Rejeito</label>
+                  <span id="barRejeitoLabel">0 kg</span>
+                  <strong><i id="barRejeito"></i></strong>
+                </div>
+
+                <div>
+                  <label>Não comercializado</label>
+                  <span id="barNaoComercializadoLabel">0 kg</span>
+                  <strong><i id="barNaoComercializado"></i></strong>
+                </div>
+              </div>
+            </article>
+
+          </div>
+        </section>
+<!--
+        <section class="dashboard-section dashboard-updates-section">
+          <div class="section-head">
+            <div>
+              <span class="section-tag">Atualizações</span>
+              <h2>Últimas atualizações da cooperativa</h2>
+            </div>
+          </div>
+
+          <div class="updates-grid">
+            <article class="updates-card">
+              <h3>📢 Avisos recentes</h3>
               <div class="info-list" id="noticesList"></div>
             </article>
-          </div>
-        </section>
 
-        <section class="dashboard-section participants-section-shell">
-          <div class="section-head participants-head">
-            <div>
-              <span class="section-tag">Cadastro da cooperativa</span>
-              <h2>Participantes cadastrados</h2>
-            </div>
-            <p id="participantsSectionText">
-              Gerencie moradores, famílias, condomínios e outros participantes vinculados à cooperativa.
-            </p>
-          </div>
-
-          <div class="participants-toolbar">
-            <div class="participants-search">
-              <input
-                type="text"
-                id="participantSearchInput"
-                placeholder="Buscar por nome, código, bairro ou endereço..."
-              />
-            </div>
-
-            <a class="participants-add-btn" href="cadastro-colaboradores-cooadesc.html" id="newParticipantBtn">
-              + Novo participante
-            </a>
-          </div>
-
-          <div class="participants-kpis">
-            <article class="participants-kpi-card">
-              <span>Total cadastrados</span>
-              <strong id="participantsTotalCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Famílias / moradores</span>
-              <strong id="participantsPeopleCount">0</strong>
-            </article>
-
-            <article class="participants-kpi-card">
-              <span>Condomínios</span>
-              <strong id="participantsCondoCount">0</strong>
+            <article class="updates-card">
+              <h3>📋 Comunicados</h3>
+              <div class="territory-list" id="territoryCommunications"></div>
             </article>
           </div>
-
-          <div class="participants-list" id="participantsList"></div>
         </section>
-
-        <section class="dashboard-section territory-panel-shell">
-          <div class="territory-topbar">
-            <span class="section-tag territory-tag">Painel da cooperativa</span>
-
-            <div class="territory-tabs" id="territoryTabs">
-              <button class="territory-tab active" data-tab="comunicados">📋 Comunicados</button>
-              <button class="territory-tab" data-tab="servicos">🛠 Serviços</button>
-              <button class="territory-tab" data-tab="mapa">🗺 Mapa</button>
-              <button class="territory-tab" data-tab="calendario">🗓 Calendário</button>
-              <button class="territory-tab" data-tab="treinamentos">🎓 Capacitações</button>
-              <button class="territory-tab territory-tab-special" data-tab="coleta">🚚 Coleta especial</button>
-              <button class="territory-tab" data-tab="ouvidoria">🗣 Ouvidoria</button>
-            </div>
-          </div>
-
-          <div class="territory-panel-grid">
-            <div class="territory-main">
-              <div class="territory-main-head">
-                <div>
-                  <h3 id="territoryPanelTitle">Comunicados da cooperativa</h3>
-                  <p id="territoryPanelSubtitle">Avisos, atualizações e orientações da cooperativa.</p>
-                </div>
-
-                <div class="territory-head-actions">
-                  <button class="pill-state pill-state-active" type="button">Atual</button>
-                  <button class="pill-state" type="button">Timeline</button>
-                </div>
-              </div>
-
-              <div class="territory-tab-content active" id="tab-comunicados">
-                <div class="territory-list" id="territoryCommunications"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-servicos">
-                <div class="territory-list" id="territoryServices"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-mapa">
-                <section class="territory-map-section">
-                  <div class="territory-map-toolbar">
-                    <div>
-                      <h4>Mapa de pontos de coleta</h4>
-                      <p>
-                        Veja no mapa os pontos fixos da cooperativa e os endereços cadastrados pelos participantes.
-                      </p>
-                    </div>
-
-                    <div class="territory-map-filters">
-                      <select id="mapTypeFilter" class="map-select">
-                        <option value="all">Todos os tipos</option>
-                        <option value="seletiva">Coleta seletiva</option>
-                        <option value="papel">Papel</option>
-                        <option value="plastico">Plástico</option>
-                        <option value="vidro">Vidro</option>
-                        <option value="metal">Metal</option>
-                        <option value="eletronicos">Eletrônicos</option>
-                        <option value="oleo">Óleo</option>
-                        <option value="participante">Pontos de participantes</option>
-                      </select>
-
-                      <button id="btnLoadParticipantPoints" class="map-ghost-btn" type="button">
-                        ➕ Carregar pontos por endereço
-                      </button>
-
-                      <button id="btnNearMe" class="map-ghost-btn" type="button">
-                        📍 Perto de mim
-                      </button>
-                    </div>
-                  </div>
-
-                  <div class="territory-map-layout">
-                    <div class="territory-map-canvas">
-                      <div id="territoryMap"></div>
-                    </div>
-
-                    <aside class="territory-map-sidebar">
-                      <div class="map-sidebar-head">
-                        <h5>Lista de pontos</h5>
-                        <span id="mapPointsCount">0</span>
-                      </div>
-
-                      <div id="mapPointsList" class="map-points-list"></div>
-
-                      <div class="map-editor-box" id="mapEditorBox">
-                        <h6>Editar ponto selecionado</h6>
-                        <div class="map-editor-fields">
-                          <input type="text" id="editPointName" placeholder="Nome do ponto" />
-                          <input type="text" id="editPointAddress" placeholder="Endereço do ponto" />
-                          <input type="text" id="editPointType" placeholder="Tipo (seletiva, papel, plástico...)" />
-                          <input type="number" step="any" id="editPointLat" placeholder="Latitude" />
-                          <input type="number" step="any" id="editPointLng" placeholder="Longitude" />
-                        </div>
-
-                        <div class="map-editor-actions">
-                          <button type="button" class="map-ghost-btn" id="btnApplyPointEdit">Salvar posição</button>
-                          <button type="button" class="map-ghost-btn" id="btnCancelPointEdit">Cancelar</button>
-                        </div>
-                      </div>
-                    </aside>
-                  </div>
-                </section>
-              </div>
-
-              <div class="territory-tab-content" id="tab-calendario">
-                <div class="territory-list" id="territoryCalendar"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-treinamentos">
-                <div class="territory-list" id="territoryTrainings"></div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-coleta">
-                <div class="territory-special-box">
-                  <strong>Coleta especial aberta</strong>
-                  <p>
-                    Registre coletas especiais, agendadas ou operacionais da cooperativa.
-                  </p>
-                  <a class="special-cta" href="cadastro-coletas-cooadesc.html">♻️ Registrar coleta realizada</a>
-                </div>
-              </div>
-
-              <div class="territory-tab-content" id="tab-ouvidoria">
-                <div class="territory-special-box">
-                  <strong>Ouvidoria da cooperativa</strong>
-                  <p>
-                    Canal para dúvidas, sugestões, ocorrências e retorno da comunidade ligada à cooperativa.
-                  </p>
-                  <a class="panel-link" href="#tab-ouvidoria">Abrir ouvidoria →</a>
-                </div>
-              </div>
-            </div>
-
-            <aside class="territory-side">
-              <div class="side-card">
-                <h4>Resumo rápido</h4>
-
-                <div class="summary-list">
-                  <div class="summary-row">
-                    <span>Materiais aceitos</span>
-                    <strong id="summaryAccepted">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Não aceitos</span>
-                    <strong id="summaryRejected">0</strong>
-                  </div>
-                  <div class="summary-row">
-                    <span>Pontos no mapa</span>
-                    <strong id="summaryPoints">0</strong>
-                  </div>
-                </div>
-
-                <div class="summary-actions">
-                  <a href="#tab-servicos" class="summary-btn">Serviços</a>
-                  <a href="dashbooard-cooperativa-cooadesc.html" class="summary-btn">Mapa</a>
-                </div>
-              </div>
-
-              <div class="side-card quick-shortcuts">
-                <h4>Atalho rápido</h4>
-                <a class="special-cta" href="cadastro-coletas-cooadesc.html">♻️ Registrar coleta</a>
-              </div>
-
-              <div class="side-card small-grid">
-                <a href="#tab-calendario" class="summary-btn">Calendário</a>
-                <a href="#tab-ouvidoria" class="summary-btn">Ouvidoria</a>
-              </div>
-
-              <div class="side-card indicators-card">
-                <div class="indicators-head">
-                  <h4>Indicadores gerais</h4>
-                  <p id="indicatorCardText">
-                    Resumo consolidado da cooperativa, incluindo registros de coleta.
-                  </p>
-                </div>
-
-                <div class="indicator-mini-grid">
-                  <div class="indicator-mini">
-                    <span>Coletas</span>
-                    <strong id="indicatorColetas">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Participantes</span>
-                    <strong id="indicatorParticipants">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Documentos</span>
-                    <strong id="indicatorDocs">0</strong>
-                  </div>
-                  <div class="indicator-mini">
-                    <span>Ações</span>
-                    <strong id="indicatorActions">0</strong>
-                  </div>
-                </div>
-
-               <a class="dashboard-cta" href="dashbooard-cooperativa-cooadesc.html">
-  📊 Acessar dashboard da cooperativa
-</a>
-              </div>
-            </aside>
-          </div>
-        </section>
+-->
       </main>
     </div>
   </div>
-
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
-    crossorigin=""
-  ></script>
 
   <script type="module" src="/cooperativas-territorio.js"></script>
 </body>
