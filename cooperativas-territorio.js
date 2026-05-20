@@ -399,54 +399,82 @@ function isColetaRealizada(item = {}) {
 ========================================================= */
 
 function getDateValue(item = {}) {
-  const possible =
-    item.opDate ||
-    item.dataOperacao ||
-    item.operationDate ||
-    item.dataColeta ||
-    item.coletaData ||
-    item.dateColeta ||
-    item.createdAtISO ||
-    item.updatedAtISO ||
-    item.createdAt ||
-    item.updatedAt ||
-    item.date ||
-    item.data ||
-    item.payloadSnapshot?.opDate ||
-    item.payloadSnapshot?.dataOperacao ||
-    item.payloadSnapshot?.operationDate ||
-    item.payloadSnapshot?.dataColeta ||
-    item.payloadSnapshot?.createdAtISO ||
-    item.payloadSnapshot?.data ||
-    item.recebimento?.dataColeta ||
-    item.finalTurno?.dataColeta ||
-    null;
+  const candidates = [
+    item.opDate,
+    item.dataOperacao,
+    item.operationDate,
+    item.dataColeta,
+    item.coletaData,
+    item.dateColeta,
+    item.dataRegistro,
+    item.createdAtISO,
+    item.updatedAtISO,
+    item.createdAt,
+    item.updatedAt,
+    item.date,
+    item.data,
 
-  if (!possible) return null;
+    item.payloadSnapshot?.opDate,
+    item.payloadSnapshot?.dataOperacao,
+    item.payloadSnapshot?.operationDate,
+    item.payloadSnapshot?.dataColeta,
+    item.payloadSnapshot?.coletaData,
+    item.payloadSnapshot?.dataRegistro,
+    item.payloadSnapshot?.createdAtISO,
+    item.payloadSnapshot?.createdAt,
+    item.payloadSnapshot?.data,
 
-  if (typeof possible?.toDate === "function") return possible.toDate();
+    item.recebimento?.dataColeta,
+    item.recebimento?.dataOperacao,
+    item.recebimento?.createdAt,
+    item.finalTurno?.dataColeta,
+    item.finalTurno?.dataOperacao,
+    item.finalTurno?.createdAt
+  ];
 
-  if (typeof possible?.seconds === "number") {
-    return new Date(possible.seconds * 1000);
-  }
+  for (const possible of candidates) {
+    if (!possible) continue;
 
-  if (possible instanceof Date) return possible;
-
-  if (typeof possible === "string") {
-    const brDateTime = possible.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:\s+(\d{2}):(\d{2}))?/);
-
-    if (brDateTime) {
-      return new Date(
-        Number(brDateTime[3]),
-        Number(brDateTime[2]) - 1,
-        Number(brDateTime[1]),
-        Number(brDateTime[4] || 0),
-        Number(brDateTime[5] || 0)
-      );
+    if (typeof possible?.toDate === "function") {
+      const date = possible.toDate();
+      if (!Number.isNaN(date.getTime())) return date;
     }
 
-    const parsed = new Date(possible);
-    if (!Number.isNaN(parsed.getTime())) return parsed;
+    if (typeof possible?.seconds === "number") {
+      const date = new Date(possible.seconds * 1000);
+      if (!Number.isNaN(date.getTime())) return date;
+    }
+
+    if (possible instanceof Date) {
+      if (!Number.isNaN(possible.getTime())) return possible;
+    }
+
+    if (typeof possible === "string") {
+      const clean = possible.trim();
+
+      const brDate = clean.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (brDate) {
+        const date = new Date(
+          Number(brDate[3]),
+          Number(brDate[2]) - 1,
+          Number(brDate[1])
+        );
+        if (!Number.isNaN(date.getTime())) return date;
+      }
+
+      const isoDate = clean.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoDate) {
+        const date = new Date(
+          Number(isoDate[1]),
+          Number(isoDate[2]) - 1,
+          Number(isoDate[3])
+        );
+        if (!Number.isNaN(date.getTime())) return date;
+      }
+
+      const parsed = new Date(clean);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
   }
 
   return null;
@@ -1618,22 +1646,50 @@ function listenDashboardData() {
     updateKpis();
   });
 
-  listenCollection("coletas", (items) => {
-    STATE.coletas = items
-      .filter(isColetaRealizada)
-      .filter(itemBelongsToTerritory)
-      .sort((a, b) => {
-        const dateA = getDateValue(a)?.getTime() || 0;
-        const dateB = getDateValue(b)?.getTime() || 0;
-        return dateB - dateA;
-      });
+listenCollection("coletas", (items) => {
+  const todasDoFirebase = items.map((item) => ({
+    id: item.id,
+    data: formatDateLabel(item),
+    codigo: getParticipantCode(item),
+    participante: getParticipantName(item),
+    fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+    status: getColetaStatusLabel(item),
+    territorio:
+      item.territoryId ||
+      item.territory ||
+      item.cooperativeId ||
+      item.payloadSnapshot?.territoryId ||
+      "-"
+  }));
 
-    STATE.recentPage = 0;
-    populateEntregaFilter(STATE.coletas);
+  console.table(todasDoFirebase);
 
-    updateKpis();
-    renderRecentColetas();
-  });
+  STATE.coletas = items
+    .filter(isColetaRealizada)
+    .filter(itemBelongsToTerritory)
+    .sort((a, b) => {
+      const dateA = getDateValue(a)?.getTime() || 0;
+      const dateB = getDateValue(b)?.getTime() || 0;
+      return dateB - dateA;
+    });
+
+  console.table(
+    STATE.coletas.map((item) => ({
+      id: item.id,
+      data: formatDateLabel(item),
+      codigo: getParticipantCode(item),
+      participante: getParticipantName(item),
+      fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+      status: getColetaStatusLabel(item)
+    }))
+  );
+
+  STATE.recentPage = 0;
+  populateEntregaFilter(STATE.coletas);
+
+  updateKpis();
+  renderRecentColetas();
+});
 
   listenCollection("approvalRequests", (items) => {
     STATE.approvalRequests = items
