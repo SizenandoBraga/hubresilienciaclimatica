@@ -53,7 +53,21 @@ function setText(id,value){
 function lower(value){
   return String(value || "").trim().toLowerCase();
 }
+function normalizeCooperativaId(value = ""){
 
+  return lower(value)
+    .trim()
+
+    /* remove prefixos duplicados */
+    .replace(/^crgr[-_]/,"")
+
+    /* normaliza separadores */
+    .replace(/_/g,"-")
+
+    /* aliases */
+    .replace(/^coadesc$/,"cooadesc")
+    .replace(/^padre_cacique$/,"padre-cacique");
+}
 function normalizeText(value){
   return String(value || "").trim();
 }
@@ -112,7 +126,8 @@ function getDate(item = {}){
 }
 
 function getTerritoryId(item = {}){
-  return normalizeText(
+
+  const raw =
     item.territoryId ||
     item.territory ||
     item.territoryCode ||
@@ -120,7 +135,10 @@ function getTerritoryId(item = {}){
     item.crgrId ||
     item.code ||
     item.codigo ||
-    ""
+    "";
+
+  return normalizeCooperativaId(
+    normalizeText(raw)
   );
 }
 
@@ -188,7 +206,7 @@ function isRealCooperativaDoc(item = {}){
 function formatCooperativaNameFromId(id = ""){
 
   const normalized =
-    lower(id).replace(/_/g,"-");
+  normalizeCooperativaId(id);
 
   const names = {
 
