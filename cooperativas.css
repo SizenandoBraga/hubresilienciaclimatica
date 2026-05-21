@@ -2041,7 +2041,5 @@ body.menu-open{overflow:hidden}
     saturate(60%)
     invert(60%)
 
-    drop-shadow(
-      0 10px 22px rgba(0,0,0,.16)
-    );
+    
 }
