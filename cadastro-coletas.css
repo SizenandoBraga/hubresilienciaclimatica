@@ -52,67 +52,60 @@ body {
 
   background:
     linear-gradient(
-      rgba(255,255,255,.94),
-      rgba(255,255,255,.96)
-    ),
-
-    url("img/Cluster_ecoar.png");
-
-  background-color: var(--bg);
-
-  background-repeat: no-repeat;
-
-  background-position:
-    center center;
-
-  background-size:
-    720px auto;
-
-  background-attachment: fixed;
+      180deg,
+      rgba(245,246,240,.98),
+      rgba(245,246,240,.96)
+    );
 
   color: var(--black);
 
   position: relative;
+
+  min-height: 100vh;
+
+  overflow-x: hidden;
 }
 
 /* =========================================================
-   MARCA D'ÁGUA CLUSTER ECOAR
-========================================================= */
-
-/* =========================================================
-   MARCA D'ÁGUA • CLUSTER ECOAR
+   MARCA D'ÁGUA LATERAL • CLUSTER ECOAR
+   Mantém a raiz do projeto e mostra o logo inteiro na lateral
 ========================================================= */
 
 body::before{
-
   content:"";
 
   position:fixed;
 
-  top:0;
-  left:-120px;
+  top:50%;
+  left:24px;
 
-  width:100vw;
-  height:100vh;
+  width:420px;
+  height:420px;
 
   background:
     url("img/Cluster_ecoar.png")
-    left center / 760px auto
+    center center / contain
     no-repeat;
 
-  opacity:.050;
+  opacity:.060;
 
   pointer-events:none;
 
-  z-index:-1;
+  z-index:0;
+
+  transform:
+    translateY(-50%);
 
   filter:
     grayscale(.04)
-    contrast(1.05)
-    saturate(1.06);
+    contrast(1.04)
+    saturate(1.04);
+}
 
-  transform:
-    translateY(20px);
+body > *{
+  position:relative;
+
+  z-index:1;
 }
 
 a {
@@ -972,7 +965,7 @@ textarea {
   }
 
   .logo-img {
-    width: 70px;
+    width: 112px;
   }
 
   .brand-title {
@@ -1181,3 +1174,86 @@ textarea {
     max-width:118px;
   }
 }
+
+/* =========================================================
+   RESPONSIVO • MARCA D'ÁGUA LATERAL E LOGOS
+========================================================= */
+
+@media(max-width:1180px){
+
+  body::before{
+    left:10px;
+
+    width:360px;
+    height:360px;
+
+    opacity:.050;
+  }
+}
+
+@media(max-width:760px){
+
+  body::before{
+    left:50%;
+
+    top:auto;
+    bottom:18px;
+
+    width:310px;
+    height:310px;
+
+    transform:
+      translateX(-50%);
+
+    opacity:.035;
+  }
+
+  .logo-img{
+    width:118px;
+  }
+}
+
+@media(max-width:640px){
+
+  body::before{
+    width:270px;
+    height:270px;
+
+    bottom:10px;
+
+    opacity:.030;
+  }
+
+  .logo-img{
+    width:108px;
+  }
+
+  .brand-logo-cluster,
+  .brand-text .img img{
+    height:40px;
+    max-width:132px;
+  }
+}
+
+@media(max-width:480px){
+
+  body::before{
+    width:230px;
+    height:230px;
+
+    bottom:6px;
+
+    opacity:.026;
+  }
+
+  .logo-img{
+    width:92px;
+  }
+
+  .brand-logo-cluster,
+  .brand-text .img img{
+    height:32px;
+    max-width:112px;
+  }
+}
+
