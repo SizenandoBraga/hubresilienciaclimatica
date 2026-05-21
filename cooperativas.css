@@ -69,7 +69,35 @@ img{max-width:100%;display:block}
   padding-bottom:10px;
 }
 
-.brand-mark{width:160px}
+/* =========================================================
+   LOGO NSRU • MENU LATERAL
+========================================================= */
+
+.brand-mark{
+  width:210px;
+
+  max-width:100%;
+
+  margin:0 auto;
+
+  filter:
+    drop-shadow(
+      0 10px 24px rgba(0,0,0,.10)
+    );
+
+  transition:
+    transform .22s ease,
+    filter .22s ease;
+}
+
+.sidebar:hover .brand-mark{
+  transform:scale(1.02);
+
+  filter:
+    drop-shadow(
+      0 16px 34px rgba(0,0,0,.14)
+    );
+}
 
 .sidebar-nav{
   display:flex;
@@ -1170,7 +1198,9 @@ body.menu-open{overflow:hidden}
 
   .sidebar{width:min(92vw,320px)}
 
-  .brand-mark{width:120px}
+ .brand-mark{
+  width:168px;
+}
 
   .recent-table-footer{justify-content:stretch}
 
@@ -2013,7 +2043,7 @@ body.menu-open{overflow:hidden}
 
   object-fit:contain;
 
-  opacity:.11;
+  opacity:.085;
 
   filter:
     grayscale(.04)
