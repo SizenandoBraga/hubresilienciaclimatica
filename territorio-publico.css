@@ -134,58 +134,112 @@ body{
 }
 
 /* =========================================================
-   HERO COM CARROSSEL • SEM FUNDO NO SLIDE
+   HERO COM CARROSSEL • FUNDO CLARO
 ========================================================= */
 
 .territory-hero-static{
   position:relative;
+
   padding:54px 0 42px;
+
   background:
-    radial-gradient(circle at top left, rgba(255,255,255,.18), transparent 34%),
-    radial-gradient(circle at bottom right, rgba(83,172,222,.18), transparent 32%),
-    linear-gradient(135deg, #81B92A 0%, #6ba31f 50%, #5f8d19 100%);
+    radial-gradient(
+      circle at top left,
+      rgba(129,185,42,.10),
+      transparent 34%
+    ),
+
+    radial-gradient(
+      circle at bottom right,
+      rgba(83,172,222,.10),
+      transparent 32%
+    ),
+
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.985),
+      rgba(255,255,255,.94)
+    );
 }
 
 .territory-hero-static::before{
   content:"";
+
   position:absolute;
   inset:0;
-  background:linear-gradient(120deg, rgba(255,255,255,.08), transparent 30%);
+
+  background:
+    radial-gradient(
+      circle at 12% 18%,
+      rgba(239,107,34,.08),
+      transparent 26%
+    ),
+
+    radial-gradient(
+      circle at 88% 82%,
+      rgba(129,185,42,.08),
+      transparent 30%
+    );
+
   pointer-events:none;
 }
 
 .territory-hero-inner{
   width:min(var(--container),calc(100% - 10%));
+
   margin:0 auto;
 }
 
 .territory-hero-static .territory-slide{
   position:relative;
+
   display:grid;
-  grid-template-columns:minmax(0,1.12fr) minmax(420px,.88fr);
+
+  grid-template-columns:
+    minmax(0,1.12fr)
+    minmax(420px,.88fr);
+
   align-items:center;
+
   gap:58px;
+
   min-height:620px;
+
   padding:0;
+
   overflow:visible;
+
   background:none;
+
   border:none;
+
   border-radius:0;
+
   box-shadow:none;
 }
 
+/* =========================================================
+   TEXTO HERO
+========================================================= */
+
 .territory-slide-content{
   min-width:0;
+
   max-width:860px;
 }
 
 .territory-slide-content h1{
   display:flex;
   flex-direction:column;
+
   gap:6px;
+
   margin-bottom:30px;
+
   line-height:.94;
+
   letter-spacing:-2.4px;
+
   text-align:left;
 }
 
@@ -194,132 +248,108 @@ body{
 .title-blue,
 .title-orange{
   display:block;
+
   font-weight:800;
 }
 
 .title-dark{
   font-size:clamp(54px,5vw,84px);
-  background:linear-gradient(135deg,#3C3A39,#575351);
+
+  background:
+    linear-gradient(
+      135deg,
+      #3C3A39,
+      #575351
+    );
+
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+
   background-clip:text;
 }
 
 .title-green{
   font-size:clamp(46px,4vw,70px);
-  background:linear-gradient(135deg,#81B92A,#5f8d19);
+
+  background:
+    linear-gradient(
+      135deg,
+      #81B92A,
+      #5f8d19
+    );
+
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+
   background-clip:text;
 }
 
 .title-blue{
   font-size:clamp(44px,4vw,64px);
-  background:linear-gradient(135deg,#53ACDE,#2f88ba);
+
+  background:
+    linear-gradient(
+      135deg,
+      #53ACDE,
+      #2f88ba
+    );
+
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+
   background-clip:text;
 }
 
 .title-orange{
   font-size:clamp(46px,4vw,70px);
-  background:linear-gradient(135deg,#EF6B22,#c95518);
+
+  background:
+    linear-gradient(
+      135deg,
+      #EF6B22,
+      #c95518
+    );
+
   -webkit-background-clip:text;
   -webkit-text-fill-color:transparent;
+
   background-clip:text;
 }
 
 .territory-slide-lead{
   margin-bottom:26px;
+
   max-width:760px;
+
   font-size:clamp(23px,2vw,31px);
+
   line-height:1.58;
+
   color:#45413e;
+
   font-weight:600;
+
   text-align:left;
+
   text-wrap:pretty;
+
   overflow-wrap:break-word;
 }
 
 .territory-slide p:not(.territory-slide-lead){
   max-width:760px;
+
   font-size:20px;
+
   line-height:1.86;
+
   color:#5c5753;
+
   text-align:left;
+
   text-wrap:pretty;
+
   overflow-wrap:break-word;
-}
-
-/* =========================================================
-   CARROSSEL DO HERO
-========================================================= */
-
-.territory-hero-carousel{
-  position:relative;
-  width:100%;
-  min-width:0;
-}
-
-.hero-carousel-track{
-  position:relative;
-  width:100%;
-  height:560px;
-  overflow:hidden;
-  border-radius:34px;
-}
-
-.hero-carousel-slide{
-  position:absolute;
-  inset:0;
-  opacity:0;
-  transform:scale(1.03);
-  transition:opacity .45s ease, transform .45s ease;
-}
-
-.hero-carousel-slide.is-active{
-  opacity:1;
-  z-index:2;
-  transform:scale(1);
-}
-
-.hero-carousel-slide img{
-  width:100%;
-  height:100%;
-  object-fit:cover;
-  display:block;
-  border-radius:34px;
-  box-shadow:0 30px 80px rgba(0,0,0,.18);
-}
-
-.hero-carousel-controls{
-  position:absolute;
-  left:18px;
-  right:18px;
-  bottom:18px;
-  display:flex;
-  justify-content:space-between;
-  z-index:5;
-}
-
-.hero-carousel-btn{
-  width:54px;
-  height:54px;
-  border:none;
-  border-radius:999px;
-  background:rgba(255,255,255,.92);
-  color:#3C3A39;
-  font-size:22px;
-  cursor:pointer;
-  backdrop-filter:blur(12px);
-  transition:.22s ease;
-  box-shadow:0 12px 26px rgba(0,0,0,.12);
-}
-
-.hero-carousel-btn:hover{
-  background:#EF6B22;
-  color:#fff;
-  transform:translateY(-2px);
 }
 
 /* =========================================================
@@ -342,6 +372,114 @@ body{
   color:var(--orange);
 
   font-weight:800;
+}
+
+/* =========================================================
+   CARROSSEL HERO
+========================================================= */
+
+.territory-hero-carousel{
+  position:relative;
+
+  width:100%;
+
+  min-width:0;
+}
+
+.hero-carousel-track{
+  position:relative;
+
+  width:100%;
+
+  height:560px;
+
+  overflow:hidden;
+
+  border-radius:34px;
+}
+
+.hero-carousel-slide{
+  position:absolute;
+  inset:0;
+
+  opacity:0;
+
+  transform:scale(1.03);
+
+  transition:
+    opacity .45s ease,
+    transform .45s ease;
+}
+
+.hero-carousel-slide.is-active{
+  opacity:1;
+
+  z-index:2;
+
+  transform:scale(1);
+}
+
+.hero-carousel-slide img{
+  width:100%;
+  height:100%;
+
+  object-fit:cover;
+
+  display:block;
+
+  border-radius:34px;
+
+  box-shadow:
+    0 30px 80px rgba(0,0,0,.18);
+}
+
+/* =========================================================
+   CONTROLES
+========================================================= */
+
+.hero-carousel-controls{
+  position:absolute;
+
+  left:18px;
+  right:18px;
+  bottom:18px;
+
+  display:flex;
+  justify-content:space-between;
+
+  z-index:5;
+}
+
+.hero-carousel-btn{
+  width:54px;
+  height:54px;
+
+  border:none;
+
+  border-radius:999px;
+
+  background:rgba(255,255,255,.92);
+
+  color:#3C3A39;
+
+  font-size:22px;
+
+  cursor:pointer;
+
+  backdrop-filter:blur(12px);
+
+  transition:.22s ease;
+
+  box-shadow:
+    0 12px 26px rgba(0,0,0,.12);
+}
+
+.hero-carousel-btn:hover{
+  background:#EF6B22;
+
+  color:#fff;
+
+  transform:translateY(-2px);
 }
 
 /* =========================================================
@@ -540,6 +678,7 @@ body{
 .panel-head h2{
   display:flex;
   flex-direction:column;
+
   gap:4px;
 
   line-height:.96;
@@ -588,12 +727,28 @@ body{
   }
 }
 
-@media(max-width:980px){
+@media(max-width:1080px){
 
   .territory-hero-static .territory-slide{
-    min-height:640px;
+    grid-template-columns:1fr;
 
-    padding:58px;
+    gap:34px;
+
+    min-height:auto;
+  }
+
+  .territory-slide-content{
+    order:2;
+
+    max-width:100%;
+  }
+
+  .territory-hero-carousel{
+    order:1;
+  }
+
+  .hero-carousel-track{
+    height:430px;
   }
 }
 
@@ -609,23 +764,41 @@ body{
   }
 
   .territory-hero-static .territory-slide{
-    min-height:700px;
+    gap:24px;
+  }
 
-    padding:36px 24px;
+  .hero-carousel-track{
+    height:320px;
 
-    border-radius:28px;
+    border-radius:24px;
+  }
+
+  .hero-carousel-slide img{
+    border-radius:24px;
+  }
+
+  .territory-slide-content h1{
+    gap:4px;
+
+    margin-bottom:22px;
   }
 
   .title-dark{
     font-size:38px;
   }
 
-  .title-green{
+  .title-green,
+  .title-orange{
     font-size:32px;
   }
 
   .title-blue{
     font-size:30px;
+  }
+
+  .territory-slide-lead,
+  .territory-slide p:not(.territory-slide-lead){
+    max-width:100%;
   }
 
   .territory-slide-lead{
@@ -663,116 +836,6 @@ body{
 
 @media(max-width:420px){
 
-  .territory-hero-static .territory-slide{
-    min-height:740px;
-
-    padding:30px 20px;
-  }
-
-  .title-dark{
-    font-size:32px;
-  }
-
-  .title-green{
-    font-size:28px;
-  }
-
-  .title-blue{
-    font-size:26px;
-  }
-
-  .stat-card{
-    padding:24px;
-  }
-
-  .stat-value{
-    font-size:42px;
-  }
-}
-
-/* =========================================================
-   AJUSTES RESPONSIVOS • HERO CARROSSEL
-========================================================= */
-
-@media(max-width:1080px){
-  .territory-hero-static .territory-slide{
-    grid-template-columns:1fr;
-    gap:34px;
-    min-height:auto;
-  }
-
-  .territory-slide-content{
-    order:2;
-    max-width:100%;
-  }
-
-  .territory-hero-carousel{
-    order:1;
-  }
-
-  .hero-carousel-track{
-    height:430px;
-  }
-}
-
-@media(max-width:768px){
-  .territory-hero-static{
-    padding:20px 0 24px;
-  }
-
-  .container,
-  .territory-hero-inner{
-    width:calc(100% - 20px);
-  }
-
-  .territory-hero-static .territory-slide{
-    gap:24px;
-  }
-
-  .hero-carousel-track{
-    height:320px;
-    border-radius:24px;
-  }
-
-  .hero-carousel-slide img{
-    border-radius:24px;
-  }
-
-  .territory-slide-content h1{
-    gap:4px;
-    margin-bottom:22px;
-  }
-
-  .title-dark{
-    font-size:38px;
-  }
-
-  .title-green,
-  .title-orange{
-    font-size:32px;
-  }
-
-  .title-blue{
-    font-size:30px;
-  }
-
-  .territory-slide-lead,
-  .territory-slide p:not(.territory-slide-lead){
-    max-width:100%;
-  }
-
-  .territory-slide-lead{
-    font-size:18px;
-    line-height:1.74;
-  }
-
-  .territory-slide p:not(.territory-slide-lead){
-    font-size:15.8px;
-    line-height:1.8;
-  }
-}
-
-@media(max-width:420px){
   .hero-carousel-track{
     height:280px;
   }
@@ -780,6 +843,7 @@ body{
   .hero-carousel-btn{
     width:46px;
     height:46px;
+
     font-size:19px;
   }
 
@@ -794,5 +858,13 @@ body{
 
   .title-blue{
     font-size:26px;
+  }
+
+  .stat-card{
+    padding:24px;
+  }
+
+  .stat-value{
+    font-size:42px;
   }
 }

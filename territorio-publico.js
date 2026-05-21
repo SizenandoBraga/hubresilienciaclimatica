@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const TERRITORY_DATA = {
     territoryId: bodyData.territoryId || "",
-
     stats: {
       cooperados: Number(bodyData.cooperados || 0),
       coletas: Number(bodyData.coletas || 0),
@@ -41,10 +40,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function setText(id, value) {
     const el = document.getElementById(id);
-
-    if (el) {
-      el.textContent = value;
-    }
+    if (el) el.textContent = value;
   }
 
   function formatNumber(value) {
@@ -59,196 +55,127 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function renderStats(stats) {
-
-    setText(
-      "cooperadosValue",
-      formatNumber(stats.cooperados)
-    );
-
-    setText(
-      "coletasValue",
-      formatNumber(stats.coletas)
-    );
-
-    setText(
-      "volumeValue",
-      formatTon(stats.volume)
-    );
-
-    setText(
-      "pontosValue",
-      formatNumber(stats.pontos)
-    );
+    setText("cooperadosValue", formatNumber(stats.cooperados));
+    setText("coletasValue", formatNumber(stats.coletas));
+    setText("volumeValue", formatTon(stats.volume));
+    setText("pontosValue", formatNumber(stats.pontos));
   }
 
   async function tryGetDashboardDoc(db, firestore, docId) {
-
     const { doc, getDoc } = firestore;
-
-    return await getDoc(
-      doc(
-        db,
-        "dashboard_public_by_cooperativa",
-        docId
-      )
-    );
+    return await getDoc(doc(db, "dashboard_public_by_cooperativa", docId));
   }
 
   async function loadPublicTerritoryStats() {
-
-    try{
-
+    try {
       const firebaseInit = await import("./firebase-init.js");
-
       const firestore = await import(
         "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js"
       );
 
       const { db } = firebaseInit;
-
-      const aliases = territoryAliases(
-        TERRITORY_DATA.territoryId
-      );
+      const aliases = territoryAliases(TERRITORY_DATA.territoryId);
 
       let foundSnap = null;
 
-      for(const alias of aliases){
+      for (const alias of aliases) {
+        const snap = await tryGetDashboardDoc(db, firestore, alias);
 
-        const snap = await tryGetDashboardDoc(
-          db,
-          firestore,
-          alias
-        );
-
-        if(snap.exists()){
-
+        if (snap.exists()) {
           foundSnap = snap;
-
           break;
         }
       }
 
-      if(!foundSnap){
-
+      if (!foundSnap) {
         renderStats(TERRITORY_DATA.stats);
-
         return;
       }
 
       const data = foundSnap.data();
 
       renderStats({
-
-        cooperados:Number(
+        cooperados: Number(
           data.totalPublicoPessoas ??
           data.usersCount ??
           data.participantsCount ??
           TERRITORY_DATA.stats.cooperados ??
           0
         ),
-
-        coletas:Number(
+        coletas: Number(
           data.coletasCount ??
           TERRITORY_DATA.stats.coletas ??
           0
         ),
-
-        volume:Number(
+        volume: Number(
           data.residuosCount ??
           data.volumeCount ??
           TERRITORY_DATA.stats.volume ??
           0
         ),
-
-        pontos:Number(
+        pontos: Number(
           data.pontosCount ??
           TERRITORY_DATA.stats.pontos ??
           0
         )
       });
-
-    }catch(error){
-
-      console.error(
-        "[TERRITÓRIO] erro:",
-        error
-      );
-
+    } catch (error) {
+      console.error("[TERRITÓRIO] erro:", error);
       renderStats(TERRITORY_DATA.stats);
     }
   }
 
-  /* =========================================================
-     HERO SLIDER
-  ========================================================= */
+  function initHeroCarousel() {
+    const slides = document.querySelectorAll(".hero-carousel-slide");
+    const prevBtn = document.getElementById("heroPrev");
+    const nextBtn = document.getElementById("heroNext");
 
-  function initTerritorySlider(){
-
-    const slides = document.querySelectorAll(".territory-slide");
-
-    const dots = document.querySelectorAll(".territory-dot");
-
-    if(!slides.length) return;
+    if (!slides.length) return;
 
     let current = 0;
-
+    let timer = null;
     const delay = 5000;
 
-    function render(index){
-
-      slides.forEach((slide,i)=>{
-
-        slide.classList.toggle(
-          "is-active",
-          i === index
-        );
-      });
-
-      dots.forEach((dot,i)=>{
-
-        dot.classList.toggle(
-          "is-active",
-          i === index
-        );
+    function render(index) {
+      slides.forEach((slide, i) => {
+        slide.classList.toggle("is-active", i === index);
       });
     }
 
-    function next(){
-
-      current++;
-
-      if(current >= slides.length){
-
-        current = 0;
-      }
-
+    function next() {
+      current = (current + 1) % slides.length;
       render(current);
     }
 
-    dots.forEach((dot,index)=>{
+    function prev() {
+      current = (current - 1 + slides.length) % slides.length;
+      render(current);
+    }
 
-      dot.addEventListener("click",()=>{
+    function restartTimer() {
+      if (timer) clearInterval(timer);
+      timer = setInterval(next, delay);
+    }
 
-        current = index;
+    nextBtn?.addEventListener("click", () => {
+      next();
+      restartTimer();
+    });
 
-        render(current);
-      });
+    prevBtn?.addEventListener("click", () => {
+      prev();
+      restartTimer();
     });
 
     render(current);
-
-    setInterval(next,delay);
+    restartTimer();
   }
 
-  function init(){
-
+  function init() {
     renderStats(TERRITORY_DATA.stats);
-
     loadPublicTerritoryStats();
-
-    initTerritorySlider();
+    initHeroCarousel();
   }
 
   init();
-
 });
