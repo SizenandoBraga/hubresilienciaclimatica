@@ -69,34 +69,17 @@ img{max-width:100%;display:block}
   padding-bottom:10px;
 }
 
-/* =========================================================
-   LOGO NSRU • MENU LATERAL
-========================================================= */
-
 .brand-mark{
   width:210px;
-
   max-width:100%;
-
   margin:0 auto;
-
-  filter:
-    drop-shadow(
-      0 10px 24px rgba(0,0,0,.10)
-    );
-
-  transition:
-    transform .22s ease,
-    filter .22s ease;
+  filter:drop-shadow(0 10px 24px rgba(0,0,0,.10));
+  transition:transform .22s ease, filter .22s ease;
 }
 
 .sidebar:hover .brand-mark{
   transform:scale(1.02);
-
-  filter:
-    drop-shadow(
-      0 16px 34px rgba(0,0,0,.14)
-    );
+  filter:drop-shadow(0 16px 34px rgba(0,0,0,.14));
 }
 
 .sidebar-nav{
@@ -1065,6 +1048,53 @@ img{max-width:100%;display:block}
 
 body.modal-open{overflow:hidden}
 
+/* =========================================================
+   CLUSTER ECOAR • MARCA D'ÁGUA GLOBAL
+   Centralizada sobre a página, sem prejudicar leitura
+========================================================= */
+
+.sidebar-watermark{
+  position:fixed;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  pointer-events:none;
+  z-index:0;
+  overflow:hidden;
+}
+
+.sidebar-watermark::before{
+  display:none;
+}
+
+.sidebar-watermark img{
+  position:fixed;
+  top:50%;
+  left:50%;
+  width:min(42vw,520px);
+  height:auto;
+  object-fit:contain;
+  transform:translate(-50%, -50%);
+  opacity:.038;
+  filter:grayscale(.02) contrast(1.04) saturate(1.05);
+  transition:opacity .22s ease, transform .22s ease;
+}
+
+/* Garante que o conteúdo fique acima da marca d'água */
+.content-area,
+.coop-main,
+.topbar,
+.dashboard-section,
+.panel,
+.updates-card,
+.powerbi-card,
+.coleta-modal,
+.sidebar{
+  position:relative;
+  z-index:2;
+}
+
 /* MOBILE OVERLAY */
 
 .mobile-overlay{
@@ -1198,9 +1228,7 @@ body.menu-open{overflow:hidden}
 
   .sidebar{width:min(92vw,320px)}
 
- .brand-mark{
-  width:168px;
-}
+  .brand-mark{width:168px}
 
   .recent-table-footer{justify-content:stretch}
 
@@ -1994,76 +2022,53 @@ body.menu-open{overflow:hidden}
     flex:auto;
   }
 }
+
 /* =========================================================
-   MARCA D'ÁGUA • SIDEBAR
+   AJUSTES FINAIS • LOGOS E MARCA D'ÁGUA
 ========================================================= */
 
-.sidebar-watermark{
-  position:relative;
-
-  display:flex;
-  align-items:center;
-  justify-content:center;
-
-  width:100%;
-
-  margin:26px 0 18px;
-
-  padding:10px 0;
+.sidebar-top{
+  padding-bottom:18px;
 }
 
-.sidebar-watermark::before{
-  content:"";
-
-  position:absolute;
-
-  inset:0;
-
-  border-radius:22px;
-
-  background:
-    linear-gradient(
-      135deg,
-      rgba(255,255,255,.05),
-      rgba(255,255,255,.02)
-    );
-
-  border:
-    1px solid rgba(255,255,255,.06);
-
-  backdrop-filter:blur(4px);
+.brand-mark{
+  width:210px;
+  max-width:100%;
 }
 
 .sidebar-watermark img{
-  position:relative;
-
-  width:160px;
-
-  height:auto;
-
-  object-fit:contain;
-
-  opacity:.085;
-
-  filter:
-    grayscale(.04)
-    contrast(1.05)
-    saturate(1.06);
-
-  transition:
-    opacity .22s ease,
-    transform .22s ease,
-    filter .22s ease;
+  opacity:.038;
 }
 
-.sidebar:hover .sidebar-watermark img{
+@media(max-width:1180px){
+  .sidebar-watermark img{
+    width:min(52vw,420px);
+    opacity:.032;
+  }
 
-  opacity:.14;
+  .brand-mark{
+    width:188px;
+  }
+}
 
-  transform:scale(1.02);
+@media(max-width:760px){
+  .sidebar-watermark img{
+    width:min(72vw,320px);
+    opacity:.026;
+  }
 
-  filter:
-    grayscale(.02)
-    contrast(1.06)
-    saturate(1.08);
+  .brand-mark{
+    width:168px;
+  }
+}
+
+@media(max-width:480px){
+  .sidebar-watermark img{
+    width:min(78vw,240px);
+    opacity:.022;
+  }
+
+  .brand-mark{
+    width:148px;
+  }
 }
