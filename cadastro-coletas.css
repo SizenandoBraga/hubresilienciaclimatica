@@ -958,3 +958,105 @@ textarea {
     display: none !important;
   }
 }
+
+/* =========================================================
+   BRAND • TEXTO + LOGO CLUSTER ECOAR
+   Atualização para topo com logo proporcional
+========================================================= */
+
+.brand{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:22px;
+  width:100%;
+  min-width:0;
+  text-decoration:none;
+}
+
+.brand-text{
+  display:flex;
+  flex-direction:column;
+  gap:3px;
+  min-width:0;
+  flex:1;
+}
+
+.brand-title{
+  font-size:24px;
+  line-height:1.04;
+  font-weight:800;
+  letter-spacing:-.8px;
+  color:var(--black);
+}
+
+.brand-sub{
+  margin-top:4px;
+  font-size:13px;
+  line-height:1.35;
+  font-weight:800;
+  letter-spacing:.04em;
+  color:var(--text-soft);
+  text-transform:uppercase;
+}
+
+.brand-logo-wrap,
+.brand-text .img{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  flex-shrink:0;
+  margin-left:auto;
+}
+
+.brand-logo-cluster,
+.brand-text .img img{
+  display:block;
+  width:auto;
+  height:74px;
+  max-width:210px;
+  object-fit:contain;
+  filter:drop-shadow(0 8px 20px rgba(0,0,0,.10));
+  transition:
+    transform .22s ease,
+    filter .22s ease;
+}
+
+.brand:hover .brand-logo-cluster,
+.brand:hover .img img{
+  transform:scale(1.04);
+  filter:drop-shadow(0 12px 28px rgba(0,0,0,.14));
+}
+
+@media(max-width:760px){
+  .brand{
+    gap:14px;
+  }
+
+  .brand-title{
+    font-size:18px;
+    line-height:1.08;
+  }
+
+  .brand-sub{
+    font-size:11px;
+  }
+
+  .brand-logo-cluster,
+  .brand-text .img img{
+    height:52px;
+    max-width:150px;
+  }
+}
+
+@media(max-width:480px){
+  .brand{
+    align-items:flex-start;
+  }
+
+  .brand-logo-cluster,
+  .brand-text .img img{
+    height:44px;
+    max-width:118px;
+  }
+}
