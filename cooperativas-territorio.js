@@ -1451,6 +1451,25 @@ function openColetaModal(item) {
     }
   });
 }
+
+function getMaterialValue(item = {}, keys = []) {
+  for (const key of keys) {
+    const value =
+      item[key] ??
+      item.finalTurno?.[key] ??
+      item.recebimento?.[key] ??
+      item.payloadSnapshot?.[key] ??
+      item.materiais?.[key] ??
+      item.materials?.[key];
+
+    if (value !== undefined && value !== null && value !== "") {
+      return toNumber(value);
+    }
+  }
+
+  return 0;
+}
+
 function openEditColetaModal(item) {
 
   const old = document.getElementById(
@@ -1647,42 +1666,42 @@ function openEditColetaModal(item) {
 
             <label class="coleta-info-card">
               <strong>Plástico (kg)</strong>
-              <input type="number" step="0.01" name="plasticoKg" value="${toNumber(item.plasticoKg || item.plastico)}">
+             <input type="number" step="0.01" name="plasticoKg" value="${getMaterialValue(item, ["plasticoKg", "plastico"])}">
             </label>
 
             <label class="coleta-info-card">
               <strong>Vidro (kg)</strong>
-              <input type="number" step="0.01" name="vidroKg" value="${toNumber(item.vidroKg || item.vidro)}">
+              <input type="number" step="0.01" name="vidroKg" value="${getMaterialValue(item, ["vidroKg", "vidro"])}">
             </label>
 
             <label class="coleta-info-card">
               <strong>Metal / Alumínio (kg)</strong>
-              <input type="number" step="0.01" name="metalKg" value="${toNumber(item.metalKg || item.aluminioMetalKg)}">
+              <input type="number" step="0.01" name="metalKg" value="${getMaterialValue(item, ["metalKg", "aluminioMetalKg"])}">
             </label>
 
             <label class="coleta-info-card">
               <strong>Sacaria (kg)</strong>
-              <input type="number" step="0.01" name="sacariaKg" value="${toNumber(item.sacariaKg || item.sacaria)}">
+              <input type="number" step="0.01" name="sacariaKg" value="${getMaterialValue(item, ["sacariaKg", "sacaria"])}">
             </label>
 
             <label class="coleta-info-card">
               <strong>Papel misto (kg)</strong>
-              <input type="number" step="0.01" name="papelMistoKg" value="${toNumber(item.papelMistoKg || item.papelMisto)}">
+              <input type="number" step="0.01" name="papelMistoKg" value="${getMaterialValue(item, ["papelMistoKg", "papelMisto"])}">
             </label>
 
             <label class="coleta-info-card">
               <strong>Papelão (kg)</strong>
-              <input type="number" step="0.01" name="papelaoKg" value="${toNumber(item.papelaoKg || item.papelao)}">
+              <input type="number" step="0.01" name="papelaoKg" value="${getMaterialValue(item, ["papelaoKg", "papelao"])}">
             </label>
 
             <label class="coleta-info-card">
               <strong>Isopor (kg)</strong>
-              <input type="number" step="0.01" name="isoporKg" value="${toNumber(item.isoporKg || item.isopor)}">
+              <input type="number" step="0.01" name="isoporKg" value="${getMaterialValue(item, ["isoporKg", "isopor"])}">
             </label>
 
             <label class="coleta-info-card">
               <strong>Óleo de cozinha (kg)</strong>
-              <input type="number" step="0.01" name="oleoKg" value="${toNumber(item.oleoKg || item.oleo)}">
+              <input type="number" step="0.01" name="oleoKg" value="${getMaterialValue(item, ["oleoKg", "oleo"])}">
             </label>
 
           </div>
