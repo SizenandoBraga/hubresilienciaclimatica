@@ -10,7 +10,9 @@ import {
   getDoc,
   collection,
   query,
-  onSnapshot
+  onSnapshot,
+  updateDoc,
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================================================
@@ -1449,7 +1451,107 @@ function openColetaModal(item) {
     }
   });
 }
+function openEditColetaModal(item) {
+  const old = document.getElementById("coletaEditModal");
+  if (old) old.remove();
 
+  const modal = document.createElement("div");
+  modal.id = "coletaEditModal";
+  modal.className = "coleta-modal-overlay";
+
+  modal.innerHTML = `
+    <div class="coleta-modal">
+      <button class="coleta-modal-close" id="closeEditColetaModal" type="button">×</button>
+
+      <div class="coleta-modal-head">
+        <h2>Editar coleta</h2>
+        <p>Atualize os dados principais do registro.</p>
+      </div>
+
+      <form id="editColetaForm">
+        <div class="coleta-modal-grid">
+          <label class="coleta-info-card">
+            <strong>Participante</strong>
+            <input name="participantName" value="${escapeHtml(getParticipantName(item))}">
+          </label>
+
+          <label class="coleta-info-card">
+            <strong>Código</strong>
+            <input name="participantCode" value="${escapeHtml(getParticipantCode(item))}">
+          </label>
+
+          <label class="coleta-info-card">
+            <strong>Peso recebido</strong>
+            <input name="pesoRecebido" type="number" step="0.01" value="${getPesoRecebido(item)}">
+          </label>
+
+          <label class="coleta-info-card">
+            <strong>Rejeito</strong>
+            <input name="rejeito" type="number" step="0.01" value="${getRejeito(item)}">
+          </label>
+
+          <label class="coleta-info-card">
+            <strong>Não comercializado</strong>
+            <input name="naoComercializado" type="number" step="0.01" value="${getNaoComercializado(item)}">
+          </label>
+
+          <label class="coleta-info-card">
+            <strong>Qualidade</strong>
+            <input name="qualidade" type="number" step="0.1" value="${getQualidade(item)}">
+          </label>
+        </div>
+
+        <div class="coleta-edit-actions" style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
+          <button class="primary-link-button" type="submit">Salvar alterações</button>
+          <button class="table-page-btn" id="cancelEditColetaModal" type="button">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("modal-open");
+
+  function closeModal() {
+    modal.remove();
+    document.body.classList.remove("modal-open");
+  }
+
+  modal.addEventListener("click", (event) => {
+    if (
+      event.target.id === "closeEditColetaModal" ||
+      event.target.id === "cancelEditColetaModal" ||
+      event.target === modal
+    ) {
+      closeModal();
+    }
+  });
+
+  modal.querySelector("#editColetaForm")?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+
+    const formData = new FormData(event.target);
+
+    await updateDoc(doc(db, "coletas", item.id), {
+      participantName: String(formData.get("participantName") || "").trim(),
+      participantCode: String(formData.get("participantCode") || "").trim(),
+      pesoRecebido: toNumber(formData.get("pesoRecebido")),
+      pesoResiduoSecoKg: toNumber(formData.get("pesoRecebido")),
+      rejeito: toNumber(formData.get("rejeito")),
+      rejeitoKg: toNumber(formData.get("rejeito")),
+      naoComercializado: toNumber(formData.get("naoComercializado")),
+      naoComercializadoKg: toNumber(formData.get("naoComercializado")),
+      qualidade: toNumber(formData.get("qualidade")),
+      status: "editado",
+      coletaStatus: "editado",
+      updatedAt: serverTimestamp(),
+      updatedBy: STATE.currentUser?.uid || null
+    });
+
+    closeModal();
+    setCoopSyncStatus(`Coleta atualizada em ${new Date().toLocaleString("pt-BR")}`);
+  });
+}
 function setupRecentColetasActions() {
 
   document.addEventListener("click", (event) => {
