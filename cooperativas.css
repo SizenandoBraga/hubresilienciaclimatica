@@ -1964,3 +1964,69 @@ body.menu-open{overflow:hidden}
     flex:auto;
   }
 }
+/* =========================================================
+   MARCA D'ÁGUA • SIDEBAR
+========================================================= */
+
+.sidebar-watermark{
+  position:relative;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  width:100%;
+
+  margin:26px 0 18px;
+
+  padding:10px 0;
+}
+
+.sidebar-watermark::before{
+  content:"";
+
+  position:absolute;
+
+  inset:0;
+
+  border-radius:22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.05),
+      rgba(255,255,255,.02)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.06);
+
+  backdrop-filter:blur(4px);
+}
+
+.sidebar-watermark img{
+  position:relative;
+
+  width:132px;
+
+  height:auto;
+
+  object-fit:contain;
+
+  opacity:.14;
+
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(100%);
+
+  transition:
+    opacity .22s ease,
+    transform .22s ease;
+}
+
+.sidebar:hover .sidebar-watermark img{
+  opacity:.18;
+
+  transform:scale(1.03);
+}
