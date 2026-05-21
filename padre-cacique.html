@@ -48,82 +48,109 @@
 >
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
 
+  <div class="bg-grid"></div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+  <div class="noise"></div>
+
   <div id="site-header"></div>
 
-  <main id="conteudo">
+  <main>
+    <section class="territory-hero territory-hero-static" id="territorio-padre-cacique">
+  <div class="territory-hero-inner">
+    <article class="territory-slide is-active">
 
-    <section class="hero-territory">
-      <div class="container hero-grid">
-        <div class="hero-copy">
-          <span class="eyebrow">CRGR • Território prioritário</span>
+      <!-- TEXTO -->
+      <div class="territory-slide-content">
+        <h1>
+          <span class="title-orange">Associação de Catadores</span>
+          <span class="title-orange">da Padre Cacique</span>
+          <
+        </h1>
 
-          <h1 id="territoryHeroTitle">Associação de Catadores da Padre Cacique</h1>
+        <p class="territory-slide-lead">
+          A <span class="text-dark">Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem, operando como Unidade de Triagem conveniada ao DMLU no bairro Belém Velho. 
+        </p>
 
-          <p class="hero-lead" id="territoryHeroLead">
-            Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem, operando como Unidade de Triagem conveniada ao DMLU.
-          </p>
+        <p>
+         A Associação de Catadores da Padre Cacique opera na Estrada do Rincão, 6781, como Unidade de Triagem conveniada ao DMLU, integrando o sistema municipal de coleta seletiva com geração direta de trabalho e renda no território. Como CRGR, a associação assume papel ampliado: 
+         ponto de formação, articulação territorial e registro de dados — tornando-se a ponte entre o ciclo dos resíduos e a comunidade que o produz.
+        </p>
+      </div>
 
-          <div class="hero-summary">
-            <p>
-              Com inserção produtiva e forte vínculo territorial, a associação conecta a gestão de resíduos
-              à realidade urbana, promovendo trabalho, renda e organização comunitária.
-            </p>
+      <!-- CARROSSEL -->
+      <div class="territory-hero-carousel">
 
-            
+        <div class="hero-carousel-track" id="heroCarouselTrack">
+
+          <div class="hero-carousel-slide is-active">
+            <img
+              src="img/LogoVP.png"
+              alt="Cooperativa Vila Pinto"
+            />
           </div>
 
-       
+          <div class="hero-carousel-slide">
+            <img
+              src="img/logo-cea.png"
+              alt="Centro de educação ambiental"
+            />
+          </div>
 
-         <div class="hero-actions">
-    <a href="#sobre-territorio" class="btn btn-primary btn-saiba-mais">
-  Saiba mais
-  <span style="margin-left:6px;">→</span>
-</a>
-      </div>
+          <div class="hero-carousel-slide">
+            <img
+              src="img/LogoVP.png"
+              alt="Território Vila Pinto"
+            />
+          </div>
+
+           <div class="hero-carousel-slide">
+            <img
+              src="img/logo-cea.png"
+              alt="Centro de educação ambiental"
+            />
+          </div>
+
         </div>
 
-        <aside class="hero-panel">
-          <div class="hero-panel-card">
-            <div class="mini-top">
-              <span class="mini-badge">Território ativo</span>
-              <span class="mini-status"></span>
-            </div>
+        <div class="hero-carousel-controls">
+          <button type="button" class="hero-carousel-btn" id="heroPrev">
+            ←
+          </button>
 
-            <h2>Resumo do território</h2>
+          <button type="button" class="hero-carousel-btn" id="heroNext">
+            →
+          </button>
+        </div>
 
-            <ul class="territory-meta">
-              <li><strong>Nome:</strong> <span id="territoryLabelText">Associação de Catadores da Padre Cacique</span></li>
-              <li><strong>Região:</strong> <span id="territoryRegionText">Restinga</span></li>
-              <li><strong>Perfil:</strong> <span id="territoryProfileText">Associação de catadores com inserção produtiva e vínculo territorial</span></li>
-              <li><strong>Foco:</strong> <span id="territoryFocusText">Coleta seletiva, triagem e fortalecimento da cadeia local de reciclagem</span></li>
-            </ul>
-          </div>
-        </aside>
       </div>
-    </section>
+
+    </article>
+  </div>
+</section>
 
     <section id="stats-section" class="stats-section">
       <div class="container">
         <div class="stats-grid">
-          <article class="stat-card">
+          <article class="stat-card stat-green">
             <span class="stat-label">Cooperados</span>
             <strong class="stat-value" id="cooperadosValue">0</strong>
             <p class="stat-note">Equipe vinculada ao território</p>
           </article>
 
-          <article class="stat-card">
+          <article class="stat-card stat-orange">
             <span class="stat-label">Coletas no território</span>
             <strong class="stat-value" id="coletasValue">0</strong>
             <p class="stat-note">Registros operacionais do território</p>
           </article>
 
-          <article class="stat-card">
+          <article class="stat-card stat-blue">
             <span class="stat-label">Volume reciclado</span>
             <strong class="stat-value" id="volumeValue">0,0 t</strong>
             <p class="stat-note">Soma das quantidades registradas</p>
           </article>
 
-          <article class="stat-card">
+          <article class="stat-card stat-dark">
             <span class="stat-label">Pontos de coleta</span>
             <strong class="stat-value" id="pontosValue">0</strong>
             <p class="stat-note">Pontos vinculados ao território</p>
@@ -132,126 +159,48 @@
       </div>
     </section>
 
-    <section id="sobre-territorio" class="details-section">
-      <div class="container details-grid two">
-        <article class="detail-card">
-          <span class="section-kicker">Território estratégico</span>
-          <h3>Bairro Restinga</h3>
-          <p>
-            Com mais de 60 mil habitantes, a Restinga representa 4,31% da população de Porto Alegre e está situada a cerca de 20 km do Centro Histórico, na zona sul da cidade.
-          </p>
-        </article>
-
-        <article class="detail-card">
-          <span class="section-kicker">Impacto territorial</span>
-          <h3>Gestão de resíduos e inclusão produtiva</h3>
-          <p>
-            A presença da associação fortalece a gestão de resíduos, a geração de renda e a articulação territorial, atuando como ponto de ancoragem para soluções sustentáveis.
-          </p>
-        </article>
-      </div>
-    </section>
-
     <section class="content-section">
       <div class="container territory-layout">
         <section class="panel panel-main">
           <div class="panel-head">
-            <div>
-              <span class="section-kicker">Leitura territorial</span>
-              <h2>Atuação no território</h2>
-            </div>
+            <h2>
+              <span class="title-dark">Leitura</span>
+              <span class="title-green">territorial</span>
+            </h2>
           </div>
 
           <div class="territory-text">
             <p>
-              A Associação de Catadores da Padre Cacique opera na Estrada do Rincão, 6781, como Unidade de Triagem conveniada ao DMLU, integrando o sistema municipal de coleta seletiva com geração direta de trabalho e renda.
+              A atuação da cooperativa está profundamente conectada à
+              <span class="text-dark">realidade da Bonja</span>, um território com alta densidade, diversidade social e desafios estruturais, mas também com grande
+              <span class="text-dark">capacidade de mobilização</span> e inovação comunitária.
             </p>
 
             <p>
-              O território da Restinga concentra aproximadamente 23% da população autodeclarada preta da cidade e registra um dos rendimentos nominais mensais mais baixos de Porto Alegre.
+              Essa proximidade permite soluções mais eficientes, baseadas no
+              <span class="text-dark">conhecimento local</span> e na articulação entre diferentes atores.
             </p>
 
             <p>
-              A taxa de analfabetismo era de 4% e o rendimento médio dos responsáveis por domicílio correspondia a 1,86 salários mínimos.
+              A Vila Pinto representa um modelo concreto de como cooperativas podem operar como
+              <span class="text-dark">infraestruturas essenciais da economia circular</span>, fortalecendo cadeias de reciclagem ao mesmo tempo em que promovem
+              <span class="text-dark">cidadania e transformação social</span>.
             </p>
 
             <p>
-              Apesar da escala populacional — equivalente a um município de médio porte — o território ainda acumula déficits históricos em infraestrutura, mobilidade e acesso a serviços.
-            </p>
-
-            <p>
-              A presença da associação nesse contexto representa um ponto de ancoragem concreto para articular gestão de resíduos, geração de renda e resposta comunitária.
-            </p>
-
-            <p>
-              Como CRGR, a associação assume papel ampliado: ponto de formação, articulação territorial e registro de dados — tornando-se a ponte entre o ciclo dos resíduos e a comunidade que o produz.
+              Mais do que gerir resíduos, a Vila Pinto ajuda a construir
+              <span class="text-dark">futuros possíveis</span> a partir do território.
             </p>
           </div>
         </section>
-
-        <aside class="panel side-stack">
-          <div class="mini-panel">
-            <span class="section-kicker">Cooperativa</span>
-            <h3 id="coopNameText">Associação de Catadores da Padre Cacique</h3>
-            <p id="coopDescriptionText">
-              Associação com atuação na triagem, articulação comunitária e fortalecimento da cadeia local de reciclagem.
-            </p>
-            <a href="#" class="inline-link" data-coop-link>Acessar página da cooperativa</a>
-          </div>
-
-          <div class="mini-panel">
-            <span class="section-kicker">Ações rápidas</span>
-            <div class="quick-actions">
-              <a href="#" class="quick-btn" data-participant-link>Participantes</a>
-              <a href="#stats-section" class="quick-btn">Indicadores</a>
-              <a href="moodle.html" class="quick-btn">Conteúdos</a>
-              
-            </div>
-          </div>
-        </aside>
       </div>
     </section>
-
-    <section class="content-section">
-      <div class="container territory-layout">
-        <section class="panel panel-main">
-          <div class="panel-head">
-            <div>
-              <span class="section-kicker">Mapa territorial</span>
-              <h2>Localização</h2>
-            </div>
-          </div>
-
-          <div id="map" class="territory-map" aria-label="Mapa do território Padre Cacique"></div>
-        </section>
-
-        <aside class="panel side-stack">
-          <div class="mini-panel">
-            <span class="section-kicker">Território</span>
-            <h3>Restinga</h3>
-            <p>
-              Região de grande densidade populacional, desafios estruturais e forte organização comunitária.
-            </p>
-          </div>
-
-          <div class="mini-panel">
-            <span class="section-kicker">Atuação</span>
-            <h3>Resíduos e território</h3>
-            <p>
-              Integração entre coleta seletiva, triagem, geração de renda e desenvolvimento local.
-            </p>
-          </div>
-        </aside>
-      </div>
-    </section>
-
   </main>
 
   <div id="site-footer"></div>
 
-  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="header-publico.js"></script>
   <script src="footer-publico.js"></script>
-  <script src="territorio-publico.js"></script>
+  <script type="module" src="territorio-publico.js"></script>
 </body>
 </html>
