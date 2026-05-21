@@ -2043,12 +2043,12 @@ body.menu-open{overflow:hidden}
 
   object-fit:contain;
 
-  opacity:.085;
+  opacity:.10;
 
   filter:
-    grayscale(.04)
-    contrast(1.05)
-    saturate(1.06);
+    grayscale(.03)
+    contrast(1.04)
+    saturate(1.05);
 
   transition:
     opacity .22s ease,
@@ -2058,12 +2058,12 @@ body.menu-open{overflow:hidden}
 
 .sidebar:hover .sidebar-watermark img{
 
-  opacity:.14;
+  opacity:.10;
 
-  transform:scale(1.02);
+  transform:scale(1.01);
 
   filter:
     grayscale(.02)
-    contrast(1.06)
-    saturate(1.08);
+    contrast(1.05)
+    saturate(1.06);
 }
