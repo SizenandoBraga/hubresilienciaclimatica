@@ -10,9 +10,7 @@ import {
   getDoc,
   collection,
   query,
-  onSnapshot,
-  updateDoc,
-  serverTimestamp
+  onSnapshot
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================================================
