@@ -79,28 +79,40 @@ body {
    MARCA D'ÁGUA CLUSTER ECOAR
 ========================================================= */
 
+/* =========================================================
+   MARCA D'ÁGUA • CLUSTER ECOAR
+========================================================= */
+
 body::before{
+
   content:"";
 
   position:fixed;
 
-  inset:0;
+  top:0;
+  left:-120px;
+
+  width:100vw;
+  height:100vh;
 
   background:
     url("img/Cluster_ecoar.png")
-    center center / 720px auto
+    left center / 760px auto
     no-repeat;
 
-  opacity:.045;
+  opacity:.050;
 
   pointer-events:none;
 
   z-index:-1;
 
   filter:
-    grayscale(.08)
+    grayscale(.04)
     contrast(1.05)
-    saturate(1.04);
+    saturate(1.06);
+
+  transform:
+    translateY(20px);
 }
 
 a {
