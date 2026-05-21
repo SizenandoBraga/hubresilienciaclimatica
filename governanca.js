@@ -126,15 +126,92 @@ function getTerritoryId(item = {}){
 
 function getTerritoryLabel(item = {}){
   return normalizeText(
+    item.cooperativaNome ||
+    item.nomeCooperativa ||
+    item.cooperativeName ||
+    item.cooperativa ||
     item.territoryLabel ||
-    item.name ||
     item.title ||
     item.label ||
-    item.cooperativaNome ||
-    item.cooperativa ||
     item.nome ||
+    item.name ||
     getTerritoryId(item)
   );
+}
+function isRealCooperativaDoc(item = {}){
+
+  const id =
+    getTerritoryId(item) ||
+    item.id ||
+    "";
+
+  const role = normalizeRole(item);
+
+  const type = lower(
+    item.type ||
+    item.tipo ||
+    item.profile ||
+    item.userType ||
+    item.collectionType ||
+    ""
+  );
+
+  if(!id) return false;
+
+  const looksLikeUser =
+    Boolean(item.email) ||
+    Boolean(item.uid) ||
+    Boolean(item.roles) ||
+
+    role === "admin" ||
+    role === "governanca" ||
+    role === "gestor" ||
+    role === "usuario" ||
+    role === "brigadista";
+
+  const explicitlyCoop =
+    type.includes("cooperativa") ||
+    type.includes("territorio") ||
+    type.includes("território") ||
+    type.includes("crgr") ||
+
+    Boolean(item.cooperativaNome) ||
+    Boolean(item.nomeCooperativa) ||
+    Boolean(item.cooperativeName) ||
+    Boolean(item.territoryLabel) ||
+    Boolean(item.code) ||
+    Boolean(item.codigo);
+
+  return explicitlyCoop && !looksLikeUser;
+}
+
+function formatCooperativaNameFromId(id = ""){
+
+  const normalized =
+    lower(id).replace(/_/g,"-");
+
+  const names = {
+
+    "vila-pinto":"Vila Pinto",
+    "crgr-vila-pinto":"Vila Pinto",
+
+    "cooadesc":"COOADESC",
+    "coadesc":"COOADESC",
+    "crgr-cooadesc":"COOADESC",
+
+    "padre-cacique":"Padre Cacique",
+    "crgr-padre-cacique":"Padre Cacique"
+  };
+
+  if(names[normalized]){
+    return names[normalized];
+  }
+
+  return String(id)
+    .replace(/[-_]/g," ")
+    .replace(/\b\w/g,(letter)=>
+      letter.toUpperCase()
+    );
 }
 
 function sumNumericFromItem(item){
@@ -238,59 +315,172 @@ async function loadAllData(){
   };
 }
 
-function buildCooperativasAtivas({users,participants,coletas,crgrs}){
+function buildCooperativasAtivas({
+  users,
+  participants,
+  coletas,
+  crgrs
+}){
+
   const map = new Map();
 
-  function ensure(id,label){
+  function ensureRealCooperativa(item = {}){
+
+    const id =
+      getTerritoryId(item) ||
+      item.id;
+
     if(!id) return;
 
     if(!map.has(id)){
+
       map.set(id,{
+
         id,
+
         code:id,
-        name:label || id,
+
+        name:
+          getTerritoryLabel(item) ||
+          formatCooperativaNameFromId(id),
+
         usuarios:0,
         participantes:0,
         coletas:0,
         residuo:0,
         rejeito:0,
+
         active:true
       });
     }
   }
 
-  crgrs.filter(isActive).forEach((item)=>{
-    const id = getTerritoryId(item) || item.id;
-    ensure(id,getTerritoryLabel(item));
-  });
+  /*
+    IMPORTANTE:
+    Apenas collections reais podem criar cooperativas.
+  */
+
+  crgrs
+    .filter(isActive)
+    .filter(isRealCooperativaDoc)
+    .forEach(ensureRealCooperativa);
+
+  /*
+    Fallback caso collections estejam vazias
+  */
+
+  if(map.size === 0){
+
+    const ids = new Set();
+
+    users.forEach((item)=>{
+
+      const id = getTerritoryId(item);
+
+      if(id) ids.add(id);
+    });
+
+    participants.forEach((item)=>{
+
+      const id = getTerritoryId(item);
+
+      if(id) ids.add(id);
+    });
+
+    coletas.forEach((item)=>{
+
+      const id = getTerritoryId(item);
+
+      if(id) ids.add(id);
+    });
+
+    ids.forEach((id)=>{
+
+      map.set(id,{
+
+        id,
+
+        code:id,
+
+        name:
+          formatCooperativaNameFromId(id),
+
+        usuarios:0,
+        participantes:0,
+        coletas:0,
+        residuo:0,
+        rejeito:0,
+
+        active:true
+      });
+    });
+  }
+
+  /*
+    Usuários
+  */
 
   users.forEach((item)=>{
+
     const id = getTerritoryId(item);
-    ensure(id,getTerritoryLabel(item));
-    if(map.has(id)) map.get(id).usuarios += 1;
+
+    if(!map.has(id)) return;
+
+    map.get(id).usuarios += 1;
   });
 
-  participants.filter(isActive).forEach((item)=>{
-    const id = getTerritoryId(item);
-    ensure(id,getTerritoryLabel(item));
-    if(map.has(id)) map.get(id).participantes += 1;
-  });
+  /*
+    Participantes
+  */
 
-  coletas.filter(isActive).forEach((item)=>{
-    const id = getTerritoryId(item);
-    ensure(id,getTerritoryLabel(item));
+  participants
+    .filter(isActive)
+    .forEach((item)=>{
 
-    if(map.has(id)){
+      const id = getTerritoryId(item);
+
+      if(!map.has(id)) return;
+
+      map.get(id).participantes += 1;
+    });
+
+  /*
+    Coletas
+  */
+
+  coletas
+    .filter(isActive)
+    .forEach((item)=>{
+
+      const id = getTerritoryId(item);
+
+      if(!map.has(id)) return;
+
       const coop = map.get(id);
-      coop.coletas += 1;
-      coop.residuo += getResiduoSeco(item);
-      coop.rejeito += getRejeito(item);
-    }
-  });
 
-  return Array.from(map.values())
-    .filter((item)=>item.active !== false)
-    .sort((a,b)=>String(a.name).localeCompare(String(b.name),"pt-BR"));
+      coop.coletas += 1;
+
+      coop.residuo +=
+        getResiduoSeco(item);
+
+      coop.rejeito +=
+        getRejeito(item);
+    });
+
+  return Array
+    .from(map.values())
+
+    .filter((item)=>
+      item.active !== false
+    )
+
+    .sort((a,b)=>
+      String(a.name)
+        .localeCompare(
+          String(b.name),
+          "pt-BR"
+        )
+    );
 }
 
 function showSection(sectionName){
