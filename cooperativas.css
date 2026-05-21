@@ -2043,27 +2043,24 @@ body.menu-open{overflow:hidden}
 
   object-fit:contain;
 
-  opacity:.10;
+  opacity:1;
 
   filter:
-    grayscale(.03)
+    grayscale(.02)
     contrast(1.04)
     saturate(1.05);
 
   transition:
-    opacity .22s ease,
     transform .22s ease,
     filter .22s ease;
 }
 
 .sidebar:hover .sidebar-watermark img{
 
-  opacity:.10;
-
   transform:scale(1.01);
 
   filter:
-    grayscale(.02)
+    grayscale(0)
     contrast(1.05)
     saturate(1.06);
 }
