@@ -2039,7 +2039,7 @@ body.menu-open{overflow:hidden}
   filter:
     brightness(0)
     saturate(60%)
-    invert(600%)
+    invert(60%)
 
     drop-shadow(
       0 10px 22px rgba(0,0,0,.16)
