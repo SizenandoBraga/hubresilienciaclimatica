@@ -134,7 +134,7 @@ body{
 }
 
 /* =========================================================
-   HERO COM CARROSSEL • FUNDO CLARO
+   HERO
 ========================================================= */
 
 .territory-hero-static{
@@ -145,20 +145,21 @@ body{
   background:
     radial-gradient(
       circle at top left,
-      rgba(129,185,42,.10),
+      rgba(255,255,255,.18),
       transparent 34%
     ),
 
     radial-gradient(
       circle at bottom right,
-      rgba(83,172,222,.10),
+      rgba(83,172,222,.18),
       transparent 32%
     ),
 
     linear-gradient(
       135deg,
-      rgba(255,255,255,.985),
-      rgba(255,255,255,.94)
+      #81B92A 0%,
+      #6ba31f 50%,
+      #5f8d19 100%
     );
 }
 
@@ -169,15 +170,9 @@ body{
   inset:0;
 
   background:
-    radial-gradient(
-      circle at 12% 18%,
-      rgba(239,107,34,.08),
-      transparent 26%
-    ),
-
-    radial-gradient(
-      circle at 88% 82%,
-      rgba(129,185,42,.08),
+    linear-gradient(
+      120deg,
+      rgba(255,255,255,.08),
       transparent 30%
     );
 
@@ -193,66 +188,50 @@ body{
 .territory-hero-static .territory-slide{
   position:relative;
 
-  display:grid;
-
-  grid-template-columns:
-    minmax(0,1.12fr)
-    minmax(420px,.88fr);
-
+  display:flex;
   align-items:center;
 
-  gap:58px;
+  min-height:580px;
 
-  min-height:620px;
+  padding:78px;
 
-  padding:0;
+  border-radius:42px;
 
-  overflow:visible;
+  overflow:hidden;
 
-  background:none;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.985),
+      rgba(255,255,255,.94)
+    );
 
-  border:none;
+  border:1px solid rgba(255,255,255,.78);
 
-  border-radius:0;
-
-  box-shadow:none;
+  box-shadow:
+    0 34px 80px rgba(0,0,0,.12),
+    inset 0 1px 0 rgba(255,255,255,.95);
 }
 
-/* =========================================================
-   TEXTO HERO
-========================================================= */
-
 .territory-slide-content{
-  min-width:0;
-
-  max-width:860px;
+  max-width:960px;
 }
 
 .territory-slide-content h1{
   display:flex;
   flex-direction:column;
-
-  gap:6px;
+  gap:8px;
 
   margin-bottom:30px;
 
   line-height:.94;
 
   letter-spacing:-2.4px;
-
-  text-align:left;
-}
-
-.title-dark,
-.title-green,
-.title-blue,
-.title-orange{
-  display:block;
-
-  font-weight:800;
 }
 
 .title-dark{
+  display:block;
+
   font-size:clamp(54px,5vw,84px);
 
   background:
@@ -266,9 +245,13 @@ body{
   -webkit-text-fill-color:transparent;
 
   background-clip:text;
+
+  font-weight:800;
 }
 
 .title-green{
+  display:block;
+
   font-size:clamp(46px,4vw,70px);
 
   background:
@@ -282,9 +265,13 @@ body{
   -webkit-text-fill-color:transparent;
 
   background-clip:text;
+
+  font-weight:800;
 }
 
 .title-blue{
+  display:block;
+
   font-size:clamp(44px,4vw,64px);
 
   background:
@@ -298,28 +285,14 @@ body{
   -webkit-text-fill-color:transparent;
 
   background-clip:text;
-}
 
-.title-orange{
-  font-size:clamp(46px,4vw,70px);
-
-  background:
-    linear-gradient(
-      135deg,
-      #EF6B22,
-      #c95518
-    );
-
-  -webkit-background-clip:text;
-  -webkit-text-fill-color:transparent;
-
-  background-clip:text;
+  font-weight:800;
 }
 
 .territory-slide-lead{
   margin-bottom:26px;
 
-  max-width:760px;
+  max-width:840px;
 
   font-size:clamp(23px,2vw,31px);
 
@@ -328,28 +301,16 @@ body{
   color:#45413e;
 
   font-weight:600;
-
-  text-align:left;
-
-  text-wrap:pretty;
-
-  overflow-wrap:break-word;
 }
 
 .territory-slide p:not(.territory-slide-lead){
-  max-width:760px;
+  max-width:860px;
 
   font-size:20px;
 
   line-height:1.86;
 
   color:#5c5753;
-
-  text-align:left;
-
-  text-wrap:pretty;
-
-  overflow-wrap:break-word;
 }
 
 /* =========================================================
@@ -372,114 +333,6 @@ body{
   color:var(--orange);
 
   font-weight:800;
-}
-
-/* =========================================================
-   CARROSSEL HERO
-========================================================= */
-
-.territory-hero-carousel{
-  position:relative;
-
-  width:100%;
-
-  min-width:0;
-}
-
-.hero-carousel-track{
-  position:relative;
-
-  width:100%;
-
-  height:560px;
-
-  overflow:hidden;
-
-  border-radius:34px;
-}
-
-.hero-carousel-slide{
-  position:absolute;
-  inset:0;
-
-  opacity:0;
-
-  transform:scale(1.03);
-
-  transition:
-    opacity .45s ease,
-    transform .45s ease;
-}
-
-.hero-carousel-slide.is-active{
-  opacity:1;
-
-  z-index:2;
-
-  transform:scale(1);
-}
-
-.hero-carousel-slide img{
-  width:100%;
-  height:100%;
-
-  object-fit:cover;
-
-  display:block;
-
-  border-radius:34px;
-
-  box-shadow:
-    0 30px 80px rgba(0,0,0,.18);
-}
-
-/* =========================================================
-   CONTROLES
-========================================================= */
-
-.hero-carousel-controls{
-  position:absolute;
-
-  left:18px;
-  right:18px;
-  bottom:18px;
-
-  display:flex;
-  justify-content:space-between;
-
-  z-index:5;
-}
-
-.hero-carousel-btn{
-  width:54px;
-  height:54px;
-
-  border:none;
-
-  border-radius:999px;
-
-  background:rgba(255,255,255,.92);
-
-  color:#3C3A39;
-
-  font-size:22px;
-
-  cursor:pointer;
-
-  backdrop-filter:blur(12px);
-
-  transition:.22s ease;
-
-  box-shadow:
-    0 12px 26px rgba(0,0,0,.12);
-}
-
-.hero-carousel-btn:hover{
-  background:#EF6B22;
-
-  color:#fff;
-
-  transform:translateY(-2px);
 }
 
 /* =========================================================
@@ -678,7 +531,6 @@ body{
 .panel-head h2{
   display:flex;
   flex-direction:column;
-
   gap:4px;
 
   line-height:.96;
@@ -727,28 +579,12 @@ body{
   }
 }
 
-@media(max-width:1080px){
+@media(max-width:980px){
 
   .territory-hero-static .territory-slide{
-    grid-template-columns:1fr;
+    min-height:640px;
 
-    gap:34px;
-
-    min-height:auto;
-  }
-
-  .territory-slide-content{
-    order:2;
-
-    max-width:100%;
-  }
-
-  .territory-hero-carousel{
-    order:1;
-  }
-
-  .hero-carousel-track{
-    height:430px;
+    padding:58px;
   }
 }
 
@@ -764,41 +600,23 @@ body{
   }
 
   .territory-hero-static .territory-slide{
-    gap:24px;
-  }
+    min-height:700px;
 
-  .hero-carousel-track{
-    height:320px;
+    padding:36px 24px;
 
-    border-radius:24px;
-  }
-
-  .hero-carousel-slide img{
-    border-radius:24px;
-  }
-
-  .territory-slide-content h1{
-    gap:4px;
-
-    margin-bottom:22px;
+    border-radius:28px;
   }
 
   .title-dark{
     font-size:38px;
   }
 
-  .title-green,
-  .title-orange{
+  .title-green{
     font-size:32px;
   }
 
   .title-blue{
     font-size:30px;
-  }
-
-  .territory-slide-lead,
-  .territory-slide p:not(.territory-slide-lead){
-    max-width:100%;
   }
 
   .territory-slide-lead{
@@ -836,23 +654,17 @@ body{
 
 @media(max-width:420px){
 
-  .hero-carousel-track{
-    height:280px;
-  }
+  .territory-hero-static .territory-slide{
+    min-height:740px;
 
-  .hero-carousel-btn{
-    width:46px;
-    height:46px;
-
-    font-size:19px;
+    padding:30px 20px;
   }
 
   .title-dark{
     font-size:32px;
   }
 
-  .title-green,
-  .title-orange{
+  .title-green{
     font-size:28px;
   }
 
