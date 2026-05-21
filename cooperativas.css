@@ -2007,26 +2007,41 @@ body.menu-open{overflow:hidden}
 .sidebar-watermark img{
   position:relative;
 
-  width:132px;
+  width:108px;
 
   height:auto;
 
   object-fit:contain;
 
-  opacity:.14;
+  opacity:.24;
 
   filter:
     brightness(0)
     saturate(100%)
-    invert(100%);
+    invert(100%)
+
+    drop-shadow(
+      0 6px 14px rgba(0,0,0,.12)
+    );
 
   transition:
     opacity .22s ease,
-    transform .22s ease;
+    transform .22s ease,
+    filter .22s ease;
 }
 
 .sidebar:hover .sidebar-watermark img{
-  opacity:.18;
 
-  transform:scale(1.03);
+  opacity:.30;
+
+  transform:scale(1.02);
+
+  filter:
+    brightness(0)
+    saturate(100%)
+    invert(100%)
+
+    drop-shadow(
+      0 10px 22px rgba(0,0,0,.16)
+    );
 }
