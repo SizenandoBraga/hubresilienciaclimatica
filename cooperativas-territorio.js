@@ -1451,42 +1451,75 @@ function openColetaModal(item) {
 }
 
 function setupRecentColetasActions() {
+
   document.addEventListener("click", (event) => {
-    const viewButton = event.target.closest("[data-view-coleta]");
+
+    const viewButton =
+      event.target.closest("[data-view-coleta]");
 
     if (viewButton) {
-      const coletaId = viewButton.dataset.viewColeta;
-      const coleta = STATE.coletas.find((item) => String(item.id) === String(coletaId));
+
+      const coletaId =
+        viewButton.dataset.viewColeta;
+
+      const coleta = STATE.coletas.find(
+        (item) =>
+          String(item.id) === String(coletaId)
+      );
 
       if (!coleta) return;
 
       openColetaModal(coleta);
+
       return;
     }
 
-    const editButton = event.target.closest("[data-edit-coleta]");
+    const editButton =
+      event.target.closest("[data-edit-coleta]");
 
-  if (editButton) {
-  const coletaId = editButton.dataset.editColeta;
+    if (editButton) {
 
-  const coleta = STATE.coletas.find(
-    (item) => String(item.id) === String(coletaId)
-  );
+      const coletaId =
+        editButton.dataset.editColeta;
 
-  if (!coleta) return;
+      const coleta = STATE.coletas.find(
+        (item) =>
+          String(item.id) === String(coletaId)
+      );
 
-  openEditColetaModal(coleta);
-}
+      if (!coleta) return;
+
+      openEditColetaModal(coleta);
+
+      return;
+    }
+  });
 
   document.addEventListener("keydown", (event) => {
+
     if (event.key !== "Escape") return;
 
-    const modal = document.getElementById("coletaDetailsModal");
+    const modal =
+      document.getElementById(
+        "coletaDetailsModal"
+      );
+
+    const editModal =
+      document.getElementById(
+        "coletaEditModal"
+      );
 
     if (modal) {
       modal.remove();
-      document.body.classList.remove("modal-open");
     }
+
+    if (editModal) {
+      editModal.remove();
+    }
+
+    document.body.classList.remove(
+      "modal-open"
+    );
   });
 }
 
