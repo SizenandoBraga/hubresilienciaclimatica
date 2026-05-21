@@ -1452,105 +1452,419 @@ function openColetaModal(item) {
   });
 }
 function openEditColetaModal(item) {
-  const old = document.getElementById("coletaEditModal");
+
+  const old = document.getElementById(
+    "coletaEditModal"
+  );
+
   if (old) old.remove();
 
+  const fluxo =
+    inferFluxoKey(item);
+
+  const isFinalTurno =
+    fluxo === "final_turno";
+
   const modal = document.createElement("div");
+
   modal.id = "coletaEditModal";
-  modal.className = "coleta-modal-overlay";
+
+  modal.className =
+    "coleta-modal-overlay";
 
   modal.innerHTML = `
-    <div class="coleta-modal">
-      <button class="coleta-modal-close" id="closeEditColetaModal" type="button">×</button>
+
+    <div class="coleta-modal coleta-edit-modal">
+
+      <button
+        class="coleta-modal-close"
+        id="closeEditColetaModal"
+        type="button"
+      >
+        ×
+      </button>
 
       <div class="coleta-modal-head">
-        <h2>Editar coleta</h2>
-        <p>Atualize os dados principais do registro.</p>
+
+        <h2>Editar registro</h2>
+
+        <p>
+          Atualize os dados incorretos antes de salvar.
+        </p>
+
       </div>
 
       <form id="editColetaForm">
+
         <div class="coleta-modal-grid">
+
           <label class="coleta-info-card">
+
             <strong>Participante</strong>
-            <input name="participantName" value="${escapeHtml(getParticipantName(item))}">
+
+            <input
+              type="text"
+              name="participantName"
+              value="${escapeHtml(
+                getParticipantName(item)
+              )}"
+            />
+
           </label>
 
           <label class="coleta-info-card">
-            <strong>Código</strong>
-            <input name="participantCode" value="${escapeHtml(getParticipantCode(item))}">
+
+            <strong>Fluxo</strong>
+
+            <select name="flowType">
+
+              <option
+                value="recebimento"
+                ${
+                  !isFinalTurno
+                    ? "selected"
+                    : ""
+                }
+              >
+                Recebimento
+              </option>
+
+              <option
+                value="final_turno"
+                ${
+                  isFinalTurno
+                    ? "selected"
+                    : ""
+                }
+              >
+                Final do turno
+              </option>
+
+            </select>
+
           </label>
 
           <label class="coleta-info-card">
-            <strong>Peso recebido</strong>
-            <input name="pesoRecebido" type="number" step="0.01" value="${getPesoRecebido(item)}">
+
+            <strong>Entrega</strong>
+
+            <input
+              type="text"
+              name="entrega"
+              value="${escapeHtml(
+                getEntrega(item)
+              )}"
+            />
+
           </label>
 
           <label class="coleta-info-card">
-            <strong>Rejeito</strong>
-            <input name="rejeito" type="number" step="0.01" value="${getRejeito(item)}">
+
+            <strong>Resíduo seco (kg)</strong>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="pesoRecebido"
+              value="${getPesoRecebido(item)}"
+            />
+
           </label>
 
           <label class="coleta-info-card">
-            <strong>Não comercializado</strong>
-            <input name="naoComercializado" type="number" step="0.01" value="${getNaoComercializado(item)}">
-          </label>
 
-          <label class="coleta-info-card">
             <strong>Qualidade</strong>
-            <input name="qualidade" type="number" step="0.1" value="${getQualidade(item)}">
+
+            <select name="qualidade">
+
+              <option value="1" ${
+                getQualidade(item) == 1
+                  ? "selected"
+                  : ""
+              }>
+                1 • Muito baixa
+              </option>
+
+              <option value="2" ${
+                getQualidade(item) == 2
+                  ? "selected"
+                  : ""
+              }>
+                2 • Média
+              </option>
+
+              <option value="3" ${
+                getQualidade(item) == 3
+                  ? "selected"
+                  : ""
+              }>
+                3 • Alta
+              </option>
+
+            </select>
+
           </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Rejeito (kg)</strong>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="rejeito"
+              value="${getRejeito(item)}"
+            />
+
+          </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Não comercializado (kg)</strong>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="naoComercializado"
+              value="${getNaoComercializado(item)}"
+            />
+
+          </label>
+
         </div>
 
-        <div class="coleta-edit-actions" style="margin-top:20px;display:flex;gap:10px;flex-wrap:wrap;">
-          <button class="primary-link-button" type="submit">Salvar alterações</button>
-          <button class="table-page-btn" id="cancelEditColetaModal" type="button">Cancelar</button>
+        ${
+          isFinalTurno
+            ? `
+        <div class="coleta-materials-box">
+
+          <h3>Frações de resíduos</h3>
+
+          <div class="coleta-modal-grid">
+
+            <label class="coleta-info-card">
+              <strong>Plástico (kg)</strong>
+              <input type="number" step="0.01" name="plasticoKg" value="${toNumber(item.plasticoKg || item.plastico)}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Vidro (kg)</strong>
+              <input type="number" step="0.01" name="vidroKg" value="${toNumber(item.vidroKg || item.vidro)}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Metal / Alumínio (kg)</strong>
+              <input type="number" step="0.01" name="metalKg" value="${toNumber(item.metalKg || item.aluminioMetalKg)}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Sacaria (kg)</strong>
+              <input type="number" step="0.01" name="sacariaKg" value="${toNumber(item.sacariaKg || item.sacaria)}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Papel misto (kg)</strong>
+              <input type="number" step="0.01" name="papelMistoKg" value="${toNumber(item.papelMistoKg || item.papelMisto)}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Papelão (kg)</strong>
+              <input type="number" step="0.01" name="papelaoKg" value="${toNumber(item.papelaoKg || item.papelao)}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Isopor (kg)</strong>
+              <input type="number" step="0.01" name="isoporKg" value="${toNumber(item.isoporKg || item.isopor)}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Óleo de cozinha (kg)</strong>
+              <input type="number" step="0.01" name="oleoKg" value="${toNumber(item.oleoKg || item.oleo)}">
+            </label>
+
+          </div>
+
         </div>
+        `
+            : ""
+        }
+
+        <label class="coleta-materials-box">
+
+          <h3>Observação</h3>
+
+          <textarea
+            name="observacao"
+            rows="4"
+            placeholder="Motivo do ajuste / observação"
+          >${escapeHtml(
+            item.observacao || ""
+          )}</textarea>
+
+        </label>
+
+        <div class="coleta-edit-actions">
+
+          <button
+            class="primary-link-button"
+            type="submit"
+          >
+            Salvar edição
+          </button>
+
+          <button
+            class="table-page-btn"
+            id="cancelEditColetaModal"
+            type="button"
+          >
+            Cancelar
+          </button>
+
+        </div>
+
       </form>
+
     </div>
   `;
 
   document.body.appendChild(modal);
-  document.body.classList.add("modal-open");
+
+  document.body.classList.add(
+    "modal-open"
+  );
 
   function closeModal() {
+
     modal.remove();
-    document.body.classList.remove("modal-open");
+
+    document.body.classList.remove(
+      "modal-open"
+    );
   }
 
-  modal.addEventListener("click", (event) => {
-    if (
-      event.target.id === "closeEditColetaModal" ||
-      event.target.id === "cancelEditColetaModal" ||
-      event.target === modal
-    ) {
-      closeModal();
+  modal.addEventListener(
+    "click",
+    (event) => {
+
+      if (
+        event.target.id ===
+          "closeEditColetaModal"
+
+        ||
+
+        event.target.id ===
+          "cancelEditColetaModal"
+
+        ||
+
+        event.target === modal
+      ) {
+
+        closeModal();
+      }
     }
-  });
+  );
 
-  modal.querySelector("#editColetaForm")?.addEventListener("submit", async (event) => {
-    event.preventDefault();
+  modal.querySelector(
+    "#editColetaForm"
+  )?.addEventListener(
+    "submit",
+    async (event) => {
 
-    const formData = new FormData(event.target);
+      event.preventDefault();
 
-    await updateDoc(doc(db, "coletas", item.id), {
-      participantName: String(formData.get("participantName") || "").trim(),
-      participantCode: String(formData.get("participantCode") || "").trim(),
-      pesoRecebido: toNumber(formData.get("pesoRecebido")),
-      pesoResiduoSecoKg: toNumber(formData.get("pesoRecebido")),
-      rejeito: toNumber(formData.get("rejeito")),
-      rejeitoKg: toNumber(formData.get("rejeito")),
-      naoComercializado: toNumber(formData.get("naoComercializado")),
-      naoComercializadoKg: toNumber(formData.get("naoComercializado")),
-      qualidade: toNumber(formData.get("qualidade")),
-      status: "editado",
-      coletaStatus: "editado",
-      updatedAt: serverTimestamp(),
-      updatedBy: STATE.currentUser?.uid || null
-    });
+      const formData =
+        new FormData(event.target);
 
-    closeModal();
-    setCoopSyncStatus(`Coleta atualizada em ${new Date().toLocaleString("pt-BR")}`);
-  });
+      await updateDoc(
+        doc(db, "coletas", item.id),
+        {
+
+          participantName:String(
+            formData.get("participantName") || ""
+          ).trim(),
+
+          flowType:String(
+            formData.get("flowType") || ""
+          ).trim(),
+
+          entrega:String(
+            formData.get("entrega") || ""
+          ).trim(),
+
+          pesoRecebido:toNumber(
+            formData.get("pesoRecebido")
+          ),
+
+          pesoResiduoSecoKg:toNumber(
+            formData.get("pesoRecebido")
+          ),
+
+          qualidade:toNumber(
+            formData.get("qualidade")
+          ),
+
+          rejeito:toNumber(
+            formData.get("rejeito")
+          ),
+
+          naoComercializado:toNumber(
+            formData.get("naoComercializado")
+          ),
+
+          plasticoKg:toNumber(
+            formData.get("plasticoKg")
+          ),
+
+          vidroKg:toNumber(
+            formData.get("vidroKg")
+          ),
+
+          metalKg:toNumber(
+            formData.get("metalKg")
+          ),
+
+          sacariaKg:toNumber(
+            formData.get("sacariaKg")
+          ),
+
+          papelMistoKg:toNumber(
+            formData.get("papelMistoKg")
+          ),
+
+          papelaoKg:toNumber(
+            formData.get("papelaoKg")
+          ),
+
+          isoporKg:toNumber(
+            formData.get("isoporKg")
+          ),
+
+          oleoKg:toNumber(
+            formData.get("oleoKg")
+          ),
+
+          observacao:String(
+            formData.get("observacao") || ""
+          ).trim(),
+
+          updatedAt:serverTimestamp(),
+
+          updatedBy:
+            STATE.currentUser?.uid || null
+        }
+      );
+
+      closeModal();
+
+      setCoopSyncStatus(
+        "Coleta atualizada com sucesso."
+      );
+    }
+  );
 }
 function setupRecentColetasActions() {
 
