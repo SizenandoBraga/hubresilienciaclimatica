@@ -333,7 +333,7 @@ img{max-width:100%;display:block}
 .section-head h1,
 .section-head h2{
   margin:10px 0 0;
-  font-size:clamp(30px,3vw,42px);
+  font-size:24px;
   line-height:1;
 }
 
