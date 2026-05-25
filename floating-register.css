@@ -1,0 +1,396 @@
+/* =========================================================
+   FLOATING REGISTER BOT • NSRU
+========================================================= */
+
+:root{
+  --float-green:#81B92A;
+  --float-green-dark:#5f8d19;
+
+  --float-orange:#EF6B22;
+
+  --float-blue:#53ACDE;
+
+  --float-dark:#3C3A39;
+
+  --float-shadow:
+    0 24px 60px rgba(15,23,42,.22);
+
+  --float-radius:26px;
+}
+
+/* =========================================================
+   WRAPPER
+========================================================= */
+
+.floating-register{
+
+  position:fixed;
+
+  right:22px;
+  bottom:22px;
+
+  z-index:99999;
+}
+
+/* =========================================================
+   BOTÃO FLUTUANTE
+========================================================= */
+
+.floating-register-btn{
+
+  position:relative;
+
+  overflow:hidden;
+
+  min-height:58px;
+
+  padding:0 22px;
+
+  border:none;
+
+  border-radius:999px;
+
+  display:flex;
+  align-items:center;
+  gap:12px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--float-green),
+      var(--float-green-dark)
+    );
+
+  color:#fff;
+
+  font-size:15px;
+
+  font-weight:900;
+
+  letter-spacing:.01em;
+
+  box-shadow:
+    0 18px 40px rgba(129,185,42,.28);
+
+  transition:.22s ease;
+}
+
+.floating-register-btn::before{
+
+  content:"";
+
+  position:absolute;
+
+  inset:0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.18),
+      transparent 45%
+    );
+
+  opacity:.7;
+}
+
+.floating-register-btn:hover{
+
+  transform:
+    translateY(-3px)
+    scale(1.02);
+
+  filter:saturate(1.08);
+}
+
+.floating-register-btn span{
+
+  width:28px;
+  height:28px;
+
+  border-radius:999px;
+
+  display:grid;
+  place-items:center;
+
+  background:
+    rgba(255,255,255,.18);
+
+  font-size:20px;
+
+  line-height:1;
+}
+
+/* =========================================================
+   CHATBOT
+========================================================= */
+
+.register-bot{
+
+  position:absolute;
+
+  right:0;
+  bottom:76px;
+
+  width:340px;
+
+  display:none;
+
+  overflow:hidden;
+
+  border-radius:30px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,.98),
+      rgba(248,249,244,.96)
+    );
+
+  border:
+    1px solid rgba(255,255,255,.72);
+
+  backdrop-filter:blur(18px);
+
+  box-shadow:
+    var(--float-shadow);
+}
+
+.register-bot.show{
+  display:block;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.register-bot-head{
+
+  position:relative;
+
+  padding:18px 20px;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--float-green),
+      var(--float-green-dark)
+    );
+
+  color:#fff;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+}
+
+.register-bot-head::after{
+
+  content:"";
+
+  position:absolute;
+
+  right:-40px;
+  top:-40px;
+
+  width:120px;
+  height:120px;
+
+  border-radius:50%;
+
+  background:
+    rgba(255,255,255,.12);
+}
+
+.register-bot-head strong{
+
+  position:relative;
+  z-index:2;
+
+  font-size:18px;
+
+  letter-spacing:-.3px;
+
+  font-weight:900;
+}
+
+.register-bot-head button{
+
+  position:relative;
+  z-index:2;
+
+  width:34px;
+  height:34px;
+
+  border:none;
+
+  border-radius:999px;
+
+  background:
+    rgba(255,255,255,.16);
+
+  color:#fff;
+
+  font-size:22px;
+
+  line-height:1;
+
+  font-weight:900;
+
+  transition:.18s ease;
+}
+
+.register-bot-head button:hover{
+
+  background:
+    rgba(255,255,255,.28);
+}
+
+/* =========================================================
+   BODY
+========================================================= */
+
+.register-bot-body{
+
+  padding:22px;
+
+  display:grid;
+
+  gap:14px;
+}
+
+.register-bot-message{
+
+  padding:14px 16px;
+
+  border-radius:18px 18px 18px 6px;
+
+  background:
+    #f4f7ee;
+
+  color:
+    var(--float-dark);
+
+  font-size:14px;
+
+  line-height:1.55;
+
+  font-weight:700;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255,255,255,.8);
+}
+
+/* =========================================================
+   LINKS
+========================================================= */
+
+.register-bot-link{
+
+  position:relative;
+
+  overflow:hidden;
+
+  min-height:58px;
+
+  padding:0 18px;
+
+  border-radius:20px;
+
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+
+  background:
+    rgba(129,185,42,.08);
+
+  border:
+    1px solid rgba(129,185,42,.14);
+
+  color:
+    var(--float-green-dark);
+
+  text-decoration:none;
+
+  font-size:15px;
+
+  font-weight:900;
+
+  transition:.2s ease;
+}
+
+.register-bot-link::before{
+
+  content:"";
+
+  position:absolute;
+
+  inset:0;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,255,255,.22),
+      transparent 45%
+    );
+
+  opacity:0;
+
+  transition:.2s ease;
+}
+
+.register-bot-link:hover{
+
+  transform:
+    translateY(-2px);
+
+  color:#fff;
+
+  background:
+    linear-gradient(
+      135deg,
+      var(--float-orange),
+      #c95518
+    );
+
+  box-shadow:
+    0 16px 32px rgba(239,107,34,.24);
+}
+
+.register-bot-link:hover::before{
+  opacity:1;
+}
+
+.register-bot-link span{
+  font-size:18px;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:640px){
+
+  .floating-register{
+
+    left:14px;
+    right:14px;
+
+    bottom:14px;
+  }
+
+  .floating-register-btn{
+
+    width:100%;
+
+    justify-content:center;
+  }
+
+  .register-bot{
+
+    width:100%;
+
+    right:0;
+
+    bottom:72px;
+  }
+}
