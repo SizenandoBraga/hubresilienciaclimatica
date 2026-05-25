@@ -12,6 +12,7 @@ import {
   query,
   onSnapshot,
   updateDoc,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
@@ -1396,6 +1397,14 @@ function renderRecentColetas() {
     Editar
   </button>
 
+  <button
+  class="table-btn cancel"
+  type="button"
+  data-delete-coleta="${escapeHtml(item.id)}"
+>
+  Excluir
+</button>
+
 </td>
         </tr>
       `;
@@ -1954,104 +1963,235 @@ function openEditColetaModal(item) {
     }
   );
 }
-function setupRecentColetasActions() {
+async function deleteColetaRecord(coletaId) {
 
-  document.addEventListener("click", (event) => {
-
-    const viewButton =
-      event.target.closest("[data-view-coleta]");
-
-    if (viewButton) {
-
-      const coletaId =
-        viewButton.dataset.viewColeta;
-
-      const coleta = STATE.coletas.find(
-        (item) =>
-          String(item.id) === String(coletaId)
-      );
-
-      if (!coleta) return;
-
-      openColetaModal(coleta);
-
-      return;
-    }
-const imageButton =
-  event.target.closest(
-    "[data-image-coleta]"
-  );
-
-if (imageButton) {
-
-  const coletaId =
-    imageButton.dataset.imageColeta;
-
-  const coleta =
-    STATE.coletas.find(
-      (item) =>
-
-        String(item.id)
-        ===
-        String(coletaId)
-    );
-
-  if (!coleta) {
-
+  if (!coletaId) {
     return;
   }
 
-  openColetaImageModal(coleta);
+  const confirmed = confirm(
+    "Deseja realmente excluir esta coleta?\n\nEssa ação remove permanentemente os dados do banco."
+  );
 
-  return;
-}
-    const editButton =
-      event.target.closest("[data-edit-coleta]");
+  if (!confirmed) {
+    return;
+  }
 
-    if (editButton) {
+  try {
 
-      const coletaId =
-        editButton.dataset.editColeta;
-
-      const coleta = STATE.coletas.find(
+    const coleta =
+      STATE.coletas.find(
         (item) =>
           String(item.id) === String(coletaId)
       );
 
-      if (!coleta) return;
+    if (!coleta) {
 
-      openEditColetaModal(coleta);
+      alert("Coleta não encontrada.");
 
       return;
     }
-  });
 
-  document.addEventListener("keydown", (event) => {
+    /* =====================================================
+       REMOVE DO FIREBASE
+    ===================================================== */
 
-    if (event.key !== "Escape") return;
-
-    const modal =
-      document.getElementById(
-        "coletaDetailsModal"
-      );
-
-    const editModal =
-      document.getElementById(
-        "coletaEditModal"
-      );
-
-    if (modal) {
-      modal.remove();
-    }
-
-    if (editModal) {
-      editModal.remove();
-    }
-
-    document.body.classList.remove(
-      "modal-open"
+    await deleteDoc(
+      doc(
+        db,
+        "coletas",
+        coletaId
+      )
     );
-  });
+
+    /* =====================================================
+       REMOVE LOCALMENTE
+    ===================================================== */
+
+    STATE.coletas =
+      STATE.coletas.filter(
+        (item) =>
+          String(item.id) !== String(coletaId)
+      );
+
+    /* =====================================================
+       ATUALIZA UI
+    ===================================================== */
+
+    updateKpis();
+
+    renderRecentColetas();
+
+    updateCharts(
+      computeDashboardData()
+    );
+
+    setCoopSyncStatus(
+      "Coleta removida com sucesso."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao excluir coleta:",
+      error
+    );
+
+    alert(
+      "Erro ao excluir coleta."
+    );
+  }
+}
+
+function setupRecentColetasActions() {
+
+  document.addEventListener(
+    "click",
+    (event) => {
+
+      /* =====================================================
+         VER COLETA
+      ===================================================== */
+
+      const viewButton =
+        event.target.closest(
+          "[data-view-coleta]"
+        );
+
+      if (viewButton) {
+
+        const coletaId =
+          viewButton.dataset.viewColeta;
+
+        const coleta =
+          STATE.coletas.find(
+            (item) =>
+              String(item.id) ===
+              String(coletaId)
+          );
+
+        if (!coleta) return;
+
+        openColetaModal(coleta);
+
+        return;
+      }
+
+      /* =====================================================
+         VER IMAGEM
+      ===================================================== */
+
+      const imageButton =
+        event.target.closest(
+          "[data-image-coleta]"
+        );
+
+      if (imageButton) {
+
+        const coletaId =
+          imageButton.dataset.imageColeta;
+
+        const coleta =
+          STATE.coletas.find(
+            (item) =>
+              String(item.id) ===
+              String(coletaId)
+          );
+
+        if (!coleta) return;
+
+        openColetaImageModal(coleta);
+
+        return;
+      }
+
+      /* =====================================================
+         EDITAR
+      ===================================================== */
+
+      const editButton =
+        event.target.closest(
+          "[data-edit-coleta]"
+        );
+
+      if (editButton) {
+
+        const coletaId =
+          editButton.dataset.editColeta;
+
+        const coleta =
+          STATE.coletas.find(
+            (item) =>
+              String(item.id) ===
+              String(coletaId)
+          );
+
+        if (!coleta) return;
+
+        openEditColetaModal(coleta);
+
+        return;
+      }
+
+      /* =====================================================
+         EXCLUIR
+      ===================================================== */
+
+      const deleteButton =
+        event.target.closest(
+          "[data-delete-coleta]"
+        );
+
+      if (deleteButton) {
+
+        const coletaId =
+          deleteButton.dataset.deleteColeta;
+
+        deleteColetaRecord(coletaId);
+
+        return;
+      }
+    }
+  );
+
+  /* =====================================================
+     ESC FECHA MODAIS
+  ===================================================== */
+
+  document.addEventListener(
+    "keydown",
+    (event) => {
+
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      const modal =
+        document.getElementById(
+          "coletaDetailsModal"
+        );
+
+      const editModal =
+        document.getElementById(
+          "coletaEditModal"
+        );
+
+      const imageModal =
+        document.getElementById(
+          "coletaImageModal"
+        );
+
+      if (modal) modal.remove();
+
+      if (editModal) editModal.remove();
+
+      if (imageModal) imageModal.remove();
+
+      document.body.classList.remove(
+        "modal-open"
+      );
+    }
+  );
 }
 
 /* =========================================================

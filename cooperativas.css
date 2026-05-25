@@ -1,7 +1,7 @@
 /* =========================================================
    NSRU • COOPERATIVA DASHBOARD PRO
+   CSS completo para painel de cooperativas
    Identidade visual: verde #81B92A, laranja #EF6B22, azul #53ACDE, grafite #3C3A39
-   Compatível com HTML/JS enviados: cooperativas.css + cooperativas-territorio.js
 ========================================================= */
 
 *,
@@ -132,7 +132,7 @@ img{
 }
 
 /* =========================================================
-   SIDEBAR PRO
+   SIDEBAR
 ========================================================= */
 
 .sidebar{
@@ -198,7 +198,6 @@ img{
   object-fit:contain;
 }
 
-/* logo Cluster no menu lateral, abaixo, sem atrapalhar */
 .sidebar-watermark{
   position:absolute;
   z-index:1;
@@ -222,7 +221,7 @@ img{
   flex-direction:column;
   gap:10px;
   margin-top:6px;
-  padding-bottom:170px;
+  padding-bottom:190px;
   overflow:auto;
 }
 
@@ -346,7 +345,7 @@ img{
   z-index:3;
   left:18px;
   right:18px;
-  bottom:180px;
+  bottom:150px;
   padding:15px;
   border-radius:20px;
   background:rgba(0,0,0,.14);
@@ -815,7 +814,7 @@ body.menu-open{
 }
 
 /* =========================================================
-   TABLE PRO — visual igual à referência, mais premium
+   TABLE PRO
 ========================================================= */
 
 .table-panel-pro{
@@ -956,7 +955,7 @@ body.menu-open{
 
 .table-pro{
   width:100%;
-  min-width:1120px;
+  min-width:1180px;
   border-collapse:separate;
   border-spacing:0;
 }
@@ -1169,9 +1168,15 @@ body.menu-open{
 }
 
 .table-btn.cancel{
-  color:var(--nsru-orange);
-  background:var(--nsru-orange-50);
-  border-color:rgba(239,107,34,.22);
+  color:#c53a2d;
+  background:rgba(255,80,80,.10);
+  border:1px solid rgba(255,80,80,.16);
+}
+
+.table-btn.cancel:hover{
+  color:#fff;
+  background:linear-gradient(135deg,#ef4444,#c62828);
+  border-color:transparent;
 }
 
 .table-footer-controls{
@@ -1225,7 +1230,7 @@ body.menu-open{
 }
 
 /* =========================================================
-   POWER BI PRO — mais profissional
+   POWER BI PRO
 ========================================================= */
 
 .powerbi-grid{
@@ -1240,12 +1245,9 @@ body.menu-open{
   overflow:hidden;
   padding:22px;
   border-radius:28px;
-  background:
-    linear-gradient(145deg,#ffffff 0%,#fbfcf8 100%);
+  background:linear-gradient(145deg,#ffffff 0%,#fbfcf8 100%);
   border:1px solid rgba(60,58,57,.085);
-  box-shadow:
-    0 22px 56px rgba(15,23,42,.08),
-    inset 0 1px 0 rgba(255,255,255,.85);
+  box-shadow:0 22px 56px rgba(15,23,42,.08), inset 0 1px 0 rgba(255,255,255,.85);
 }
 
 .powerbi-card::before{
@@ -1342,11 +1344,8 @@ body.menu-open{
   width:100%;
   min-height:9px;
   border-radius:16px 16px 5px 5px;
-  background:
-    linear-gradient(180deg,#67c0ec 0%,var(--nsru-blue) 46%,var(--nsru-blue-700) 100%);
-  box-shadow:
-    0 12px 24px rgba(83,172,222,.28),
-    inset 0 1px 0 rgba(255,255,255,.35);
+  background:linear-gradient(180deg,#67c0ec 0%,var(--nsru-blue) 46%,var(--nsru-blue-700) 100%);
+  box-shadow:0 12px 24px rgba(83,172,222,.28), inset 0 1px 0 rgba(255,255,255,.35);
   transition:transform .22s ease, filter .22s ease;
 }
 
@@ -1376,15 +1375,8 @@ body.menu-open{
   height:202px;
   position:relative;
   border-radius:50%;
-  background:
-    conic-gradient(
-      var(--nsru-green) 0 45%,
-      var(--nsru-blue) 45% 78%,
-      var(--nsru-orange) 78% 100%
-    );
-  box-shadow:
-    0 22px 46px rgba(15,23,42,.12),
-    inset 0 0 0 1px rgba(255,255,255,.55);
+  background:conic-gradient(var(--nsru-green) 0 45%, var(--nsru-blue) 45% 78%, var(--nsru-orange) 78% 100%);
+  box-shadow:0 22px 46px rgba(15,23,42,.12), inset 0 0 0 1px rgba(255,255,255,.55);
 }
 
 .powerbi-donut::before{
@@ -1393,13 +1385,7 @@ body.menu-open{
   inset:-8px;
   z-index:-1;
   border-radius:inherit;
-  background:
-    conic-gradient(
-      rgba(129,185,42,.28),
-      rgba(83,172,222,.25),
-      rgba(239,107,34,.25),
-      rgba(129,185,42,.28)
-    );
+  background:conic-gradient(rgba(129,185,42,.28), rgba(83,172,222,.25), rgba(239,107,34,.25), rgba(129,185,42,.28));
   filter:blur(10px);
   opacity:.55;
 }
@@ -1410,9 +1396,7 @@ body.menu-open{
   inset:42px;
   border-radius:50%;
   background:#fff;
-  box-shadow:
-    inset 0 0 0 1px rgba(60,58,57,.08),
-    0 8px 18px rgba(15,23,42,.06);
+  box-shadow:inset 0 0 0 1px rgba(60,58,57,.08), 0 8px 18px rgba(15,23,42,.06);
 }
 
 .powerbi-donut-center{
@@ -1533,7 +1517,7 @@ body.menu-open{
 }
 
 /* =========================================================
-   MODAL — mantém estrutura atual, visual mais limpo
+   MODAIS
 ========================================================= */
 
 .coleta-modal-overlay{
@@ -1719,6 +1703,56 @@ body.menu-open{
 
 body.modal-open{
   overflow:hidden;
+}
+
+/* =========================================================
+   INFO LISTS
+========================================================= */
+
+.info-list,
+.territory-list{
+  display:grid;
+  gap:12px;
+}
+
+.info-item{
+  display:flex;
+  justify-content:space-between;
+  gap:14px;
+  padding:14px;
+  border-radius:18px;
+  border:1px solid var(--nsru-line);
+  background:#fff;
+  box-shadow:var(--shadow-sm);
+}
+
+.info-copy{
+  display:grid;
+  gap:4px;
+}
+
+.info-copy strong{
+  color:var(--nsru-ink);
+  font-size:16px;
+  font-weight:900;
+}
+
+.info-copy span{
+  color:var(--nsru-muted);
+  font-size:14px;
+  line-height:1.38;
+  font-weight:700;
+}
+
+.info-meta{
+  flex-shrink:0;
+  align-self:flex-start;
+  padding:5px 10px;
+  border-radius:999px;
+  background:var(--nsru-blue-50);
+  color:var(--nsru-blue-700);
+  font-size:12px;
+  font-weight:900;
 }
 
 /* =========================================================
