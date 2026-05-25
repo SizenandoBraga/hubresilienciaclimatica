@@ -2,151 +2,73 @@
    FLOATING REGISTER BOT • NSRU
 ========================================================= */
 
-document.addEventListener(
-  "DOMContentLoaded",
-  () => {
-
-    setupFloatingRegisterBot();
-  }
-);
-
-/* =========================================================
-   INIT
-========================================================= */
+document.addEventListener("DOMContentLoaded", () => {
+  setupFloatingRegisterBot();
+});
 
 function setupFloatingRegisterBot() {
+  const openButton = document.getElementById("openRegisterBot");
+  const closeButton = document.getElementById("closeRegisterBot");
+  const bot = document.getElementById("registerBot");
+  const wrapper = document.getElementById("floatingRegister");
 
-  const openButton =
-    document.getElementById(
-      "openRegisterBot"
-    );
-
-  const closeButton =
-    document.getElementById(
-      "closeRegisterBot"
-    );
-
-  const bot =
-    document.getElementById(
-      "registerBot"
-    );
-
-  const wrapper =
-    document.getElementById(
-      "floatingRegister"
-    );
-
-  if (
-    !openButton ||
-    !closeButton ||
-    !bot
-  ) {
-
+  if (!openButton || !closeButton || !bot || !wrapper) {
     return;
   }
 
-  /* =====================================================
-     ABRIR / FECHAR
-  ===================================================== */
+  function openBot() {
+    bot.classList.add("show");
+    openButton.classList.add("active");
+    openButton.setAttribute("aria-expanded", "true");
+  }
 
-  openButton.addEventListener(
-    "click",
-    () => {
+  function closeBot() {
+    bot.classList.remove("show");
+    openButton.classList.remove("active");
+    openButton.setAttribute("aria-expanded", "false");
+  }
 
-      bot.classList.toggle(
-        "show"
-      );
+  function toggleBot(event) {
+    event.stopPropagation();
 
-      openButton.classList.toggle(
-        "active"
-      );
+    if (bot.classList.contains("show")) {
+      closeBot();
+    } else {
+      openBot();
     }
-  );
+  }
 
-  closeButton.addEventListener(
-    "click",
-    () => {
+  openButton.setAttribute("aria-expanded", "false");
+  openButton.setAttribute("aria-controls", "registerBot");
 
-      closeRegisterBot();
+  openButton.addEventListener("click", toggleBot);
+
+  closeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    closeBot();
+  });
+
+  bot.addEventListener("click", (event) => {
+    event.stopPropagation();
+  });
+
+  document.addEventListener("click", (event) => {
+    if (!wrapper.contains(event.target)) {
+      closeBot();
     }
-  );
+  });
 
-  /* =====================================================
-     CLICK FORA FECHA
-  ===================================================== */
-
-  document.addEventListener(
-    "click",
-    (event) => {
-
-      if (
-        !wrapper.contains(
-          event.target
-        )
-      ) {
-
-        closeRegisterBot();
-      }
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeBot();
     }
-  );
+  });
 
-  /* =====================================================
-     ESC FECHA
-  ===================================================== */
-
-  document.addEventListener(
-    "keydown",
-    (event) => {
-
-      if (
-        event.key === "Escape"
-      ) {
-
-        closeRegisterBot();
-      }
-    }
-  );
-
-  /* =====================================================
-     ANIMAÇÃO ENTRADA
-  ===================================================== */
+  document.querySelectorAll(".register-bot-link").forEach((link) => {
+    link.addEventListener("click", closeBot);
+  });
 
   setTimeout(() => {
-
-    openButton.classList.add(
-      "loaded"
-    );
-
+    openButton.classList.add("loaded");
   }, 600);
-}
-
-/* =========================================================
-   FECHAR BOT
-========================================================= */
-
-function closeRegisterBot() {
-
-  const bot =
-    document.getElementById(
-      "registerBot"
-    );
-
-  const openButton =
-    document.getElementById(
-      "openRegisterBot"
-    );
-
-  if (bot) {
-
-    bot.classList.remove(
-      "show"
-    );
-  }
-
-  if (openButton) {
-
-    openButton.classList.remove(
-      "active"
-    );
-  }
 }
