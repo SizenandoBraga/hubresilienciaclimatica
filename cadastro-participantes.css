@@ -1191,3 +1191,36 @@ body.modal-open{
     grid-template-columns: 1fr;
   }
 }
+.success-modal-actions{
+
+  display:flex;
+
+  gap:12px;
+
+  flex-wrap:wrap;
+
+  justify-content:center;
+}
+
+.success-modal-actions .btn-secondary{
+
+  min-width:220px;
+}
+
+.success-modal-actions .btn-primary{
+
+  min-width:260px;
+}
+
+@media(max-width:640px){
+
+  .success-modal-actions{
+
+    flex-direction:column;
+  }
+
+  .success-modal-actions button{
+
+    width:100%;
+  }
+}

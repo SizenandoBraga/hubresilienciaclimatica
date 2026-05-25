@@ -116,6 +116,9 @@ const els = {
   successModal: $("successModal"),
   closeSuccessModal: $("closeSuccessModal"),
 
+  newParticipantRegistration:
+  $("newParticipantRegistration"),
+
   menuToggle: $("menuToggle"),
   mobileMenu: $("mobileMenu"),
 
@@ -1027,11 +1030,30 @@ function bindMenu() {
 }
 
 function bindSuccessModal() {
-  els.closeSuccessModal?.addEventListener("click", closeSuccessModal);
+
+  els.closeSuccessModal
+    ?.addEventListener(
+      "click",
+      closeSuccessModal
+    );
+
+  els.newParticipantRegistration
+    ?.addEventListener(
+      "click",
+      () => {
+
+        window.location.reload();
+      }
+    );
 
   els.successModal
-    ?.querySelector(".success-modal-backdrop")
-    ?.addEventListener("click", closeSuccessModal);
+    ?.querySelector(
+      ".success-modal-backdrop"
+    )
+    ?.addEventListener(
+      "click",
+      closeSuccessModal
+    );
 }
 
 function bindSubmit() {
