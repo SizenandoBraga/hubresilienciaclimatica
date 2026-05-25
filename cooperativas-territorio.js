@@ -1253,6 +1253,65 @@ function getSortedRealizadas() {
       return dateB - dateA;
     });
 }
+function getColetaImageUrl(item = {}) {
+  return (
+    item.imageUrl ||
+    item.imagemUrl ||
+    item.photoUrl ||
+    item.fotoUrl ||
+    item.coletaImageUrl ||
+    item.recebimento?.imageUrl ||
+    item.recebimento?.imagemUrl ||
+    item.finalTurno?.imageUrl ||
+    item.finalTurno?.imagemUrl ||
+    item.payloadSnapshot?.imageUrl ||
+    item.payloadSnapshot?.imagemUrl ||
+    item.payloadSnapshot?.fotoUrl ||
+    ""
+  );
+}
+
+function openColetaImageModal(item = {}) {
+  const imageUrl = getColetaImageUrl(item);
+
+  if (!imageUrl) {
+    alert("Esta coleta não possui imagem salva.");
+    return;
+  }
+
+  const old = document.getElementById("coletaImageModal");
+  if (old) old.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "coletaImageModal";
+  modal.className = "coleta-modal-overlay";
+
+  modal.innerHTML = `
+    <div class="coleta-modal coleta-image-modal">
+      <button class="coleta-modal-close" id="closeColetaImageModal" type="button">×</button>
+
+      <div class="coleta-modal-head">
+        <h2>Imagem da coleta</h2>
+        <p>${escapeHtml(getParticipantName(item))} • ${escapeHtml(formatDateLabel(item))}</p>
+      </div>
+
+      <img src="${escapeHtml(imageUrl)}" alt="Imagem da coleta" />
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("modal-open");
+
+  modal.addEventListener("click", (event) => {
+    if (
+      event.target.id === "closeColetaImageModal" ||
+      event.target === modal
+    ) {
+      modal.remove();
+      document.body.classList.remove("modal-open");
+    }
+  });
+}
 
 function renderRecentColetas() {
   if (!els.recentColetasTableBody) return;
@@ -1312,22 +1371,32 @@ function renderRecentColetas() {
           </td>
 
           <td class="td-actions">
-            <button
-              class="table-btn dark"
-              type="button"
-              data-view-coleta="${escapeHtml(item.id)}"
-            >
-              Ver coleta
-            </button>
 
-            <button
-              class="table-btn dark outline"
-              type="button"
-              data-edit-coleta="${escapeHtml(item.id)}"
-            >
-              Editar
-            </button>
-          </td>
+  <button
+    class="table-btn dark"
+    type="button"
+    data-view-coleta="${escapeHtml(item.id)}"
+  >
+    Ver coleta
+  </button>
+
+  <button
+    class="table-btn image"
+    type="button"
+    data-image-coleta="${escapeHtml(item.id)}"
+  >
+    Imagem
+  </button>
+
+  <button
+    class="table-btn dark outline"
+    type="button"
+    data-edit-coleta="${escapeHtml(item.id)}"
+  >
+    Editar
+  </button>
+
+</td>
         </tr>
       `;
     })
@@ -1908,7 +1977,34 @@ function setupRecentColetasActions() {
 
       return;
     }
+const imageButton =
+  event.target.closest(
+    "[data-image-coleta]"
+  );
 
+if (imageButton) {
+
+  const coletaId =
+    imageButton.dataset.imageColeta;
+
+  const coleta =
+    STATE.coletas.find(
+      (item) =>
+
+        String(item.id)
+        ===
+        String(coletaId)
+    );
+
+  if (!coleta) {
+
+    return;
+  }
+
+  openColetaImageModal(coleta);
+
+  return;
+}
     const editButton =
       event.target.closest("[data-edit-coleta]");
 
