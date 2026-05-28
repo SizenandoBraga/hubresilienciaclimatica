@@ -427,114 +427,135 @@
         </div>
       </section>-->
 
-     <section class="panel">
+     <section class="panel table-dashboard-panel">
   <div class="panel-inner">
-    <div class="panel-head">
-      <div class="hgroup">
-        <h2>Seção 6 • Tabela de coletas</h2>
-        <p>Visualização detalhada dos registros com filtros rápidos, leitura operacional e edição dos dados registrados.</p>
+    <div class="table-dashboard-head">
+      <div>
+        <div class="table-title-row">
+          <span class="table-title-icon">▦</span>
+          <h2>Tabela de coletas</h2>
+        </div>
+
+        <p>
+          Visualização detalhada dos registros com filtros rápidos, leitura operacional e edição dos dados registrados.
+        </p>
       </div>
+
+      <button class="export-table-btn" type="button" id="btnExportExcel">
+        ⬇ Exportar tabela
+      </button>
     </div>
 
-    <div class="table-section-pro">
-      <div class="table-summary-cards">
-        <div class="mini-summary-card">
+    <div class="table-summary-cards table-summary-cards-modern">
+      <div class="mini-summary-card summary-green">
+        <span class="summary-icon">◎</span>
+        <div>
           <span class="mini-summary-label">Registros visíveis</span>
           <strong id="tableVisibleCount">0</strong>
         </div>
+      </div>
 
-        <div class="mini-summary-card">
+      <div class="mini-summary-card summary-blue">
+        <span class="summary-icon">▽</span>
+        <div>
           <span class="mini-summary-label">Filtrados na tabela</span>
           <strong id="tableFilteredCount">0</strong>
         </div>
+      </div>
 
-        <div class="mini-summary-card">
+      <div class="mini-summary-card summary-orange">
+        <span class="summary-icon">◷</span>
+        <div>
           <span class="mini-summary-label">Última atualização</span>
           <strong id="tableLastUpdate">—</strong>
         </div>
       </div>
+    </div>
 
-      <div class="table-filters-pro">
-        <div class="table-filter-field search">
-          <label for="tSearch">Busca na tabela</label>
-          <input id="tSearch" type="text" placeholder="participante, código, observação, material..." />
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tFluxo">Fluxo</label>
-          <select id="tFluxo">
-            <option value="__all__">Todos</option>
-            <option value="recebimento">Recebimento</option>
-            <option value="final_turno">Final do turno</option>
-          </select>
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tEntrega">Entrega</label>
-          <select id="tEntrega">
-            <option value="__all__">Todas</option>
-          </select>
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tStatus">Status</label>
-          <select id="tStatus">
-            <option value="__all__">Todos</option>
-            <option value="ativo">Ativo</option>
-            <option value="editado">Editado</option>
-            <option value="cancelado">Cancelado</option>
-          </select>
-        </div>
-
-        <div class="table-filter-field">
-          <label for="tTipoCadastro">Tipo cadastro</label>
-          <select id="tTipoCadastro">
-            <option value="__all__">Todos</option>
-            <option value="participante">Participante</option>
-            <option value="condominio">Condomínio</option>
-            <option value="comercio">Comércio</option>
-            <option value="outro">Outro</option>
-          </select>
-        </div>
-
-        <div class="table-filter-actions">
-          <button type="button" class="btn btn-primary" id="btnApplyTableFilters">Filtrar tabela</button>
-          <button type="button" class="btn btn-ghost" id="btnClearTableFilters">Limpar tabela</button>
-        </div>
+    <div class="table-filters-pro table-filters-modern">
+      <div class="table-filter-field search">
+        <label for="tSearch">Busca na tabela</label>
+        <input id="tSearch" type="text" placeholder="participante, código, observação..." />
       </div>
 
-      <div class="table-with-label-layout table-only-layout">
-        <div class="table-wrap table-wrap-pro">
-          <table id="tbl" class="table-pro">
-            <thead>
-              <tr>
-                <th>Data</th>
-                <th>Participante</th>
-                <th>Código</th>
-                <th>Tipo de recebimento</th>
-                <th>Status</th>
-                <th>Detalhes</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-            <tbody id="tableColetasBody"></tbody>
-          </table>
-        </div>
-
-        <div class="table-footer-controls">
-          <button type="button" class="table-page-btn" id="btnPrevColetas">
-            ← Voltar 10
-          </button>
-
-          <div class="table-page-indicator" id="tablePageIndicator">
-            Mostrando 0-0 de 0
-          </div>
-
-          <button type="button" class="table-page-btn primary" id="btnNextColetas">
-            Avançar +10 →
-          </button>
-        </div>
+      <div class="table-filter-field">
+        <label for="tFluxo">Fluxo</label>
+        <select id="tFluxo">
+          <option value="__all__">Todos</option>
+          <option value="recebimento">Recebimento</option>
+          <option value="final_turno">Final do turno</option>
+        </select>
       </div>
+
+      <div class="table-filter-field">
+        <label for="tEntrega">Entrega</label>
+        <select id="tEntrega">
+          <option value="__all__">Todas</option>
+        </select>
+      </div>
+
+      <div class="table-filter-field">
+        <label for="tStatus">Status</label>
+        <select id="tStatus">
+          <option value="__all__">Todos</option>
+          <option value="ativo">Ativo</option>
+          <option value="editado">Editado</option>
+          <option value="cancelado">Cancelado</option>
+        </select>
+      </div>
+
+      <div class="table-filter-field">
+        <label for="tTipoCadastro">Tipo cadastro</label>
+        <select id="tTipoCadastro">
+          <option value="__all__">Todos</option>
+          <option value="participante">Participante</option>
+          <option value="condominio">Condomínio</option>
+          <option value="comercio">Comércio</option>
+          <option value="outro">Outro</option>
+        </select>
+      </div>
+
+      <div class="table-filter-actions">
+        <button type="button" class="btn btn-primary" id="btnApplyTableFilters">
+          Filtrar tabela
+        </button>
+
+        <button type="button" class="btn btn-ghost" id="btnClearTableFilters">
+          Limpar tabela
+        </button>
+      </div>
+    </div>
+
+    <div class="table-wrap table-wrap-pro table-wrap-modern">
+      <table id="tbl" class="table-pro table-pro-modern">
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Participante</th>
+            <th>Código</th>
+            <th>Tipo de recebimento</th>
+            <th>Status</th>
+            <th>Detalhes</th>
+            <th>Ações</th>
+          </tr>
+        </thead>
+
+        <tbody id="tableColetasBody"></tbody>
+      </table>
+    </div>
+
+    <div class="table-footer-controls table-footer-modern">
+      <button type="button" class="table-page-btn" id="btnPrevColetas">
+        ← Voltar 10
+      </button>
+
+      <div class="table-page-indicator" id="tablePageIndicator">
+        Mostrando 0-0 de 0
+      </div>
+
+      <button type="button" class="table-page-btn primary" id="btnNextColetas">
+        Avançar +10 →
+      </button>
     </div>
   </div>
 </section>
