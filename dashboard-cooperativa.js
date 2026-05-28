@@ -2487,7 +2487,9 @@ function renderTable(items = []) {
   if (!pageItems.length) {
     els.tableColetasBody.innerHTML = `
       <tr>
-        <td colspan="7">Nenhum registro encontrado.</td>
+        <td colspan="7" class="table-empty">
+          Nenhum registro encontrado.
+        </td>
       </tr>
     `;
   } else {
@@ -2501,53 +2503,48 @@ function renderTable(items = []) {
 
       return `
         <tr>
-          <td>${escapeHtml(dateLabel)}</td>
+          <td class="td-date">${escapeHtml(dateLabel)}</td>
 
-          <td>
+          <td class="td-user">
             <strong>${escapeHtml(participant.name)}</strong>
-            <div style="font-size:12px;color:#6c6764;margin-top:4px;">
-              ${escapeHtml(participant.type || "participante")}
-            </div>
+            <span>${escapeHtml(participant.type || "participante")}</span>
           </td>
 
-          <td>${escapeHtml(participant.code)}</td>
+          <td class="td-code">${escapeHtml(participant.code)}</td>
 
-          <td>${escapeHtml(fluxoLabel)}</td>
+          <td class="td-flow">${escapeHtml(fluxoLabel)}</td>
 
           <td>${statusBadge(item)}</td>
 
           <td>
-            <div class="details-metrics">
-              <span>
-                <strong>Reciclável:</strong>
-                ${escapeHtml(formatKg(reciclavel))}
+            <div class="table-detail-tags">
+              <span class="detail-tag success">
+                Reciclável: ${escapeHtml(formatKg(reciclavel))}
               </span>
 
-              <span>
-                <strong>Rejeito:</strong>
-                ${escapeHtml(formatKg(rejeito))}
+              <span class="detail-tag danger">
+                Rejeito: ${escapeHtml(formatKg(rejeito))}
               </span>
 
-              <span>
-                <strong>Não comercializado:</strong>
-                ${escapeHtml(formatKg(naoComercializado))}
+              <span class="detail-tag warning">
+                Não comercializado: ${escapeHtml(formatKg(naoComercializado))}
               </span>
             </div>
           </td>
 
           <td>
-            <div class="table-actions">
+            <div class="td-actions">
               <button
                 type="button"
-                class="table-action-link"
+                class="table-btn view"
                 data-view="${escapeHtml(item.id)}"
               >
-                Ver coleta
+                Ver
               </button>
 
               <button
                 type="button"
-                class="action-btn edit"
+                class="table-btn edit"
                 data-edit="${escapeHtml(item.id)}"
               >
                 Editar
