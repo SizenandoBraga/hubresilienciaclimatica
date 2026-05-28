@@ -1324,60 +1324,282 @@ textarea:focus{
   background:#ffe5e2;
   color:#c83a2b;
 }
-
 /* =========================================================
-   PAGINAÇÃO DA TABELA
+   TABELA DE COLETAS • DESIGN MODERNO
 ========================================================= */
 
-.table-footer-controls{
+.table-dashboard-panel{
+  background:#fff;
+  border:1px solid rgba(60,58,57,.08);
+  box-shadow:0 24px 70px rgba(15,23,42,.08);
+}
+
+.table-dashboard-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:18px;
+  margin-bottom:24px;
+}
+
+.table-title-row{
   display:flex;
   align-items:center;
-  justify-content:flex-end;
-  gap:14px;
-  margin-top:18px;
+  gap:13px;
+}
+
+.table-title-row h2{
+  margin:0;
+  font-size:28px;
+  font-weight:900;
+  color:var(--nsru-ink);
+}
+
+.table-title-icon{
+  width:42px;
+  height:42px;
+  display:grid;
+  place-items:center;
+  border-radius:14px;
+  background:var(--nsru-green-50);
+  color:var(--nsru-green-700);
+  font-size:24px;
+  font-weight:900;
+}
+
+.table-dashboard-head p{
+  margin:10px 0 0;
+  color:var(--nsru-muted);
+  font-size:15px;
+  font-weight:700;
+}
+
+.export-table-btn{
+  min-height:42px;
+  padding:0 18px;
+  border-radius:14px;
+  border:2px solid rgba(129,185,42,.45);
+  background:#fff;
+  color:var(--nsru-green-700);
+  font-size:14px;
+  font-weight:900;
+}
+
+.table-summary-cards-modern{
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:18px;
+  margin-bottom:24px;
+}
+
+.table-summary-cards-modern .mini-summary-card{
+  min-height:104px;
+  display:flex;
+  align-items:center;
+  gap:18px;
+  padding:22px;
+  border-radius:22px;
+  background:#fff;
+  box-shadow:0 16px 38px rgba(15,23,42,.07);
+}
+
+.summary-icon{
+  width:54px;
+  height:54px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  font-size:26px;
+  font-weight:900;
+}
+
+.summary-green .summary-icon{
+  background:rgba(129,185,42,.17);
+  color:var(--nsru-green-700);
+}
+
+.summary-blue .summary-icon{
+  background:rgba(83,172,222,.18);
+  color:var(--nsru-blue-700);
+}
+
+.summary-orange .summary-icon{
+  background:rgba(239,107,34,.16);
+  color:var(--nsru-orange);
+}
+
+.summary-green strong{
+  color:var(--nsru-green-700);
+}
+
+.summary-blue strong{
+  color:var(--nsru-blue-700);
+}
+
+.summary-orange strong{
+  color:var(--nsru-orange);
+}
+
+.table-filters-modern{
+  grid-template-columns:1.6fr .8fr .8fr .8fr .9fr auto;
+  padding:20px;
+  margin-bottom:24px;
+  border-radius:20px;
+  background:#fff;
+  box-shadow:0 14px 36px rgba(15,23,42,.06);
+}
+
+.table-wrap-modern{
+  border-radius:22px;
+  overflow:hidden;
+  border:1px solid rgba(60,58,57,.10);
+  box-shadow:0 16px 42px rgba(15,23,42,.07);
+}
+
+.table-pro-modern{
+  min-width:1180px;
+}
+
+.table-pro-modern thead{
+  background:#f4f5ef;
+}
+
+.table-pro-modern th{
+  padding:18px 20px;
+  color:#7a736f;
+  font-size:12px;
+  letter-spacing:.08em;
+}
+
+.table-pro-modern td{
+  padding:22px 20px;
+  font-size:15px;
+}
+
+.table-pro-modern tbody tr{
+  background:#fff;
+}
+
+.table-pro-modern tbody tr + tr td{
+  border-top:1px solid rgba(60,58,57,.07);
+}
+
+.table-pro-modern .td-user strong{
+  font-size:16px;
+}
+
+.table-pro-modern .td-user span{
+  background:rgba(129,185,42,.16);
+  color:var(--nsru-green-700);
+}
+
+.table-detail-tags{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.detail-tag{
+  width:max-content;
+  padding:6px 11px;
+  border-radius:999px;
+  font-size:12px;
+  font-weight:900;
+}
+
+.detail-tag.success{
+  color:#16813d;
+  background:#eaf8ec;
+  border:1px solid #cbeecf;
+}
+
+.detail-tag.danger{
+  color:#c33127;
+  background:#fff0ec;
+  border:1px solid #ffd6ce;
+}
+
+.detail-tag.warning{
+  color:#9b6400;
+  background:#fff6df;
+  border:1px solid #ffe3a8;
+}
+
+.td-actions{
+  display:flex;
+  gap:8px;
   flex-wrap:wrap;
 }
 
-.table-page-btn{
+.table-btn{
+  min-height:32px;
+  padding:0 13px;
+  border-radius:999px;
+  border:1px solid transparent;
+  font-size:12px;
+  font-weight:900;
+}
+
+.table-btn.view{
+  background:#eaf6fd;
+  color:#2381b8;
+  border-color:#c7e7f8;
+}
+
+.table-btn.image{
+  background:#eef8e3;
+  color:#5f8d19;
+  border-color:#d6edbb;
+}
+
+.table-btn.edit{
+  background:#fff2df;
+  color:#b76700;
+  border-color:#ffdca8;
+}
+
+.table-btn.cancel{
+  background:#ffecec;
+  color:#c83a2b;
+  border-color:#ffd1d1;
+}
+
+.table-footer-modern{
+  margin-top:18px;
+}
+
+.table-footer-modern .table-page-btn{
   min-height:44px;
-  padding:0 18px;
-  border-radius:14px;
-  background:#fff;
-  color:#3C3A39;
-  border:1px solid rgba(60,58,57,.12);
-  font-size:14px;
-  font-weight:800;
-  cursor:pointer;
-  transition:.2s ease;
-  box-shadow:0 6px 18px rgba(60,58,57,.05);
+  padding:0 20px;
+  border-radius:999px;
 }
 
-.table-page-btn:hover{
-  transform:translateY(-1px);
-  box-shadow:0 12px 24px rgba(60,58,57,.08);
+.table-footer-modern .table-page-btn.primary{
+  background:linear-gradient(135deg,#9ac866,#7eb63a);
 }
 
-.table-page-btn.primary{
-  background:linear-gradient(135deg,#0F62FE,#0353E9);
-  color:#fff;
-  border:none;
+@media(max-width:1180px){
+  .table-filters-modern{
+    grid-template-columns:1fr 1fr;
+  }
 }
 
-.table-page-btn:disabled{
-  opacity:.45;
-  cursor:not-allowed;
-  transform:none;
-  box-shadow:none;
-}
+@media(max-width:760px){
+  .table-dashboard-head{
+    flex-direction:column;
+  }
 
-.table-page-indicator{
-  min-width:160px;
-  text-align:center;
-  font-size:14px;
-  font-weight:800;
-  color:#6c6764;
-}
+  .export-table-btn{
+    width:100%;
+  }
 
+  .table-summary-cards-modern{
+    grid-template-columns:1fr;
+  }
+
+  .table-filters-modern{
+    grid-template-columns:1fr;
+  }
+}
 /* =========================================================
    MODAIS
 ========================================================= */

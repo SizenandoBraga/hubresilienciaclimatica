@@ -2494,78 +2494,166 @@ function renderTable(items = []) {
     `;
   } else {
     els.tableColetasBody.innerHTML = pageItems.map((item) => {
+
       const participant = resolveParticipant(item);
-      const dateLabel = formatDateBR(inferDateISO(item));
-      const fluxoLabel = formatFluxoLabel(inferFluxo(item));
-      const reciclavel = inferTotalReciclavelRegistro(item);
-      const rejeito = inferTotalRejeitoRegistro(item);
-      const naoComercializado = inferNaoComercializado(item);
+
+      const dateLabel = formatDateBR(
+        inferDateISO(item)
+      );
+
+      const fluxoLabel =
+        formatFluxoLabel(
+          inferFluxo(item)
+        );
+
+      const reciclavel =
+        inferTotalReciclavelRegistro(item);
+
+      const rejeito =
+        inferTotalRejeitoRegistro(item);
+
+      const naoComercializado =
+        inferNaoComercializado(item);
 
       return `
-        <tr>
-          <td class="td-date">${escapeHtml(dateLabel)}</td>
+        <tr class="dashboard-table-row">
 
-          <td class="td-user">
-            <strong>${escapeHtml(participant.name)}</strong>
-            <span>${escapeHtml(participant.type || "participante")}</span>
+          <!-- DATA -->
+          <td class="td-date">
+            ${escapeHtml(dateLabel)}
           </td>
 
-          <td class="td-code">${escapeHtml(participant.code)}</td>
+          <!-- PARTICIPANTE -->
+          <td class="td-user">
+            <strong>
+              ${escapeHtml(participant.name)}
+            </strong>
 
-          <td class="td-flow">${escapeHtml(fluxoLabel)}</td>
+            <span>
+              ${escapeHtml(
+                participant.type || "Participante"
+              )}
+            </span>
+          </td>
 
-          <td>${statusBadge(item)}</td>
+          <!-- CÓDIGO -->
+          <td class="td-code">
+            ${escapeHtml(participant.code)}
+          </td>
 
-          <td>
+          <!-- FLUXO -->
+          <td class="td-flow">
+            ${escapeHtml(fluxoLabel)}
+          </td>
+
+          <!-- STATUS -->
+          <td class="td-status">
+            ${statusBadge(item)}
+          </td>
+
+          <!-- DETALHES -->
+          <td class="td-details">
             <div class="table-detail-tags">
+
               <span class="detail-tag success">
-                Reciclável: ${escapeHtml(formatKg(reciclavel))}
+                Reciclável:
+                ${escapeHtml(
+                  formatKg(reciclavel)
+                )}
               </span>
 
               <span class="detail-tag danger">
-                Rejeito: ${escapeHtml(formatKg(rejeito))}
+                Rejeito:
+                ${escapeHtml(
+                  formatKg(rejeito)
+                )}
               </span>
 
               <span class="detail-tag warning">
-                Não comercializado: ${escapeHtml(formatKg(naoComercializado))}
+                Não comercializado:
+                ${escapeHtml(
+                  formatKg(
+                    naoComercializado
+                  )
+                )}
               </span>
+
             </div>
           </td>
 
-          <td>
-            <div class="td-actions">
-              <button
-                type="button"
-                class="table-btn view"
-                data-view="${escapeHtml(item.id)}"
-              >
-                Ver
-              </button>
+          <!-- AÇÕES -->
+          <td class="td-actions">
 
-              <button
-                type="button"
-                class="table-btn edit"
-                data-edit="${escapeHtml(item.id)}"
-              >
-                Editar
-              </button>
-            </div>
+            <button
+              type="button"
+              class="table-btn view"
+              data-view="${escapeHtml(item.id)}"
+            >
+              Ver coleta
+            </button>
+
+            ${
+              item.photoURL ||
+              item.imageURL ||
+              item.foto ||
+              item.imagem
+                ? `
+                  <button
+                    type="button"
+                    class="table-btn image"
+                    data-image="${escapeHtml(
+                      item.photoURL ||
+                      item.imageURL ||
+                      item.foto ||
+                      item.imagem
+                    )}"
+                  >
+                    Imagem
+                  </button>
+                `
+                : ""
+            }
+
+            <button
+              type="button"
+              class="table-btn edit"
+              data-edit="${escapeHtml(item.id)}"
+            >
+              Editar
+            </button>
+
+            <button
+              type="button"
+              class="table-btn cancel"
+              data-delete="${escapeHtml(item.id)}"
+            >
+              Excluir
+            </button>
+
           </td>
+
         </tr>
       `;
     }).join("");
   }
 
+  /* =========================
+     CONTADORES
+  ========================= */
+
   if (els.tableVisibleCount) {
-    els.tableVisibleCount.textContent = String(pageItems.length);
+    els.tableVisibleCount.textContent =
+      String(pageItems.length);
   }
 
   if (els.tableFilteredCount) {
-    els.tableFilteredCount.textContent = String(total);
+    els.tableFilteredCount.textContent =
+      String(total);
   }
 
   if (els.tableLastUpdate) {
-    els.tableLastUpdate.textContent = formatDateTimeBR(new Date());
+    els.tableLastUpdate.textContent =
+      formatDateTimeBR(new Date());
   }
 
   updateTablePagination(total);
