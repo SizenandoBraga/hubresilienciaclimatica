@@ -1315,7 +1315,46 @@ body.menu-open{
 
   font-weight:800;
 }
+.summary-icon{
+  width:54px;
+  height:54px;
+  flex-shrink:0;
 
+  display:grid;
+  place-items:center;
+
+  border-radius:50%;
+
+  font-size:26px;
+  font-weight:900;
+}
+
+.summary-green .summary-icon{
+  background:rgba(129,185,42,.18);
+  color:var(--nsru-green-700);
+}
+
+.summary-blue .summary-icon{
+  background:rgba(83,172,222,.18);
+  color:var(--nsru-blue-700);
+}
+
+.summary-orange .summary-icon{
+  background:rgba(239,107,34,.16);
+  color:var(--nsru-orange);
+}
+
+.summary-green strong{
+  color:var(--nsru-green-700);
+}
+
+.summary-blue strong{
+  color:var(--nsru-blue-700);
+}
+
+.summary-orange strong{
+  color:var(--nsru-orange);
+}
 /* =========================================================
    POWER BI PRO
 ========================================================= */
