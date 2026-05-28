@@ -1336,85 +1336,64 @@ function renderRecentColetas() {
     return;
   }
 
-  els.recentColetasTableBody.innerHTML = pageItems
-    .map((item) => {
-      const participante = getParticipantName(item);
-      const codigo = getParticipantCode(item);
-      const data = formatDateLabel(item);
-      const fluxo = formatFluxoLabel(getTipoRecebimento(item));
-      const status = getColetaStatusLabel(item);
-      const reciclavel = formatKg(getPesoRecebido(item));
-      const rejeito = formatKg(getRejeito(item));
-      const naoComercializado = formatKg(getNaoComercializado(item));
-      const tipo = getParticipantTypeLabel(item);
+  els.recentColetasTableBody.innerHTML = pageItems.map((item) => {
+    const participante = getParticipantName(item);
+    const codigo = getParticipantCode(item);
+    const data = formatDateLabel(item);
+    const fluxo = formatFluxoLabel(getTipoRecebimento(item));
+    const status = getColetaStatusLabel(item);
+    const reciclavel = formatKg(getPesoRecebido(item));
+    const rejeito = formatKg(getRejeito(item));
+    const naoComercializado = formatKg(getNaoComercializado(item));
+    const tipo = getParticipantTypeLabel(item);
 
-      return `
-        <tr>
-          <td class="td-date">${escapeHtml(data)}</td>
+    return `
+      <tr class="dashboard-table-row">
+        <td class="td-date">${escapeHtml(data)}</td>
 
-          <td class="td-user">
-            <strong>${escapeHtml(participante)}</strong>
-            <span>${escapeHtml(tipo)}</span>
-          </td>
+        <td class="td-user">
+          <strong>${escapeHtml(participante)}</strong>
+          <span>${escapeHtml(tipo)}</span>
+        </td>
 
-          <td class="td-code">${escapeHtml(codigo)}</td>
+        <td class="td-code">${escapeHtml(codigo || "—")}</td>
 
-          <td class="td-flow">${escapeHtml(fluxo)}</td>
+        <td class="td-flow">${escapeHtml(fluxo)}</td>
 
-          <td class="td-status">${statusBadge(status)}</td>
+        <td class="td-status">${statusBadge(status)}</td>
 
-          <td class="td-details">
-            <div class="table-detail-tags">
-              <span class="detail-tag success">Reciclável: ${escapeHtml(reciclavel)}</span>
-              <span class="detail-tag danger">Rejeito: ${escapeHtml(rejeito)}</span>
-              <span class="detail-tag warning">Não comercializado: ${escapeHtml(naoComercializado)}</span>
-            </div>
-          </td>
+        <td class="td-details">
+          <div class="table-detail-tags">
+            <span class="detail-tag success">Reciclável: ${escapeHtml(reciclavel)}</span>
+            <span class="detail-tag danger">Rejeito: ${escapeHtml(rejeito)}</span>
+            <span class="detail-tag warning">Não comercializado: ${escapeHtml(naoComercializado)}</span>
+          </div>
+        </td>
 
-          <td class="td-actions">
+        <td class="td-actions">
+          <button class="table-btn view" type="button" data-view-coleta="${escapeHtml(item.id)}">
+            Ver coleta
+          </button>
 
-  <button
-    class="table-btn dark"
-    type="button"
-    data-view-coleta="${escapeHtml(item.id)}"
-  >
-    Ver coleta
-  </button>
+          <button class="table-btn image" type="button" data-image-coleta="${escapeHtml(item.id)}">
+            Imagem
+          </button>
 
-  <button
-    class="table-btn image"
-    type="button"
-    data-image-coleta="${escapeHtml(item.id)}"
-  >
-    Imagem
-  </button>
+          <button class="table-btn edit" type="button" data-edit-coleta="${escapeHtml(item.id)}">
+            Editar
+          </button>
 
-  <button
-    class="table-btn dark outline"
-    type="button"
-    data-edit-coleta="${escapeHtml(item.id)}"
-  >
-    Editar
-  </button>
-
-  <button
-  class="table-btn cancel"
-  type="button"
-  data-delete-coleta="${escapeHtml(item.id)}"
->
-  Excluir
-</button>
-
-</td>
-        </tr>
-      `;
-    })
-    .join("");
+          <button class="table-btn cancel" type="button" data-delete-coleta="${escapeHtml(item.id)}">
+            Excluir
+          </button>
+        </td>
+      </tr>
+    `;
+  }).join("");
 
   updateTableCounters(pageItems.length, filtered.length);
   updateTablePagination(filtered.length);
 }
-
 function updateTableCounters(visible, filtered) {
   setText(els.tableVisibleCount, visible);
   setText(els.tableFilteredCount, filtered);
