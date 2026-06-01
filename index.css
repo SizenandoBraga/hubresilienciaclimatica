@@ -474,8 +474,8 @@ select{
 }
 
 .projeto-logo{
-  width:220px;
-  min-height:190px;
+  width:250px;
+  min-height:210px;
   padding:22px;
   border-radius:28px;
   background:var(--color-orange);
