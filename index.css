@@ -478,7 +478,7 @@ select{
   min-height:190px;
   padding:22px;
   border-radius:28px;
-  background:#fff;
+  background:var(--color-orange);
   display:flex;
   align-items:center;
   justify-content:center;
