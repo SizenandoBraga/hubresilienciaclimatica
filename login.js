@@ -1,6 +1,5 @@
 import { auth, db } from "./firebase-init-vp.js";
-import { auth, db } from "./firebase-init-coadesc.js";
-import { auth, db } from "./firebase-init-pc.js";
+
 
 import {
   signInWithEmailAndPassword,
