@@ -123,20 +123,20 @@ select{
 #crgr{
   background:
     radial-gradient(circle at 12% 12%,rgba(255,255,255,.14),transparent 34%),
-    linear-gradient(135deg,var(--color-orange) 0%,var(--color-orange-2) 100%);
+    linear-gradient(135deg,var(--color-blue) 0%,var(--color-blue-2) 100%);
 }
 
 #faq{
   background:
     radial-gradient(circle at 12% 12%,rgba(255,255,255,.14),transparent 34%),
-    linear-gradient(135deg,var(--color-blue) 0%,var(--color-blue-2) 100%);
+    linear-gradient(135deg,var(--color-dark) 0%,var(--color-dark-2) 100%);
 }
 
 #parcerias{
   padding-bottom:var(--space-3xl);
   background:
     radial-gradient(circle at 12% 12%,rgba(255,255,255,.14),transparent 34%),
-    linear-gradient(135deg,var(--color-dark) 0%,var(--color-dark-2) 100%);
+    linear-gradient(135deg,var(--color-green) 0%,var(--color-green-2) 100%);
 }
 
 /* =========================================================
