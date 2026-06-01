@@ -1,0 +1,517 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Importar e Exportar Firebase</title>
+
+  <style>
+    :root{
+      --green:#62B32F;
+      --orange:#ef6b22;
+      --blue:#2FA8D8;
+      --dark:#1f1e1d;
+      --bg:#f4f4ef;
+      --card:#ffffff;
+      --muted:#666;
+      --border:#ddd;
+    }
+
+    *{box-sizing:border-box}
+
+    body{
+      margin:0;
+      font-family:Inter,Arial,sans-serif;
+      background:var(--bg);
+      color:#1d1d1d;
+    }
+
+    .page{
+      max-width:1100px;
+      margin:0 auto;
+      padding:32px 18px;
+    }
+
+    .hero{
+      background:linear-gradient(135deg,var(--green),#81B92A);
+      color:#fff;
+      padding:28px;
+      border-radius:28px;
+      margin-bottom:22px;
+    }
+
+    .hero h1{
+      margin:0 0 8px;
+      font-size:32px;
+    }
+
+    .hero p{
+      margin:0;
+      line-height:1.5;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:18px;
+    }
+
+    .card{
+      background:var(--card);
+      border:1px solid var(--border);
+      border-radius:24px;
+      padding:22px;
+      box-shadow:0 12px 28px rgba(0,0,0,.08);
+    }
+
+    .card h2{
+      margin:0 0 14px;
+      font-size:22px;
+    }
+
+    label{
+      display:block;
+      font-weight:700;
+      margin:14px 0 6px;
+    }
+
+    textarea,
+    input{
+      width:100%;
+      border:1px solid var(--border);
+      border-radius:14px;
+      padding:12px;
+      font-size:14px;
+      background:#fff;
+    }
+
+    textarea{
+      min-height:180px;
+      font-family:Consolas,monospace;
+      resize:vertical;
+    }
+
+    .hint{
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.5;
+      margin-top:8px;
+    }
+
+    .actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      margin-top:16px;
+    }
+
+    button{
+      border:0;
+      border-radius:999px;
+      padding:12px 18px;
+      font-weight:800;
+      cursor:pointer;
+      color:#fff;
+      background:var(--dark);
+    }
+
+    button.green{background:var(--green)}
+    button.orange{background:var(--orange)}
+    button.blue{background:var(--blue)}
+    button:disabled{
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    .full{
+      grid-column:1/-1;
+    }
+
+    .status{
+      min-height:160px;
+      padding:16px;
+      border-radius:18px;
+      background:#111;
+      color:#d8ffd1;
+      font-family:Consolas,monospace;
+      font-size:13px;
+      line-height:1.5;
+      overflow:auto;
+      white-space:pre-wrap;
+    }
+
+    .danger{
+      background:#fff3f3;
+      border:1px solid #ffc9c9;
+      color:#8a1f1f;
+      padding:14px;
+      border-radius:16px;
+      line-height:1.5;
+      margin-top:12px;
+    }
+
+    @media(max-width:800px){
+      .grid{grid-template-columns:1fr}
+      .hero h1{font-size:26px}
+    }
+  </style>
+</head>
+
+<body>
+  <main class="page">
+    <section class="hero">
+      <h1>Importar e Exportar dados do Firebase</h1>
+      <p>
+        Ferramenta administrativa para migrar dados do Firestore entre projetos Firebase.
+        Exporte de uma conta, baixe o JSON e importe na outra.
+      </p>
+    </section>
+
+    <section class="grid">
+      <div class="card">
+        <h2>1. Configuração Firebase</h2>
+
+        <label for="firebaseConfig">Cole aqui o firebaseConfig do projeto atual</label>
+        <textarea id="firebaseConfig" placeholder='{
+  "apiKey": "...",
+  "authDomain": "...",
+  "projectId": "...",
+  "storageBucket": "...",
+  "messagingSenderId": "...",
+  "appId": "..."
+}'></textarea>
+
+        <div class="actions">
+          <button class="green" id="connectBtn">Conectar Firebase</button>
+        </div>
+
+        <p class="hint">
+          Use a configuração do projeto de origem para exportar.
+          Depois atualize para a configuração do projeto destino para importar.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>2. Coleções</h2>
+
+        <label for="collections">Coleções para exportar/importar</label>
+        <textarea id="collections">approvalRequests
+coletas
+dashboard
+dashboard_public_by_cooperativa
+participants
+publicDashboard
+users</textarea>
+
+        <p class="hint">
+          Informe uma coleção por linha. Os IDs dos documentos serão preservados.
+        </p>
+      </div>
+
+      <div class="card">
+        <h2>3. Exportar dados</h2>
+
+        <p class="hint">
+          Depois de conectar no Firebase de origem, clique em exportar.
+          Será baixado um arquivo JSON com os documentos.
+        </p>
+
+        <div class="actions">
+          <button class="blue" id="exportBtn" disabled>Exportar JSON</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>4. Importar dados</h2>
+
+        <label for="importFile">Selecione o arquivo JSON exportado</label>
+        <input type="file" id="importFile" accept=".json,application/json" />
+
+        <div class="danger">
+          Atenção: a importação usa o mesmo ID dos documentos.
+          Se já existir documento com o mesmo ID no projeto destino, ele poderá ser atualizado.
+        </div>
+
+        <div class="actions">
+          <button class="orange" id="importBtn" disabled>Importar JSON</button>
+        </div>
+      </div>
+
+      <div class="card full">
+        <h2>Status</h2>
+        <div class="status" id="status">Aguardando conexão...</div>
+      </div>
+    </section>
+  </main>
+
+  <script type="module">
+    import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs,
+      doc,
+      writeBatch
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+    let app = null;
+    let db = null;
+    let selectedImportData = null;
+
+    const firebaseConfigEl = document.getElementById("firebaseConfig");
+    const collectionsEl = document.getElementById("collections");
+    const connectBtn = document.getElementById("connectBtn");
+    const exportBtn = document.getElementById("exportBtn");
+    const importBtn = document.getElementById("importBtn");
+    const importFile = document.getElementById("importFile");
+    const statusEl = document.getElementById("status");
+
+    function log(message){
+      const time = new Date().toLocaleTimeString("pt-BR");
+      statusEl.textContent += `\n[${time}] ${message}`;
+      statusEl.scrollTop = statusEl.scrollHeight;
+    }
+
+    function resetStatus(message){
+      statusEl.textContent = message;
+    }
+
+    function getCollections(){
+      return collectionsEl.value
+        .split("\n")
+        .map(item => item.trim())
+        .filter(Boolean);
+    }
+
+    function parseFirebaseConfig(){
+      const raw = firebaseConfigEl.value.trim();
+
+      if(!raw){
+        throw new Error("Cole o firebaseConfig antes de conectar.");
+      }
+
+      try{
+        return JSON.parse(raw);
+      }catch(error){
+        throw new Error("firebaseConfig inválido. Use JSON puro com aspas duplas.");
+      }
+    }
+
+    function normalizeValue(value){
+      if(value && typeof value.toDate === "function"){
+        return {
+          __type:"timestamp",
+          value:value.toDate().toISOString()
+        };
+      }
+
+      if(Array.isArray(value)){
+        return value.map(normalizeValue);
+      }
+
+      if(value && typeof value === "object"){
+        const output = {};
+
+        Object.entries(value).forEach(([key, val]) => {
+          output[key] = normalizeValue(val);
+        });
+
+        return output;
+      }
+
+      return value;
+    }
+
+    function restoreValue(value){
+      if(value && typeof value === "object" && value.__type === "timestamp"){
+        return new Date(value.value);
+      }
+
+      if(Array.isArray(value)){
+        return value.map(restoreValue);
+      }
+
+      if(value && typeof value === "object"){
+        const output = {};
+
+        Object.entries(value).forEach(([key, val]) => {
+          output[key] = restoreValue(val);
+        });
+
+        return output;
+      }
+
+      return value;
+    }
+
+    function downloadJson(data, filename){
+      const blob = new Blob(
+        [JSON.stringify(data, null, 2)],
+        { type:"application/json;charset=utf-8" }
+      );
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    async function connectFirebase(){
+      try{
+        resetStatus("Conectando...");
+
+        if(app){
+          await deleteApp(app);
+          app = null;
+          db = null;
+        }
+
+        const config = parseFirebaseConfig();
+
+        app = initializeApp(config, `app-${Date.now()}`);
+        db = getFirestore(app);
+
+        exportBtn.disabled = false;
+        importBtn.disabled = !selectedImportData;
+
+        resetStatus(`Conectado ao projeto: ${config.projectId}`);
+      }catch(error){
+        resetStatus(`Erro ao conectar: ${error.message}`);
+      }
+    }
+
+    async function exportData(){
+      if(!db){
+        alert("Conecte o Firebase primeiro.");
+        return;
+      }
+
+      const collections = getCollections();
+
+      if(!collections.length){
+        alert("Informe ao menos uma coleção.");
+        return;
+      }
+
+      const backup = {
+        exportedAt:new Date().toISOString(),
+        collections:{}
+      };
+
+      resetStatus("Iniciando exportação...");
+
+      for(const collectionName of collections){
+        log(`Lendo coleção: ${collectionName}`);
+
+        const snap = await getDocs(collection(db, collectionName));
+
+        backup.collections[collectionName] = {};
+
+        snap.forEach(documentSnapshot => {
+          backup.collections[collectionName][documentSnapshot.id] =
+            normalizeValue(documentSnapshot.data());
+        });
+
+        log(`${collectionName}: ${snap.size} documento(s) exportado(s).`);
+      }
+
+      const projectId = parseFirebaseConfig().projectId || "firebase";
+      const filename = `backup-${projectId}-${new Date().toISOString().slice(0,10)}.json`;
+
+      downloadJson(backup, filename);
+
+      log("Exportação concluída.");
+    }
+
+    async function importData(){
+      if(!db){
+        alert("Conecte o Firebase destino primeiro.");
+        return;
+      }
+
+      if(!selectedImportData){
+        alert("Selecione um arquivo JSON para importar.");
+        return;
+      }
+
+      const confirmImport = confirm(
+        "Confirma a importação? Documentos com o mesmo ID poderão ser atualizados."
+      );
+
+      if(!confirmImport){
+        return;
+      }
+
+      resetStatus("Iniciando importação...");
+
+      const collections = selectedImportData.collections || {};
+      let total = 0;
+
+      for(const [collectionName, documents] of Object.entries(collections)){
+        const entries = Object.entries(documents || {});
+
+        log(`Importando coleção: ${collectionName} (${entries.length} documentos)`);
+
+        let batch = writeBatch(db);
+        let batchCount = 0;
+
+        for(const [documentId, documentData] of entries){
+          const ref = doc(db, collectionName, documentId);
+          batch.set(ref, restoreValue(documentData), { merge:true });
+
+          batchCount++;
+          total++;
+
+          if(batchCount === 450){
+            await batch.commit();
+            log(`Lote gravado em ${collectionName}: ${batchCount} documentos`);
+
+            batch = writeBatch(db);
+            batchCount = 0;
+          }
+        }
+
+        if(batchCount > 0){
+          await batch.commit();
+          log(`Lote final gravado em ${collectionName}: ${batchCount} documentos`);
+        }
+      }
+
+      log(`Importação concluída. Total importado: ${total} documentos.`);
+    }
+
+    importFile.addEventListener("change", async event => {
+      const file = event.target.files?.[0];
+
+      if(!file){
+        selectedImportData = null;
+        importBtn.disabled = true;
+        return;
+      }
+
+      try{
+        const text = await file.text();
+        selectedImportData = JSON.parse(text);
+
+        importBtn.disabled = !db;
+
+        log(`Arquivo carregado: ${file.name}`);
+      }catch(error){
+        selectedImportData = null;
+        importBtn.disabled = true;
+        alert("Arquivo JSON inválido.");
+      }
+    });
+
+    connectBtn.addEventListener("click", connectFirebase);
+    exportBtn.addEventListener("click", exportData);
+    importBtn.addEventListener("click", importData);
+  </script>
+</body>
+</html>
