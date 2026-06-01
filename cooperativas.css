@@ -139,15 +139,23 @@ img{
   position:sticky;
   top:0;
   z-index:1100;
+
   height:100vh;
-  overflow:hidden;
+
+  overflow-y:auto;
+  overflow-x:hidden;
+
   padding:24px 18px;
+
   display:flex;
   flex-direction:column;
+
   color:#fff;
+
   background:
     radial-gradient(circle at 0% 8%, rgba(255,255,255,.18), transparent 36%),
     linear-gradient(180deg,#82bb2c 0%,#6fa522 48%,#5b8918 100%);
+
   box-shadow:20px 0 48px rgba(15,23,42,.13);
 }
 
@@ -199,14 +207,33 @@ img{
 }
 
 .sidebar-watermark{
-  position:absolute;
-  z-index:1;
-  left:50%;
-  bottom:18px;
-  width:178px;
-  transform:translateX(-50%);
-  opacity:.18;
-  pointer-events:none;
+ position:relative;
+
+  left:auto;
+  right:auto;
+  bottom:auto;
+
+  margin-top:16px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+
+  gap:12px;
+
+  padding:14px 10px 8px;
+
+  border-radius:24px;
+
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255,255,255,.06),
+      rgba(255,255,255,.02)
+    );
+
+  border:1px solid rgba(255,255,255,.08);
 }
 
 .sidebar-watermark img{
@@ -219,10 +246,16 @@ img{
 .sidebar-nav{
   display:flex;
   flex-direction:column;
+
   gap:10px;
+
   margin-top:6px;
-  padding-bottom:190px;
-  overflow:auto;
+
+  padding-bottom:20px;
+
+  overflow:visible;
+
+  flex:1;
 }
 
 .sidebar-nav::-webkit-scrollbar{
@@ -341,18 +374,33 @@ img{
 }
 
 .sidebar-help{
-  position:absolute;
-  z-index:3;
-  left:18px;
-  right:18px;
-  bottom:150px;
-  padding:15px;
-  border-radius:20px;
-  background:rgba(0,0,0,.14);
-  border:1px solid rgba(255,255,255,.16);
-  backdrop-filter:blur(8px);
-}
+  position:relative;
 
+  left:auto;
+  right:auto;
+  bottom:auto;
+
+  margin-top:18px;
+
+  display:flex;
+  align-items:flex-start;
+  gap:14px;
+
+  padding:18px;
+
+  border-radius:22px;
+
+  background:
+    linear-gradient(
+      135deg,
+      rgba(0,0,0,.18),
+      rgba(0,0,0,.08)
+    );
+
+  border:1px solid rgba(255,255,255,.16);
+
+  backdrop-filter:blur(10px);
+}
 .sidebar-help p{
   margin:0;
   color:rgba(255,255,255,.88);
@@ -2189,4 +2237,27 @@ body.modal-open{
     transition:none!important;
     animation:none!important;
   }
+}
+.nav-link-logout{
+  margin-top:16px !important;
+
+  position:sticky;
+  bottom:0;
+
+  z-index:20;
+
+  background:
+    linear-gradient(
+      135deg,
+      #c62828,
+      #ef4444
+    ) !important;
+
+  color:#fff !important;
+
+  border:none !important;
+}
+
+.nav-link-logout:hover{
+  transform:translateY(-2px);
 }
