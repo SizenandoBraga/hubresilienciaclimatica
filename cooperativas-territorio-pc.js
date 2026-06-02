@@ -1,19 +1,24 @@
-import { auth, db } from "./firebase-init-pc.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { auth, db } from "./firebase-init.js";
+
+import {
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
 import {
   doc,
   getDoc,
   collection,
   query,
-  where,
-  orderBy,
   onSnapshot,
-  getDocs,
-  limit,
   updateDoc,
-  setDoc,
+  deleteDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+/* =========================================================
+   CONFIG
+========================================================= */
 
 const bodyConfig = document.body.dataset || {};
 
@@ -21,143 +26,118 @@ function canonicalTerritoryId(value) {
   const raw = String(value || "")
     .trim()
     .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .replaceAll("_", "-")
     .replace(/\s+/g, "-");
 
   if (!raw) return "vila-pinto";
-  if (raw === "crgr-vila-pinto") return "vila-pinto";
-  if (raw === "crgr-coadesc" || raw === "crgr-cooadesc") return "coadesc";
-  if (raw === "crgr-padre-cacique") return "padre-cacique";
+  if (raw === "crgr-vila-pinto" || raw === "vila-pinto" || raw === "vp") return "vila-pinto";
+  if (raw === "crgr-cooadesc" || raw === "crgr-coadesc" || raw === "cooadesc" || raw === "coadesc") return "cooadesc";
+  if (raw === "crgr-padre-cacique" || raw === "padre-cacique" || raw === "padre") return "padre-cacique";
+
   return raw;
 }
 
 const PAGE_TERRITORY = {
   territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
-  territoryLabel: bodyConfig.territoryLabel || "Território",
-  cooperativeName: bodyConfig.cooperativeName || "Cooperativa",
+  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Vila Pinto",
+  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto",
   participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
-  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html",
-  mapLat: Number(bodyConfig.mapLat || -30.0346),
-  mapLng: Number(bodyConfig.mapLng || -51.2177),
-  mapZoom: Number(bodyConfig.mapZoom || 15)
+  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
+  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html"
 };
 
-const AUTO_SYNC_INTERVAL_MS = 12 * 60 * 60 * 1000;
+/* =========================================================
+   ELEMENTOS
+========================================================= */
 
 const els = {
   sidebar: document.getElementById("sidebar"),
   menuBtn: document.getElementById("menuBtn"),
-  sidebarClose: document.getElementById("sidebarClose"),
   mobileOverlay: document.getElementById("mobileOverlay"),
   logoutLink: document.getElementById("logoutLink"),
 
-  territoryNameTop: document.getElementById("territoryNameTop"),
-  cooperativeNameTop: document.getElementById("cooperativeNameTop"),
-  roleNameTop: document.getElementById("roleNameTop"),
   userNameTop: document.getElementById("userNameTop"),
-  rolePill: document.getElementById("rolePill"),
   accessBanner: document.getElementById("accessBanner"),
   sidebarHelpText: document.getElementById("sidebarHelpText"),
 
-  noticesList: document.getElementById("noticesList"),
+  syncCoopDashboardBtn: document.getElementById("syncCoopDashboardBtn"),
+  syncCoopDashboardStatus: document.getElementById("syncCoopDashboardStatus"),
 
-  territoryPanelTitle: document.getElementById("territoryPanelTitle"),
-  territoryPanelSubtitle: document.getElementById("territoryPanelSubtitle"),
-
-  territoryCommunications: document.getElementById("territoryCommunications"),
-  territoryServices: document.getElementById("territoryServices"),
-  territoryCalendar: document.getElementById("territoryCalendar"),
-  territoryTrainings: document.getElementById("territoryTrainings"),
-
-  summaryAccepted: document.getElementById("summaryAccepted"),
-  summaryRejected: document.getElementById("summaryRejected"),
-  summaryPoints: document.getElementById("summaryPoints"),
-
-  indicatorColetas: document.getElementById("indicatorColetas"),
   indicatorParticipants: document.getElementById("indicatorParticipants"),
-  indicatorDocs: document.getElementById("indicatorDocs"),
+  indicatorColetas: document.getElementById("indicatorColetas"),
   indicatorActions: document.getElementById("indicatorActions"),
 
-  participantsList: document.getElementById("participantsList"),
-  participantSearchInput: document.getElementById("participantSearchInput"),
+  indicatorPesoRecebido: document.getElementById("indicatorPesoRecebido"),
+  indicatorRejeito: document.getElementById("indicatorRejeito"),
+  indicatorNaoComercializado: document.getElementById("indicatorNaoComercializado"),
+  indicatorQualidadeMedia: document.getElementById("indicatorQualidadeMedia"),
+
   participantsTotalCount: document.getElementById("participantsTotalCount"),
   participantsPeopleCount: document.getElementById("participantsPeopleCount"),
   participantsCondoCount: document.getElementById("participantsCondoCount"),
-  participantsSectionText: document.getElementById("participantsSectionText"),
-  newParticipantBtn: document.getElementById("newParticipantBtn"),
 
-  approvalRequestsList: document.getElementById("approvalRequestsList"),
+  noticesList: document.getElementById("noticesList"),
+  territoryCommunications: document.getElementById("territoryCommunications"),
 
-  mapPointsCount: document.getElementById("mapPointsCount"),
-  mapPointsList: document.getElementById("mapPointsList"),
-  mapTypeFilter: document.getElementById("mapTypeFilter"),
-  btnNearMe: document.getElementById("btnNearMe"),
-  btnLoadParticipantPoints: document.getElementById("btnLoadParticipantPoints"),
+  chartColetasMensais: document.getElementById("chartColetasMensais"),
+  chartParticipantesPerfil: document.getElementById("chartParticipantesPerfil"),
 
-  editPointName: document.getElementById("editPointName"),
-  editPointAddress: document.getElementById("editPointAddress"),
-  editPointType: document.getElementById("editPointType"),
-  editPointLat: document.getElementById("editPointLat"),
-  editPointLng: document.getElementById("editPointLng"),
-  btnApplyPointEdit: document.getElementById("btnApplyPointEdit"),
-  btnCancelPointEdit: document.getElementById("btnCancelPointEdit"),
+  recentColetasTableBody:
+    document.getElementById("tableColetasBody") ||
+    document.getElementById("recentColetasTableBody") ||
+    document.getElementById("latestColetasBody"),
 
-  usersNavLink: document.querySelector('a[href="usuarios.html"]'),
-  participantsSectionShell: document.querySelector(".participants-section-shell"),
-  indicatorsCard: document.querySelector(".indicators-card"),
+  tableVisibleCount: document.getElementById("tableVisibleCount"),
+  tableFilteredCount: document.getElementById("tableFilteredCount"),
+  tableLastUpdate: document.getElementById("tableLastUpdate"),
 
-  syncCoopDashboardBtn: document.getElementById("syncCoopDashboardBtn"),
-  syncCoopDashboardStatus: document.getElementById("syncCoopDashboardStatus")
+  tSearch: document.getElementById("tSearch"),
+  tFluxo: document.getElementById("tFluxo"),
+  tEntrega: document.getElementById("tEntrega"),
+  tStatus: document.getElementById("tStatus"),
+  tTipoCadastro: document.getElementById("tTipoCadastro"),
+  btnApplyTableFilters: document.getElementById("btnApplyTableFilters"),
+  btnClearTableFilters: document.getElementById("btnClearTableFilters"),
+
+  btnPrevColetas: document.getElementById("btnPrevColetas"),
+  btnNextColetas: document.getElementById("btnNextColetas"),
+  tablePageIndicator: document.getElementById("tablePageIndicator"),
+
+  exportParticipantsPdfBtn: document.getElementById("exportParticipantsPdfBtn"),
+  btnLoadMoreColetas: document.getElementById("btnLoadMoreColetas")
 };
 
-const TAB_META = {
-  comunicados: {
-    title: "Comunicados da cooperativa",
-    subtitle: "Avisos, atualizações e orientações da cooperativa."
-  },
-  servicos: {
-    title: "Serviços disponíveis",
-    subtitle: "Ações e apoios operacionais do território."
-  },
-  mapa: {
-    title: "Mapa do território",
-    subtitle: "Pontos de coleta e endereços operacionais vinculados à cooperativa."
-  },
-  calendario: {
-    title: "Agenda e calendário",
-    subtitle: "Compromissos, reuniões e atividades previstas."
-  },
-  treinamentos: {
-    title: "Capacitações",
-    subtitle: "Formações e conteúdos da cooperativa."
-  },
-  coleta: {
-    title: "Coleta especial",
-    subtitle: "Fluxos operacionais extraordinários."
-  },
-  ouvidoria: {
-    title: "Ouvidoria",
-    subtitle: "Canal aberto para escuta e apoio."
-  }
-};
+/* =========================================================
+   STATE
+========================================================= */
 
 const STATE = {
   currentUser: null,
   profile: null,
   isAdmin: false,
   canEditAll: false,
-  allParticipants: [],
+  participants: [],
+  coletas: [],
   approvalRequests: [],
-  territoryMap: null,
-  territoryMarkers: [],
-  fixedPoints: [],
-  participantPoints: [],
-  allMapPoints: [],
-  geocodeCache: new Map(),
-  selectedPointId: null,
-  participantsUnsubscribe: null,
-  approvalRequestsUnsubscribe: null
+  unsubscribers: [],
+  recentPage: 0,
+  recentPageSize: 10,
+  recentLimit: 10
 };
+
+/* =========================================================
+   HELPERS
+========================================================= */
+
+function normalizeText(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
 
 function escapeHtml(value) {
   return String(value ?? "")
@@ -168,32 +148,57 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function normalizeText(value) {
-  return String(value || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
+function setText(el, value) {
+  if (!el) return;
+  el.textContent = String(value ?? "");
 }
 
-function normalizedTerritoryEqual(a, b) {
-  return canonicalTerritoryId(a) === canonicalTerritoryId(b);
+function formatNumber(value) {
+  return Number(value || 0).toLocaleString("pt-BR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2
+  });
 }
 
-function roleLabel(role) {
-  const map = {
-    admin: "Administrador da cooperativa",
-    cooperativa: "Cooperativa",
-    governanca: "Governança",
-    gestor: "Gestor",
-    user: "Cooperativa",
-    usuario: "Cooperativa"
-  };
-  return map[role] || role || "Perfil";
+function formatKg(value) {
+  return `${formatNumber(Number(value || 0))} kg`;
 }
 
-function isCommonCoopUser(role) {
-  return ["cooperativa", "user", "usuario"].includes(role);
+function toNumber(value) {
+  if (typeof value === "number") return Number.isFinite(value) ? value : 0;
+  if (value === null || value === undefined || value === "") return 0;
+
+  const parsed = Number(
+    String(value)
+      .trim()
+      .replace(/\s/g, "")
+      .replace(/kg|kgs|quilo|quilos|litros?|r\$/gi, "")
+      .replace(/\./g, "")
+      .replace(",", ".")
+      .replace(/[^\d.-]/g, "")
+  );
+
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+function animateNumber(el, value, suffix = "") {
+  if (!el) return;
+
+  const target = Number(value || 0);
+  const current = Number(String(el.textContent || "0").replace(/[^\d.-]/g, "")) || 0;
+  const duration = 450;
+  const start = performance.now();
+
+  function frame(now) {
+    const progress = Math.min((now - start) / duration, 1);
+    const next = Math.round(current + (target - current) * progress);
+
+    el.textContent = next.toLocaleString("pt-BR") + suffix;
+
+    if (progress < 1) requestAnimationFrame(frame);
+  }
+
+  requestAnimationFrame(frame);
 }
 
 function isAdminUser(role) {
@@ -204,148 +209,706 @@ function isGovernancaUser(role) {
   return role === "governanca" || role === "gestor";
 }
 
-function participantIcon(type) {
-  const key = normalizeText(type);
+/* =========================================================
+   TERRITÓRIO
+========================================================= */
 
-  if (key === "condominio") return "🏢";
-  if (key === "comercio") return "🏪";
-  if (key === "familia") return "👨‍👩‍👧";
-  if (key === "morador") return "👤";
-  if (key === "lideranca") return "📣";
-  if (key === "participante") return "🧩";
-
-  return "👤";
+function getParticipantCode(item = {}) {
+  return String(
+    item.participantCode ||
+    item.codigoParticipante ||
+    item.codigo ||
+    item.code ||
+    item.familyCode ||
+    item.payloadSnapshot?.participantCode ||
+    item.payloadSnapshot?.codigoParticipante ||
+    item.payloadSnapshot?.familyCode ||
+    item.recebimento?.participantCode ||
+    item.finalTurno?.participantCode ||
+    ""
+  ).trim();
 }
 
-function formatParticipantType(type) {
-  const map = {
-    morador: "Morador",
-    familia: "Família",
-    condominio: "Condomínio",
-    comercio: "Comércio",
-    lideranca: "Liderança",
-    participante: "Participante",
-    usuario: "Participante",
-    user: "Participante"
+function itemBelongsToTerritory(item = {}) {
+  const code = getParticipantCode(item).toUpperCase();
+
+  const fields = [
+    item.territoryId,
+    item.territory,
+    item.territorio,
+    item.territoryLabel,
+    item.cooperativeId,
+    item.cooperativaId,
+    item.cooperativeName,
+    item.cooperativa,
+    item.localCrgr,
+    item.crgr,
+    item.payloadSnapshot?.territoryId,
+    item.payloadSnapshot?.territory,
+    item.payloadSnapshot?.territorio,
+    item.payloadSnapshot?.territoryLabel,
+    item.payloadSnapshot?.cooperativeId,
+    item.payloadSnapshot?.cooperativaId,
+    item.payloadSnapshot?.cooperativa,
+    item.payloadSnapshot?.localCrgr,
+    item.payloadSnapshot?.crgr,
+    item.recebimento?.territoryId,
+    item.recebimento?.territory,
+    item.recebimento?.cooperativeId,
+    item.finalTurno?.territoryId,
+    item.finalTurno?.territory,
+    item.finalTurno?.cooperativeId
+  ]
+    .filter(Boolean)
+    .map(canonicalTerritoryId);
+
+  const current = PAGE_TERRITORY.territoryId;
+
+  if (fields.includes(current)) return true;
+
+  const hasOtherTerritory = fields.some((field) =>
+    ["vila-pinto", "cooadesc", "padre-cacique"].includes(field) &&
+    field !== current
+  );
+
+  if (hasOtherTerritory) return false;
+
+  if (current === "vila-pinto") {
+    if (
+      code.startsWith("VPD") ||
+      code.startsWith("VP") ||
+      code.startsWith("C") ||
+      code.startsWith("F") ||
+      code === "FAMILIAS"
+    ) return true;
+
+    if (
+      code.startsWith("COA") ||
+      code.startsWith("COO") ||
+      code.startsWith("PC") ||
+      code.startsWith("PCA")
+    ) return false;
+
+    return true;
+  }
+
+  if (current === "cooadesc") {
+    return code.startsWith("COA") || code.startsWith("COO") || code.startsWith("CD");
+  }
+
+  if (current === "padre-cacique") {
+    return code.startsWith("PC") || code.startsWith("PCA") || code.startsWith("PDC");
+  }
+
+  return true;
+}
+
+/* =========================================================
+   PARTICIPANTES / STATUS
+========================================================= */
+
+function getParticipantName(item = {}) {
+  const code = getParticipantCode(item);
+
+  return (
+    item.participantName ||
+    item.nomeParticipante ||
+    item.nome ||
+    item.name ||
+    item.payloadSnapshot?.participantName ||
+    item.payloadSnapshot?.name ||
+    item.recebimento?.participantName ||
+    item.finalTurno?.participantName ||
+    code ||
+    "-"
+  );
+}
+
+function participantType(item = {}) {
+  return normalizeText(
+    item.participantType ||
+    item.tipoParticipante ||
+    item.tipoCadastro ||
+    item.tipo ||
+    item.localType ||
+    item.codeLocalType ||
+    item.payloadSnapshot?.participantType ||
+    item.payloadSnapshot?.tipoCadastro ||
+    item.payloadSnapshot?.localType ||
+    item.payloadSnapshot?.codeLocalType
+  );
+}
+
+function getParticipantTypeLabel(item = {}) {
+  const type = participantType(item);
+
+  if (type.includes("condominio")) return "condomínio";
+  if (type.includes("comercio")) return "comércio";
+  if (type.includes("casa")) return "participante";
+  if (type.includes("familia")) return "participante";
+
+  return type || "participante";
+}
+
+function isApprovedParticipant(item = {}) {
+  const status = normalizeText(item.approvalStatus || item.status || item.decision);
+
+  return (
+    status === "approved" ||
+    status === "aprovado" ||
+    status === "active" ||
+    status === "ativo" ||
+    item.active === true ||
+    item.ativo === true
+  );
+}
+
+function isPendingParticipant(item = {}) {
+  const status = normalizeText(item.status || item.decision || item.approvalStatus);
+
+  return (
+    status === "pending" ||
+    status === "pendente" ||
+    status === "waiting" ||
+    status === "aguardando"
+  );
+}
+
+function isColetaRealizada(item = {}) {
+  const status = normalizeText(
+    item.status ||
+    item.situacao ||
+    item.decision ||
+    item.approvalStatus ||
+    item.coletaStatus ||
+    "realizada"
+  );
+
+  return ![
+    "cancelada",
+    "cancelado",
+    "rejected",
+    "rejeitada",
+    "rejeitado",
+    "pendente",
+    "pending",
+    "rascunho",
+    "draft"
+  ].includes(status);
+}
+
+/* =========================================================
+   DATA / TIPO / STATUS COLETA
+========================================================= */
+
+function getDateValue(item = {}) {
+  const candidates = [
+    item.opDate,
+    item.dataOperacao,
+    item.operationDate,
+    item.dataColeta,
+    item.coletaData,
+    item.dateColeta,
+    item.dataRegistro,
+    item.createdAtISO,
+    item.updatedAtISO,
+    item.createdAt,
+    item.updatedAt,
+    item.date,
+    item.data,
+
+    item.payloadSnapshot?.opDate,
+    item.payloadSnapshot?.dataOperacao,
+    item.payloadSnapshot?.operationDate,
+    item.payloadSnapshot?.dataColeta,
+    item.payloadSnapshot?.coletaData,
+    item.payloadSnapshot?.dataRegistro,
+    item.payloadSnapshot?.createdAtISO,
+    item.payloadSnapshot?.createdAt,
+    item.payloadSnapshot?.data,
+
+    item.recebimento?.dataColeta,
+    item.recebimento?.dataOperacao,
+    item.recebimento?.createdAt,
+    item.finalTurno?.dataColeta,
+    item.finalTurno?.dataOperacao,
+    item.finalTurno?.createdAt
+  ];
+
+  for (const possible of candidates) {
+    if (!possible) continue;
+
+    if (typeof possible?.toDate === "function") {
+      const date = possible.toDate();
+      if (!Number.isNaN(date.getTime())) return date;
+    }
+
+    if (typeof possible?.seconds === "number") {
+      const date = new Date(possible.seconds * 1000);
+      if (!Number.isNaN(date.getTime())) return date;
+    }
+
+    if (possible instanceof Date) {
+      if (!Number.isNaN(possible.getTime())) return possible;
+    }
+
+    if (typeof possible === "string") {
+      const clean = possible.trim();
+
+      const brDate = clean.match(/^(\d{2})\/(\d{2})\/(\d{4})/);
+      if (brDate) {
+        const date = new Date(
+          Number(brDate[3]),
+          Number(brDate[2]) - 1,
+          Number(brDate[1])
+        );
+        if (!Number.isNaN(date.getTime())) return date;
+      }
+
+      const isoDate = clean.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (isoDate) {
+        const date = new Date(
+          Number(isoDate[1]),
+          Number(isoDate[2]) - 1,
+          Number(isoDate[3])
+        );
+        if (!Number.isNaN(date.getTime())) return date;
+      }
+
+      const parsed = new Date(clean);
+      if (!Number.isNaN(parsed.getTime())) return parsed;
+    }
+  }
+
+  return null;
+}
+
+function formatDateLabel(item = {}) {
+  const date = getDateValue(item);
+  return date ? date.toLocaleDateString("pt-BR") : "-";
+}
+
+function formatDateTimeLabel(date = new Date()) {
+  return date.toLocaleString("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short"
+  });
+}
+
+function getTipoRecebimento(item = {}) {
+  return (
+    item.flowType ||
+    item.fluxo ||
+    item.tipoColeta ||
+    item.tipoRecebimento ||
+    item.receiptType ||
+    item.tipo ||
+    item.recebimento?.flowType ||
+    item.recebimento?.fluxo ||
+    item.finalTurno?.flowType ||
+    item.finalTurno?.fluxo ||
+    item.localType ||
+    item.codeLocalType ||
+    item.payloadSnapshot?.flowType ||
+    item.payloadSnapshot?.fluxo ||
+    item.payloadSnapshot?.tipoRecebimento ||
+    item.payloadSnapshot?.localType ||
+    "recebimento"
+  );
+}
+
+function inferFluxoKey(item = {}) {
+  const normalized = normalizeText(getTipoRecebimento(item)).replaceAll("-", "_");
+
+  if (normalized.includes("final") || normalized.includes("turno")) return "final_turno";
+
+  return "recebimento";
+}
+
+function formatFluxoLabel(value) {
+  const normalized = normalizeText(value).replaceAll("-", "_");
+
+  if (normalized === "recebimento") return "Recebimento";
+  if (normalized === "final_turno") return "Final do turno";
+  if (normalized.includes("final")) return "Final do turno";
+
+  return value && value !== "-" ? String(value) : "Recebimento";
+}
+
+function getEntrega(item = {}) {
+  return (
+    item.deliveryType ||
+    item.entrega ||
+    item.tipoEntrega ||
+    item.payloadSnapshot?.deliveryType ||
+    item.payloadSnapshot?.entrega ||
+    item.recebimento?.deliveryType ||
+    item.recebimento?.entrega ||
+    item.finalTurno?.deliveryType ||
+    item.finalTurno?.entrega ||
+    "Normal"
+  );
+}
+
+function getColetaStatusLabel(item = {}) {
+  const raw =
+    item.status ||
+    item.situacao ||
+    item.decision ||
+    item.approvalStatus ||
+    item.coletaStatus ||
+    "Realizada";
+
+  const normalized = normalizeText(raw);
+
+  if (normalized === "approved" || normalized === "aprovado") return "Ativo";
+  if (normalized === "active" || normalized === "ativo") return "Ativo";
+  if (normalized === "realizada") return "Ativo";
+  if (normalized === "editado") return "Editado";
+  if (normalized === "pending") return "Pendente";
+  if (normalized === "rejected") return "Rejeitada";
+  if (normalized === "cancelado") return "Cancelado";
+
+  return String(raw || "Ativo");
+}
+
+function statusBadge(statusOrItem) {
+  const label =
+    typeof statusOrItem === "object"
+      ? getColetaStatusLabel(statusOrItem)
+      : String(statusOrItem || "Ativo");
+
+  const normalized = normalizeText(label);
+
+  let className = "status-badge";
+
+  if (normalized.includes("pend")) className += " pendente";
+  if (normalized.includes("cancel") || normalized.includes("reje")) className += " rejeitado";
+  if (normalized.includes("real") || normalized.includes("aprov") || normalized.includes("ativ")) {
+    className += " realizada";
+  }
+
+  if (normalized.includes("edit")) className += " pendente";
+
+  return `<span class="${className}">${escapeHtml(label)}</span>`;
+}
+
+/* =========================================================
+   MATERIAIS / PESOS / QUALIDADE
+========================================================= */
+
+function getMateriaisObject(coleta = {}) {
+  return (
+    coleta.materiais ||
+    coleta.materials ||
+    coleta.materiaisInformados ||
+    coleta.recebimento?.materiais ||
+    coleta.recebimento?.materials ||
+    coleta.finalTurno?.materiais ||
+    coleta.finalTurno?.materials ||
+    coleta.payloadSnapshot?.materiais ||
+    coleta.payloadSnapshot?.materials ||
+    coleta.payloadSnapshot?.materiaisInformados ||
+    {}
+  );
+}
+
+function getFinalTurnoMateriais(item = {}) {
+  return {
+    "Plástico":
+      toNumber(item.plasticoKg) ||
+      toNumber(item.plastico) ||
+      toNumber(item.finalTurno?.plasticoKg) ||
+      toNumber(item.finalTurno?.plastico) ||
+      toNumber(item.payloadSnapshot?.plasticoKg) ||
+      toNumber(item.payloadSnapshot?.plastico),
+
+    "Vidro":
+      toNumber(item.vidroKg) ||
+      toNumber(item.vidro) ||
+      toNumber(item.finalTurno?.vidroKg) ||
+      toNumber(item.finalTurno?.vidro) ||
+      toNumber(item.payloadSnapshot?.vidroKg) ||
+      toNumber(item.payloadSnapshot?.vidro),
+
+    "Sacaria":
+      toNumber(item.sacariaKg) ||
+      toNumber(item.sacaria) ||
+      toNumber(item.finalTurno?.sacariaKg) ||
+      toNumber(item.finalTurno?.sacaria) ||
+      toNumber(item.payloadSnapshot?.sacariaKg) ||
+      toNumber(item.payloadSnapshot?.sacaria),
+
+    "Papel misto":
+      toNumber(item.papelMistoKg) ||
+      toNumber(item.papelMisto) ||
+      toNumber(item.finalTurno?.papelMistoKg) ||
+      toNumber(item.finalTurno?.papelMisto) ||
+      toNumber(item.payloadSnapshot?.papelMistoKg) ||
+      toNumber(item.payloadSnapshot?.papelMisto),
+
+    "Papelão":
+      toNumber(item.papelaoKg) ||
+      toNumber(item.papelao) ||
+      toNumber(item.finalTurno?.papelaoKg) ||
+      toNumber(item.finalTurno?.papelao) ||
+      toNumber(item.payloadSnapshot?.papelaoKg) ||
+      toNumber(item.payloadSnapshot?.papelao),
+
+    "Metal / Alumínio":
+      toNumber(item.aluminioMetalKg) ||
+      toNumber(item.metalKg) ||
+      toNumber(item.aluminioKg) ||
+      toNumber(item.finalTurno?.aluminioMetalKg) ||
+      toNumber(item.finalTurno?.metalKg) ||
+      toNumber(item.finalTurno?.aluminioKg) ||
+      toNumber(item.payloadSnapshot?.aluminioMetalKg) ||
+      toNumber(item.payloadSnapshot?.metalKg) ||
+      toNumber(item.payloadSnapshot?.aluminioKg),
+
+    "Isopor":
+      toNumber(item.isoporKg) ||
+      toNumber(item.isopor) ||
+      toNumber(item.finalTurno?.isoporKg) ||
+      toNumber(item.finalTurno?.isopor) ||
+      toNumber(item.payloadSnapshot?.isoporKg) ||
+      toNumber(item.payloadSnapshot?.isopor),
+
+    "Óleo":
+      toNumber(item.oleoKg) ||
+      toNumber(item.oleo) ||
+      toNumber(item.finalTurno?.oleoKg) ||
+      toNumber(item.finalTurno?.oleo) ||
+      toNumber(item.payloadSnapshot?.oleoKg) ||
+      toNumber(item.payloadSnapshot?.oleo)
   };
-  return map[normalizeText(type)] || type || "Não informado";
 }
 
-function buildFullAddress(participant) {
-  if (!participant) return "";
+function somaMateriais(coleta = {}) {
+  const fixedMaterials = getFinalTurnoMateriais(coleta);
 
-  const address = participant.address || {};
+  const fixedTotal = Object.values(fixedMaterials).reduce((acc, value) => {
+    return acc + toNumber(value);
+  }, 0);
 
-  const nestedAddress = [
-    address.street,
-    address.number,
-    address.neighborhood,
-    address.city || "Porto Alegre",
-    address.state || "RS"
-  ]
-    .map((v) => String(v || "").trim())
-    .filter(Boolean)
-    .join(", ");
+  if (fixedTotal > 0) return fixedTotal;
 
-  if (nestedAddress) return nestedAddress;
+  const materiais = getMateriaisObject(coleta);
 
-  const flatAddress = [
-    participant.rua,
-    participant.numero,
-    participant.bairro,
-    participant.cidade || "Porto Alegre",
-    participant.uf || "RS"
-  ]
-    .map((v) => String(v || "").trim())
-    .filter(Boolean)
-    .join(", ");
+  if (Array.isArray(materiais)) {
+    return materiais.reduce((acc, item) => {
+      return acc + toNumber(item.peso || item.kg || item.valor || item.quantidade);
+    }, 0);
+  }
 
-  return participant.enderecoCompleto || flatAddress;
-}
+  if (typeof materiais === "object" && materiais !== null) {
+    return Object.values(materiais).reduce((acc, value) => {
+      if (typeof value === "object" && value !== null) {
+        return acc + toNumber(value.peso || value.kg || value.valor || value.quantidade);
+      }
 
-function hasValidLatLng(item) {
-  const lat = Number(item?.lat ?? item?.address?.lat);
-  const lng = Number(item?.lng ?? item?.address?.lng);
-  return Number.isFinite(lat) && Number.isFinite(lng);
-}
+      return acc + toNumber(value);
+    }, 0);
+  }
 
-function sumNumericFromItem(item) {
-  if (typeof item === "number") return item;
-  if (!item || typeof item !== "object") return 0;
-  if (typeof item.peso === "number") return item.peso;
-  if (typeof item.kg === "number") return item.kg;
-  if (typeof item.quantidade === "number") return item.quantidade;
-  if (typeof item.total === "number") return item.total;
   return 0;
 }
 
-function sumObjectNumericValues(obj) {
-  if (!obj || typeof obj !== "object") return 0;
-  let total = 0;
-  for (const key of Object.keys(obj)) {
-    total += sumNumericFromItem(obj[key]);
+function getPesoRecebido(coleta = {}) {
+  return (
+    toNumber(coleta.pesoRecebido) ||
+    toNumber(coleta.peso_recebido) ||
+    toNumber(coleta.totalPesoRecebido) ||
+    toNumber(coleta.totalRecebido) ||
+    toNumber(coleta.totalRecebidoKg) ||
+    toNumber(coleta.totalKg) ||
+    toNumber(coleta.pesoTotal) ||
+    toNumber(coleta.peso) ||
+    toNumber(coleta.kg) ||
+    toNumber(coleta.recebimento?.pesoResiduoSecoKg) ||
+    toNumber(coleta.recebimento?.pesoRecebido) ||
+    toNumber(coleta.recebimento?.totalKg) ||
+    toNumber(coleta.finalTurno?.pesoResiduoSecoKg) ||
+    toNumber(coleta.finalTurno?.pesoRecebido) ||
+    toNumber(coleta.finalTurno?.totalKg) ||
+    toNumber(coleta.payloadSnapshot?.pesoRecebido) ||
+    toNumber(coleta.payloadSnapshot?.totalKg) ||
+    toNumber(coleta.payloadSnapshot?.pesoResiduoSecoKg) ||
+    somaMateriais(coleta) ||
+    0
+  );
+}
+
+function getRejeito(coleta = {}) {
+  return (
+    toNumber(coleta.rejeito) ||
+    toNumber(coleta.pesoRejeito) ||
+    toNumber(coleta.totalRejeito) ||
+    toNumber(coleta.totalRejeitoKg) ||
+    toNumber(coleta.rejeitoKg) ||
+    toNumber(coleta.rejeitos) ||
+    toNumber(coleta.recebimento?.pesoRejeitoKg) ||
+    toNumber(coleta.recebimento?.rejeito) ||
+    toNumber(coleta.finalTurno?.pesoRejeitoKg) ||
+    toNumber(coleta.finalTurno?.rejeito) ||
+    toNumber(coleta.payloadSnapshot?.rejeito) ||
+    toNumber(coleta.payloadSnapshot?.pesoRejeito) ||
+    toNumber(coleta.payloadSnapshot?.totalRejeito) ||
+    0
+  );
+}
+
+function getNaoComercializado(coleta = {}) {
+  return (
+    toNumber(coleta.naoComercializado) ||
+    toNumber(coleta.nao_comercializado) ||
+    toNumber(coleta.totalNaoComercializado) ||
+    toNumber(coleta.totalNaoComercializadoKg) ||
+    toNumber(coleta.naoComercializadoKg) ||
+    toNumber(coleta.materialNaoComercializado) ||
+    toNumber(coleta.naoVenda) ||
+    toNumber(coleta.semComercializacao) ||
+    toNumber(coleta.recebimento?.pesoNaoComercializadoKg) ||
+    toNumber(coleta.recebimento?.naoComercializado) ||
+    toNumber(coleta.finalTurno?.pesoNaoComercializadoKg) ||
+    toNumber(coleta.finalTurno?.naoComercializado) ||
+    toNumber(coleta.payloadSnapshot?.naoComercializado) ||
+    toNumber(coleta.payloadSnapshot?.totalNaoComercializado) ||
+    0
+  );
+}
+
+function getQualidade(coleta = {}) {
+  return (
+    toNumber(coleta.qualidade) ||
+    toNumber(coleta.notaQualidade) ||
+    toNumber(coleta.qualityScore) ||
+    toNumber(coleta.recebimento?.qualidade) ||
+    toNumber(coleta.recebimento?.notaQualidade) ||
+    toNumber(coleta.recebimento?.qualidadeNota) ||
+    toNumber(coleta.finalTurno?.qualidade) ||
+    toNumber(coleta.finalTurno?.notaQualidade) ||
+    toNumber(coleta.finalTurno?.qualidadeNota) ||
+    toNumber(coleta.payloadSnapshot?.qualidade) ||
+    toNumber(coleta.payloadSnapshot?.notaQualidade) ||
+    toNumber(coleta.payloadSnapshot?.qualidadeNota) ||
+    0
+  );
+}
+
+function renderMaterialsList(item = {}) {
+  const fixedMaterials = getFinalTurnoMateriais(item);
+
+  const fixedEntries = Object.entries(fixedMaterials).filter(([, value]) => toNumber(value) > 0);
+
+  if (fixedEntries.length) {
+    return fixedEntries
+      .map(([name, value]) => {
+        return `
+          <div class="material-line">
+            <span>${escapeHtml(name)}</span>
+            <strong>${escapeHtml(formatKg(value))}</strong>
+          </div>
+        `;
+      })
+      .join("");
   }
-  return total;
-}
 
-function getResiduosTotalFromColeta(coleta = {}) {
-  let total = 0;
+  const materiais = getMateriaisObject(item);
+  let entries = [];
 
-  if (typeof coleta.totalKg === "number") total += coleta.totalKg;
-  if (coleta.recebimento && typeof coleta.recebimento === "object") total += sumObjectNumericValues(coleta.recebimento);
-  if (coleta.residuos && typeof coleta.residuos === "object") total += sumObjectNumericValues(coleta.residuos);
-  if (coleta.materiais && typeof coleta.materiais === "object") total += sumObjectNumericValues(coleta.materiais);
+  if (Array.isArray(materiais)) {
+    entries = materiais.map((mat) => [
+      mat.nome || mat.material || mat.tipo || "Material",
+      mat.peso || mat.kg || mat.valor || mat.quantidade || 0
+    ]);
+  } else if (typeof materiais === "object" && materiais !== null) {
+    entries = Object.entries(materiais).map(([name, value]) => {
+      if (typeof value === "object" && value !== null) {
+        return [
+          value.nome || value.material || name,
+          value.peso || value.kg || value.valor || value.quantidade || 0
+        ];
+      }
 
-  return Math.round(total);
-}
-
-function setCoopSyncStatus(text) {
-  if (els.syncCoopDashboardStatus) {
-    els.syncCoopDashboardStatus.textContent = text;
+      return [name, value];
+    });
   }
+
+  entries = entries.filter(([, value]) => toNumber(value) > 0);
+
+  if (!entries.length) {
+    return `<div class="empty-materials">Nenhum material informado.</div>`;
+  }
+
+  return entries
+    .map(([name, value]) => {
+      return `
+        <div class="material-line">
+          <span>${escapeHtml(name)}</span>
+          <strong>${escapeHtml(formatKg(value))}</strong>
+        </div>
+      `;
+    })
+    .join("");
 }
 
-function setCoopSyncButtonLoading(isLoading) {
-  if (!els.syncCoopDashboardBtn) return;
-  els.syncCoopDashboardBtn.classList.toggle("is-loading", isLoading);
-  els.syncCoopDashboardBtn.disabled = isLoading;
-}
+/* =========================================================
+   AUTH
+========================================================= */
 
 async function getUserProfile(uid) {
   const snap = await getDoc(doc(db, "users", uid));
-  if (!snap.exists()) throw new Error("Usuário não encontrado.");
-  const data = { id: snap.id, ...snap.data() };
-  if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
+
+  if (!snap.exists()) {
+    throw new Error("Usuário não encontrado.");
+  }
+
+  const data = {
+    id: snap.id,
+    ...snap.data()
+  };
+
+  if (data.territoryId) {
+    data.territoryId = canonicalTerritoryId(data.territoryId);
+  }
+
   return data;
 }
 
 function validateProfile(profile) {
   if (!profile) throw new Error("Perfil de usuário inválido.");
-  if (profile.status !== "active") throw new Error("Usuário sem acesso ativo.");
 
-  const acceptedRoles = ["admin", "cooperativa", "user", "usuario", "governanca", "gestor"];
-  if (!acceptedRoles.includes(profile.role)) {
-    throw new Error("Acesso permitido apenas para perfis autorizados.");
-  }
-
-  if (!isGovernancaUser(profile.role) && !profile.territoryId) {
-    throw new Error("Usuário sem território vinculado.");
+  if (profile.status && profile.status !== "active") {
+    throw new Error("Usuário sem acesso ativo.");
   }
 }
 
+/* =========================================================
+   UI
+========================================================= */
+
 function setupSidebar() {
-  els.menuBtn?.addEventListener("click", () => {
+  function openSidebar() {
     els.sidebar?.classList.add("open");
     els.mobileOverlay?.classList.add("show");
-  });
+    document.body.classList.add("menu-open");
+  }
 
   function closeSidebar() {
     els.sidebar?.classList.remove("open");
     els.mobileOverlay?.classList.remove("show");
+    document.body.classList.remove("menu-open");
   }
 
-  els.sidebarClose?.addEventListener("click", closeSidebar);
+  els.menuBtn?.addEventListener("click", openSidebar);
   els.mobileOverlay?.addEventListener("click", closeSidebar);
+
+  document.querySelectorAll(".sidebar .nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 1180) closeSidebar();
+    });
+  });
 
   window.addEventListener("resize", () => {
     if (window.innerWidth > 1180) closeSidebar();
@@ -355,6 +918,7 @@ function setupSidebar() {
 function setupLogout() {
   els.logoutLink?.addEventListener("click", async (event) => {
     event.preventDefault();
+
     try {
       await signOut(auth);
     } catch (error) {
@@ -365,1332 +929,1521 @@ function setupLogout() {
   });
 }
 
+function setupTopbarShadow() {
+  const topbar = document.querySelector(".topbar");
+  if (!topbar) return;
+
+  window.addEventListener("scroll", () => {
+    topbar.style.boxShadow =
+      window.scrollY > 8
+        ? "0 10px 28px rgba(15,23,42,.08)"
+        : "0 6px 20px rgba(15,23,42,.04)";
+  });
+}
+
 function fillHeader(profile) {
-  const isGovernanca = isGovernancaUser(profile.role);
   const isAdmin = isAdminUser(profile.role);
+  const isGovernanca = isGovernancaUser(profile.role);
 
-  const territory =
-    profile.territoryLabel ||
-    (isGovernanca ? "Todos os territórios" : PAGE_TERRITORY.territoryLabel);
+  const name =
+    profile.displayName ||
+    profile.name ||
+    profile.nome ||
+    (isAdmin ? "Administrador VP" : "Usuário");
 
-  const coop =
-    profile.cooperativeName ||
-    profile.cooperativeLabel ||
-    (isGovernanca ? "Todas as cooperativas" : PAGE_TERRITORY.cooperativeName);
-
-  const name = profile.displayName || profile.name || "Usuário";
-
-  if (els.territoryNameTop) els.territoryNameTop.textContent = territory;
-  if (els.cooperativeNameTop) els.cooperativeNameTop.textContent = coop;
-  if (els.roleNameTop) els.roleNameTop.textContent = roleLabel(profile.role);
-  if (els.userNameTop) els.userNameTop.textContent = name;
+  setText(els.userNameTop, name);
 
   if (els.accessBanner) {
     if (isGovernanca) {
       els.accessBanner.className = "access-banner show admin";
       els.accessBanner.innerHTML =
-        `<strong>Acesso de governança ativo.</strong> Você pode visualizar e editar dados de todas as cooperativas cadastradas no sistema.`;
-    } else if (isAdmin) {
-      els.accessBanner.className = "access-banner show cooperativa";
-      els.accessBanner.innerHTML =
-        `<strong>Acesso administrativo da cooperativa ativo.</strong> Você pode visualizar e editar apenas os dados da sua cooperativa e do seu território vinculado.`;
+        `<strong>Acesso de governança ativo.</strong> Visualização geral dos indicadores do sistema.`;
     } else {
       els.accessBanner.className = "access-banner show cooperativa";
       els.accessBanner.innerHTML =
-        `<strong>Acesso da cooperativa ativo.</strong> Você visualiza e insere dados apenas da sua cooperativa e do seu território vinculado.`;
+        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa ${PAGE_TERRITORY.cooperativeName}.`;
     }
   }
 
-  document.querySelectorAll(".admin-only").forEach((el) => {
-    el.classList.toggle("hidden", !(isAdmin || isGovernanca));
-  });
-
-  if (els.usersNavLink) {
-    els.usersNavLink.style.display = isAdmin || isGovernanca ? "" : "none";
-  }
-
-  if (els.newParticipantBtn) {
-    els.newParticipantBtn.href = PAGE_TERRITORY.participantUrl;
-  }
-
-  document.querySelectorAll(`a[href="cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-padre-cacique.html"], a[href="cadastro-coletas-coadesc.html"]`).forEach((a) => {
-    a.href = PAGE_TERRITORY.coletasUrl;
-  });
-
-  if (els.participantsSectionText) {
-    if (isGovernanca) {
-      els.participantsSectionText.textContent =
-        "Visualização geral de participantes cadastrados no sistema.";
-    } else {
-      els.participantsSectionText.textContent =
-        "Participantes vinculados à sua cooperativa e ao seu território.";
-    }
+  if (els.sidebarHelpText) {
+    els.sidebarHelpText.textContent =
+      "Dashboard da cooperativa com dados operacionais, participantes e coletas.";
   }
 }
 
 function renderInfoList(container, items) {
   if (!container) return;
+
   container.innerHTML = items
-    .map(
-      (item) => `
-    <article class="info-item">
-      <div class="info-copy">
-        <strong>${escapeHtml(item.title)}</strong>
-        <span>${escapeHtml(item.description)}</span>
-      </div>
-      ${item.meta ? `<span class="info-meta">${escapeHtml(item.meta)}</span>` : ""}
-    </article>
-  `
-    )
+    .map((item) => {
+      return `
+        <article class="info-item">
+          <div class="info-copy">
+            <strong>${escapeHtml(item.title)}</strong>
+            <span>${escapeHtml(item.description)}</span>
+          </div>
+          ${item.meta ? `<span class="info-meta">${escapeHtml(item.meta)}</span>` : ""}
+        </article>
+      `;
+    })
     .join("");
 }
 
 function fillStaticPanels() {
   renderInfoList(els.noticesList, [
     {
-      title: "Comunicado do Núcleo",
-      description: "Atualização de conteúdos, materiais operacionais e documentos nesta semana.",
-      meta: "Hoje"
+      title: "Indicadores atualizados",
+      description: "Os dados do painel são sincronizados com os registros da cooperativa.",
+      meta: "Sistema"
     },
     {
-      title: "Campanha ativa no território",
-      description: "Mutirão de educação ambiental com mobilização local.",
-      meta: "Esta semana"
+      title: "Acompanhamento operacional",
+      description: "Use o dashboard para acompanhar participantes, coletas e ações pendentes.",
+      meta: "Painel"
     }
   ]);
 
   renderInfoList(els.territoryCommunications, [
     {
-      title: "Mutirão de limpeza — sábado",
-      description: "Concentração às 8h. Leve luvas, água e identificação da cooperativa.",
-      meta: "Ação"
+      title: "Resumo da cooperativa",
+      description: "Painel inicial otimizado para leitura rápida dos principais números.",
+      meta: "Dashboard"
     },
     {
-      title: "Mudança de horário",
-      description: "Triagem das 8h às 17h de segunda a sexta-feira.",
-      meta: "Aviso"
-    },
-    {
-      title: "Coleta especial aberta",
-      description: "Agendamentos para grandes volumes via registro operacional.",
-      meta: "Serviço"
+      title: "Dados integrados",
+      description: "Participantes, coletas e solicitações são carregados diretamente do Firebase.",
+      meta: "Firebase"
     }
   ]);
-
-  renderInfoList(els.territoryServices, [
-    {
-      title: "Apoio operacional",
-      description: "Orientação sobre triagem, rota, recebimento e organização dos pontos."
-    },
-    {
-      title: "Ponto de entrega",
-      description: "Recebimento de materiais vinculados ao território e parceiros locais."
-    }
-  ]);
-
-  renderInfoList(els.territoryCalendar, [
-    {
-      title: "Reunião da cooperativa",
-      description: "Quarta-feira • 14h • sede local",
-      meta: "Agenda"
-    },
-    {
-      title: "Oficina ambiental",
-      description: "Sexta-feira • 9h • escola do território",
-      meta: "Capacitação"
-    }
-  ]);
-
-  renderInfoList(els.territoryTrainings, [
-    {
-      title: "Capacitação inicial",
-      description: "Introdução à separação correta dos resíduos."
-    },
-    {
-      title: "Boas práticas operacionais",
-      description: "Procedimentos, segurança e rotina da cooperativa."
-    }
-  ]);
-
-  if (els.summaryAccepted) els.summaryAccepted.textContent = "4";
-  if (els.summaryRejected) els.summaryRejected.textContent = "4";
 }
 
-function setupTerritoryTabs() {
-  const tabs = document.querySelectorAll(".territory-tab");
-  const contents = document.querySelectorAll(".territory-tab-content");
-
-  tabs.forEach((tab) => {
-    tab.addEventListener("click", () => {
-      const key = tab.dataset.tab;
-
-      tabs.forEach((t) => t.classList.remove("active"));
-      contents.forEach((c) => c.classList.remove("active"));
-
-      tab.classList.add("active");
-      document.getElementById(`tab-${key}`)?.classList.add("active");
-
-      if (els.territoryPanelTitle) {
-        els.territoryPanelTitle.textContent = TAB_META[key]?.title || "Painel do território";
-      }
-
-      if (els.territoryPanelSubtitle) {
-        els.territoryPanelSubtitle.textContent = TAB_META[key]?.subtitle || "";
-      }
-
-      if (key === "mapa") {
-        setTimeout(() => STATE.territoryMap?.invalidateSize(), 200);
-      }
-    });
-  });
+function setCoopSyncStatus(text) {
+  setText(els.syncCoopDashboardStatus, text);
 }
 
-function computeParticipantsKpis(items) {
-  const total = items.length;
+/* =========================================================
+   FIREBASE
+========================================================= */
 
-  const peopleCount = items.filter((item) =>
-    ["morador", "familia", "lideranca", "participante", "user", "usuario"].includes(
-      normalizeText(item.participantType || item.tipoParticipante || item.tipo)
-    )
-  ).length;
-
-  const condoCount = items.filter(
-    (item) =>
-      normalizeText(item.participantType || item.tipoParticipante || item.tipo) === "condominio"
-  ).length;
-
-  if (els.participantsTotalCount) els.participantsTotalCount.textContent = String(total);
-  if (els.participantsPeopleCount) els.participantsPeopleCount.textContent = String(peopleCount);
-  if (els.participantsCondoCount) els.participantsCondoCount.textContent = String(condoCount);
-  if (els.indicatorParticipants) els.indicatorParticipants.textContent = String(total);
-}
-
-function renderParticipants(items) {
-  if (!els.participantsList) return;
-
-  if (!items.length) {
-    els.participantsList.innerHTML = `
-      <div class="participants-empty">
-        Nenhum participante encontrado para o filtro atual.
-      </div>
-    `;
-    return;
-  }
-
-  els.participantsList.innerHTML = items
-    .map((item) => {
-      const participantType = item.participantType || item.tipoParticipante || item.tipo;
-      const address = buildFullAddress(item) || "Endereço não informado";
-      return `
-      <article class="participant-row">
-        <div class="participant-main">
-          <div class="participant-avatar">${participantIcon(participantType)}</div>
-          <div class="participant-copy">
-            <strong>${escapeHtml(item.name || item.nome || "Sem nome")}</strong>
-            <span>${escapeHtml(item.participantCode || item.familyCode || item.codigoFamilia || "-")}</span>
-            <span>${escapeHtml(address)}</span>
-          </div>
-        </div>
-
-        <div class="participant-meta">
-          <span class="participant-tag">${escapeHtml(formatParticipantType(participantType))}</span>
-          <span class="participant-subtag">${escapeHtml(
-            item.localType ||
-              item.address?.neighborhood ||
-              item.bairro ||
-              item.territoryLabel ||
-              "Território"
-          )}</span>
-        </div>
-      </article>
-    `;
-    })
-    .join("");
-}
-
-function filterParticipants() {
-  const term = normalizeText(els.participantSearchInput?.value);
-
-  if (!term) {
-    computeParticipantsKpis(STATE.allParticipants);
-    renderParticipants(STATE.allParticipants);
-    return;
-  }
-
-  const filtered = STATE.allParticipants.filter((item) => {
-    const haystack = [
-      item.name,
-      item.nome,
-      item.participantCode,
-      item.familyCode,
-      item.codigoFamilia,
-      item.localType,
-      item.address?.street,
-      item.address?.number,
-      item.address?.neighborhood,
-      item.address?.city,
-      item.rua,
-      item.numero,
-      item.bairro,
-      item.cidade,
-      item.enderecoCompleto
-    ]
-      .map(normalizeText)
-      .join(" ");
-
-    return haystack.includes(term);
-  });
-
-  computeParticipantsKpis(filtered);
-  renderParticipants(filtered);
-}
-
-function bindParticipantsSearch() {
-  els.participantSearchInput?.addEventListener("input", filterParticipants);
-}
-
-function buildParticipantsQuery(profile, useOrdered = true) {
-  if (isGovernancaUser(profile.role)) {
-    return useOrdered
-      ? query(collection(db, "participants"), orderBy("createdAtISO", "desc"))
-      : query(collection(db, "participants"));
-  }
-
-  return useOrdered
-    ? query(
-        collection(db, "participants"),
-        where("territoryId", "==", profile.territoryId),
-        orderBy("createdAtISO", "desc")
-      )
-    : query(collection(db, "participants"), where("territoryId", "==", profile.territoryId));
-}
-
-function applyParticipantsSnapshot(snapshot) {
-  STATE.allParticipants = snapshot.docs
-    .map((docItem) => {
-      const data = { id: docItem.id, ...docItem.data() };
-      if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
-      return data;
-    })
-    .filter((item) => item.approvalStatus !== "rejected")
-    .filter((item) => {
-      if (isGovernancaUser(STATE.profile?.role)) return true;
-      return normalizedTerritoryEqual(item.territoryId, STATE.profile?.territoryId || PAGE_TERRITORY.territoryId);
-    });
-
-  computeParticipantsKpis(STATE.allParticipants);
-  renderParticipants(STATE.allParticipants);
-  filterParticipants();
-  updateParticipantIndicator();
-
-  if (STATE.profile) {
-    loadIndicators(STATE.profile);
-  }
-}
-
-function loadParticipants(profile) {
-  if (typeof STATE.participantsUnsubscribe === "function") {
+function clearUnsubscribers() {
+  STATE.unsubscribers.forEach((unsubscribe) => {
     try {
-      STATE.participantsUnsubscribe();
+      unsubscribe();
     } catch (_) {}
-    STATE.participantsUnsubscribe = null;
-  }
-
-  const orderedQuery = buildParticipantsQuery(profile, true);
-
-  STATE.participantsUnsubscribe = onSnapshot(
-    orderedQuery,
-    (snapshot) => {
-      applyParticipantsSnapshot(snapshot);
-    },
-    (error) => {
-      console.warn("Falha na consulta ordenada de participantes. Tentando fallback sem orderBy...", error);
-
-      const fallbackQuery = buildParticipantsQuery(profile, false);
-
-      STATE.participantsUnsubscribe = onSnapshot(
-        fallbackQuery,
-        (snapshot) => {
-          applyParticipantsSnapshot(snapshot);
-        },
-        (fallbackError) => {
-          console.error("Erro ao carregar participantes:", fallbackError);
-          if (els.participantsList) {
-            els.participantsList.innerHTML = `
-              <div class="participants-empty">
-                Não foi possível carregar os participantes.
-              </div>
-            `;
-          }
-        }
-      );
-    }
-  );
-}
-
-function buildApprovalRequestsQuery(profile, useOrdered = true) {
-  if (isGovernancaUser(profile.role)) {
-    return useOrdered
-      ? query(
-          collection(db, "approvalRequests"),
-          where("type", "==", "participant_registration"),
-          where("status", "==", "pending"),
-          orderBy("createdAtISO", "desc")
-        )
-      : query(
-          collection(db, "approvalRequests"),
-          where("type", "==", "participant_registration"),
-          where("status", "==", "pending")
-        );
-  }
-
-  return useOrdered
-    ? query(
-        collection(db, "approvalRequests"),
-        where("type", "==", "participant_registration"),
-        where("status", "==", "pending"),
-        where("territoryId", "==", profile.territoryId),
-        orderBy("createdAtISO", "desc")
-      )
-    : query(
-        collection(db, "approvalRequests"),
-        where("type", "==", "participant_registration"),
-        where("status", "==", "pending"),
-        where("territoryId", "==", profile.territoryId)
-      );
-}
-
-function renderApprovalRequests(items) {
-  if (!els.approvalRequestsList) return;
-
-  if (!(STATE.isAdmin || STATE.canEditAll)) {
-    els.approvalRequestsList.innerHTML = `
-      <div class="participants-empty">
-        Área disponível apenas para administradores.
-      </div>
-    `;
-    return;
-  }
-
-  if (!items.length) {
-    els.approvalRequestsList.innerHTML = `
-      <div class="participants-empty">
-        Nenhuma solicitação pendente no momento.
-      </div>
-    `;
-    return;
-  }
-
-  els.approvalRequestsList.innerHTML = items
-    .map((item) => {
-      const snapshot = item.applicantSnapshot || {};
-      const address = snapshot.address?.addressLine
-        || [
-          snapshot.address?.street,
-          snapshot.address?.number,
-          snapshot.address?.neighborhood,
-          snapshot.address?.city,
-          snapshot.address?.state
-        ]
-          .filter(Boolean)
-          .join(", ");
-
-      return `
-        <article class="participant-row">
-          <div class="participant-main">
-            <div class="participant-avatar">${participantIcon(item.participantType)}</div>
-            <div class="participant-copy">
-              <strong>${escapeHtml(item.participantName || "Sem nome")}</strong>
-              <span>${escapeHtml(item.participantCode || "-")}</span>
-              <span>${escapeHtml(address || "Endereço não informado")}</span>
-              <span>${escapeHtml(snapshot.phone || "Telefone não informado")}</span>
-            </div>
-          </div>
-
-          <div class="participant-meta">
-            <span class="participant-tag">${escapeHtml(formatParticipantType(item.participantType))}</span>
-            <span class="participant-subtag">${escapeHtml(item.territoryLabel || "Território")}</span>
-            <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
-              <button type="button" class="map-mini-btn green" data-approve-request="${escapeHtml(item.id)}">
-                Aprovar
-              </button>
-              <button type="button" class="map-mini-btn orange" data-reject-request="${escapeHtml(item.id)}">
-                Rejeitar
-              </button>
-            </div>
-          </div>
-        </article>
-      `;
-    })
-    .join("");
-
-  els.approvalRequestsList.querySelectorAll("[data-approve-request]").forEach((btn) => {
-    btn.addEventListener("click", () => approveParticipantRequest(btn.dataset.approveRequest));
   });
 
-  els.approvalRequestsList.querySelectorAll("[data-reject-request]").forEach((btn) => {
-    btn.addEventListener("click", () => rejectParticipantRequest(btn.dataset.rejectRequest));
-  });
+  STATE.unsubscribers = [];
 }
 
-function loadApprovalRequests(profile) {
-  if (!els.approvalRequestsList) return;
-
-  if (typeof STATE.approvalRequestsUnsubscribe === "function") {
-    try {
-      STATE.approvalRequestsUnsubscribe();
-    } catch (_) {}
-    STATE.approvalRequestsUnsubscribe = null;
-  }
-
-  if (!(STATE.isAdmin || STATE.canEditAll)) {
-    renderApprovalRequests([]);
-    return;
-  }
-
-  const orderedQuery = buildApprovalRequestsQuery(profile, true);
-
-  STATE.approvalRequestsUnsubscribe = onSnapshot(
-    orderedQuery,
-    (snapshot) => {
-      STATE.approvalRequests = snapshot.docs.map((docItem) => {
-        const data = { id: docItem.id, ...docItem.data() };
-        if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
-        return data;
-      });
-      renderApprovalRequests(STATE.approvalRequests);
-      if (STATE.profile) loadIndicators(STATE.profile);
-    },
-    (error) => {
-      console.warn("Falha na consulta ordenada de solicitações. Tentando fallback...", error);
-
-      const fallbackQuery = buildApprovalRequestsQuery(profile, false);
-
-      STATE.approvalRequestsUnsubscribe = onSnapshot(
-        fallbackQuery,
-        (snapshot) => {
-          STATE.approvalRequests = snapshot.docs.map((docItem) => {
-            const data = { id: docItem.id, ...docItem.data() };
-            if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
-            return data;
-          });
-          renderApprovalRequests(STATE.approvalRequests);
-          if (STATE.profile) loadIndicators(STATE.profile);
-        },
-        (fallbackError) => {
-          console.error("Erro ao carregar solicitações:", fallbackError);
-          if (els.approvalRequestsList) {
-            els.approvalRequestsList.innerHTML = `
-              <div class="participants-empty">
-                Não foi possível carregar as solicitações.
-              </div>
-            `;
-          }
-        }
-      );
-    }
-  );
-}
-
-async function approveParticipantRequest(requestId) {
+function listenCollection(collectionName, callback) {
   try {
-    const requestRef = doc(db, "approvalRequests", requestId);
-    const requestSnap = await getDoc(requestRef);
+    const q = query(collection(db, collectionName));
 
-    if (!requestSnap.exists()) {
-      throw new Error("Solicitação não encontrada.");
-    }
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const docs = snapshot.docs.map((docItem) => ({
+          id: docItem.id,
+          ...docItem.data()
+        }));
 
-    const requestData = requestSnap.data();
-    if (!requestData.participantId) {
-      throw new Error("Solicitação sem participantId.");
-    }
-
-    const participantRef = doc(db, "participants", requestData.participantId);
-    const now = serverTimestamp();
-
-    await updateDoc(requestRef, {
-      status: "approved",
-      approved: true,
-      rejected: false,
-      active: false,
-      publicSync: false,
-      updatedAt: now,
-      "review.approvedAt": now,
-      "review.approvedBy": STATE.currentUser?.uid || null,
-      "review.approvedByName": STATE.profile?.name || STATE.profile?.displayName || "Administrador",
-      "review.rejectedAt": null,
-      "review.rejectedBy": null,
-      "review.rejectedByName": null
-    });
-
-    await updateDoc(participantRef, {
-      status: "active",
-      approvalStatus: "approved",
-      active: true,
-      updatedAt: now,
-      "review.approvedAt": now,
-      "review.approvedBy": STATE.currentUser?.uid || null,
-      "review.approvedByName": STATE.profile?.name || STATE.profile?.displayName || "Administrador",
-      "review.rejectedAt": null,
-      "review.rejectedBy": null,
-      "review.rejectedByName": null
-    });
-
-    await runCooperativaDashboardSync({
-      territoryId: STATE.profile?.territoryId || PAGE_TERRITORY.territoryId,
-      territoryLabel: STATE.profile?.territoryLabel || PAGE_TERRITORY.territoryLabel,
-      silent: true
-    });
-
-    alert("Solicitação aprovada com sucesso.");
-  } catch (error) {
-    console.error("Erro ao aprovar solicitação:", error);
-    alert(error.message || "Não foi possível aprovar a solicitação.");
-  }
-}
-
-async function rejectParticipantRequest(requestId) {
-  try {
-    const requestRef = doc(db, "approvalRequests", requestId);
-    const requestSnap = await getDoc(requestRef);
-
-    if (!requestSnap.exists()) {
-      throw new Error("Solicitação não encontrada.");
-    }
-
-    const requestData = requestSnap.data();
-    if (!requestData.participantId) {
-      throw new Error("Solicitação sem participantId.");
-    }
-
-    const participantRef = doc(db, "participants", requestData.participantId);
-    const now = serverTimestamp();
-
-    await updateDoc(requestRef, {
-      status: "rejected",
-      approved: false,
-      rejected: true,
-      active: false,
-      updatedAt: now,
-      "review.rejectedAt": now,
-      "review.rejectedBy": STATE.currentUser?.uid || null,
-      "review.rejectedByName": STATE.profile?.name || STATE.profile?.displayName || "Administrador"
-    });
-
-    await updateDoc(participantRef, {
-      status: "rejected",
-      approvalStatus: "rejected",
-      active: false,
-      updatedAt: now,
-      "review.rejectedAt": now,
-      "review.rejectedBy": STATE.currentUser?.uid || null,
-      "review.rejectedByName": STATE.profile?.name || STATE.profile?.displayName || "Administrador"
-    });
-
-    await runCooperativaDashboardSync({
-      territoryId: STATE.profile?.territoryId || PAGE_TERRITORY.territoryId,
-      territoryLabel: STATE.profile?.territoryLabel || PAGE_TERRITORY.territoryLabel,
-      silent: true
-    });
-
-    alert("Solicitação rejeitada com sucesso.");
-  } catch (error) {
-    console.error("Erro ao rejeitar solicitação:", error);
-    alert(error.message || "Não foi possível rejeitar a solicitação.");
-  }
-}
-
-function getDefaultTerritoryPoints(profile) {
-  const territoryId = canonicalTerritoryId(profile?.territoryId || PAGE_TERRITORY.territoryId);
-
-  if (territoryId === "vila-pinto") {
-    return [
-      {
-        id: "vp-main",
-        name: "Vila Pinto",
-        type: "seletiva",
-        lat: -30.048729170292532,
-        lng: -51.15652604283108,
-        address: "Vila Pinto, Porto Alegre - RS"
+        callback(docs);
       },
-      {
-        id: "vp-2",
-        name: "Escola parceira",
-        type: "papel",
-        lat: -30.0468,
-        lng: -51.1602,
-        address: "Área escolar do território"
-      },
-      {
-        id: "vp-3",
-        name: "Ponto comunitário",
-        type: "plastico",
-        lat: -30.0505,
-        lng: -51.1539,
-        address: "Centro comunitário local"
-      }
-    ];
-  }
-
-  if (territoryId === "coadesc" || territoryId === "cooadesc") {
-    return [
-      {
-        id: "coa-1",
-        name: "COADESC",
-        type: "seletiva",
-        lat: -30.003,
-        lng: -51.206,
-        address: "Base da COADESC"
-      },
-      {
-        id: "coa-2",
-        name: "Ponto comunitário COADESC",
-        type: "plastico",
-        lat: -30.006,
-        lng: -51.203,
-        address: "Ponto comunitário da região"
-      }
-    ];
-  }
-
-  if (territoryId === "padre-cacique") {
-    return [
-      {
-        id: "pc-1",
-        name: "Padre Cacique",
-        type: "seletiva",
-        lat: -30.140122365657504,
-        lng: -51.1268772051727,
-        address: "Base da cooperativa Padre Cacique"
-      },
-      {
-        id: "pc-2",
-        name: "Ponto parceiro Padre Cacique",
-        type: "vidro",
-        lat: -30.1388,
-        lng: -51.1249,
-        address: "Ponto de apoio do território"
-      }
-    ];
-  }
-
-  if (isGovernancaUser(profile.role)) {
-    return [
-      {
-        id: "admin-default",
-        name: "Base geral do NSRU",
-        type: "seletiva",
-        lat: PAGE_TERRITORY.mapLat,
-        lng: PAGE_TERRITORY.mapLng,
-        address: "Visualização geral do sistema"
-      }
-    ];
-  }
-
-  return [
-    {
-      id: "default-1",
-      name: profile?.territoryLabel || PAGE_TERRITORY.territoryLabel,
-      type: "seletiva",
-      lat: PAGE_TERRITORY.mapLat,
-      lng: PAGE_TERRITORY.mapLng,
-      address: "Ponto principal do território"
-    }
-  ];
-}
-
-function clearTerritoryMarkers() {
-  STATE.territoryMarkers.forEach((marker) => STATE.territoryMap?.removeLayer(marker));
-  STATE.territoryMarkers = [];
-}
-
-function getMarkerColor(type) {
-  const normalized = normalizeText(type);
-  if (normalized === "participante") return "#EF6B22";
-  if (normalized === "papel") return "#53ACDE";
-  if (normalized === "plastico") return "#81B92A";
-  if (normalized === "vidro") return "#3C3A39";
-  return "#2F8F4E";
-}
-
-function buildDivIcon(type) {
-  const color = getMarkerColor(type);
-  return L.divIcon({
-    className: "custom-map-pin-wrap",
-    html: `
-      <div style="
-        width:18px;
-        height:18px;
-        border-radius:999px;
-        background:${color};
-        border:3px solid #fff;
-        box-shadow:0 4px 14px rgba(0,0,0,.18);
-      "></div>
-    `,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9]
-  });
-}
-
-function selectPointForEdit(pointId) {
-  const point = STATE.allMapPoints.find((p) => p.id === pointId);
-  if (!point) return;
-
-  STATE.selectedPointId = pointId;
-
-  if (els.editPointName) els.editPointName.value = point.name || "";
-  if (els.editPointAddress) els.editPointAddress.value = point.address || "";
-  if (els.editPointType) els.editPointType.value = point.type || "";
-  if (els.editPointLat) els.editPointLat.value = point.lat ?? "";
-  if (els.editPointLng) els.editPointLng.value = point.lng ?? "";
-}
-
-function clearPointEditor() {
-  STATE.selectedPointId = null;
-  if (els.editPointName) els.editPointName.value = "";
-  if (els.editPointAddress) els.editPointAddress.value = "";
-  if (els.editPointType) els.editPointType.value = "";
-  if (els.editPointLat) els.editPointLat.value = "";
-  if (els.editPointLng) els.editPointLng.value = "";
-}
-
-function updatePointInState(updatedPoint) {
-  STATE.allMapPoints = STATE.allMapPoints.map((item) =>
-    item.id === updatedPoint.id ? { ...item, ...updatedPoint } : item
-  );
-
-  STATE.fixedPoints = STATE.fixedPoints.map((item) =>
-    item.id === updatedPoint.id ? { ...item, ...updatedPoint } : item
-  );
-
-  STATE.participantPoints = STATE.participantPoints.map((item) =>
-    item.id === updatedPoint.id ? { ...item, ...updatedPoint } : item
-  );
-}
-
-function renderMapPointsList(points) {
-  if (!els.mapPointsList) return;
-
-  if (!points.length) {
-    els.mapPointsList.innerHTML = `
-      <div class="participants-empty">Nenhum ponto encontrado para o filtro atual.</div>
-    `;
-    return;
-  }
-
-  els.mapPointsList.innerHTML = points
-    .map(
-      (point) => `
-    <article class="map-point-card">
-      <strong>${escapeHtml(point.name)}</strong>
-      <span>${escapeHtml(point.address || "Endereço não informado")}</span>
-      <span>Tipo: ${escapeHtml(point.type || "seletiva")} • ${Number(point.lat).toFixed(5)}, ${Number(point.lng).toFixed(5)}</span>
-
-      <div class="map-point-card-actions">
-        <button class="map-mini-btn green" type="button" data-edit-point="${escapeHtml(point.id)}">Editar</button>
-        <button class="map-mini-btn orange" type="button" data-focus-point="${escapeHtml(point.id)}">Ver no mapa</button>
-      </div>
-    </article>
-  `
-    )
-    .join("");
-
-  els.mapPointsList.querySelectorAll("[data-edit-point]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      selectPointForEdit(btn.dataset.editPoint);
-    });
-  });
-
-  els.mapPointsList.querySelectorAll("[data-focus-point]").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      const point = STATE.allMapPoints.find((p) => p.id === btn.dataset.focusPoint);
-      if (!point || !STATE.territoryMap) return;
-      STATE.territoryMap.setView([point.lat, point.lng], 17);
-    });
-  });
-}
-
-function renderTerritoryMap(points) {
-  if (typeof L === "undefined") return;
-
-  if (!STATE.territoryMap) {
-    const first = points[0] || { lat: PAGE_TERRITORY.mapLat, lng: PAGE_TERRITORY.mapLng };
-
-    STATE.territoryMap = L.map("territoryMap", {
-      zoomControl: true
-    }).setView([first.lat, first.lng], PAGE_TERRITORY.mapZoom);
-
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: "&copy; OpenStreetMap"
-    }).addTo(STATE.territoryMap);
-  }
-
-  clearTerritoryMarkers();
-
-  const bounds = [];
-
-  points.forEach((point) => {
-    const marker = L.marker([point.lat, point.lng], {
-      icon: buildDivIcon(point.type),
-      draggable: true
-    }).addTo(STATE.territoryMap);
-
-    marker.bindPopup(`
-      <strong>${escapeHtml(point.name)}</strong><br>
-      ${escapeHtml(point.address || "")}<br>
-      Tipo: ${escapeHtml(point.type || "seletiva")}
-    `);
-
-    marker.on("click", () => {
-      selectPointForEdit(point.id);
-    });
-
-    marker.on("dragend", (event) => {
-      const latlng = event.target.getLatLng();
-      const updatedPoint = {
-        ...point,
-        lat: Number(latlng.lat),
-        lng: Number(latlng.lng)
-      };
-
-      updatePointInState(updatedPoint);
-      selectPointForEdit(point.id);
-      if (els.editPointLat) els.editPointLat.value = updatedPoint.lat;
-      if (els.editPointLng) els.editPointLng.value = updatedPoint.lng;
-      renderMapPointsList(getCurrentMapFilteredPoints());
-    });
-
-    STATE.territoryMarkers.push(marker);
-    bounds.push([point.lat, point.lng]);
-  });
-
-  if (bounds.length === 1) {
-    STATE.territoryMap.setView(bounds[0], PAGE_TERRITORY.mapZoom);
-  } else if (bounds.length > 1) {
-    STATE.territoryMap.fitBounds(bounds, { padding: [30, 30] });
-  }
-
-  if (els.mapPointsCount) {
-    els.mapPointsCount.textContent = String(points.length);
-  }
-
-  if (els.summaryPoints) {
-    els.summaryPoints.textContent = String(points.length);
-  }
-
-  renderMapPointsList(points);
-}
-
-function getCurrentMapFilteredPoints() {
-  const filter = els.mapTypeFilter?.value || "all";
-
-  if (filter === "all") return STATE.allMapPoints;
-
-  return STATE.allMapPoints.filter((point) => normalizeText(point.type) === normalizeText(filter));
-}
-
-function applyMapFilter() {
-  renderTerritoryMap(getCurrentMapFilteredPoints());
-}
-
-function applyPointEdit() {
-  if (!STATE.selectedPointId) {
-    alert("Selecione um ponto para editar.");
-    return;
-  }
-
-  const point = STATE.allMapPoints.find((p) => p.id === STATE.selectedPointId);
-  if (!point) return;
-
-  const updatedPoint = {
-    ...point,
-    name: els.editPointName?.value?.trim() || point.name,
-    address: els.editPointAddress?.value?.trim() || point.address,
-    type: els.editPointType?.value?.trim() || point.type,
-    lat: Number(els.editPointLat?.value),
-    lng: Number(els.editPointLng?.value)
-  };
-
-  if (!Number.isFinite(updatedPoint.lat) || !Number.isFinite(updatedPoint.lng)) {
-    alert("Latitude e longitude inválidas.");
-    return;
-  }
-
-  updatePointInState(updatedPoint);
-  applyMapFilter();
-
-  const selected = STATE.allMapPoints.find((p) => p.id === updatedPoint.id);
-  if (selected && STATE.territoryMap) {
-    STATE.territoryMap.setView([selected.lat, selected.lng], 16);
-  }
-
-  alert("Ponto atualizado com sucesso na tela.");
-}
-
-function setupMapActions() {
-  els.mapTypeFilter?.addEventListener("change", applyMapFilter);
-
-  els.btnNearMe?.addEventListener("click", () => {
-    if (!navigator.geolocation || !STATE.territoryMap) {
-      alert("Geolocalização não disponível neste dispositivo.");
-      return;
-    }
-
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const lat = pos.coords.latitude;
-        const lng = pos.coords.longitude;
-
-        STATE.territoryMap.setView([lat, lng], 15);
-
-        const userMarker = L.circleMarker([lat, lng], {
-          radius: 10,
-          weight: 3,
-          color: "#53ACDE",
-          fillColor: "#53ACDE",
-          fillOpacity: 0.35
-        }).addTo(STATE.territoryMap);
-
-        userMarker.bindPopup("Sua localização atual").openPopup();
-
-        setTimeout(() => {
-          try {
-            STATE.territoryMap.removeLayer(userMarker);
-          } catch (_) {}
-        }, 12000);
-      },
-      () => {
-        alert("Não foi possível obter sua localização.");
+      (error) => {
+        console.error(`[${collectionName}] Erro ao carregar dados:`, error);
+        callback([]);
       }
     );
-  });
 
-  els.btnLoadParticipantPoints?.addEventListener("click", async () => {
-    els.btnLoadParticipantPoints.disabled = true;
-    els.btnLoadParticipantPoints.textContent = "Carregando endereços...";
-
-    try {
-      await loadParticipantAddressPoints();
-      applyMapFilter();
-    } catch (error) {
-      console.error("Erro ao carregar pontos dos participantes:", error);
-      alert("Não foi possível carregar os pontos dos participantes.");
-    } finally {
-      els.btnLoadParticipantPoints.disabled = false;
-      els.btnLoadParticipantPoints.textContent = "➕ Carregar pontos por endereço";
-    }
-  });
-
-  els.btnApplyPointEdit?.addEventListener("click", applyPointEdit);
-  els.btnCancelPointEdit?.addEventListener("click", clearPointEditor);
-}
-
-function initTerritoryMap(profile) {
-  STATE.fixedPoints = getDefaultTerritoryPoints(profile);
-  STATE.participantPoints = [];
-  STATE.allMapPoints = [...STATE.fixedPoints];
-
-  setTimeout(() => {
-    renderTerritoryMap(STATE.allMapPoints);
-  }, 120);
-}
-
-async function geocodeAddress(addressText) {
-  const key = addressText.trim();
-  if (!key) return null;
-
-  if (STATE.geocodeCache.has(key)) {
-    return STATE.geocodeCache.get(key);
-  }
-
-  const url = `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(key)}`;
-  const response = await fetch(url, {
-    headers: { Accept: "application/json" }
-  });
-
-  if (!response.ok) {
-    throw new Error("Falha na geocodificação.");
-  }
-
-  const data = await response.json();
-  const result = data?.[0] ? { lat: Number(data[0].lat), lng: Number(data[0].lon) } : null;
-
-  STATE.geocodeCache.set(key, result);
-  return result;
-}
-
-function buildParticipantPoint(participant, coords) {
-  return {
-    id: `participant-${participant.id}`,
-    name:
-      participant.name ||
-      participant.nome ||
-      participant.participantCode ||
-      participant.familyCode ||
-      "Participante",
-    type: "participante",
-    lat: Number(coords.lat),
-    lng: Number(coords.lng),
-    address: buildFullAddress(participant) || "Endereço do participante"
-  };
-}
-
-async function loadParticipantAddressPoints() {
-  if (!STATE.allParticipants.length) return;
-
-  const points = [];
-
-  for (const participant of STATE.allParticipants) {
-    if (participant.approvalStatus && participant.approvalStatus !== "approved") {
-      continue;
-    }
-
-    if (hasValidLatLng(participant)) {
-      const pointCoords = {
-        lat: Number(participant.lat ?? participant.address?.lat),
-        lng: Number(participant.lng ?? participant.address?.lng)
-      };
-      points.push(buildParticipantPoint(participant, pointCoords));
-      continue;
-    }
-
-    const address = buildFullAddress(participant);
-    if (!address) continue;
-
-    try {
-      const coords = await geocodeAddress(address);
-      if (coords) {
-        points.push(buildParticipantPoint(participant, coords));
-      }
-    } catch (error) {
-      console.warn("Endereço não geocodificado:", address, error);
-    }
-  }
-
-  const uniqueMap = new Map();
-  [...STATE.fixedPoints, ...points].forEach((item) => uniqueMap.set(item.id, item));
-
-  STATE.participantPoints = points;
-  STATE.allMapPoints = [...uniqueMap.values()];
-
-  renderTerritoryMap(getCurrentMapFilteredPoints());
-}
-
-async function loadCollectionCount(collectionName, profile, whereField = "territoryId") {
-  try {
-    let q;
-
-    if (isGovernancaUser(profile.role)) {
-      q = query(collection(db, collectionName), limit(500));
-    } else {
-      q = query(
-        collection(db, collectionName),
-        where(whereField, "==", profile.territoryId),
-        limit(500)
-      );
-    }
-
-    const snap = await getDocs(q);
-    return snap.size;
+    STATE.unsubscribers.push(unsubscribe);
   } catch (error) {
-    console.warn(`Erro ao contar coleção ${collectionName}:`, error);
-    return 0;
+    console.error(`[${collectionName}] Erro ao iniciar listener:`, error);
+    callback([]);
   }
 }
 
-function updateParticipantIndicator() {
-  if (els.indicatorParticipants) {
-    const approvedCount = STATE.allParticipants.filter(
-      (item) => item.approvalStatus === "approved" || item.status === "active"
-    ).length;
-    els.indicatorParticipants.textContent = String(approvedCount);
-  }
-}
+/* =========================================================
+   KPIs
+========================================================= */
 
-async function loadIndicators(profile) {
-  const isGovernanca = isGovernancaUser(profile.role);
+function computeDashboardData() {
+  const approvedParticipants = STATE.participants.filter(isApprovedParticipant);
+  const coletasRealizadas = STATE.coletas.filter(isColetaRealizada);
 
-  const coletas = await loadCollectionCount("coletas", profile, "territoryId");
-  const usersCount = isGovernanca ? await loadCollectionCount("users", profile, "territoryId") : null;
-  const participantsCount = STATE.allParticipants.filter(
-    (item) => item.approvalStatus === "approved" || item.status === "active"
+  const peopleCount = approvedParticipants.filter((item) =>
+    ["morador", "familia", "família", "lideranca", "participante", "user", "usuario", "casa"].includes(participantType(item))
   ).length;
 
-  if (els.indicatorColetas) {
-    els.indicatorColetas.textContent = String(coletas);
-  }
-
-  if (els.indicatorParticipants) {
-    els.indicatorParticipants.textContent = String(participantsCount);
-  }
-
-  if (els.indicatorDocs) {
-    const value = isGovernanca ? String(usersCount) : "—";
-    els.indicatorDocs.textContent = value;
-  }
-
-  if (els.indicatorActions) {
-    els.indicatorActions.textContent = (STATE.isAdmin || STATE.canEditAll)
-      ? String(STATE.approvalRequests.length)
-      : "—";
-  }
-}
-
-async function loadCollectionSafe(name) {
-  try {
-    const snap = await getDocs(query(collection(db, name), orderBy("createdAt", "desc")));
-    return snap.docs.map((d) => {
-      const data = { id: d.id, ...d.data() };
-      if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
-      return data;
-    });
-  } catch {
-    try {
-      const snap = await getDocs(collection(db, name));
-      return snap.docs.map((d) => {
-        const data = { id: d.id, ...d.data() };
-        if (data.territoryId) data.territoryId = canonicalTerritoryId(data.territoryId);
-        return data;
-      });
-    } catch (error) {
-      console.warn(`Não foi possível ler a coleção ${name}:`, error);
-      return [];
-    }
-  }
-}
-
-function buildCooperativaPublicSummary({ users, participants, coletas, approvalRequests, territoryId, territoryLabel }) {
-  const normalizedId = canonicalTerritoryId(territoryId);
-
-  const usersFiltered = users.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
-  const participantsFiltered = participants.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
-  const coletasFiltered = coletas.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
-  const approvalFiltered = approvalRequests.filter((item) => normalizedTerritoryEqual(item.territoryId, normalizedId));
-
-  const cooperativaMembersCount = usersFiltered.filter((item) =>
-    ["cooperativa", "integrante", "catador", "user", "usuario", "admin"].includes(normalizeText(item.role))
+  const condoCount = approvedParticipants.filter((item) =>
+    ["condominio", "condomínio"].includes(participantType(item))
   ).length;
 
-  const residuosCount = coletasFiltered.reduce((acc, item) => acc + getResiduosTotalFromColeta(item), 0);
+  const pesoRecebido = coletasRealizadas.reduce((acc, item) => acc + getPesoRecebido(item), 0);
+  const rejeito = coletasRealizadas.reduce((acc, item) => acc + getRejeito(item), 0);
+  const naoComercializado = coletasRealizadas.reduce((acc, item) => acc + getNaoComercializado(item), 0);
+
+  const qualidadeItens = coletasRealizadas
+    .map(getQualidade)
+    .filter((value) => value > 0);
+
+  const qualidadeMedia = qualidadeItens.length
+    ? (qualidadeItens.reduce((acc, value) => acc + value, 0) / qualidadeItens.length).toFixed(1)
+    : "0";
 
   return {
-    territoryId: normalizedId,
-    territoryLabel,
-    usersCount: usersFiltered.length + participantsFiltered.length,
-    participantsCount: participantsFiltered.length,
-    cooperativaMembersCount,
-    coletasCount: coletasFiltered.length,
-    residuosCount,
-    approvalsCount: approvalFiltered.length,
-    crgrsCount: 1,
-    alertsCount: 0
+    participants: approvedParticipants.length,
+    people: peopleCount,
+    condos: condoCount,
+    coletas: coletasRealizadas.length,
+    actions: STATE.approvalRequests.length,
+    pesoRecebido,
+    rejeito,
+    naoComercializado,
+    qualidadeMedia
   };
 }
 
-async function saveCooperativaPublicDashboard(payload) {
-  await setDoc(
-    doc(db, "dashboard_public_by_cooperativa", payload.territoryId),
-    {
-      ...payload,
-      updatedAt: serverTimestamp()
-    },
-    { merge: true }
-  );
+function updateKpis() {
+  const data = computeDashboardData();
+
+  animateNumber(els.indicatorParticipants, data.participants);
+  animateNumber(els.indicatorColetas, data.coletas);
+  animateNumber(els.indicatorActions, data.actions);
+
+  animateNumber(els.participantsTotalCount, data.participants);
+  animateNumber(els.participantsPeopleCount, data.people);
+  animateNumber(els.participantsCondoCount, data.condos);
+
+  setText(els.indicatorPesoRecebido, formatKg(data.pesoRecebido));
+  setText(els.indicatorRejeito, formatKg(data.rejeito));
+  setText(els.indicatorNaoComercializado, formatKg(data.naoComercializado));
+  setText(els.indicatorQualidadeMedia, data.qualidadeMedia);
+
+  renderRecentColetas();
+  updateCharts(data);
 }
 
-async function runCooperativaDashboardSync({ territoryId, territoryLabel, silent = false }) {
-  try {
-    const normalizedId = canonicalTerritoryId(territoryId);
+/* =========================================================
+   FILTROS DA TABELA
+========================================================= */
 
-    setCoopSyncButtonLoading(true);
-    setCoopSyncStatus(silent ? "Verificando atualização automática..." : "Atualizando indicadores da cooperativa...");
+function getTableFilters() {
+  return {
+    search: normalizeText(els.tSearch?.value || ""),
+    fluxo: els.tFluxo?.value || "__all__",
+    entrega: els.tEntrega?.value || "__all__",
+    status: els.tStatus?.value || "__all__",
+    tipoCadastro: els.tTipoCadastro?.value || "__all__"
+  };
+}
 
-    const [users, participants, coletas, approvalRequests] = await Promise.all([
-      loadCollectionSafe("users"),
-      loadCollectionSafe("participants"),
-      loadCollectionSafe("coletas"),
-      loadCollectionSafe("approvalRequests")
-    ]);
+function populateEntregaFilter(items = []) {
+  if (!els.tEntrega) return;
 
-    const summary = buildCooperativaPublicSummary({
-      users,
-      participants,
-      coletas,
-      approvalRequests,
-      territoryId: normalizedId,
-      territoryLabel
-    });
+  const currentValue = els.tEntrega.value || "__all__";
+  const entregas = new Set();
 
-    await saveCooperativaPublicDashboard(summary);
+  items.forEach((item) => {
+    const entrega = getEntrega(item);
+    if (entrega && entrega !== "Normal") entregas.add(entrega);
+  });
 
-    const nowLabel = new Date().toLocaleString("pt-BR");
-    setCoopSyncStatus(`Atualizado em ${nowLabel}`);
+  els.tEntrega.innerHTML = `
+    <option value="__all__">Todas</option>
+    ${Array.from(entregas)
+      .sort((a, b) => a.localeCompare(b, "pt-BR"))
+      .map((entrega) => `<option value="${escapeHtml(entrega)}">${escapeHtml(entrega)}</option>`)
+      .join("")}
+  `;
+
+  if ([...entregas].includes(currentValue)) {
+    els.tEntrega.value = currentValue;
+  }
+}
+
+function applyTableFilterToItems(items = []) {
+  const filters = getTableFilters();
+
+  return items.filter((item) => {
+    const fluxo = inferFluxoKey(item);
+    const entrega = getEntrega(item);
+    const status = normalizeText(getColetaStatusLabel(item));
+    const tipo = participantType(item);
+
+    if (filters.fluxo !== "__all__" && fluxo !== filters.fluxo) return false;
+    if (filters.entrega !== "__all__" && entrega !== filters.entrega) return false;
+
+    if (filters.status !== "__all__") {
+      if (filters.status === "ativo" && !status.includes("ativ")) return false;
+      if (filters.status === "editado" && !status.includes("edit")) return false;
+      if (filters.status === "cancelado" && !status.includes("cancel")) return false;
+    }
+
+    if (filters.tipoCadastro !== "__all__") {
+      if (filters.tipoCadastro === "participante") {
+        if (tipo.includes("condominio") || tipo.includes("comercio")) return false;
+      }
+
+      if (filters.tipoCadastro === "condominio" && !tipo.includes("condominio")) return false;
+      if (filters.tipoCadastro === "comercio" && !tipo.includes("comercio")) return false;
+
+      if (filters.tipoCadastro === "outro") {
+        if (
+          tipo.includes("participante") ||
+          tipo.includes("familia") ||
+          tipo.includes("casa") ||
+          tipo.includes("condominio") ||
+          tipo.includes("comercio")
+        ) return false;
+      }
+    }
+
+    if (filters.search) {
+      const haystack = normalizeText([
+        getParticipantName(item),
+        getParticipantCode(item),
+        getParticipantTypeLabel(item),
+        formatFluxoLabel(getTipoRecebimento(item)),
+        getEntrega(item),
+        getColetaStatusLabel(item),
+        JSON.stringify(item)
+      ].join(" "));
+
+      if (!haystack.includes(filters.search)) return false;
+    }
 
     return true;
-  } catch (error) {
-    console.error("[Cooperativa] Erro ao sincronizar dashboard público:", error);
-    setCoopSyncStatus("Erro ao atualizar indicadores da cooperativa.");
-    return false;
-  } finally {
-    setCoopSyncButtonLoading(false);
-  }
-}
-
-async function autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabel }) {
-  try {
-    const normalizedId = canonicalTerritoryId(territoryId);
-
-    setCoopSyncStatus("Verificando última atualização...");
-
-    const snap = await getDoc(doc(db, "dashboard_public_by_cooperativa", normalizedId));
-
-    if (!snap.exists()) {
-      await runCooperativaDashboardSync({
-        territoryId: normalizedId,
-        territoryLabel,
-        silent: true
-      });
-      return;
-    }
-
-    const data = snap.data();
-    const updatedAt = data?.updatedAt && typeof data.updatedAt.toDate === "function"
-      ? data.updatedAt.toDate().getTime()
-      : 0;
-
-    const now = Date.now();
-    const diff = now - updatedAt;
-
-    if (!updatedAt || diff >= AUTO_SYNC_INTERVAL_MS) {
-      await runCooperativaDashboardSync({
-        territoryId: normalizedId,
-        territoryLabel: data?.territoryLabel || territoryLabel,
-        silent: true
-      });
-      return;
-    }
-
-    setCoopSyncStatus(
-      `Última atualização em ${new Date(updatedAt).toLocaleString("pt-BR")}`
-    );
-  } catch (error) {
-    console.error("[Cooperativa] Falha na verificação automática:", error);
-    setCoopSyncStatus("Não foi possível verificar a atualização automática.");
-  }
-}
-
-function bindCooperativaSyncButton({ territoryId, territoryLabel }) {
-  if (!els.syncCoopDashboardBtn) return;
-
-  els.syncCoopDashboardBtn.addEventListener("click", async () => {
-    await runCooperativaDashboardSync({
-      territoryId,
-      territoryLabel,
-      silent: false
-    });
   });
 }
+
+function setupTableFilters() {
+  els.btnApplyTableFilters?.addEventListener("click", () => {
+    STATE.recentPage = 0;
+    renderRecentColetas();
+  });
+
+  els.btnClearTableFilters?.addEventListener("click", () => {
+    if (els.tSearch) els.tSearch.value = "";
+    if (els.tFluxo) els.tFluxo.value = "__all__";
+    if (els.tEntrega) els.tEntrega.value = "__all__";
+    if (els.tStatus) els.tStatus.value = "__all__";
+    if (els.tTipoCadastro) els.tTipoCadastro.value = "__all__";
+
+    STATE.recentPage = 0;
+    renderRecentColetas();
+  });
+
+  els.tSearch?.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      STATE.recentPage = 0;
+      renderRecentColetas();
+    }
+  });
+}
+
+/* =========================================================
+   TABELA RECENTE COM PAGINAÇÃO
+========================================================= */
+
+function getSortedRealizadas() {
+  return [...STATE.coletas]
+    .filter(isColetaRealizada)
+    .sort((a, b) => {
+      const dateA = getDateValue(a)?.getTime() || 0;
+      const dateB = getDateValue(b)?.getTime() || 0;
+      return dateB - dateA;
+    });
+}
+function getColetaImageUrl(item = {}) {
+  return (
+    item.imageUrl ||
+    item.imagemUrl ||
+    item.photoUrl ||
+    item.fotoUrl ||
+    item.coletaImageUrl ||
+    item.recebimento?.imageUrl ||
+    item.recebimento?.imagemUrl ||
+    item.finalTurno?.imageUrl ||
+    item.finalTurno?.imagemUrl ||
+    item.payloadSnapshot?.imageUrl ||
+    item.payloadSnapshot?.imagemUrl ||
+    item.payloadSnapshot?.fotoUrl ||
+    ""
+  );
+}
+
+function openColetaImageModal(item = {}) {
+  const imageUrl = getColetaImageUrl(item);
+
+  if (!imageUrl) {
+    alert("Esta coleta não possui imagem salva.");
+    return;
+  }
+
+  const old = document.getElementById("coletaImageModal");
+  if (old) old.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "coletaImageModal";
+  modal.className = "coleta-modal-overlay";
+
+  modal.innerHTML = `
+    <div class="coleta-modal coleta-image-modal">
+      <button class="coleta-modal-close" id="closeColetaImageModal" type="button">×</button>
+
+      <div class="coleta-modal-head">
+        <h2>Imagem da coleta</h2>
+        <p>${escapeHtml(getParticipantName(item))} • ${escapeHtml(formatDateLabel(item))}</p>
+      </div>
+
+      <img src="${escapeHtml(imageUrl)}" alt="Imagem da coleta" />
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("modal-open");
+
+  modal.addEventListener("click", (event) => {
+    if (
+      event.target.id === "closeColetaImageModal" ||
+      event.target === modal
+    ) {
+      modal.remove();
+      document.body.classList.remove("modal-open");
+    }
+  });
+}
+
+function renderRecentColetas() {
+  if (!els.recentColetasTableBody) return;
+
+  const all = getSortedRealizadas();
+  const filtered = applyTableFilterToItems(all);
+
+  const start = STATE.recentPage * STATE.recentPageSize;
+  const end = start + STATE.recentPageSize;
+  const pageItems = filtered.slice(start, end);
+
+  if (!pageItems.length) {
+    els.recentColetasTableBody.innerHTML = `
+      <tr>
+        <td colspan="7" class="table-empty">Nenhuma coleta encontrada.</td>
+      </tr>
+    `;
+
+    updateTableCounters(0, filtered.length);
+    updateTablePagination(filtered.length);
+    return;
+  }
+
+  els.recentColetasTableBody.innerHTML = pageItems.map((item) => {
+    const participante = getParticipantName(item);
+    const codigo = getParticipantCode(item);
+    const data = formatDateLabel(item);
+    const fluxo = formatFluxoLabel(getTipoRecebimento(item));
+    const status = getColetaStatusLabel(item);
+    const reciclavel = formatKg(getPesoRecebido(item));
+    const rejeito = formatKg(getRejeito(item));
+    const naoComercializado = formatKg(getNaoComercializado(item));
+    const tipo = getParticipantTypeLabel(item);
+
+    return `
+      <tr class="
+  dashboard-table-row
+  ${
+    normalizeText(
+      item.status ||
+      item.coletaStatus ||
+      ""
+    ).includes("cancel")
+      ? "coleta-cancelada"
+      : ""
+  }
+">
+        <td class="td-date">${escapeHtml(data)}</td>
+
+        <td class="td-user">
+          <strong>${escapeHtml(participante)}</strong>
+          <span>${escapeHtml(tipo)}</span>
+        </td>
+
+        <td class="td-code">${escapeHtml(codigo || "—")}</td>
+
+        <td class="td-flow">${escapeHtml(fluxo)}</td>
+
+        <td class="td-status">${statusBadge(status)}</td>
+
+        <td class="td-details">
+          <div class="table-detail-tags">
+            <span class="detail-tag success">Reciclável: ${escapeHtml(reciclavel)}</span>
+            <span class="detail-tag danger">Rejeito: ${escapeHtml(rejeito)}</span>
+            <span class="detail-tag warning">Não comercializado: ${escapeHtml(naoComercializado)}</span>
+          </div>
+        </td>
+
+        
+          <td class="td-actions">
+
+  <button
+    class="table-btn view"
+    type="button"
+    data-view-coleta="${escapeHtml(item.id)}"
+  >
+    Ver coleta
+  </button>
+
+  <button
+    class="table-btn image"
+    type="button"
+    data-image-coleta="${escapeHtml(item.id)}"
+  >
+    Imagem
+  </button>
+
+  <button
+    class="table-btn edit"
+    type="button"
+    data-edit-coleta="${escapeHtml(item.id)}"
+  >
+    Editar
+  </button>
+
+  <button
+    class="table-btn warning"
+    type="button"
+    data-cancel-coleta="${escapeHtml(item.id)}"
+  >
+    ${
+      normalizeText(
+        item.status ||
+        item.coletaStatus ||
+        ""
+      ).includes("cancel")
+        ? "Reativar"
+        : "Cancelar"
+    }
+  </button>
+
+  <button
+    class="table-btn cancel"
+    type="button"
+    data-delete-coleta="${escapeHtml(item.id)}"
+  >
+    Excluir
+  </button>
+
+</td>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  updateTableCounters(pageItems.length, filtered.length);
+  updateTablePagination(filtered.length);
+}
+function updateTableCounters(visible, filtered) {
+  setText(els.tableVisibleCount, visible);
+  setText(els.tableFilteredCount, filtered);
+  setText(els.tableLastUpdate, formatDateTimeLabel(new Date()));
+}
+
+function updateTablePagination(total) {
+  const start = total === 0 ? 0 : STATE.recentPage * STATE.recentPageSize + 1;
+  const end = Math.min((STATE.recentPage + 1) * STATE.recentPageSize, total);
+
+  if (els.tablePageIndicator) {
+    els.tablePageIndicator.textContent =
+      total > 0 ? `Mostrando ${start}-${end} de ${total}` : "Nenhuma coleta";
+  }
+
+  if (els.btnPrevColetas) {
+    els.btnPrevColetas.disabled = STATE.recentPage <= 0;
+  }
+
+  if (els.btnNextColetas) {
+    els.btnNextColetas.disabled = end >= total;
+  }
+}
+
+function setupTablePagination() {
+  els.btnPrevColetas?.addEventListener("click", () => {
+    if (STATE.recentPage <= 0) return;
+
+    STATE.recentPage -= 1;
+    renderRecentColetas();
+  });
+
+  els.btnNextColetas?.addEventListener("click", () => {
+    const total = applyTableFilterToItems(getSortedRealizadas()).length;
+    const totalPages = Math.ceil(total / STATE.recentPageSize);
+
+    if (STATE.recentPage >= totalPages - 1) return;
+
+    STATE.recentPage += 1;
+    renderRecentColetas();
+  });
+}
+
+function updateLoadMoreButton() {
+  const btn = els.btnLoadMoreColetas || document.getElementById("btnLoadMoreColetas");
+  if (!btn) return;
+
+  btn.style.display = "none";
+}
+
+function setupLoadMoreColetasButton() {
+  const btn = els.btnLoadMoreColetas || document.getElementById("btnLoadMoreColetas");
+  if (!btn) return;
+
+  btn.addEventListener("click", () => {
+    STATE.recentLimit += 10;
+    renderRecentColetas();
+  });
+}
+
+/* =========================================================
+   MODAL COLETA
+========================================================= */
+
+function openColetaModal(item) {
+  const old = document.getElementById("coletaDetailsModal");
+  if (old) old.remove();
+
+  const modal = document.createElement("div");
+  modal.id = "coletaDetailsModal";
+  modal.className = "coleta-modal-overlay";
+
+  modal.innerHTML = `
+    <div class="coleta-modal">
+      <button class="coleta-modal-close" id="closeColetaModal" type="button">×</button>
+
+      <div class="coleta-modal-head">
+        <h2>Detalhes da coleta</h2>
+        <p>Visualização completa do registro salvo.</p>
+      </div>
+
+      <div class="coleta-modal-grid">
+        <div class="coleta-info-card"><strong>Data:</strong> ${escapeHtml(formatDateLabel(item))}</div>
+        <div class="coleta-info-card"><strong>Fluxo:</strong> ${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</div>
+        <div class="coleta-info-card"><strong>Entrega:</strong> ${escapeHtml(getEntrega(item))}</div>
+        <div class="coleta-info-card"><strong>Participante:</strong> ${escapeHtml(getParticipantName(item))}</div>
+        <div class="coleta-info-card"><strong>Código:</strong> ${escapeHtml(getParticipantCode(item))}</div>
+        <div class="coleta-info-card"><strong>Tipo cadastro:</strong> ${escapeHtml(getParticipantTypeLabel(item))}</div>
+        <div class="coleta-info-card"><strong>Status:</strong> ${escapeHtml(getColetaStatusLabel(item))}</div>
+        <div class="coleta-info-card"><strong>Qualidade:</strong> ${escapeHtml(getQualidade(item) || "—")}</div>
+        <div class="coleta-info-card"><strong>Peso recebido:</strong> ${escapeHtml(formatKg(getPesoRecebido(item)))}</div>
+        <div class="coleta-info-card"><strong>Rejeito:</strong> ${escapeHtml(formatKg(getRejeito(item)))}</div>
+        <div class="coleta-info-card"><strong>Não comercializado:</strong> ${escapeHtml(formatKg(getNaoComercializado(item)))}</div>
+      </div>
+
+      <div class="coleta-materials-box">
+        <h3>Materiais informados</h3>
+        <div class="coleta-materials-list">
+          ${renderMaterialsList(item)}
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+  document.body.classList.add("modal-open");
+
+  modal.addEventListener("click", (event) => {
+    if (event.target.id === "closeColetaModal" || event.target === modal) {
+      modal.remove();
+      document.body.classList.remove("modal-open");
+    }
+  });
+}
+
+function getMaterialValue(item = {}, keys = []) {
+  for (const key of keys) {
+    const value =
+      item[key] ??
+      item.finalTurno?.[key] ??
+      item.recebimento?.[key] ??
+      item.payloadSnapshot?.[key] ??
+      item.materiais?.[key] ??
+      item.materials?.[key];
+
+    if (value !== undefined && value !== null && value !== "") {
+      return toNumber(value);
+    }
+  }
+
+  return 0;
+}
+
+function openEditColetaModal(item) {
+
+  const old = document.getElementById(
+    "coletaEditModal"
+  );
+
+  if (old) old.remove();
+
+  const fluxo =
+    inferFluxoKey(item);
+
+  const isFinalTurno =
+    fluxo === "final_turno";
+
+  const modal = document.createElement("div");
+
+  modal.id = "coletaEditModal";
+
+  modal.className =
+    "coleta-modal-overlay";
+
+  modal.innerHTML = `
+
+    <div class="coleta-modal coleta-edit-modal">
+
+      <button
+        class="coleta-modal-close"
+        id="closeEditColetaModal"
+        type="button"
+      >
+        ×
+      </button>
+
+      <div class="coleta-modal-head">
+
+        <h2>Editar registro</h2>
+
+        <p>
+          Atualize os dados incorretos antes de salvar.
+        </p>
+
+      </div>
+
+      <form id="editColetaForm">
+
+        <div class="coleta-modal-grid">
+
+          <label class="coleta-info-card">
+
+            <strong>Participante</strong>
+
+            <input
+              type="text"
+              name="participantName"
+              value="${escapeHtml(
+                getParticipantName(item)
+              )}"
+            />
+
+          </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Fluxo</strong>
+
+            <select name="flowType">
+
+              <option
+                value="recebimento"
+                ${
+                  !isFinalTurno
+                    ? "selected"
+                    : ""
+                }
+              >
+                Recebimento
+              </option>
+
+              <option
+                value="final_turno"
+                ${
+                  isFinalTurno
+                    ? "selected"
+                    : ""
+                }
+              >
+                Final do turno
+              </option>
+
+            </select>
+
+          </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Entrega</strong>
+
+            <input
+              type="text"
+              name="entrega"
+              value="${escapeHtml(
+                getEntrega(item)
+              )}"
+            />
+
+          </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Resíduo seco (kg)</strong>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="pesoRecebido"
+              value="${getPesoRecebido(item)}"
+            />
+
+          </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Qualidade</strong>
+
+            <select name="qualidade">
+
+              <option value="1" ${
+                getQualidade(item) == 1
+                  ? "selected"
+                  : ""
+              }>
+                1 • Muito baixa
+              </option>
+
+              <option value="2" ${
+                getQualidade(item) == 2
+                  ? "selected"
+                  : ""
+              }>
+                2 • Média
+              </option>
+
+              <option value="3" ${
+                getQualidade(item) == 3
+                  ? "selected"
+                  : ""
+              }>
+                3 • Alta
+              </option>
+
+            </select>
+
+          </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Rejeito (kg)</strong>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="rejeito"
+              value="${getRejeito(item)}"
+            />
+
+          </label>
+
+          <label class="coleta-info-card">
+
+            <strong>Não comercializado (kg)</strong>
+
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              name="naoComercializado"
+              value="${getNaoComercializado(item)}"
+            />
+
+          </label>
+
+        </div>
+
+        ${
+          isFinalTurno
+            ? `
+        <div class="coleta-materials-box">
+
+          <h3>Frações de resíduos</h3>
+
+          <div class="coleta-modal-grid">
+
+            <label class="coleta-info-card">
+              <strong>Plástico (kg)</strong>
+             <input type="number" step="0.01" name="plasticoKg" value="${getMaterialValue(item, ["plasticoKg", "plastico"])}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Vidro (kg)</strong>
+              <input type="number" step="0.01" name="vidroKg" value="${getMaterialValue(item, ["vidroKg", "vidro"])}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Metal / Alumínio (kg)</strong>
+              <input type="number" step="0.01" name="metalKg" value="${getMaterialValue(item, ["metalKg", "aluminioMetalKg"])}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Sacaria (kg)</strong>
+              <input type="number" step="0.01" name="sacariaKg" value="${getMaterialValue(item, ["sacariaKg", "sacaria"])}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Papel misto (kg)</strong>
+              <input type="number" step="0.01" name="papelMistoKg" value="${getMaterialValue(item, ["papelMistoKg", "papelMisto"])}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Papelão (kg)</strong>
+              <input type="number" step="0.01" name="papelaoKg" value="${getMaterialValue(item, ["papelaoKg", "papelao"])}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Isopor (kg)</strong>
+              <input type="number" step="0.01" name="isoporKg" value="${getMaterialValue(item, ["isoporKg", "isopor"])}">
+            </label>
+
+            <label class="coleta-info-card">
+              <strong>Óleo de cozinha (kg)</strong>
+              <input type="number" step="0.01" name="oleoKg" value="${getMaterialValue(item, ["oleoKg", "oleo"])}">
+            </label>
+
+          </div>
+
+        </div>
+        `
+            : ""
+        }
+
+        <label class="coleta-materials-box">
+
+          <h3>Observação</h3>
+
+          <textarea
+            name="observacao"
+            rows="4"
+            placeholder="Motivo do ajuste / observação"
+          >${escapeHtml(
+            item.observacao || ""
+          )}</textarea>
+
+        </label>
+
+        <div class="coleta-edit-actions">
+
+          <button
+            class="primary-link-button"
+            type="submit"
+          >
+            Salvar edição
+          </button>
+
+          <button
+            class="table-page-btn"
+            id="cancelEditColetaModal"
+            type="button"
+          >
+            Cancelar
+          </button>
+
+        </div>
+
+      </form>
+
+    </div>
+  `;
+
+  document.body.appendChild(modal);
+
+  document.body.classList.add(
+    "modal-open"
+  );
+
+  function closeModal() {
+
+    modal.remove();
+
+    document.body.classList.remove(
+      "modal-open"
+    );
+  }
+
+  modal.addEventListener(
+    "click",
+    (event) => {
+
+      if (
+        event.target.id ===
+          "closeEditColetaModal"
+
+        ||
+
+        event.target.id ===
+          "cancelEditColetaModal"
+
+        ||
+
+        event.target === modal
+      ) {
+
+        closeModal();
+      }
+    }
+  );
+
+  modal.querySelector(
+    "#editColetaForm"
+  )?.addEventListener(
+    "submit",
+    async (event) => {
+
+      event.preventDefault();
+
+      const formData =
+        new FormData(event.target);
+
+      await updateDoc(
+        doc(db, "coletas", item.id),
+        {
+
+          participantName:String(
+            formData.get("participantName") || ""
+          ).trim(),
+
+          flowType:String(
+            formData.get("flowType") || ""
+          ).trim(),
+
+          entrega:String(
+            formData.get("entrega") || ""
+          ).trim(),
+
+          pesoRecebido:toNumber(
+            formData.get("pesoRecebido")
+          ),
+
+          pesoResiduoSecoKg:toNumber(
+            formData.get("pesoRecebido")
+          ),
+
+          qualidade:toNumber(
+            formData.get("qualidade")
+          ),
+
+          rejeito:toNumber(
+            formData.get("rejeito")
+          ),
+
+          naoComercializado:toNumber(
+            formData.get("naoComercializado")
+          ),
+
+          plasticoKg:toNumber(
+            formData.get("plasticoKg")
+          ),
+
+          vidroKg:toNumber(
+            formData.get("vidroKg")
+          ),
+
+          metalKg:toNumber(
+            formData.get("metalKg")
+          ),
+
+          sacariaKg:toNumber(
+            formData.get("sacariaKg")
+          ),
+
+          papelMistoKg:toNumber(
+            formData.get("papelMistoKg")
+          ),
+
+          papelaoKg:toNumber(
+            formData.get("papelaoKg")
+          ),
+
+          isoporKg:toNumber(
+            formData.get("isoporKg")
+          ),
+
+          oleoKg:toNumber(
+            formData.get("oleoKg")
+          ),
+
+          observacao:String(
+            formData.get("observacao") || ""
+          ).trim(),
+
+          updatedAt:serverTimestamp(),
+
+          updatedBy:
+            STATE.currentUser?.uid || null
+        }
+      );
+
+      closeModal();
+
+      setCoopSyncStatus(
+        "Coleta atualizada com sucesso."
+      );
+    }
+  );
+}
+
+async function toggleCancelColetaRecord(coletaId) {
+
+  if (!coletaId) return;
+
+  try {
+
+    const coleta =
+      STATE.coletas.find(
+        item =>
+          String(item.id) === String(coletaId)
+      );
+
+    if (!coleta) {
+      alert("Coleta não encontrada.");
+      return;
+    }
+
+    const statusAtual = normalizeText(
+      coleta.status ||
+      coleta.coletaStatus ||
+      ""
+    );
+
+    const cancelada =
+      statusAtual.includes("cancel");
+
+    const confirmed = confirm(
+      cancelada
+        ? "Deseja reativar esta coleta?"
+        : "Deseja cancelar esta coleta?"
+    );
+
+    if (!confirmed) return;
+
+    await updateDoc(
+      doc(
+        db,
+        "coletas",
+        coletaId
+      ),
+      {
+        status: cancelada
+          ? "ativo"
+          : "cancelado",
+
+        cancelledAt: cancelada
+          ? null
+          : serverTimestamp(),
+
+        cancelledBy: cancelada
+          ? null
+          : STATE.currentUser?.uid || null,
+
+        updatedAt: serverTimestamp(),
+
+        updatedBy:
+          STATE.currentUser?.uid || null
+      }
+    );
+
+    setCoopSyncStatus(
+      cancelada
+        ? "Coleta reativada."
+        : "Coleta cancelada."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
+
+    alert(
+      "Erro ao alterar status da coleta."
+    );
+  }
+}
+
+async function deleteColetaRecord(coletaId) {
+
+  if (!coletaId) {
+    return;
+  }
+
+  const confirmed = confirm(
+    "Deseja realmente excluir esta coleta?\n\nEssa ação remove permanentemente os dados do banco."
+  );
+
+  if (!confirmed) {
+    return;
+  }
+
+  try {
+
+    const coleta =
+      STATE.coletas.find(
+        (item) =>
+          String(item.id) === String(coletaId)
+      );
+
+    if (!coleta) {
+
+      alert("Coleta não encontrada.");
+
+      return;
+    }
+
+    /* =====================================================
+       REMOVE DO FIREBASE
+    ===================================================== */
+
+    await deleteDoc(
+      doc(
+        db,
+        "coletas",
+        coletaId
+      )
+    );
+
+    /* =====================================================
+       REMOVE LOCALMENTE
+    ===================================================== */
+
+    STATE.coletas =
+      STATE.coletas.filter(
+        (item) =>
+          String(item.id) !== String(coletaId)
+      );
+
+    /* =====================================================
+       ATUALIZA UI
+    ===================================================== */
+
+    updateKpis();
+
+    renderRecentColetas();
+
+    updateCharts(
+      computeDashboardData()
+    );
+
+    setCoopSyncStatus(
+      "Coleta removida com sucesso."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao excluir coleta:",
+      error
+    );
+
+    alert(
+      "Erro ao excluir coleta."
+    );
+  }
+}
+
+function setupRecentColetasActions() {
+
+  document.addEventListener(
+    "click",
+    (event) => {
+
+      /* =====================================================
+         VER COLETA
+      ===================================================== */
+
+      const viewButton =
+        event.target.closest(
+          "[data-view-coleta]"
+        );
+
+      if (viewButton) {
+
+        const coletaId =
+          viewButton.dataset.viewColeta;
+
+        const coleta =
+          STATE.coletas.find(
+            (item) =>
+              String(item.id) ===
+              String(coletaId)
+          );
+
+        if (!coleta) return;
+
+        openColetaModal(coleta);
+
+        return;
+      }
+
+      /* =====================================================
+         VER IMAGEM
+      ===================================================== */
+
+      const imageButton =
+        event.target.closest(
+          "[data-image-coleta]"
+        );
+
+      if (imageButton) {
+
+        const coletaId =
+          imageButton.dataset.imageColeta;
+
+        const coleta =
+          STATE.coletas.find(
+            (item) =>
+              String(item.id) ===
+              String(coletaId)
+          );
+
+        if (!coleta) return;
+
+        openColetaImageModal(coleta);
+
+        return;
+      }
+
+      /* =====================================================
+         EDITAR
+      ===================================================== */
+
+      const editButton =
+        event.target.closest(
+          "[data-edit-coleta]"
+        );
+
+      if (editButton) {
+
+        const coletaId =
+          editButton.dataset.editColeta;
+
+        const coleta =
+          STATE.coletas.find(
+            (item) =>
+              String(item.id) ===
+              String(coletaId)
+          );
+
+        if (!coleta) return;
+
+        openEditColetaModal(coleta);
+
+        return;
+      }
+
+       /* =====================================================
+         EDITAR
+      ===================================================== */
+const cancelButton =
+  event.target.closest(
+    "[data-cancel-coleta]"
+  );
+
+if (cancelButton) {
+
+  const coletaId =
+    cancelButton.dataset.cancelColeta;
+
+  toggleCancelColetaRecord(
+    coletaId
+  );
+
+  return;
+}
+      /* =====================================================
+         EXCLUIR
+      ===================================================== */
+
+      const deleteButton =
+        event.target.closest(
+          "[data-delete-coleta]"
+        );
+
+      if (deleteButton) {
+
+        const coletaId =
+          deleteButton.dataset.deleteColeta;
+
+        deleteColetaRecord(coletaId);
+
+        return;
+      }
+    }
+  );
+
+  /* =====================================================
+     ESC FECHA MODAIS
+  ===================================================== */
+
+  document.addEventListener(
+    "keydown",
+    (event) => {
+
+      if (event.key !== "Escape") {
+        return;
+      }
+
+      const modal =
+        document.getElementById(
+          "coletaDetailsModal"
+        );
+
+      const editModal =
+        document.getElementById(
+          "coletaEditModal"
+        );
+
+      const imageModal =
+        document.getElementById(
+          "coletaImageModal"
+        );
+
+      if (modal) modal.remove();
+
+      if (editModal) editModal.remove();
+
+      if (imageModal) imageModal.remove();
+
+      document.body.classList.remove(
+        "modal-open"
+      );
+    }
+  );
+}
+
+/* =========================================================
+   GRÁFICOS
+========================================================= */
+
+function buildMonthlyColetasSeries(items = []) {
+  const map = new Map();
+
+  items
+    .filter(isColetaRealizada)
+    .forEach((item) => {
+      const date = getDateValue(item);
+      if (!date) return;
+
+      const key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+
+      const label = date.toLocaleDateString("pt-BR", {
+        month: "short",
+        year: "2-digit"
+      });
+
+      if (!map.has(key)) {
+        map.set(key, {
+          key,
+          label,
+          total: 0
+        });
+      }
+
+      map.get(key).total += 1;
+    });
+
+  return Array.from(map.values())
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .slice(-8);
+}
+
+function updateCharts(data) {
+  const monthly = buildMonthlyColetasSeries(STATE.coletas);
+
+  const totalLabel = document.getElementById("chartTotalColetasLabel");
+
+  if (totalLabel) {
+    totalLabel.textContent = String(data.coletas || 0);
+  }
+
+  if (els.chartColetasMensais) {
+    const max = Math.max(...monthly.map((item) => item.total), 1);
+
+    if (!monthly.length) {
+      els.chartColetasMensais.innerHTML = `
+        <div class="empty-chart-message">Sem coletas para exibir.</div>
+      `;
+    } else {
+      els.chartColetasMensais.innerHTML = monthly
+        .map((item) => {
+          const height = Math.max(8, Math.round((item.total / max) * 100));
+
+          return `
+            <div class="powerbi-bar-item">
+              <span class="powerbi-bar-value">${item.total}</span>
+              <div class="powerbi-bar" style="height:${height}%"></div>
+              <span class="powerbi-bar-label">${escapeHtml(item.label)}</span>
+            </div>
+          `;
+        })
+        .join("");
+    }
+  }
+
+  const totalParticipants = Math.max(Number(data.participants || 0), 0);
+  const people = Math.max(Number(data.people || 0), 0);
+  const condos = Math.max(Number(data.condos || 0), 0);
+  const others = Math.max(totalParticipants - people - condos, 0);
+  const totalForDonut = Math.max(totalParticipants, 1);
+
+  const peoplePercent = (people / totalForDonut) * 100;
+  const condoPercent = (condos / totalForDonut) * 100;
+  const otherPercent = (others / totalForDonut) * 100;
+
+  const donut = document.getElementById("chartParticipantesPerfil");
+  const chartTotalParticipantesLabel = document.getElementById("chartTotalParticipantesLabel");
+
+  if (chartTotalParticipantesLabel) {
+    chartTotalParticipantesLabel.textContent = String(totalParticipants);
+  }
+
+  if (donut) {
+    const p1 = peoplePercent;
+    const p2 = peoplePercent + condoPercent;
+    const p3 = peoplePercent + condoPercent + otherPercent;
+
+    donut.style.background = `
+      conic-gradient(
+        #81B92A 0 ${p1}%,
+        #53ACDE ${p1}% ${p2}%,
+        #EF6B22 ${p2}% ${p3}%
+      )
+    `;
+  }
+
+  const peso = Number(data.pesoRecebido || 0);
+  const rejeito = Number(data.rejeito || 0);
+  const naoComercializado = Number(data.naoComercializado || 0);
+  const maxPeso = Math.max(peso, rejeito, naoComercializado, 1);
+
+  const barPeso = document.getElementById("barPesoRecebido");
+  const barRejeito = document.getElementById("barRejeito");
+  const barNaoComercializado = document.getElementById("barNaoComercializado");
+
+  const barPesoLabel = document.getElementById("barPesoRecebidoLabel");
+  const barRejeitoLabel = document.getElementById("barRejeitoLabel");
+  const barNaoComercializadoLabel = document.getElementById("barNaoComercializadoLabel");
+
+  if (barPeso) barPeso.style.width = `${Math.max(2, (peso / maxPeso) * 100)}%`;
+  if (barRejeito) barRejeito.style.width = `${Math.max(2, (rejeito / maxPeso) * 100)}%`;
+  if (barNaoComercializado) barNaoComercializado.style.width = `${Math.max(2, (naoComercializado / maxPeso) * 100)}%`;
+
+  if (barPesoLabel) barPesoLabel.textContent = formatKg(peso);
+  if (barRejeitoLabel) barRejeitoLabel.textContent = formatKg(rejeito);
+  if (barNaoComercializadoLabel) barNaoComercializadoLabel.textContent = formatKg(naoComercializado);
+}
+
+/* =========================================================
+   PERMISSÕES / DADOS
+========================================================= */
 
 function applyPermissionRules(profile) {
   STATE.isAdmin = isAdminUser(profile.role);
@@ -1698,53 +2451,221 @@ function applyPermissionRules(profile) {
 }
 
 function applyRoleVisibility(profile) {
-  const isAdmin = isAdminUser(profile.role);
-  const isGovernanca = isGovernancaUser(profile.role);
-  const canManageUsers = isAdmin || isGovernanca;
+  const canManageUsers = isAdminUser(profile.role) || isGovernancaUser(profile.role);
 
-  if (els.usersNavLink) {
-    els.usersNavLink.style.display = canManageUsers ? "" : "none";
-  }
+  const userLinks = [
+    document.querySelector('a[href="usuario-cooperativa-vila-pinto.html"]'),
+    document.querySelector('a[href="usuarios.html"]')
+  ].filter(Boolean);
 
-  if (els.newParticipantBtn) {
-    els.newParticipantBtn.style.display = canManageUsers ? "" : "none";
-  }
+  userLinks.forEach((link) => {
+    link.style.display = canManageUsers ? "" : "none";
+  });
 
-  if (els.participantsSectionShell) {
-    els.participantsSectionShell.style.display = "";
-  }
-
-  if (els.indicatorDocs) {
-    const labelEl = els.indicatorDocs.parentElement?.querySelector("span");
-    if (labelEl) {
-      labelEl.textContent = "Usuários";
-    }
-  }
-
-  if (!isGovernanca) {
-    if (els.indicatorDocs) {
-      els.indicatorDocs.textContent = "—";
-    }
-  }
-
-  if (!canManageUsers) {
-    document.querySelectorAll(".admin-only").forEach((el) => {
-      el.style.display = "none";
-    });
-  }
-
-  if (isCommonCoopUser(profile.role) || isAdmin) {
-    clearPointEditor();
-  }
+  document.querySelectorAll(".admin-only").forEach((el) => {
+    el.classList.toggle("hidden", !canManageUsers);
+  });
 }
+
+function listenDashboardData() {
+  clearUnsubscribers();
+
+  listenCollection("participants", (items) => {
+    STATE.participants = items
+      .filter(itemBelongsToTerritory)
+      .filter((item) => {
+        const status = normalizeText(item.approvalStatus || item.status || item.decision);
+        return status !== "rejected" && status !== "rejeitado";
+      });
+
+    updateKpis();
+  });
+
+listenCollection("coletas", (items) => {
+  const todasDoFirebase = items.map((item) => ({
+    id: item.id,
+    data: formatDateLabel(item),
+    codigo: getParticipantCode(item),
+    participante: getParticipantName(item),
+    fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+    status: getColetaStatusLabel(item),
+    territorio:
+      item.territoryId ||
+      item.territory ||
+      item.cooperativeId ||
+      item.payloadSnapshot?.territoryId ||
+      "-"
+  }));
+
+  console.table(todasDoFirebase);
+
+ STATE.coletas = items
+  .filter(itemBelongsToTerritory)
+
+  console.table(
+    STATE.coletas.map((item) => ({
+      id: item.id,
+      data: formatDateLabel(item),
+      codigo: getParticipantCode(item),
+      participante: getParticipantName(item),
+      fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+      status: getColetaStatusLabel(item)
+    }))
+  );
+
+  STATE.recentPage = 0;
+  populateEntregaFilter(STATE.coletas);
+
+  updateKpis();
+  renderRecentColetas();
+});
+
+  listenCollection("approvalRequests", (items) => {
+    STATE.approvalRequests = items
+      .filter(itemBelongsToTerritory)
+      .filter(isPendingParticipant);
+
+    updateKpis();
+  });
+}
+
+/* =========================================================
+   EXPORTAÇÃO / SINCRONIZAÇÃO
+========================================================= */
+
+function setupExportButton() {
+  els.exportParticipantsPdfBtn?.addEventListener("click", () => {
+    exportParticipantsListPdf();
+  });
+}
+
+function exportParticipantsListPdf() {
+  const participants = STATE.participants
+    .filter(isApprovedParticipant)
+    .sort((a, b) => getParticipantName(a).localeCompare(getParticipantName(b), "pt-BR"));
+
+  const rows = participants.map((item) => `
+    <tr>
+      <td>${escapeHtml(getParticipantName(item))}</td>
+      <td>${escapeHtml(getParticipantCode(item))}</td>
+      <td>${escapeHtml(getParticipantTypeLabel(item))}</td>
+      <td>${escapeHtml(item.participantPhone || item.phone || item.telefone || "-")}</td>
+      <td>${escapeHtml(item.enderecoCompleto || item.address || item.payloadSnapshot?.enderecoCompleto || "-")}</td>
+    </tr>
+  `).join("");
+
+  const printWindow = window.open("", "_blank", "width=1100,height=800");
+
+  printWindow.document.write(`
+    <!doctype html>
+    <html lang="pt-BR">
+    <head>
+      <meta charset="utf-8">
+      <title>Lista de Participantes - ${escapeHtml(PAGE_TERRITORY.cooperativeName)}</title>
+      <style>
+        body{
+          font-family: Arial, sans-serif;
+          padding:24px;
+          color:#222;
+        }
+
+        h1{
+          margin:0;
+          font-size:24px;
+        }
+
+        p{
+          margin:6px 0 18px;
+          color:#555;
+        }
+
+        table{
+          width:100%;
+          border-collapse:collapse;
+          font-size:12px;
+        }
+
+        th,td{
+          border:1px solid #ddd;
+          padding:8px;
+          text-align:left;
+          vertical-align:top;
+        }
+
+        th{
+          background:#81B92A;
+          color:#fff;
+          font-weight:700;
+        }
+
+        tr:nth-child(even){
+          background:#f7f7f7;
+        }
+      </style>
+    </head>
+
+    <body>
+      <h1>Lista de Participantes</h1>
+      <p>
+        ${escapeHtml(PAGE_TERRITORY.cooperativeName)} • 
+        Total: ${participants.length} participante(s) • 
+        Emitido em ${new Date().toLocaleString("pt-BR")}
+      </p>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Participante</th>
+            <th>Código</th>
+            <th>Tipo</th>
+            <th>Telefone</th>
+            <th>Endereço</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows || `
+            <tr>
+              <td colspan="5">Nenhum participante aprovado encontrado.</td>
+            </tr>
+          `}
+        </tbody>
+      </table>
+
+      <script>
+        window.onload = () => {
+          window.print();
+        };
+      <\/script>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+}
+
+function setupSyncButton() {
+  els.syncCoopDashboardBtn?.addEventListener("click", () => {
+    setCoopSyncStatus(`Atualizado em ${new Date().toLocaleString("pt-BR")}`);
+    updateKpis();
+    renderRecentColetas();
+  });
+}
+
+/* =========================================================
+   BOOT
+========================================================= */
 
 function boot() {
   setupSidebar();
   setupLogout();
-  setupTerritoryTabs();
+  setupTopbarShadow();
+  setupExportButton();
+  setupSyncButton();
+  setupLoadMoreColetasButton();
+  setupTablePagination();
+  setupTableFilters();
+  setupRecentColetasActions();
   fillStaticPanels();
-  bindParticipantsSearch();
-  setupMapActions();
 
   onAuthStateChanged(auth, async (user) => {
     try {
@@ -1754,26 +2675,20 @@ function boot() {
       }
 
       STATE.currentUser = user;
+
       const profile = await getUserProfile(user.uid);
       validateProfile(profile);
+
       STATE.profile = profile;
 
       applyPermissionRules(profile);
       fillHeader(profile);
       applyRoleVisibility(profile);
-      loadParticipants(profile);
-      loadApprovalRequests(profile);
-      initTerritoryMap(profile);
+      listenDashboardData();
 
-      const territoryId = canonicalTerritoryId(profile.territoryId || PAGE_TERRITORY.territoryId);
-      const territoryLabel = profile.territoryLabel || PAGE_TERRITORY.territoryLabel;
+      setCoopSyncStatus("Indicadores carregados em tempo real.");
 
-      bindCooperativaSyncButton({ territoryId, territoryLabel });
-      await autoSyncCooperativaDashboardIfNeeded({ territoryId, territoryLabel });
-
-      setTimeout(() => {
-        loadIndicators(profile);
-      }, 600);
+      document.body.classList.add("dashboard-loaded");
     } catch (error) {
       console.error("Erro ao carregar painel da cooperativa:", error);
       alert(error.message || "Não foi possível carregar o painel.");

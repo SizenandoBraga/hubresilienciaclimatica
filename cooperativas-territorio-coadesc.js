@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-coadesc.js";
+import { auth, db } from "./firebase-init.js";
 
 import {
   onAuthStateChanged,
@@ -1348,7 +1348,18 @@ function renderRecentColetas() {
     const tipo = getParticipantTypeLabel(item);
 
     return `
-      <tr class="dashboard-table-row">
+      <tr class="
+  dashboard-table-row
+  ${
+    normalizeText(
+      item.status ||
+      item.coletaStatus ||
+      ""
+    ).includes("cancel")
+      ? "coleta-cancelada"
+      : ""
+  }
+">
         <td class="td-date">${escapeHtml(data)}</td>
 
         <td class="td-user">
@@ -1370,22 +1381,58 @@ function renderRecentColetas() {
           </div>
         </td>
 
-        <td class="td-actions">
-          <button class="table-btn view" type="button" data-view-coleta="${escapeHtml(item.id)}">
-            Ver coleta
-          </button>
+        
+          <td class="td-actions">
 
-          <button class="table-btn image" type="button" data-image-coleta="${escapeHtml(item.id)}">
-            Imagem
-          </button>
+  <button
+    class="table-btn view"
+    type="button"
+    data-view-coleta="${escapeHtml(item.id)}"
+  >
+    Ver coleta
+  </button>
 
-          <button class="table-btn edit" type="button" data-edit-coleta="${escapeHtml(item.id)}">
-            Editar
-          </button>
+  <button
+    class="table-btn image"
+    type="button"
+    data-image-coleta="${escapeHtml(item.id)}"
+  >
+    Imagem
+  </button>
 
-          <button class="table-btn cancel" type="button" data-delete-coleta="${escapeHtml(item.id)}">
-            Excluir
-          </button>
+  <button
+    class="table-btn edit"
+    type="button"
+    data-edit-coleta="${escapeHtml(item.id)}"
+  >
+    Editar
+  </button>
+
+  <button
+    class="table-btn warning"
+    type="button"
+    data-cancel-coleta="${escapeHtml(item.id)}"
+  >
+    ${
+      normalizeText(
+        item.status ||
+        item.coletaStatus ||
+        ""
+      ).includes("cancel")
+        ? "Reativar"
+        : "Cancelar"
+    }
+  </button>
+
+  <button
+    class="table-btn cancel"
+    type="button"
+    data-delete-coleta="${escapeHtml(item.id)}"
+  >
+    Excluir
+  </button>
+
+</td>
         </td>
       </tr>
     `;
@@ -1942,6 +1989,86 @@ function openEditColetaModal(item) {
     }
   );
 }
+
+async function toggleCancelColetaRecord(coletaId) {
+
+  if (!coletaId) return;
+
+  try {
+
+    const coleta =
+      STATE.coletas.find(
+        item =>
+          String(item.id) === String(coletaId)
+      );
+
+    if (!coleta) {
+      alert("Coleta não encontrada.");
+      return;
+    }
+
+    const statusAtual = normalizeText(
+      coleta.status ||
+      coleta.coletaStatus ||
+      ""
+    );
+
+    const cancelada =
+      statusAtual.includes("cancel");
+
+    const confirmed = confirm(
+      cancelada
+        ? "Deseja reativar esta coleta?"
+        : "Deseja cancelar esta coleta?"
+    );
+
+    if (!confirmed) return;
+
+    await updateDoc(
+      doc(
+        db,
+        "coletas",
+        coletaId
+      ),
+      {
+        status: cancelada
+          ? "ativo"
+          : "cancelado",
+
+        cancelledAt: cancelada
+          ? null
+          : serverTimestamp(),
+
+        cancelledBy: cancelada
+          ? null
+          : STATE.currentUser?.uid || null,
+
+        updatedAt: serverTimestamp(),
+
+        updatedBy:
+          STATE.currentUser?.uid || null
+      }
+    );
+
+    setCoopSyncStatus(
+      cancelada
+        ? "Coleta reativada."
+        : "Coleta cancelada."
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
+
+    alert(
+      "Erro ao alterar status da coleta."
+    );
+  }
+}
+
 async function deleteColetaRecord(coletaId) {
 
   if (!coletaId) {
@@ -2112,6 +2239,25 @@ function setupRecentColetasActions() {
         return;
       }
 
+       /* =====================================================
+         EDITAR
+      ===================================================== */
+const cancelButton =
+  event.target.closest(
+    "[data-cancel-coleta]"
+  );
+
+if (cancelButton) {
+
+  const coletaId =
+    cancelButton.dataset.cancelColeta;
+
+  toggleCancelColetaRecord(
+    coletaId
+  );
+
+  return;
+}
       /* =====================================================
          EXCLUIR
       ===================================================== */
@@ -2353,14 +2499,8 @@ listenCollection("coletas", (items) => {
 
   console.table(todasDoFirebase);
 
-  STATE.coletas = items
-    .filter(isColetaRealizada)
-    .filter(itemBelongsToTerritory)
-    .sort((a, b) => {
-      const dateA = getDateValue(a)?.getTime() || 0;
-      const dateB = getDateValue(b)?.getTime() || 0;
-      return dateB - dateA;
-    });
+ STATE.coletas = items
+  .filter(itemBelongsToTerritory)
 
   console.table(
     STATE.coletas.map((item) => ({
