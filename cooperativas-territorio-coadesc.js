@@ -1247,13 +1247,13 @@ function setupTableFilters() {
 
 function getSortedRealizadas() {
   return [...STATE.coletas]
-    .filter(isColetaRealizada)
     .sort((a, b) => {
       const dateA = getDateValue(a)?.getTime() || 0;
       const dateB = getDateValue(b)?.getTime() || 0;
       return dateB - dateA;
     });
-}
+} 
+
 function getColetaImageUrl(item = {}) {
   return (
     item.imageUrl ||
