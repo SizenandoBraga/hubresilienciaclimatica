@@ -564,10 +564,10 @@ function getColetaStatusLabel(item = {}) {
   if (normalized === "approved" || normalized === "aprovado") return "Ativo";
   if (normalized === "active" || normalized === "ativo") return "Ativo";
   if (normalized === "realizada") return "Ativo";
-  if (normalized === "editado") return "Editado";
-  if (normalized === "pending") return "Pendente";
-  if (normalized === "rejected") return "Rejeitada";
-  if (normalized === "cancelado") return "Cancelado";
+  if (normalized === "editado" || normalized === "editada") return "Editado";
+  if (normalized === "pending" || normalized === "pendente") return "Pendente";
+  if (normalized === "rejected" || normalized === "rejeitada" || normalized === "rejeitado") return "Rejeitada";
+  if (normalized === "cancelado" || normalized === "cancelada") return "Cancelado";
 
   return String(raw || "Ativo");
 }
@@ -1247,13 +1247,13 @@ function setupTableFilters() {
 
 function getSortedRealizadas() {
   return [...STATE.coletas]
+    .filter(isColetaRealizada)
     .sort((a, b) => {
       const dateA = getDateValue(a)?.getTime() || 0;
       const dateB = getDateValue(b)?.getTime() || 0;
       return dateB - dateA;
     });
-} 
-
+}
 function getColetaImageUrl(item = {}) {
   return (
     item.imageUrl ||
@@ -1433,7 +1433,6 @@ function renderRecentColetas() {
   </button>
 
 </td>
-        </td>
       </tr>
     `;
   }).join("");
@@ -2043,6 +2042,10 @@ async function toggleCancelColetaRecord(coletaId) {
           ? null
           : STATE.currentUser?.uid || null,
 
+        reactivatedAt: cancelada
+          ? serverTimestamp()
+          : null,
+
         updatedAt: serverTimestamp(),
 
         updatedBy:
@@ -2239,25 +2242,27 @@ function setupRecentColetasActions() {
         return;
       }
 
-       /* =====================================================
-         EDITAR
+      /* =====================================================
+         CANCELAR / REATIVAR
       ===================================================== */
-const cancelButton =
+
+      const cancelButton =
   event.target.closest(
     "[data-cancel-coleta]"
   );
 
-if (cancelButton) {
+      if (cancelButton) {
 
-  const coletaId =
-    cancelButton.dataset.cancelColeta;
+        const coletaId =
+          cancelButton.dataset.cancelColeta;
 
-  toggleCancelColetaRecord(
-    coletaId
-  );
+        toggleCancelColetaRecord(
+          coletaId
+        );
 
-  return;
-}
+        return;
+      }
+
       /* =====================================================
          EXCLUIR
       ===================================================== */
@@ -2499,8 +2504,8 @@ listenCollection("coletas", (items) => {
 
   console.table(todasDoFirebase);
 
- STATE.coletas = items
-  .filter(itemBelongsToTerritory)
+  STATE.coletas = items
+    .filter(itemBelongsToTerritory);
 
   console.table(
     STATE.coletas.map((item) => ({
