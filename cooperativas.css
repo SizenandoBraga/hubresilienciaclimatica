@@ -2282,3 +2282,26 @@ body.modal-open{
 .table-btn.warning:hover{
   opacity:.9;
 }
+.coleta-cancelada{
+  opacity:.55;
+  filter:grayscale(1);
+  background:#f3f4f6 !important;
+}
+
+.coleta-cancelada td{
+  text-decoration:line-through;
+}
+
+.coleta-cancelada .td-actions,
+.coleta-cancelada .td-actions *{
+  text-decoration:none !important;
+}
+
+.table-btn.warning{
+  background:#f59e0b;
+  color:#fff;
+}
+
+.table-btn.warning:hover{
+  opacity:.9;
+}
