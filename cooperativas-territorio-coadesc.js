@@ -567,7 +567,12 @@ function getColetaStatusLabel(item = {}) {
   if (normalized === "editado") return "Editado";
   if (normalized === "pending") return "Pendente";
   if (normalized === "rejected") return "Rejeitada";
-  if (normalized === "cancelado") return "Cancelado";
+  if (
+  normalized === "cancelado" ||
+  normalized === "cancelada"
+) {
+  return "Cancelado";
+}
 
   return String(raw || "Ativo");
 }
@@ -1355,6 +1360,7 @@ function renderRecentColetas() {
     normalizeText(
       item.status ||
       item.coletaStatus ||
+       item.situacao ||
       ""
     ).includes("cancel")
       ? "coleta-cancelada"
@@ -1418,6 +1424,7 @@ function renderRecentColetas() {
       normalizeText(
         item.status ||
         item.coletaStatus ||
+         item.situacao ||
         ""
       ).includes("cancel")
         ? "Reativar"
@@ -2009,6 +2016,7 @@ async function toggleCancelColetaRecord(coletaId) {
     const cancelada = normalizeText(
       coleta.status ||
       coleta.coletaStatus ||
+       item.situacao ||
       ""
     ).includes("cancel");
 
@@ -2478,7 +2486,7 @@ listenCollection("coletas", (items) => {
   console.table(todasDoFirebase);
 
  STATE.coletas = items
-  .filter(itemBelongsToTerritory)
+  .filter(itemBelongsToTerritory);
 
   console.table(
     STATE.coletas.map((item) => ({
