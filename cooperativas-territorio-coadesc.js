@@ -1246,6 +1246,14 @@ function setupTableFilters() {
   });
 }
 
+function getSortedColetasTabela() {
+  return [...STATE.coletas]
+    .sort((a, b) => {
+      const dateA = getDateValue(a)?.getTime() || 0;
+      const dateB = getDateValue(b)?.getTime() || 0;
+      return dateB - dateA;
+    });
+}
 /* =========================================================
    TABELA RECENTE COM PAGINAÇÃO
 ========================================================= */
@@ -1323,7 +1331,7 @@ function openColetaImageModal(item = {}) {
 function renderRecentColetas() {
   if (!els.recentColetasTableBody) return;
 
-  const all = getSortedRealizadas();
+  const all = getSortedColetasTabela();
   const filtered = applyTableFilterToItems(all);
 
   const start = STATE.recentPage * STATE.recentPageSize;
@@ -1482,7 +1490,7 @@ function setupTablePagination() {
   });
 
   els.btnNextColetas?.addEventListener("click", () => {
-    const total = applyTableFilterToItems(getSortedRealizadas()).length;
+    const total = applyTableFilterToItems(getSortedColetasTabela()).length;
     const totalPages = Math.ceil(total / STATE.recentPageSize);
 
     if (STATE.recentPage >= totalPages - 1) return;
