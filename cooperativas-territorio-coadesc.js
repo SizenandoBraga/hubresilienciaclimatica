@@ -1247,13 +1247,13 @@ function setupTableFilters() {
 
 function getSortedRealizadas() {
   return [...STATE.coletas]
-    .filter(isColetaRealizada)
     .sort((a, b) => {
       const dateA = getDateValue(a)?.getTime() || 0;
       const dateB = getDateValue(b)?.getTime() || 0;
       return dateB - dateA;
     });
 }
+
 function getColetaImageUrl(item = {}) {
   return (
     item.imageUrl ||
@@ -1432,7 +1432,7 @@ function renderRecentColetas() {
     Excluir
   </button>
 
-</td>
+
         </td>
       </tr>
     `;
@@ -1996,76 +1996,53 @@ async function toggleCancelColetaRecord(coletaId) {
 
   try {
 
-    const coleta =
-      STATE.coletas.find(
-        item =>
-          String(item.id) === String(coletaId)
-      );
+    const coleta = STATE.coletas.find(
+      item => String(item.id) === String(coletaId)
+    );
 
     if (!coleta) {
       alert("Coleta não encontrada.");
       return;
     }
 
-    const statusAtual = normalizeText(
+    const cancelada = normalizeText(
       coleta.status ||
       coleta.coletaStatus ||
       ""
-    );
-
-    const cancelada =
-      statusAtual.includes("cancel");
+    ).includes("cancel");
 
     const confirmed = confirm(
       cancelada
         ? "Deseja reativar esta coleta?"
-        : "Deseja cancelar esta coleta?"
+        : "Deseja cancelar esta coleta?\n\nEla ficará pausada, fora das contagens, mas continuará salva no banco."
     );
 
     if (!confirmed) return;
 
     await updateDoc(
-      doc(
-        db,
-        "coletas",
-        coletaId
-      ),
+      doc(db, "coletas", coletaId),
       {
-        status: cancelada
-          ? "ativo"
-          : "cancelado",
-
-        cancelledAt: cancelada
-          ? null
-          : serverTimestamp(),
-
-        cancelledBy: cancelada
-          ? null
-          : STATE.currentUser?.uid || null,
-
+        status: cancelada ? "ativo" : "cancelado",
+        coletaStatus: cancelada ? "ativo" : "cancelado",
+        cancelled: cancelada ? false : true,
+        cancelada: cancelada ? false : true,
+        cancelledAt: cancelada ? null : serverTimestamp(),
+        cancelledBy: cancelada ? null : STATE.currentUser?.uid || null,
+        reactivatedAt: cancelada ? serverTimestamp() : null,
         updatedAt: serverTimestamp(),
-
-        updatedBy:
-          STATE.currentUser?.uid || null
+        updatedBy: STATE.currentUser?.uid || null
       }
     );
 
     setCoopSyncStatus(
       cancelada
-        ? "Coleta reativada."
-        : "Coleta cancelada."
+        ? "Coleta reativada com sucesso."
+        : "Coleta cancelada e pausada com sucesso."
     );
 
   } catch (error) {
-
-    console.error(
-      "Erro ao alterar status:",
-      error
-    );
-
-    alert(
-      "Erro ao alterar status da coleta."
-    );
+    console.error("Erro ao alterar status da coleta:", error);
+    alert("Erro ao alterar status da coleta.");
   }
 }
 
