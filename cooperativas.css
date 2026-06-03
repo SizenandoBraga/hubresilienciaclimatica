@@ -2264,44 +2264,111 @@ body.modal-open{
 
 .nav-link-logout:hover{
   transform:translateY(-2px);
-}.coleta-cancelada{
-  opacity:.45;
-  filter:grayscale(1);
-  background:#f3f4f6 !important;
 }
+
+
+/* =========================================================
+   STATUS DE COLETAS • CANCELADAS / EXCLUÍDAS
+========================================================= */
 
 .coleta-cancelada td{
-  text-decoration:line-through;
+  background:#f3f4f6 !important;
+  color:#6b7280;
 }
 
-.table-btn.warning{
-  background:#f59e0b;
-  color:#fff;
-}
-
-.table-btn.warning:hover{
-  opacity:.9;
-}
 .coleta-cancelada{
-  opacity:.55;
-  filter:grayscale(1);
-  background:#f3f4f6 !important;
+  opacity:.62;
+  filter:grayscale(.75);
 }
 
-.coleta-cancelada td{
+.coleta-cancelada .td-user strong,
+.coleta-cancelada .td-code,
+.coleta-cancelada .td-flow,
+.coleta-cancelada .td-date,
+.coleta-cancelada .td-details{
   text-decoration:line-through;
 }
 
 .coleta-cancelada .td-actions,
-.coleta-cancelada .td-actions *{
+.coleta-cancelada .td-actions *,
+.coleta-cancelada .td-status,
+.coleta-cancelada .td-status *{
   text-decoration:none !important;
 }
 
+.coleta-excluida td{
+  background:#fff1f2 !important;
+  color:#7f1d1d;
+}
+
+.coleta-excluida{
+  opacity:.72;
+  filter:grayscale(.35);
+}
+
+.coleta-excluida .td-user strong,
+.coleta-excluida .td-code,
+.coleta-excluida .td-flow,
+.coleta-excluida .td-date,
+.coleta-excluida .td-details{
+  text-decoration:line-through;
+}
+
+.coleta-excluida .td-actions,
+.coleta-excluida .td-actions *,
+.coleta-excluida .td-status,
+.coleta-excluida .td-status *{
+  text-decoration:none !important;
+}
+
+.status-badge.rejeitado{
+  color:#b42318;
+  background:#fff0ec;
+  border:1px solid #ffd6ce;
+}
+
+.status-badge.realizada{
+  color:#16813d;
+  background:#eaf8ec;
+  border:1px solid #cbeecf;
+}
+
+.status-badge.pendente{
+  color:#9b6400;
+  background:#fff6df;
+  border:1px solid #ffe3a8;
+}
+
 .table-btn.warning{
-  background:#f59e0b;
   color:#fff;
+  background:#f59e0b;
+  border-color:#d97706;
 }
 
 .table-btn.warning:hover{
-  opacity:.9;
+  color:#fff;
+  background:#d97706;
+  opacity:.96;
+}
+
+.table-btn.deleted{
+  color:#991b1b;
+  background:#fee2e2;
+  border-color:#fecaca;
+}
+
+.table-btn.deleted:hover{
+  color:#fff;
+  background:#b91c1c;
+}
+
+.table-btn.restore{
+  color:#166534;
+  background:#dcfce7;
+  border-color:#bbf7d0;
+}
+
+.table-btn.restore:hover{
+  color:#fff;
+  background:#16a34a;
 }

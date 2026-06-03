@@ -374,33 +374,7 @@ function isPendingParticipant(item = {}) {
   );
 }
 
-function isColetaCancelada(item = {}) {
-  const status = normalizeText(
-    item.status ||
-    item.situacao ||
-    item.decision ||
-    item.approvalStatus ||
-    item.coletaStatus ||
-    item.cancelStatus ||
-    item.payloadSnapshot?.status ||
-    item.payloadSnapshot?.coletaStatus ||
-    ""
-  );
-
-  return (
-    status.includes("cancel") ||
-    item.cancelled === true ||
-    item.cancelada === true ||
-    item.cancelado === true ||
-    Boolean(item.cancelledAt) ||
-    Boolean(item.canceladaEm) ||
-    Boolean(item.canceladoEm)
-  );
-}
-
 function isColetaRealizada(item = {}) {
-  if (isColetaCancelada(item)) return false;
-
   const status = normalizeText(
     item.status ||
     item.situacao ||
@@ -411,6 +385,8 @@ function isColetaRealizada(item = {}) {
   );
 
   return ![
+    "cancelada",
+    "cancelado",
     "rejected",
     "rejeitada",
     "rejeitado",
@@ -575,8 +551,6 @@ function getEntrega(item = {}) {
 }
 
 function getColetaStatusLabel(item = {}) {
-  if (isColetaCancelada(item)) return "Cancelado";
-
   const raw =
     item.status ||
     item.situacao ||
@@ -593,6 +567,7 @@ function getColetaStatusLabel(item = {}) {
   if (normalized === "editado") return "Editado";
   if (normalized === "pending") return "Pendente";
   if (normalized === "rejected") return "Rejeitada";
+  if (normalized === "cancelado") return "Cancelado";
 
   return String(raw || "Ativo");
 }
@@ -1272,6 +1247,7 @@ function setupTableFilters() {
 
 function getSortedRealizadas() {
   return [...STATE.coletas]
+    .filter(isColetaRealizada)
     .sort((a, b) => {
       const dateA = getDateValue(a)?.getTime() || 0;
       const dateB = getDateValue(b)?.getTime() || 0;
@@ -1372,7 +1348,18 @@ function renderRecentColetas() {
     const tipo = getParticipantTypeLabel(item);
 
     return `
-      <tr class="dashboard-table-row ${isColetaCancelada(item) ? "coleta-cancelada" : ""}">
+      <tr class="
+  dashboard-table-row
+  ${
+    normalizeText(
+      item.status ||
+      item.coletaStatus ||
+      ""
+    ).includes("cancel")
+      ? "coleta-cancelada"
+      : ""
+  }
+">
         <td class="td-date">${escapeHtml(data)}</td>
 
         <td class="td-user">
@@ -1394,26 +1381,58 @@ function renderRecentColetas() {
           </div>
         </td>
 
-        <td class="td-actions">
-          <button class="table-btn view" type="button" data-view-coleta="${escapeHtml(item.id)}">
-            Ver coleta
-          </button>
+        
+          <td class="td-actions">
 
-          <button class="table-btn image" type="button" data-image-coleta="${escapeHtml(item.id)}">
-            Imagem
-          </button>
+  <button
+    class="table-btn view"
+    type="button"
+    data-view-coleta="${escapeHtml(item.id)}"
+  >
+    Ver coleta
+  </button>
 
-          <button class="table-btn edit" type="button" data-edit-coleta="${escapeHtml(item.id)}">
-            Editar
-          </button>
+  <button
+    class="table-btn image"
+    type="button"
+    data-image-coleta="${escapeHtml(item.id)}"
+  >
+    Imagem
+  </button>
 
-          <button class="table-btn warning" type="button" data-cancel-coleta="${escapeHtml(item.id)}">
-            ${isColetaCancelada(item) ? "Reativar" : "Cancelar"}
-          </button>
+  <button
+    class="table-btn edit"
+    type="button"
+    data-edit-coleta="${escapeHtml(item.id)}"
+  >
+    Editar
+  </button>
 
-          <button class="table-btn cancel" type="button" data-delete-coleta="${escapeHtml(item.id)}">
-            Excluir
-          </button>
+  <button
+    class="table-btn warning"
+    type="button"
+    data-cancel-coleta="${escapeHtml(item.id)}"
+  >
+    ${
+      normalizeText(
+        item.status ||
+        item.coletaStatus ||
+        ""
+      ).includes("cancel")
+        ? "Reativar"
+        : "Cancelar"
+    }
+  </button>
+
+  <button
+    class="table-btn cancel"
+    type="button"
+    data-delete-coleta="${escapeHtml(item.id)}"
+  >
+    Excluir
+  </button>
+
+</td>
         </td>
       </tr>
     `;
@@ -1970,52 +1989,83 @@ function openEditColetaModal(item) {
     }
   );
 }
+
 async function toggleCancelColetaRecord(coletaId) {
 
   if (!coletaId) return;
 
   try {
-    const coleta = STATE.coletas.find((item) => String(item.id) === String(coletaId));
+
+    const coleta =
+      STATE.coletas.find(
+        item =>
+          String(item.id) === String(coletaId)
+      );
 
     if (!coleta) {
       alert("Coleta não encontrada.");
       return;
     }
 
-    const cancelada = isColetaCancelada(coleta);
+    const statusAtual = normalizeText(
+      coleta.status ||
+      coleta.coletaStatus ||
+      ""
+    );
+
+    const cancelada =
+      statusAtual.includes("cancel");
 
     const confirmed = confirm(
       cancelada
         ? "Deseja reativar esta coleta?"
-        : "Deseja cancelar esta coleta?\n\nEla continuará salva e poderá ser reativada depois."
+        : "Deseja cancelar esta coleta?"
     );
 
     if (!confirmed) return;
 
     await updateDoc(
-      doc(db, "coletas", coletaId),
+      doc(
+        db,
+        "coletas",
+        coletaId
+      ),
       {
-        status: cancelada ? "ativo" : "cancelado",
-        coletaStatus: cancelada ? "ativo" : "cancelado",
-        cancelled: cancelada ? false : true,
-        cancelada: cancelada ? false : true,
-        cancelledAt: cancelada ? null : serverTimestamp(),
-        cancelledBy: cancelada ? null : STATE.currentUser?.uid || null,
-        reactivatedAt: cancelada ? serverTimestamp() : null,
+        status: cancelada
+          ? "ativo"
+          : "cancelado",
+
+        cancelledAt: cancelada
+          ? null
+          : serverTimestamp(),
+
+        cancelledBy: cancelada
+          ? null
+          : STATE.currentUser?.uid || null,
+
         updatedAt: serverTimestamp(),
-        updatedBy: STATE.currentUser?.uid || null
+
+        updatedBy:
+          STATE.currentUser?.uid || null
       }
     );
 
     setCoopSyncStatus(
       cancelada
-        ? "Coleta reativada com sucesso."
-        : "Coleta cancelada com sucesso."
+        ? "Coleta reativada."
+        : "Coleta cancelada."
     );
 
   } catch (error) {
-    console.error("Erro ao alterar status da coleta:", error);
-    alert("Erro ao alterar status da coleta.");
+
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
+
+    alert(
+      "Erro ao alterar status da coleta."
+    );
   }
 }
 
@@ -2189,25 +2239,25 @@ function setupRecentColetasActions() {
         return;
       }
 
-      /* =====================================================
-         CANCELAR / REATIVAR
+       /* =====================================================
+         EDITAR
       ===================================================== */
+const cancelButton =
+  event.target.closest(
+    "[data-cancel-coleta]"
+  );
 
-      const cancelButton =
-        event.target.closest(
-          "[data-cancel-coleta]"
-        );
+if (cancelButton) {
 
-      if (cancelButton) {
+  const coletaId =
+    cancelButton.dataset.cancelColeta;
 
-        const coletaId =
-          cancelButton.dataset.cancelColeta;
+  toggleCancelColetaRecord(
+    coletaId
+  );
 
-        toggleCancelColetaRecord(coletaId);
-
-        return;
-      }
-
+  return;
+}
       /* =====================================================
          EXCLUIR
       ===================================================== */
@@ -2449,13 +2499,8 @@ listenCollection("coletas", (items) => {
 
   console.table(todasDoFirebase);
 
-  STATE.coletas = items
-    .filter(itemBelongsToTerritory)
-    .sort((a, b) => {
-      const dateA = getDateValue(a)?.getTime() || 0;
-      const dateB = getDateValue(b)?.getTime() || 0;
-      return dateB - dateA;
-    });
+ STATE.coletas = items
+  .filter(itemBelongsToTerritory)
 
   console.table(
     STATE.coletas.map((item) => ({
@@ -2464,8 +2509,7 @@ listenCollection("coletas", (items) => {
       codigo: getParticipantCode(item),
       participante: getParticipantName(item),
       fluxo: formatFluxoLabel(getTipoRecebimento(item)),
-      status: getColetaStatusLabel(item),
-      cancelada: isColetaCancelada(item)
+      status: getColetaStatusLabel(item)
     }))
   );
 
