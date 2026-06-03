@@ -374,7 +374,34 @@ function isPendingParticipant(item = {}) {
   );
 }
 
+
+function isColetaCancelada(item = {}) {
+  const status = normalizeText(
+    item.status ||
+    item.situacao ||
+    item.decision ||
+    item.approvalStatus ||
+    item.coletaStatus ||
+    item.cancelStatus ||
+    item.payloadSnapshot?.status ||
+    item.payloadSnapshot?.coletaStatus ||
+    ""
+  );
+
+  return (
+    status.includes("cancel") ||
+    item.cancelled === true ||
+    item.cancelada === true ||
+    item.cancelado === true ||
+    Boolean(item.cancelledAt) ||
+    Boolean(item.canceladaEm) ||
+    Boolean(item.canceladoEm)
+  );
+}
+
 function isColetaRealizada(item = {}) {
+  if (isColetaCancelada(item)) return false;
+
   const status = normalizeText(
     item.status ||
     item.situacao ||
@@ -551,6 +578,8 @@ function getEntrega(item = {}) {
 }
 
 function getColetaStatusLabel(item = {}) {
+  if (isColetaCancelada(item)) return "Cancelado";
+
   const raw =
     item.status ||
     item.situacao ||
@@ -567,7 +596,7 @@ function getColetaStatusLabel(item = {}) {
   if (normalized === "editado") return "Editado";
   if (normalized === "pending") return "Pendente";
   if (normalized === "rejected") return "Rejeitada";
-  if (normalized === "cancelado") return "Cancelado";
+  if (normalized === "cancelado" || normalized === "cancelada") return "Cancelado";
 
   return String(raw || "Ativo");
 }
@@ -1245,6 +1274,15 @@ function setupTableFilters() {
    TABELA RECENTE COM PAGINAÇÃO
 ========================================================= */
 
+function getSortedColetasTabela() {
+  return [...STATE.coletas]
+    .sort((a, b) => {
+      const dateA = getDateValue(a)?.getTime() || 0;
+      const dateB = getDateValue(b)?.getTime() || 0;
+      return dateB - dateA;
+    });
+}
+
 function getSortedRealizadas() {
   return [...STATE.coletas]
     .filter(isColetaRealizada)
@@ -1254,6 +1292,8 @@ function getSortedRealizadas() {
       return dateB - dateA;
     });
 }
+
+
 function getColetaImageUrl(item = {}) {
   return (
     item.imageUrl ||
@@ -1317,7 +1357,7 @@ function openColetaImageModal(item = {}) {
 function renderRecentColetas() {
   if (!els.recentColetasTableBody) return;
 
-  const all = getSortedRealizadas();
+  const all = getSortedColetasTabela();
   const filtered = applyTableFilterToItems(all);
 
   const start = STATE.recentPage * STATE.recentPageSize;
@@ -1346,20 +1386,10 @@ function renderRecentColetas() {
     const rejeito = formatKg(getRejeito(item));
     const naoComercializado = formatKg(getNaoComercializado(item));
     const tipo = getParticipantTypeLabel(item);
+    const cancelada = isColetaCancelada(item);
 
     return `
-      <tr class="
-  dashboard-table-row
-  ${
-    normalizeText(
-      item.status ||
-      item.coletaStatus ||
-      ""
-    ).includes("cancel")
-      ? "coleta-cancelada"
-      : ""
-  }
-">
+      <tr class="dashboard-table-row ${cancelada ? "coleta-cancelada" : ""}">
         <td class="td-date">${escapeHtml(data)}</td>
 
         <td class="td-user">
@@ -1413,15 +1443,7 @@ function renderRecentColetas() {
     type="button"
     data-cancel-coleta="${escapeHtml(item.id)}"
   >
-    ${
-      normalizeText(
-        item.status ||
-        item.coletaStatus ||
-        ""
-      ).includes("cancel")
-        ? "Reativar"
-        : "Cancelar"
-    }
+    ${cancelada ? "Reativar" : "Cancelar"}
   </button>
 
   <button
@@ -1432,7 +1454,7 @@ function renderRecentColetas() {
     Excluir
   </button>
 
-</td>
+
         </td>
       </tr>
     `;
@@ -1474,7 +1496,7 @@ function setupTablePagination() {
   });
 
   els.btnNextColetas?.addEventListener("click", () => {
-    const total = applyTableFilterToItems(getSortedRealizadas()).length;
+    const total = applyTableFilterToItems(getSortedColetasTabela()).length;
     const totalPages = Math.ceil(total / STATE.recentPageSize);
 
     if (STATE.recentPage >= totalPages - 1) return;
@@ -1996,76 +2018,53 @@ async function toggleCancelColetaRecord(coletaId) {
 
   try {
 
-    const coleta =
-      STATE.coletas.find(
-        item =>
-          String(item.id) === String(coletaId)
-      );
+    const coleta = STATE.coletas.find(
+      item => String(item.id) === String(coletaId)
+    );
 
     if (!coleta) {
       alert("Coleta não encontrada.");
       return;
     }
 
-    const statusAtual = normalizeText(
+    const cancelada = normalizeText(
       coleta.status ||
       coleta.coletaStatus ||
       ""
-    );
-
-    const cancelada =
-      statusAtual.includes("cancel");
+    ).includes("cancel");
 
     const confirmed = confirm(
       cancelada
         ? "Deseja reativar esta coleta?"
-        : "Deseja cancelar esta coleta?"
+        : "Deseja cancelar esta coleta?\n\nEla ficará pausada, fora das contagens, mas continuará salva no banco."
     );
 
     if (!confirmed) return;
 
     await updateDoc(
-      doc(
-        db,
-        "coletas",
-        coletaId
-      ),
+      doc(db, "coletas", coletaId),
       {
-        status: cancelada
-          ? "ativo"
-          : "cancelado",
-
-        cancelledAt: cancelada
-          ? null
-          : serverTimestamp(),
-
-        cancelledBy: cancelada
-          ? null
-          : STATE.currentUser?.uid || null,
-
+        status: cancelada ? "ativo" : "cancelado",
+        coletaStatus: cancelada ? "ativo" : "cancelado",
+        cancelled: cancelada ? false : true,
+        cancelada: cancelada ? false : true,
+        cancelledAt: cancelada ? null : serverTimestamp(),
+        cancelledBy: cancelada ? null : STATE.currentUser?.uid || null,
+        reactivatedAt: cancelada ? serverTimestamp() : null,
         updatedAt: serverTimestamp(),
-
-        updatedBy:
-          STATE.currentUser?.uid || null
+        updatedBy: STATE.currentUser?.uid || null
       }
     );
 
     setCoopSyncStatus(
       cancelada
-        ? "Coleta reativada."
-        : "Coleta cancelada."
+        ? "Coleta reativada com sucesso."
+        : "Coleta cancelada e pausada com sucesso."
     );
 
   } catch (error) {
-
-    console.error(
-      "Erro ao alterar status:",
-      error
-    );
-
-    alert(
-      "Erro ao alterar status da coleta."
-    );
+    console.error("Erro ao alterar status da coleta:", error);
+    alert("Erro ao alterar status da coleta.");
   }
 }
 
@@ -2239,25 +2238,25 @@ function setupRecentColetasActions() {
         return;
       }
 
-       /* =====================================================
-         EDITAR
+      /* =====================================================
+         CANCELAR / REATIVAR
       ===================================================== */
-const cancelButton =
+      const cancelButton =
   event.target.closest(
     "[data-cancel-coleta]"
   );
 
-if (cancelButton) {
+      if (cancelButton) {
 
-  const coletaId =
-    cancelButton.dataset.cancelColeta;
+        const coletaId =
+          cancelButton.dataset.cancelColeta;
 
-  toggleCancelColetaRecord(
-    coletaId
-  );
+        toggleCancelColetaRecord(
+          coletaId
+        );
 
-  return;
-}
+        return;
+      }
       /* =====================================================
          EXCLUIR
       ===================================================== */
