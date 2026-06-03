@@ -1254,6 +1254,7 @@ function getSortedRealizadas() {
     });
 }
 
+
 function getColetaImageUrl(item = {}) {
   return (
     item.imageUrl ||
