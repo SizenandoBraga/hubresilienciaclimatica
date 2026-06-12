@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-coadesc.js";
+import { auth, db } from "./firebase-init-vp.js";
 import "./polyfills.js";
 import { db as dbGuardioes } from "./firebase-init-guardioes.js";
 import { registerAccessLog } from "./access-tracker.js";
