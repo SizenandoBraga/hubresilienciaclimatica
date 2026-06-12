@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-coadesc.js";
+import { auth, db } from "./firebase-init-vp.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   addDoc,
@@ -9,14 +9,46 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-   CONFIG FIXA COOADESC
+   CONFIGURAÇÃO DA PÁGINA DINÂMICA
+   Funciona para Vila Pinto, COOADESC e Padre Cacique
 ========================= */
 
-const PAGE_TERRITORY = {
-  territoryId: "cooadesc",
-  territoryLabel: "COOADESC",
-  backUrl: "./login.html"
+const TERRITORY_FALLBACKS = {
+  "vila-pinto": {
+    territoryId: "vila-pinto",
+    territoryLabel: "Centro de Triagem Vila Pinto",
+    backUrl: "cooperativa-vila-pinto.html"
+  },
+
+  "cooadesc": {
+    territoryId: "cooadesc",
+    territoryLabel: "COOADESC",
+    backUrl: "cooperativa-cooadesc.html"
+  },
+
+  "padre-cacique": {
+    territoryId: "padre-cacique",
+    territoryLabel: "Padre Cacique",
+    backUrl: "cooperativa-padre-cacique.html"
+  }
 };
+
+function getPageTerritoryConfig() {
+  const body = document.body;
+  const territoryId = body?.dataset?.territoryId || "vila-pinto";
+  const fallback = TERRITORY_FALLBACKS[territoryId] || TERRITORY_FALLBACKS["vila-pinto"];
+
+  return {
+    territoryId,
+    territoryLabel: body?.dataset?.territoryLabel || fallback.territoryLabel,
+    backUrl: body?.dataset?.backUrl || fallback.backUrl
+  };
+}
+
+const PAGE_TERRITORY = getPageTerritoryConfig();
+
+/* Código padrão para família quando o campo Código ficar vazio */
+const DEFAULT_FAMILY_CODE = "F000";
 
 /* =========================
    STATE GLOBAL
@@ -58,11 +90,17 @@ function parseNum(value) {
   return Number.isFinite(n) ? n : null;
 }
 
+function getCodeOrDefault(value) {
+  const code = String(value || "").trim();
+  return code || DEFAULT_FAMILY_CODE;
+}
+
 function formatFlow(value) {
   const map = {
     recebimento: "Recebimento",
     final_turno: "Final do turno"
   };
+
   return map[value] || value || "-";
 }
 
@@ -80,10 +118,19 @@ function setPageTerritoryState() {
 }
 
 function setBackLink() {
+  const btnBack = $("btnBackCooperativa");
+
+  if (btnBack) {
+    btnBack.addEventListener("click", () => {
+      window.location.href = PAGE_TERRITORY.backUrl;
+    });
+  }
+
   const backLink = document.querySelector(".topbar-actions a.btn.ghost");
+
   if (backLink) {
     backLink.href = PAGE_TERRITORY.backUrl;
-    backLink.textContent = "Voltar ao login";
+    backLink.textContent = "Voltar à cooperativa";
   }
 }
 
@@ -152,9 +199,7 @@ function ensureAuthenticatedUser() {
     STATE.userDoc?.active === true;
 
   if (!statusOk) {
-    throw new Error(
-      `Usuário sem permissão. Status atual em users: "${status || "vazio"}".`
-    );
+    throw new Error(`Usuário sem permissão. Status atual em users: "${status || "vazio"}".`);
   }
 
   const allowedCoopRoles = ["cooperativa", "operador", "usuario"];
@@ -178,6 +223,10 @@ function ensureAuthenticatedUser() {
   }
 }
 
+/* =========================
+   IMAGENS
+========================= */
+
 function ensureImageFile(file, label = "foto") {
   if (!file) {
     throw new Error(`A ${label} é obrigatória.`);
@@ -191,8 +240,10 @@ function ensureImageFile(file, label = "foto") {
 function readFileAsDataURL(file) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
+
     reader.onload = () => resolve(String(reader.result || ""));
     reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+
     reader.readAsDataURL(file);
   });
 }
@@ -200,8 +251,10 @@ function readFileAsDataURL(file) {
 function loadImageFromDataUrl(dataUrl) {
   return new Promise((resolve, reject) => {
     const img = new Image();
+
     img.onload = () => resolve(img);
     img.onerror = () => reject(new Error("Não foi possível processar a imagem."));
+
     img.src = dataUrl;
   });
 }
@@ -233,16 +286,15 @@ async function compressImageFile(file, options = {}) {
   canvas.height = targetHeight;
 
   const ctx = canvas.getContext("2d");
+
   if (!ctx) {
     throw new Error("Não foi possível preparar a imagem para salvar.");
   }
 
   ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
 
-  const compressedDataUrl = canvas.toDataURL(mimeType, quality);
-
   return {
-    dataUrl: compressedDataUrl,
+    dataUrl: canvas.toDataURL(mimeType, quality),
     originalName: file.name || "foto.jpg",
     originalType: file.type || "",
     originalSize: file.size || 0,
@@ -254,8 +306,8 @@ async function compressImageFile(file, options = {}) {
 
 async function compressManyImages(files, options = {}) {
   const validFiles = Array.from(files || []).filter(Boolean);
-
   const result = [];
+
   for (const file of validFiles) {
     result.push(await compressImageFile(file, options));
   }
@@ -318,7 +370,7 @@ async function loadCurrentUser() {
 }
 
 /* =========================
-   CHOICES
+   ESCOLHAS DA OPERAÇÃO
 ========================= */
 
 function activateGroup(selector, activeBtn, hiddenInputId, value) {
@@ -331,12 +383,16 @@ function activateGroup(selector, activeBtn, hiddenInputId, value) {
   activeBtn.setAttribute("aria-pressed", "true");
 
   const hidden = $(hiddenInputId);
-  if (hidden) hidden.value = value;
+
+  if (hidden) {
+    hidden.value = value;
+  }
 }
 
 function wireChoices() {
   document.querySelectorAll("[data-delivery]").forEach((btn) => {
     btn.setAttribute("aria-pressed", "false");
+
     btn.onclick = () => {
       activateGroup("[data-delivery]", btn, "deliveryType", btn.dataset.delivery);
     };
@@ -344,6 +400,7 @@ function wireChoices() {
 
   document.querySelectorAll("[data-flow]").forEach((btn) => {
     btn.setAttribute("aria-pressed", "false");
+
     btn.onclick = () => {
       activateGroup("[data-flow]", btn, "flowType", btn.dataset.flow);
       setText("flowStatus", formatFlow(btn.dataset.flow));
@@ -353,6 +410,7 @@ function wireChoices() {
 
   document.querySelectorAll(".quality-btn").forEach((btn) => {
     btn.setAttribute("aria-pressed", "false");
+
     btn.onclick = () => {
       document.querySelectorAll(".quality-btn").forEach((el) => {
         el.classList.remove("active");
@@ -381,12 +439,13 @@ function wireChoices() {
 }
 
 /* =========================
-   EXTRAS
+   MATERIAIS EXTRAS
 ========================= */
 
 function buildExtraRow() {
   const row = document.createElement("div");
   row.className = "extra-row";
+
   row.innerHTML = `
     <input type="text" class="extra-name" placeholder="Nome do material">
     <input type="number" step="0.01" class="extra-weight" placeholder="kg">
@@ -420,7 +479,7 @@ function getExtras() {
 }
 
 /* =========================
-   FOTOS
+   FOTOS DO FINAL DO TURNO
 ========================= */
 
 const inputFotosFinalTurno = $("fotoFinalTurno");
@@ -431,7 +490,7 @@ const MAX_FOTOS = 10;
 
 inputFotosFinalTurno?.addEventListener("change", (e) => {
   const files = Array.from(e.target.files || []);
-  const imagens = files.filter((f) => f.type.startsWith("image/"));
+  const imagens = files.filter((f) => String(f.type || "").startsWith("image/"));
 
   if (fotosFinalTurno.length + imagens.length > MAX_FOTOS) {
     alert(`Máximo de ${MAX_FOTOS} fotos`);
@@ -455,6 +514,7 @@ function renderPreviewFinalTurno() {
     reader.onload = (e) => {
       const div = document.createElement("div");
       div.className = "preview-item";
+
       div.innerHTML = `
         <img src="${e.target.result}" alt="Pré-visualização da foto ${index + 1}">
         <button type="button" class="preview-remove" data-index="${index}">×</button>
@@ -471,6 +531,7 @@ function renderPreviewFinalTurno() {
     reader.readAsDataURL(file);
   });
 }
+
 /* =========================
    ETAPA 1
 ========================= */
@@ -512,9 +573,9 @@ async function salvarRecebimento() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  const familyCodeDigitado = $("familyCode")?.value.trim() || "";
-const familyCode = familyCodeDigitado || "F000";
-const participantCode = familyCode;
+  /* Se for família e o campo ficar em branco, salva automaticamente F000 */
+  const participantCode = getCodeOrDefault($("familyCode")?.value);
+  const familyCode = participantCode;
 
   const pesoResiduoSecoKg = parseNum($("pesoResiduoSecoKg")?.value);
   const qualidadeNota = parseNum($("qualidadeNota")?.value);
@@ -529,14 +590,14 @@ const participantCode = familyCode;
     throw new Error("Salve primeiro a etapa da operação.");
   }
 
-  
-
   if (
-  pesoResiduoSecoKg === null ||
-  qualidadeNota === null
-) {
-  throw new Error("Preencha os campos obrigatórios do recebimento.");
-}
+    pesoResiduoSecoKg === null ||
+    qualidadeNota === null ||
+    pesoRejeitoKg === null ||
+    pesoNaoComercializadoKg === null
+  ) {
+    throw new Error("Preencha todos os campos obrigatórios do recebimento.");
+  }
 
   let fotoResiduo = null;
   let fotoNaoComercializado = null;
@@ -565,13 +626,12 @@ const participantCode = familyCode;
     createdByName: getCreatedByName(),
 
     opDate: STATE.operacao.opDate,
-   participantCode,
-deliveryType: STATE.operacao.deliveryType,
-flowType: "recebimento",
-observacao: STATE.operacao.opNotes || null,
-familyCode,
-codigoAutomatico: !familyCodeDigitado,
-tipoCodigo: familyCodeDigitado ? "informado" : "familia_automatico",
+    participantCode,
+    familyCode,
+    deliveryType: STATE.operacao.deliveryType,
+    flowType: "recebimento",
+    observacao: STATE.operacao.opNotes || null,
+
     photoUrl: fotoResiduo?.dataUrl || null,
     photos: recebimentoPhotos,
 
@@ -579,8 +639,8 @@ tipoCodigo: familyCodeDigitado ? "informado" : "familia_automatico",
       pesoResiduoSecoKg,
       qualidadeNota,
       observacao: recebimentoObs,
-     pesoRejeitoKg: pesoRejeitoKg ?? 0,
-pesoNaoComercializadoKg: pesoNaoComercializadoKg ?? 0,
+      pesoRejeitoKg,
+      pesoNaoComercializadoKg,
 
       fotoResiduoUrl: fotoResiduo?.dataUrl || null,
       fotoNaoComercializadoUrl: fotoNaoComercializado?.dataUrl || null,
@@ -608,20 +668,12 @@ async function salvarFinalTurno() {
   ensureTerritory();
   ensureAuthenticatedUser();
 
-  const participantCode = $("condCode")?.value.trim() || null;
+  /* Se for família e o campo ficar em branco, salva automaticamente F000 */
+  const participantCode = getCodeOrDefault($("condCode")?.value);
   const condCode = participantCode;
-  const pesoRejeitoGeralKg = parseNum($("pesoRejeitoGeralKg")?.value);
 
   if (!STATE.operacao) {
     throw new Error("Salve primeiro a etapa da operação.");
-  }
-
-  if (!participantCode) {
-    throw new Error("Informe o código do participante/condomínio.");
-  }
-
-  if (pesoRejeitoGeralKg === null) {
-    throw new Error("Preencha o peso do rejeito geral.");
   }
 
   const extras = getExtras();
@@ -646,16 +698,16 @@ async function salvarFinalTurno() {
 
     opDate: STATE.operacao.opDate,
     participantCode,
+    condCode,
     deliveryType: STATE.operacao.deliveryType,
     flowType: "final_turno",
     observacao: STATE.operacao.opNotes || null,
-    condCode,
 
     photoUrl: photoUrls[0] || null,
     photos: photoUrls,
 
     finalTurno: {
-      pesoRejeitoGeralKg,
+      /* Peso do rejeito geral removido de todos os perfis */
       plasticoKg: parseNum($("plasticoKg")?.value) || 0,
       papelMistoKg: parseNum($("papelMistoKg")?.value) || 0,
       papelaoKg: parseNum($("papelaoKg")?.value) || 0,
@@ -681,7 +733,7 @@ async function salvarFinalTurno() {
 }
 
 /* =========================
-   RESET FORMS
+   FORMS
 ========================= */
 
 function resetRecebimentoForm() {
@@ -704,15 +756,32 @@ function resetFinalTurnoForm() {
   renderPreviewFinalTurno();
 
   const wrap = $("extrasWrap");
+
   if (wrap) {
     wrap.innerHTML = "";
     wrap.appendChild(buildExtraRow());
   }
 }
 
-/* =========================
-   FORMS
-========================= */
+function resetAllForms() {
+  $("formOperacao")?.reset();
+  resetRecebimentoForm();
+  resetFinalTurnoForm();
+
+  STATE.operacao = null;
+
+  document.querySelectorAll(".choice-card").forEach((btn) => {
+    btn.classList.remove("active");
+    btn.setAttribute("aria-pressed", "false");
+  });
+
+  setText("flowStatus", "não selecionado");
+  togglePanels(null);
+
+  if ($("opDate")) {
+    $("opDate").value = toISODate(new Date());
+  }
+}
 
 function wireForms() {
   $("formOperacao")?.addEventListener("submit", (e) => {
@@ -726,8 +795,17 @@ function wireForms() {
     if (STATE.salvando) return;
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
+    const submitBtn = e.target.querySelector("button[type='submit']");
+
     try {
       STATE.salvando = true;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando coleta...";
+      }
+
+      setConnectionState("salvando");
 
       await salvarRecebimento();
 
@@ -737,12 +815,24 @@ function wireForms() {
         `Coleta de recebimento salva com sucesso em ${PAGE_TERRITORY.territoryLabel}.`
       );
 
+      setConnectionState("conectado");
       resetRecebimentoForm();
     } catch (error) {
-      console.error(error);
-      setMsg($("msgRecebimento"), "bad", error.message);
+      console.error("Erro ao salvar recebimento:", error);
+      setConnectionState("erro");
+
+      setMsg(
+        $("msgRecebimento"),
+        "bad",
+        error.message || "Erro ao salvar recebimento."
+      );
     } finally {
       STATE.salvando = false;
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Salvar coleta de recebimento";
+      }
     }
   });
 
@@ -752,24 +842,57 @@ function wireForms() {
     if (STATE.salvando) return;
     if (!saveOperacaoBase() && !STATE.operacao) return;
 
+    const submitBtn = e.target.querySelector("button[type='submit']");
+
     try {
       STATE.salvando = true;
+
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Salvando fechamento...";
+      }
+
+      setConnectionState("salvando");
 
       await salvarFinalTurno();
 
       setMsg(
         $("msgFinalTurno"),
         "ok",
-        `Final de turno salvo com sucesso em ${PAGE_TERRITORY.territoryLabel}.`
+        `Registro final do turno salvo com sucesso em ${PAGE_TERRITORY.territoryLabel}.`
       );
 
+      setConnectionState("conectado");
       resetFinalTurnoForm();
     } catch (error) {
-      console.error(error);
-      setMsg($("msgFinalTurno"), "bad", error.message);
+      console.error("Erro ao salvar fechamento do turno:", error);
+      setConnectionState("erro");
+
+      setMsg(
+        $("msgFinalTurno"),
+        "bad",
+        error.message || "Erro ao salvar fechamento do turno."
+      );
     } finally {
       STATE.salvando = false;
+
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = "Salvar registro final do turno";
+      }
     }
+  });
+
+  $("btnNovaColetaTop")?.addEventListener("click", resetAllForms);
+  $("btnNovaColetaRecebimento")?.addEventListener("click", resetAllForms);
+  $("btnNovaColetaFinalTurno")?.addEventListener("click", resetAllForms);
+
+  $("btnVoltarRecebimento")?.addEventListener("click", () => {
+    $("panelRecebimento")?.classList.add("hidden");
+  });
+
+  $("btnVoltarFinalTurno")?.addEventListener("click", () => {
+    $("panelFinalTurno")?.classList.add("hidden");
   });
 }
 
@@ -787,6 +910,7 @@ async function init() {
   }
 
   const wrap = $("extrasWrap");
+
   if (wrap && !wrap.children.length) {
     wrap.appendChild(buildExtraRow());
   }
@@ -797,7 +921,7 @@ async function init() {
 
   await loadCurrentUser();
 
-  console.log("Página COOADESC funcionando 100%");
+  console.log(`Página de coletas ${PAGE_TERRITORY.territoryLabel} iniciada com autenticação.`);
 }
 
 init();

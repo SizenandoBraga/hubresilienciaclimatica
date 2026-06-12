@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init.js";
+import { auth, db } from "./firebase-init-pc.js";
 
 import {
   onAuthStateChanged,
