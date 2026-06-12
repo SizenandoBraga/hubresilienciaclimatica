@@ -1,6 +1,10 @@
 import "./polyfills.js";
 document.documentElement.classList.add("js-ready");
 
+import "./polyfills.js";
+
+document.documentElement.classList.add("js-ready");
+
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
@@ -9,12 +13,12 @@ import {
   browserSessionPersistence,
   onAuthStateChanged,
   signOut
-} from "firebase/auth";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
   doc,
   getDoc
-} from "firebase/firestore";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 let auth = null;
 let db = null;
