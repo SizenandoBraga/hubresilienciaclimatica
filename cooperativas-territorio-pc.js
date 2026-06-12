@@ -1,5 +1,4 @@
 import { auth, db } from "./firebase-init-pc.js";
-
 import {
   onAuthStateChanged,
   signOut
@@ -12,8 +11,10 @@ import {
   query,
   onSnapshot,
   updateDoc,
+  orderBy,
   deleteDoc,
-  serverTimestamp
+  serverTimestamp,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================================================
@@ -47,7 +48,7 @@ const PAGE_TERRITORY = {
   participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
   coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html"
 };
-
+ 
 /* =========================================================
    ELEMENTOS
 ========================================================= */
@@ -126,6 +127,7 @@ const STATE = {
   recentPageSize: 10,
   recentLimit: 10
 };
+
 
 /* =========================================================
    HELPERS
@@ -374,7 +376,34 @@ function isPendingParticipant(item = {}) {
   );
 }
 
+
+function isColetaCancelada(item = {}) {
+  const status = normalizeText(
+    item.status ||
+    item.situacao ||
+    item.decision ||
+    item.approvalStatus ||
+    item.coletaStatus ||
+    item.cancelStatus ||
+    item.payloadSnapshot?.status ||
+    item.payloadSnapshot?.coletaStatus ||
+    ""
+  );
+
+  return (
+    status.includes("cancel") ||
+    item.cancelled === true ||
+    item.cancelada === true ||
+    item.cancelado === true ||
+    Boolean(item.cancelledAt) ||
+    Boolean(item.canceladaEm) ||
+    Boolean(item.canceladoEm)
+  );
+}
+
 function isColetaRealizada(item = {}) {
+  if (isColetaCancelada(item)) return false;
+
   const status = normalizeText(
     item.status ||
     item.situacao ||
@@ -551,6 +580,8 @@ function getEntrega(item = {}) {
 }
 
 function getColetaStatusLabel(item = {}) {
+  if (isColetaCancelada(item)) return "Cancelado";
+
   const raw =
     item.status ||
     item.situacao ||
@@ -567,7 +598,7 @@ function getColetaStatusLabel(item = {}) {
   if (normalized === "editado") return "Editado";
   if (normalized === "pending") return "Pendente";
   if (normalized === "rejected") return "Rejeitada";
-  if (normalized === "cancelado") return "Cancelado";
+  if (normalized === "cancelado" || normalized === "cancelada") return "Cancelado";
 
   return String(raw || "Ativo");
 }
@@ -1245,6 +1276,15 @@ function setupTableFilters() {
    TABELA RECENTE COM PAGINAÇÃO
 ========================================================= */
 
+function getSortedColetasTabela() {
+  return [...STATE.coletas]
+    .sort((a, b) => {
+      const dateA = getDateValue(a)?.getTime() || 0;
+      const dateB = getDateValue(b)?.getTime() || 0;
+      return dateB - dateA;
+    });
+}
+
 function getSortedRealizadas() {
   return [...STATE.coletas]
     .filter(isColetaRealizada)
@@ -1254,6 +1294,8 @@ function getSortedRealizadas() {
       return dateB - dateA;
     });
 }
+
+
 function getColetaImageUrl(item = {}) {
   return (
     item.imageUrl ||
@@ -1317,7 +1359,7 @@ function openColetaImageModal(item = {}) {
 function renderRecentColetas() {
   if (!els.recentColetasTableBody) return;
 
-  const all = getSortedRealizadas();
+  const all = getSortedColetasTabela();
   const filtered = applyTableFilterToItems(all);
 
   const start = STATE.recentPage * STATE.recentPageSize;
@@ -1346,20 +1388,10 @@ function renderRecentColetas() {
     const rejeito = formatKg(getRejeito(item));
     const naoComercializado = formatKg(getNaoComercializado(item));
     const tipo = getParticipantTypeLabel(item);
+    const cancelada = isColetaCancelada(item);
 
     return `
-      <tr class="
-  dashboard-table-row
-  ${
-    normalizeText(
-      item.status ||
-      item.coletaStatus ||
-      ""
-    ).includes("cancel")
-      ? "coleta-cancelada"
-      : ""
-  }
-">
+      <tr class="dashboard-table-row ${cancelada ? "coleta-cancelada" : ""}">
         <td class="td-date">${escapeHtml(data)}</td>
 
         <td class="td-user">
@@ -1413,15 +1445,7 @@ function renderRecentColetas() {
     type="button"
     data-cancel-coleta="${escapeHtml(item.id)}"
   >
-    ${
-      normalizeText(
-        item.status ||
-        item.coletaStatus ||
-        ""
-      ).includes("cancel")
-        ? "Reativar"
-        : "Cancelar"
-    }
+    ${cancelada ? "Reativar" : "Cancelar"}
   </button>
 
   <button
@@ -1432,7 +1456,7 @@ function renderRecentColetas() {
     Excluir
   </button>
 
-</td>
+
         </td>
       </tr>
     `;
@@ -1474,7 +1498,7 @@ function setupTablePagination() {
   });
 
   els.btnNextColetas?.addEventListener("click", () => {
-    const total = applyTableFilterToItems(getSortedRealizadas()).length;
+    const total = applyTableFilterToItems(getSortedColetasTabela()).length;
     const totalPages = Math.ceil(total / STATE.recentPageSize);
 
     if (STATE.recentPage >= totalPages - 1) return;
@@ -1989,6 +2013,117 @@ function openEditColetaModal(item) {
     }
   );
 }
+async function carregarSolicitacoesGuardioes(cooperativaId) {
+  const tbody = document.getElementById("guardioesCoopTableBody");
+  const indicador = document.getElementById("indicatorGuardioesSolicitacoes");
+
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(
+      query(
+        collection(dbGuardioes, "cooperativas", cooperativaId, "solicitacoes"),
+        orderBy("createdAt", "desc")
+      )
+    );
+
+    if (indicador) {
+      indicador.textContent = snap.size;
+    }
+
+    if (snap.empty) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7">Nenhuma solicitação encontrada.</td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = snap.docs.map((docItem) => {
+      const item = docItem.data();
+      const id = docItem.id;
+
+      const data =
+        item.createdAt?.toDate?.().toLocaleString("pt-BR") ||
+        "-";
+
+      const status = item.status || "solicitado";
+      const whatsappLimpo = String(item.whatsapp || "").replace(/\D/g, "");
+      const whatsappLink = whatsappLimpo
+        ? `https://wa.me/55${whatsappLimpo}`
+        : "#";
+
+      return `
+        <tr>
+          <td>${escapeHtml(data)}</td>
+          <td>${escapeHtml(item.nome || "-")}</td>
+          <td>
+            <a href="${whatsappLink}" target="_blank" rel="noopener noreferrer">
+              ${escapeHtml(item.whatsapp || "-")}
+            </a>
+          </td>
+          <td>${escapeHtml(item.endereco || "-")}</td>
+          <td>${escapeHtml(item.cep || "-")}</td>
+          <td>
+            <span class="status-pill ${status === "contatado" ? "" : "inactive"}">
+              ${escapeHtml(status)}
+            </span>
+          </td>
+          <td>
+            <button
+              type="button"
+              class="table-btn view"
+              data-contatar-guardiao="${escapeHtml(id)}"
+              data-whatsapp="${escapeHtml(whatsappLink)}"
+            >
+              Entrar em contato
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Erro ao carregar solicitações dos Guardiões:", error);
+
+    if (indicador) indicador.textContent = "0";
+
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7">Erro ao carregar solicitações.</td>
+      </tr>
+    `;
+  }
+}
+async function marcarGuardiaoComoContatado(solicitacaoId) {
+  if (!solicitacaoId) return;
+
+  try {
+    await updateDoc(
+      doc(
+        dbGuardioes,
+        "cooperativas",
+        PAGE_TERRITORY.territoryId,
+        "solicitacoes",
+        solicitacaoId
+      ),
+      {
+        status: "contatado",
+        contactedAt: serverTimestamp(),
+        contactedBy: STATE.currentUser?.uid || null,
+        updatedAt: serverTimestamp()
+      }
+    );
+
+    await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
+
+  } catch (error) {
+    console.error("Erro ao atualizar solicitação:", error);
+    alert("Erro ao atualizar solicitação.");
+  }
+}
+
 
 async function toggleCancelColetaRecord(coletaId) {
 
@@ -1996,76 +2131,53 @@ async function toggleCancelColetaRecord(coletaId) {
 
   try {
 
-    const coleta =
-      STATE.coletas.find(
-        item =>
-          String(item.id) === String(coletaId)
-      );
+    const coleta = STATE.coletas.find(
+      item => String(item.id) === String(coletaId)
+    );
 
     if (!coleta) {
       alert("Coleta não encontrada.");
       return;
     }
 
-    const statusAtual = normalizeText(
+    const cancelada = normalizeText(
       coleta.status ||
       coleta.coletaStatus ||
       ""
-    );
-
-    const cancelada =
-      statusAtual.includes("cancel");
+    ).includes("cancel");
 
     const confirmed = confirm(
       cancelada
         ? "Deseja reativar esta coleta?"
-        : "Deseja cancelar esta coleta?"
+        : "Deseja cancelar esta coleta?\n\nEla ficará pausada, fora das contagens, mas continuará salva no banco."
     );
 
     if (!confirmed) return;
 
     await updateDoc(
-      doc(
-        db,
-        "coletas",
-        coletaId
-      ),
+      doc(db, "coletas", coletaId),
       {
-        status: cancelada
-          ? "ativo"
-          : "cancelado",
-
-        cancelledAt: cancelada
-          ? null
-          : serverTimestamp(),
-
-        cancelledBy: cancelada
-          ? null
-          : STATE.currentUser?.uid || null,
-
+        status: cancelada ? "ativo" : "cancelado",
+        coletaStatus: cancelada ? "ativo" : "cancelado",
+        cancelled: cancelada ? false : true,
+        cancelada: cancelada ? false : true,
+        cancelledAt: cancelada ? null : serverTimestamp(),
+        cancelledBy: cancelada ? null : STATE.currentUser?.uid || null,
+        reactivatedAt: cancelada ? serverTimestamp() : null,
         updatedAt: serverTimestamp(),
-
-        updatedBy:
-          STATE.currentUser?.uid || null
+        updatedBy: STATE.currentUser?.uid || null
       }
     );
 
     setCoopSyncStatus(
       cancelada
-        ? "Coleta reativada."
-        : "Coleta cancelada."
+        ? "Coleta reativada com sucesso."
+        : "Coleta cancelada e pausada com sucesso."
     );
 
   } catch (error) {
-
-    console.error(
-      "Erro ao alterar status:",
-      error
-    );
-
-    alert(
-      "Erro ao alterar status da coleta."
-    );
+    console.error("Erro ao alterar status da coleta:", error);
+    alert("Erro ao alterar status da coleta.");
   }
 }
 
@@ -2239,25 +2351,27 @@ function setupRecentColetasActions() {
         return;
       }
 
-       /* =====================================================
-         EDITAR
+      /* =====================================================
+         CANCELAR / REATIVAR
       ===================================================== */
-const cancelButton =
-  event.target.closest(
-    "[data-cancel-coleta]"
-  );
 
-if (cancelButton) {
+      const cancelButton =
+        event.target.closest(
+          "[data-cancel-coleta]"
+        );
 
-  const coletaId =
-    cancelButton.dataset.cancelColeta;
+      if (cancelButton) {
 
-  toggleCancelColetaRecord(
-    coletaId
-  );
+        const coletaId =
+          cancelButton.dataset.cancelColeta;
 
-  return;
-}
+        toggleCancelColetaRecord(
+          coletaId
+        );
+
+        return;
+      }
+
       /* =====================================================
          EXCLUIR
       ===================================================== */
@@ -2272,7 +2386,43 @@ if (cancelButton) {
         const coletaId =
           deleteButton.dataset.deleteColeta;
 
-        deleteColetaRecord(coletaId);
+        deleteColetaRecord(
+          coletaId
+        );
+
+        return;
+      }
+
+      /* =====================================================
+         GUARDIÕES URBANOS
+      ===================================================== */
+
+      const contatoGuardiaoBtn =
+        event.target.closest(
+          "[data-contatar-guardiao]"
+        );
+
+      if (contatoGuardiaoBtn) {
+
+        const solicitacaoId =
+          contatoGuardiaoBtn.dataset.contatarGuardiao;
+
+        const whatsappLink =
+          contatoGuardiaoBtn.dataset.whatsapp;
+
+        marcarGuardiaoComoContatado(
+          solicitacaoId
+        );
+
+        if (
+          whatsappLink &&
+          whatsappLink !== "#"
+        ) {
+          window.open(
+            whatsappLink,
+            "_blank"
+          );
+        }
 
         return;
       }
@@ -2482,38 +2632,11 @@ function listenDashboardData() {
   });
 
 listenCollection("coletas", (items) => {
-  const todasDoFirebase = items.map((item) => ({
-    id: item.id,
-    data: formatDateLabel(item),
-    codigo: getParticipantCode(item),
-    participante: getParticipantName(item),
-    fluxo: formatFluxoLabel(getTipoRecebimento(item)),
-    status: getColetaStatusLabel(item),
-    territorio:
-      item.territoryId ||
-      item.territory ||
-      item.cooperativeId ||
-      item.payloadSnapshot?.territoryId ||
-      "-"
-  }));
-
-  console.table(todasDoFirebase);
-
- STATE.coletas = items
-  .filter(itemBelongsToTerritory)
-
-  console.table(
-    STATE.coletas.map((item) => ({
-      id: item.id,
-      data: formatDateLabel(item),
-      codigo: getParticipantCode(item),
-      participante: getParticipantName(item),
-      fluxo: formatFluxoLabel(getTipoRecebimento(item)),
-      status: getColetaStatusLabel(item)
-    }))
-  );
+  STATE.coletas = items
+    .filter(itemBelongsToTerritory);
 
   STATE.recentPage = 0;
+
   populateEntregaFilter(STATE.coletas);
 
   updateKpis();
@@ -2680,11 +2803,21 @@ function boot() {
       validateProfile(profile);
 
       STATE.profile = profile;
-
+      await registerAccessLog({
+  db,
+  auth,
+  page: "painel-cooperativa",
+  pageType: "logada",
+  territoryId: PAGE_TERRITORY.territoryId,
+  cooperativeName: PAGE_TERRITORY.cooperativeName,
+  userProfile: profile
+});
+  
       applyPermissionRules(profile);
       fillHeader(profile);
       applyRoleVisibility(profile);
       listenDashboardData();
+      await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
 
       setCoopSyncStatus("Indicadores carregados em tempo real.");
 
