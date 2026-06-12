@@ -1,7 +1,3 @@
-import "./polyfills.js";
-
-document.documentElement.classList.add("js-ready");
-
 import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
