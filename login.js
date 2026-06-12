@@ -172,12 +172,18 @@ async function selectCoop(coopKey) {
 
     const module = await coop.init();
 
-    auth = module.auth;
-    db = module.db;
+auth = module.auth;
+db = module.db;
 
-    if (!auth || !db) {
-      throw new Error("Firebase não retornou auth/db.");
-    }
+if (!auth || !db) {
+  throw new Error("Firebase não retornou auth/db.");
+}
+
+/* FORÇA LIMPEZA DA SESSÃO ANTERIOR */
+
+if (auth.currentUser) {
+  await signOut(auth);
+}
 
     if (cardTitle) {
       cardTitle.textContent = `Entrar • ${coop.label}`;
@@ -191,28 +197,7 @@ async function selectCoop(coopKey) {
     coopSelector.style.display = "none";
     loginCard.style.display = "block";
 
-    onAuthStateChanged(auth, async (user) => {
-      if (!user) return;
-
-      try {
-        const profile = await getUserProfile(user.uid);
-
-        if (!profile || !isActiveProfile(profile)) {
-          return;
-        }
-
-        showMsg(
-          "success",
-          `Sessão ativa encontrada em ${coop.label}. Entrando...`
-        );
-
-        setTimeout(() => {
-          window.location.href = getRedirect(profile);
-        }, 700);
-      } catch (error) {
-        console.error("Erro ao verificar sessão:", error);
-      }
-    });
+  
 
   } catch (error) {
     console.error("Erro ao carregar Firebase:", error);
