@@ -1,7 +1,4 @@
 import "./polyfills.js";
-document.documentElement.classList.add("js-ready");
-
-import "./polyfills.js";
 
 document.documentElement.classList.add("js-ready");
 
