@@ -174,6 +174,9 @@ async function selectCoop(coopKey) {
 
 auth = module.auth;
 db = module.db;
+console.log("COOP SELECIONADA:", selectedCoop);
+console.log("PROJECT ID:", auth.app.options.projectId);
+console.log("API KEY:", auth.app.options.apiKey);
 
 if (!auth || !db) {
   throw new Error("Firebase não retornou auth/db.");
@@ -266,7 +269,9 @@ loginForm?.addEventListener("submit", async (event) => {
         ? browserLocalPersistence
         : browserSessionPersistence
     );
-
+console.log("Tentando login em:", selectedCoop);
+console.log("Projeto Firebase:", auth.app.options.projectId);
+console.log("E-mail:", email);
     const credential = await signInWithEmailAndPassword(
       auth,
       email,
