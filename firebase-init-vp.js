@@ -8,13 +8,13 @@ import {
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDAPUu0k3cqx-v1yos2MjbUnYXd2qX6fDs",
-  authDomain: "coadesc-34711.firebaseapp.com",
-  projectId: "coadesc-34711",
-  storageBucket: "coadesc-34711.firebasestorage.app",
-  messagingSenderId: "689475129073",
-  appId: "1:689475129073:web:36deaa4b3f547dabd6a350",
-  measurementId: "G-2Y7YTT6EZS"
+  apiKey: "AIzaSyDA2Xq9sRvRuVZVkeIH8Q6d6JB9Pv_Dkss",
+  authDomain: "vila-pinto.firebaseapp.com",
+  projectId: "vila-pinto",
+  storageBucket: "vila-pinto.firebasestorage.app",
+  messagingSenderId: "669076509625",
+  appId: "1:669076509625:web:5cb058223684593590dc68",
+  measurementId: "G-N3JXY8LEY7"
 };
 
 const app = initializeApp(firebaseConfig);
