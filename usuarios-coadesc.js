@@ -3576,12 +3576,50 @@ function normalizarBuscaEndereco(value) {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/cep\s*\d{5}-?\d{3}/g, "")
-    .replace(/\bbrasil\b/g, "")
-    .replace(/\brs\b/g, "")
     .replace(/[.,]/g, " ")
+    .replace(/-/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+}
+
+function normalizarCep(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function enderecoPesquisa(user) {
+  const raw = user.raw || {};
+
+  return normalizarBuscaEndereco([
+    user.address,
+    user.enderecoCompleto,
+    raw.enderecoCompleto,
+
+    user.rua,
+    user.street,
+    raw.rua,
+    raw.street,
+
+    user.numero,
+    raw.numero,
+
+    user.bairro,
+    user.neighborhood,
+    raw.bairro,
+    raw.neighborhood,
+
+    user.cidade,
+    user.city,
+    raw.cidade,
+    raw.city,
+
+    user.cep,
+    raw.cep,
+
+    user.uf,
+    user.state,
+    raw.uf,
+    raw.state
+  ].join(" "));
 }
 
 function enderecoPesquisa(user) {
@@ -3634,12 +3672,40 @@ function enderecoPesquisa(user) {
 ========================================================== */
 
 async function adicionarPontoPorCodigoOuEndereco() {
-  const termo = String(els.manualRouteAddress?.value || "").trim();
+  const termoNormalizado = normalizarBuscaEndereco(termo);
+const cepPesquisado = normalizarCep(termo);
 
-  if (!termo) {
-    alert("Digite o código do participante ou um endereço.");
-    return;
-  }
+const participante = STATE.users.find((user) => {
+  const raw = user.raw || {};
+
+  const codigo = String(
+    user.code ||
+    user.participantCode ||
+    raw.participantCode ||
+    ""
+  )
+    .trim()
+    .toLowerCase();
+
+  const endereco = enderecoPesquisa(user);
+
+  const cepUsuario = normalizarCep(
+    user.cep ||
+    raw.cep ||
+    user.address ||
+    raw.enderecoCompleto ||
+    ""
+  );
+
+  return (
+    codigo === termoNormalizado ||
+    endereco.includes(termoNormalizado) ||
+    (
+      cepPesquisado &&
+      cepUsuario.includes(cepPesquisado)
+    )
+  );
+});
 
   const termoNormalizado =
   normalizarBuscaEndereco(termo);
