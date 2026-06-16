@@ -1,4 +1,5 @@
 import { auth, db } from "./firebase-init-pc.js";
+
 import {
   onAuthStateChanged,
   signOut
@@ -11,10 +12,8 @@ import {
   query,
   onSnapshot,
   updateDoc,
-  orderBy,
   deleteDoc,
-  serverTimestamp,
-  getDocs
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================================================
@@ -41,31 +40,14 @@ function canonicalTerritoryId(value) {
 }
 
 const PAGE_TERRITORY = {
-  territoryId: canonicalTerritoryId(
-    bodyConfig.territoryId || "padre-cacique"
-  ),
-
-  territoryLabel:
-    bodyConfig.territoryLabel ||
-    "Centro de Triagem Padre Cacique",
-
-  cooperativeName:
-    bodyConfig.cooperativeName ||
-    "Padre Cacique",
-
-  participantUrl:
-    bodyConfig.participantUrl ||
-    "cadastro-participantes-padre-cacique.html",
-
-  participantsListUrl:
-    bodyConfig.participantsListUrl ||
-    "usuarios-padre-cacique.html",
-
-  coletasUrl:
-    bodyConfig.coletasUrl ||
-    "cadastro-coletas-padre-cacique.html"
+  territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
+  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Vila Pinto",
+  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto",
+  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
+  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
+  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html"
 };
- 
+
 /* =========================================================
    ELEMENTOS
 ========================================================= */
@@ -144,7 +126,6 @@ const STATE = {
   recentPageSize: 10,
   recentLimit: 10
 };
-
 
 /* =========================================================
    HELPERS
@@ -393,34 +374,7 @@ function isPendingParticipant(item = {}) {
   );
 }
 
-
-function isColetaCancelada(item = {}) {
-  const status = normalizeText(
-    item.status ||
-    item.situacao ||
-    item.decision ||
-    item.approvalStatus ||
-    item.coletaStatus ||
-    item.cancelStatus ||
-    item.payloadSnapshot?.status ||
-    item.payloadSnapshot?.coletaStatus ||
-    ""
-  );
-
-  return (
-    status.includes("cancel") ||
-    item.cancelled === true ||
-    item.cancelada === true ||
-    item.cancelado === true ||
-    Boolean(item.cancelledAt) ||
-    Boolean(item.canceladaEm) ||
-    Boolean(item.canceladoEm)
-  );
-}
-
 function isColetaRealizada(item = {}) {
-  if (isColetaCancelada(item)) return false;
-
   const status = normalizeText(
     item.status ||
     item.situacao ||
@@ -597,8 +551,6 @@ function getEntrega(item = {}) {
 }
 
 function getColetaStatusLabel(item = {}) {
-  if (isColetaCancelada(item)) return "Cancelado";
-
   const raw =
     item.status ||
     item.situacao ||
@@ -615,7 +567,7 @@ function getColetaStatusLabel(item = {}) {
   if (normalized === "editado") return "Editado";
   if (normalized === "pending") return "Pendente";
   if (normalized === "rejected") return "Rejeitada";
-  if (normalized === "cancelado" || normalized === "cancelada") return "Cancelado";
+  if (normalized === "cancelado") return "Cancelado";
 
   return String(raw || "Ativo");
 }
@@ -1293,15 +1245,6 @@ function setupTableFilters() {
    TABELA RECENTE COM PAGINAÇÃO
 ========================================================= */
 
-function getSortedColetasTabela() {
-  return [...STATE.coletas]
-    .sort((a, b) => {
-      const dateA = getDateValue(a)?.getTime() || 0;
-      const dateB = getDateValue(b)?.getTime() || 0;
-      return dateB - dateA;
-    });
-}
-
 function getSortedRealizadas() {
   return [...STATE.coletas]
     .filter(isColetaRealizada)
@@ -1311,8 +1254,6 @@ function getSortedRealizadas() {
       return dateB - dateA;
     });
 }
-
-
 function getColetaImageUrl(item = {}) {
   return (
     item.imageUrl ||
@@ -1376,7 +1317,7 @@ function openColetaImageModal(item = {}) {
 function renderRecentColetas() {
   if (!els.recentColetasTableBody) return;
 
-  const all = getSortedColetasTabela();
+  const all = getSortedRealizadas();
   const filtered = applyTableFilterToItems(all);
 
   const start = STATE.recentPage * STATE.recentPageSize;
@@ -1405,10 +1346,20 @@ function renderRecentColetas() {
     const rejeito = formatKg(getRejeito(item));
     const naoComercializado = formatKg(getNaoComercializado(item));
     const tipo = getParticipantTypeLabel(item);
-    const cancelada = isColetaCancelada(item);
 
     return `
-      <tr class="dashboard-table-row ${cancelada ? "coleta-cancelada" : ""}">
+      <tr class="
+  dashboard-table-row
+  ${
+    normalizeText(
+      item.status ||
+      item.coletaStatus ||
+      ""
+    ).includes("cancel")
+      ? "coleta-cancelada"
+      : ""
+  }
+">
         <td class="td-date">${escapeHtml(data)}</td>
 
         <td class="td-user">
@@ -1462,7 +1413,15 @@ function renderRecentColetas() {
     type="button"
     data-cancel-coleta="${escapeHtml(item.id)}"
   >
-    ${cancelada ? "Reativar" : "Cancelar"}
+    ${
+      normalizeText(
+        item.status ||
+        item.coletaStatus ||
+        ""
+      ).includes("cancel")
+        ? "Reativar"
+        : "Cancelar"
+    }
   </button>
 
   <button
@@ -1473,7 +1432,7 @@ function renderRecentColetas() {
     Excluir
   </button>
 
-
+</td>
         </td>
       </tr>
     `;
@@ -1515,7 +1474,7 @@ function setupTablePagination() {
   });
 
   els.btnNextColetas?.addEventListener("click", () => {
-    const total = applyTableFilterToItems(getSortedColetasTabela()).length;
+    const total = applyTableFilterToItems(getSortedRealizadas()).length;
     const totalPages = Math.ceil(total / STATE.recentPageSize);
 
     if (STATE.recentPage >= totalPages - 1) return;
@@ -2030,117 +1989,6 @@ function openEditColetaModal(item) {
     }
   );
 }
-async function carregarSolicitacoesGuardioes(cooperativaId) {
-  const tbody = document.getElementById("guardioesCoopTableBody");
-  const indicador = document.getElementById("indicatorGuardioesSolicitacoes");
-
-  if (!tbody) return;
-
-  try {
-    const snap = await getDocs(
-      query(
-        collection(dbGuardioes, "cooperativas", cooperativaId, "solicitacoes"),
-        orderBy("createdAt", "desc")
-      )
-    );
-
-    if (indicador) {
-      indicador.textContent = snap.size;
-    }
-
-    if (snap.empty) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7">Nenhuma solicitação encontrada.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = snap.docs.map((docItem) => {
-      const item = docItem.data();
-      const id = docItem.id;
-
-      const data =
-        item.createdAt?.toDate?.().toLocaleString("pt-BR") ||
-        "-";
-
-      const status = item.status || "solicitado";
-      const whatsappLimpo = String(item.whatsapp || "").replace(/\D/g, "");
-      const whatsappLink = whatsappLimpo
-        ? `https://wa.me/55${whatsappLimpo}`
-        : "#";
-
-      return `
-        <tr>
-          <td>${escapeHtml(data)}</td>
-          <td>${escapeHtml(item.nome || "-")}</td>
-          <td>
-            <a href="${whatsappLink}" target="_blank" rel="noopener noreferrer">
-              ${escapeHtml(item.whatsapp || "-")}
-            </a>
-          </td>
-          <td>${escapeHtml(item.endereco || "-")}</td>
-          <td>${escapeHtml(item.cep || "-")}</td>
-          <td>
-            <span class="status-pill ${status === "contatado" ? "" : "inactive"}">
-              ${escapeHtml(status)}
-            </span>
-          </td>
-          <td>
-            <button
-              type="button"
-              class="table-btn view"
-              data-contatar-guardiao="${escapeHtml(id)}"
-              data-whatsapp="${escapeHtml(whatsappLink)}"
-            >
-              Entrar em contato
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-  } catch (error) {
-    console.error("Erro ao carregar solicitações dos Guardiões:", error);
-
-    if (indicador) indicador.textContent = "0";
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7">Erro ao carregar solicitações.</td>
-      </tr>
-    `;
-  }
-}
-async function marcarGuardiaoComoContatado(solicitacaoId) {
-  if (!solicitacaoId) return;
-
-  try {
-    await updateDoc(
-      doc(
-        dbGuardioes,
-        "cooperativas",
-        PAGE_TERRITORY.territoryId,
-        "solicitacoes",
-        solicitacaoId
-      ),
-      {
-        status: "contatado",
-        contactedAt: serverTimestamp(),
-        contactedBy: STATE.currentUser?.uid || null,
-        updatedAt: serverTimestamp()
-      }
-    );
-
-    await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
-
-  } catch (error) {
-    console.error("Erro ao atualizar solicitação:", error);
-    alert("Erro ao atualizar solicitação.");
-  }
-}
-
 
 async function toggleCancelColetaRecord(coletaId) {
 
@@ -2148,53 +1996,76 @@ async function toggleCancelColetaRecord(coletaId) {
 
   try {
 
-    const coleta = STATE.coletas.find(
-      item => String(item.id) === String(coletaId)
-    );
+    const coleta =
+      STATE.coletas.find(
+        item =>
+          String(item.id) === String(coletaId)
+      );
 
     if (!coleta) {
       alert("Coleta não encontrada.");
       return;
     }
 
-    const cancelada = normalizeText(
+    const statusAtual = normalizeText(
       coleta.status ||
       coleta.coletaStatus ||
       ""
-    ).includes("cancel");
+    );
+
+    const cancelada =
+      statusAtual.includes("cancel");
 
     const confirmed = confirm(
       cancelada
         ? "Deseja reativar esta coleta?"
-        : "Deseja cancelar esta coleta?\n\nEla ficará pausada, fora das contagens, mas continuará salva no banco."
+        : "Deseja cancelar esta coleta?"
     );
 
     if (!confirmed) return;
 
     await updateDoc(
-      doc(db, "coletas", coletaId),
+      doc(
+        db,
+        "coletas",
+        coletaId
+      ),
       {
-        status: cancelada ? "ativo" : "cancelado",
-        coletaStatus: cancelada ? "ativo" : "cancelado",
-        cancelled: cancelada ? false : true,
-        cancelada: cancelada ? false : true,
-        cancelledAt: cancelada ? null : serverTimestamp(),
-        cancelledBy: cancelada ? null : STATE.currentUser?.uid || null,
-        reactivatedAt: cancelada ? serverTimestamp() : null,
+        status: cancelada
+          ? "ativo"
+          : "cancelado",
+
+        cancelledAt: cancelada
+          ? null
+          : serverTimestamp(),
+
+        cancelledBy: cancelada
+          ? null
+          : STATE.currentUser?.uid || null,
+
         updatedAt: serverTimestamp(),
-        updatedBy: STATE.currentUser?.uid || null
+
+        updatedBy:
+          STATE.currentUser?.uid || null
       }
     );
 
     setCoopSyncStatus(
       cancelada
-        ? "Coleta reativada com sucesso."
-        : "Coleta cancelada e pausada com sucesso."
+        ? "Coleta reativada."
+        : "Coleta cancelada."
     );
 
   } catch (error) {
-    console.error("Erro ao alterar status da coleta:", error);
-    alert("Erro ao alterar status da coleta.");
+
+    console.error(
+      "Erro ao alterar status:",
+      error
+    );
+
+    alert(
+      "Erro ao alterar status da coleta."
+    );
   }
 }
 
@@ -2368,27 +2239,25 @@ function setupRecentColetasActions() {
         return;
       }
 
-      /* =====================================================
-         CANCELAR / REATIVAR
+       /* =====================================================
+         EDITAR
       ===================================================== */
+const cancelButton =
+  event.target.closest(
+    "[data-cancel-coleta]"
+  );
 
-      const cancelButton =
-        event.target.closest(
-          "[data-cancel-coleta]"
-        );
+if (cancelButton) {
 
-      if (cancelButton) {
+  const coletaId =
+    cancelButton.dataset.cancelColeta;
 
-        const coletaId =
-          cancelButton.dataset.cancelColeta;
+  toggleCancelColetaRecord(
+    coletaId
+  );
 
-        toggleCancelColetaRecord(
-          coletaId
-        );
-
-        return;
-      }
-
+  return;
+}
       /* =====================================================
          EXCLUIR
       ===================================================== */
@@ -2403,43 +2272,7 @@ function setupRecentColetasActions() {
         const coletaId =
           deleteButton.dataset.deleteColeta;
 
-        deleteColetaRecord(
-          coletaId
-        );
-
-        return;
-      }
-
-      /* =====================================================
-         GUARDIÕES URBANOS
-      ===================================================== */
-
-      const contatoGuardiaoBtn =
-        event.target.closest(
-          "[data-contatar-guardiao]"
-        );
-
-      if (contatoGuardiaoBtn) {
-
-        const solicitacaoId =
-          contatoGuardiaoBtn.dataset.contatarGuardiao;
-
-        const whatsappLink =
-          contatoGuardiaoBtn.dataset.whatsapp;
-
-        marcarGuardiaoComoContatado(
-          solicitacaoId
-        );
-
-        if (
-          whatsappLink &&
-          whatsappLink !== "#"
-        ) {
-          window.open(
-            whatsappLink,
-            "_blank"
-          );
-        }
+        deleteColetaRecord(coletaId);
 
         return;
       }
@@ -2649,11 +2482,38 @@ function listenDashboardData() {
   });
 
 listenCollection("coletas", (items) => {
-  STATE.coletas = items
-    .filter(itemBelongsToTerritory);
+  const todasDoFirebase = items.map((item) => ({
+    id: item.id,
+    data: formatDateLabel(item),
+    codigo: getParticipantCode(item),
+    participante: getParticipantName(item),
+    fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+    status: getColetaStatusLabel(item),
+    territorio:
+      item.territoryId ||
+      item.territory ||
+      item.cooperativeId ||
+      item.payloadSnapshot?.territoryId ||
+      "-"
+  }));
+
+  console.table(todasDoFirebase);
+
+ STATE.coletas = items
+  .filter(itemBelongsToTerritory)
+
+  console.table(
+    STATE.coletas.map((item) => ({
+      id: item.id,
+      data: formatDateLabel(item),
+      codigo: getParticipantCode(item),
+      participante: getParticipantName(item),
+      fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+      status: getColetaStatusLabel(item)
+    }))
+  );
 
   STATE.recentPage = 0;
-
   populateEntregaFilter(STATE.coletas);
 
   updateKpis();
@@ -2820,21 +2680,11 @@ function boot() {
       validateProfile(profile);
 
       STATE.profile = profile;
-      await registerAccessLog({
-  db,
-  auth,
-  page: "painel-cooperativa",
-  pageType: "logada",
-  territoryId: PAGE_TERRITORY.territoryId,
-  cooperativeName: PAGE_TERRITORY.cooperativeName,
-  userProfile: profile
-});
-  
+
       applyPermissionRules(profile);
       fillHeader(profile);
       applyRoleVisibility(profile);
       listenDashboardData();
-      await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
 
       setCoopSyncStatus("Indicadores carregados em tempo real.");
 
