@@ -1,0 +1,3568 @@
+import { auth, db } from "./firebase-init-coadesc.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  onSnapshot,
+  writeBatch,
+  serverTimestamp,
+  setDoc,
+  addDoc,
+  query,
+  where
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const DEFAULT_BASE = {
+  label: "Base da cooperativa",
+  lat: -30.048729170292532,
+  lng: -51.15652604283108
+};
+
+const ROUTES = {
+  "vila-pinto": {
+    label: "Centro de Triagem Vila Pinto",
+    aliases: ["vila-pinto", "crgr-vila-pinto", "crgr_vila_pinto"],
+    pages: {
+      home: "cooperativa-vila-pinto.html",
+      usuarios: "usuarios-vila-pinto.html",
+      coletas: "cadastro-coletas-vila-pinto.html",
+      usuariosCooperativa: "usuario-cooperativa-vila-pinto.html",
+      dashboard: "dashboard-cooperativa.html"
+    },
+    base: {
+      label: "Centro de Triagem Vila Pinto",
+      lat: -30.048729170292532,
+      lng: -51.15652604283108
+    }
+  },
+
+  cooadesc: {
+    label: "COOADESC",
+    aliases: [
+      "cooadesc",
+      "coadesc",
+      "crgr-cooadesc",
+      "crgr_cooadesc",
+      "crgr-coadesc",
+      "crgr_coadesc"
+    ],
+    pages: {
+      home: "cooperativa-cooadesc.html",
+      usuarios: "usuarios-cooadesc.html",
+      coletas: "cadastro-coletas-cooadesc.html",
+      usuariosCooperativa: "usuario-cooperativa-cooadesc.html",
+      dashboard: "dashboard-cooperativa-cooadesc.html"
+    },
+    base: {
+      label: "COOADESC",
+      lat: -30.003,
+      lng: -51.206
+    }
+  },
+
+  "padre-cacique": {
+    label: "Cooperativa Padre Cacique",
+    aliases: ["padre-cacique", "crgr-padre-cacique", "crgr_padre_cacique"],
+    pages: {
+      home: "cooperativa-padre-cacique.html",
+      usuarios: "usuarios-padre-cacique.html",
+      coletas: "cadastro-coletas-padre-cacique.html",
+      usuariosCooperativa: "usuario-cooperativa-padre-cacique.html",
+      dashboard: "dashboard-cooperativa-padre-cacique.html"
+    },
+    base: {
+      label: "Padre Cacique",
+      lat: -30.140122365657504,
+      lng: -51.1268772051727
+    }
+  }
+};
+
+const TERRITORIES = Object.fromEntries(
+  Object.entries(ROUTES).map(([key, config]) => [
+    key,
+    {
+      label: config.label,
+      aliases: config.aliases,
+      coletasUrl: config.pages.coletas,
+      coopHomeUrl: config.pages.home,
+      usuariosUrl: config.pages.usuarios,
+      userCoopUrl: config.pages.usuariosCooperativa,
+      dashboardUrl: config.pages.dashboard,
+      base: config.base
+    }
+  ])
+);
+
+const STATE = {
+  authUser: null,
+  userDoc: null,
+  participants: [],
+  approvalRequests: [],
+  users: [],
+  filteredUsers: [],
+  coopUsers: [],
+  territoryBase: DEFAULT_BASE,
+  unsubParticipants: null,
+  unsubApprovals: null,
+  unsubCoopUsers: null,
+  lastPendingIds: new Set(),
+  notificationPermissionAsked: false,
+ pendingPage: 0,
+activePage: 0,
+tablePage: 0,
+pageSize: 5
+};
+
+const els = {
+  btnLogout: document.getElementById("btnLogout"),
+  sidebarUserName: document.getElementById("sidebarUserName"),
+  sidebarTerritoryLabel: document.getElementById("sidebarTerritoryLabel"),
+  baseInfo: document.getElementById("baseInfo"),
+  routeInfo: document.getElementById("routeInfo"),
+  kpiTotal: document.getElementById("kpiTotal"),
+  kpiPending: document.getElementById("kpiPending"),
+  kpiActive: document.getElementById("kpiActive"),
+  kpiGeo: document.getElementById("kpiGeo"),
+  searchInput: document.getElementById("searchInput"),
+  statusFilter: document.getElementById("statusFilter"),
+  operationFilter: document.getElementById("operationFilter"),
+  routeMode: document.getElementById("routeMode"),
+  btnReload: document.getElementById("btnReload"),
+  btnDownloadParticipantsCsv: document.getElementById("btnDownloadParticipantsCsv"),
+  btnDownloadParticipantsPdf: document.getElementById("btnDownloadParticipantsPdf"),
+  inputImportParticipants: document.getElementById("inputImportParticipants"),
+  btnExportParticipantsXlsx: document.getElementById("btnExportParticipantsXlsx"),
+  importParticipantsStatus: document.getElementById("importParticipantsStatus"),
+  pendingList: document.getElementById("pendingList"),
+  activeList: document.getElementById("activeList"),
+  pendingCountLabel: document.getElementById("pendingCountLabel"),
+  activeCountLabel: document.getElementById("activeCountLabel"),
+  usersTableBody: document.getElementById("usersTableBody"),
+  tableCountLabel: document.getElementById("tableCountLabel"),
+  usersMap: document.getElementById("usersMap"),
+  btnCenterBase: document.getElementById("btnCenterBase"),
+  btnBuildRoute: document.getElementById("btnBuildRoute"),
+  mapPointsCount: document.getElementById("mapPointsCount"),
+  routeDistance: document.getElementById("routeDistance"),
+  routeDuration: document.getElementById("routeDuration"),
+  routeStatus: document.getElementById("routeStatus"),
+  userModal: document.getElementById("userModal"),
+  userModalBackdrop: document.getElementById("userModalBackdrop"),
+  closeUserModal: document.getElementById("closeUserModal"),
+  modalCloseBtn: document.getElementById("modalCloseBtn"),
+  userModalForm: document.getElementById("userModalForm"),
+  modalUserId: document.getElementById("modalUserId"),
+  modalApprovalRequestId: document.getElementById("modalApprovalRequestId"),
+  modalUserName: document.getElementById("modalUserName"),
+  modalUserCode: document.getElementById("modalUserCode"),
+  modalUserPhone: document.getElementById("modalUserPhone"),
+  modalUserStatus: document.getElementById("modalUserStatus"),
+  modalOperation: document.getElementById("modalOperation"),
+  modalTerritoryLabel: document.getElementById("modalTerritoryLabel"),
+  modalAddress: document.getElementById("modalAddress"),
+  modalLat: document.getElementById("modalLat"),
+  modalLng: document.getElementById("modalLng"),
+  modalRouteShift: document.getElementById("modalRouteShift"),
+  labelStatusFilter: document.getElementById("labelStatusFilter"),
+  labelRouteFilter: document.getElementById("labelRouteFilter"),
+  labelSearchInput: document.getElementById("labelSearchInput"),
+  labelAddressInput: document.getElementById("labelAddressInput"),
+  modalRequestInfo: document.getElementById("modalRequestInfo"),
+  userModalStatusNote: document.getElementById("userModalStatusNote"),
+  modalFocusMap: document.getElementById("modalFocusMap"),
+  modalRejectBtn: document.getElementById("modalRejectBtn"),
+  modalApproveBtn: document.getElementById("modalApproveBtn"),
+  debugStatus: document.getElementById("debugStatus"),
+
+  coopUsersSection: document.getElementById("coopUsersSection"),
+  coopUserCreateCard: document.getElementById("coopUserCreateCard"),
+  coopUserForm: document.getElementById("coopUserForm"),
+  coopUserName: document.getElementById("coopUserName"),
+  coopUserDisplayName: document.getElementById("coopUserDisplayName"),
+  coopUserEmail: document.getElementById("coopUserEmail"),
+  coopUserPassword: document.getElementById("coopUserPassword"),
+  coopUserRole: document.getElementById("coopUserRole"),
+  coopUserTerritory: document.getElementById("coopUserTerritory"),
+  btnCreateCoopUser: document.getElementById("btnCreateCoopUser"),
+  coopUsersList: document.getElementById("coopUsersList"),
+  coopUsersCountLabel: document.getElementById("coopUsersCountLabel"),
+
+  permDashboard: document.getElementById("permDashboard"),
+  permColetas: document.getElementById("permColetas"),
+  permParticipants: document.getElementById("permParticipants"),
+  permConteudos: document.getElementById("permConteudos"),
+  permDocumentos: document.getElementById("permDocumentos"),
+  permMapa: document.getElementById("permMapa"),
+  permAprovarCadastros: document.getElementById("permAprovarCadastros"),
+  permGerenciarUsuarios: document.getElementById("permGerenciarUsuarios"),
+
+  manualRouteAddress: document.getElementById("manualRouteAddress"),
+  btnAddManualAddress: document.getElementById("btnAddManualAddress"),
+  btnBuildOptimizedManualRoute: document.getElementById("btnBuildOptimizedManualRoute"),
+  btnSaveManualRoute: document.getElementById("btnSaveManualRoute"),
+  btnClearManualRoute: document.getElementById("btnClearManualRoute"),
+  manualPointsList: document.getElementById("manualPointsList")
+};
+
+let map = null;
+let baseMarker = null;
+let userMarkers = [];
+let routePolyline = null;
+let toastEl = null;
+
+let manualMarkers = [];
+let manualPoints = [];
+let manualRouteBound = false;
+let lastManualRouteResult = null;
+
+/* =========================
+UTILS
+========================= */
+
+function safeText(value, fallback = "—") {
+  const text = String(value ?? "").trim();
+  return text || fallback;
+}
+
+function onlyDigits(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function toNumberOrNull(value) {
+  if (value === null || value === undefined || value === "") return null;
+
+  let raw = String(value).trim().replace(",", ".");
+  let n = Number(raw);
+
+  if (!Number.isFinite(n)) return null;
+
+  if (Math.abs(n) > 180) {
+    const sign = n < 0 ? -1 : 1;
+    const digits = String(Math.abs(Math.trunc(n)));
+
+    if (digits.length >= 4) {
+      const fixed = Number(digits.slice(0, 2) + "." + digits.slice(2));
+      n = sign * fixed;
+    }
+  }
+
+  return Number.isFinite(n) ? n : null;
+}
+
+function isValidCoord(lat, lng) {
+  return (
+    Number.isFinite(lat) &&
+    Number.isFinite(lng) &&
+    lat >= -90 &&
+    lat <= 90 &&
+    lng >= -180 &&
+    lng <= 180
+  );
+}
+
+function normalizeStatus(value) {
+  const raw = String(value || "").toLowerCase().trim();
+
+  if (["pending", "pendente", "pending_review", "pending_approval"].includes(raw)) return "pendente";
+  if (["approved", "aprovado", "active", "ativo"].includes(raw)) return "aprovado";
+  if (["inactive", "inativo", "rejected", "rejeitado", "blocked"].includes(raw)) return "inativo";
+
+  return "pendente";
+}
+
+function badgeClass(status) {
+  if (status === "aprovado") return "badge badge-aprovado";
+  if (status === "inativo") return "badge badge-inativo";
+  return "badge badge-pendente";
+}
+
+function formatDistanceKm(meters) {
+  if (!Number.isFinite(meters)) return "0 km";
+  return `${(meters / 1000).toFixed(1).replace(".", ",")} km`;
+}
+
+function formatDuration(seconds) {
+  if (!Number.isFinite(seconds)) return "0 min";
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes} min`;
+  const hours = Math.floor(minutes / 60);
+  const rest = minutes % 60;
+  return `${hours}h ${rest}min`;
+}
+
+function buildAddress(data) {
+  if (data?.enderecoCompleto) return data.enderecoCompleto;
+  if (data?.address?.addressLine) return data.address.addressLine;
+
+  const rua = data?.rua || data?.street || data?.address?.street || "";
+  const numero = data?.numero || data?.address?.number || "";
+  const bairro = data?.bairro || data?.neighborhood || data?.address?.neighborhood || "";
+  const cidade = data?.cidade || data?.city || data?.address?.city || "";
+  const uf = data?.uf || data?.state || data?.address?.state || "";
+  const cep = data?.cep || data?.address?.cep || "";
+
+  return [
+    [rua, numero].filter(Boolean).join(", "),
+    [bairro, cidade, uf].filter(Boolean).join(" - "),
+    cep ? `CEP ${cep}` : ""
+  ].filter(Boolean).join(" • ");
+}
+
+function normalizeRouteKey(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .trim();
+}
+
+function normalizeTerritory(value) {
+  return normalizeRouteKey(value);
+}
+
+function canonicalTerritoryId(value) {
+  const normalized = normalizeRouteKey(value);
+
+  for (const [key, config] of Object.entries(ROUTES)) {
+    const aliases = [key, ...(config.aliases || [])].map(normalizeRouteKey);
+
+    if (aliases.includes(normalized)) return key;
+  }
+
+  return normalized || null;
+}
+
+function getCurrentTerritoryId() {
+  return canonicalTerritoryId(
+    document.body?.dataset?.territoryId ||
+    STATE.userDoc?.territoryId ||
+    "vila-pinto"
+  );
+}
+
+function getRouteConfig(territoryId) {
+  const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
+  return ROUTES[key] || ROUTES["vila-pinto"];
+}
+
+function getRoutePage(pageName, territoryId) {
+  const config = getRouteConfig(territoryId);
+  return config.pages?.[pageName] || ROUTES["vila-pinto"].pages?.[pageName] || "login.html";
+}
+
+function buildPageUrl(pageName, territoryId, params = {}) {
+  const page = getRoutePage(pageName, territoryId);
+  const url = new URL(page, window.location.origin);
+
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null && value !== "") {
+      url.searchParams.set(key, value);
+    }
+  });
+
+  return url.href;
+}
+
+function getTerritoryConfig(territoryId) {
+  const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
+  return TERRITORIES[key] || TERRITORIES["vila-pinto"];
+}
+
+function getTerritoryAliases(territoryId) {
+  const config = getTerritoryConfig(territoryId);
+  const canonical = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
+  return Array.from(new Set([canonical, ...(config?.aliases || [])].filter(Boolean)));
+}
+
+function getPageTerritoryId() {
+  return getCurrentTerritoryId();
+}
+
+function sameTerritory(a, b) {
+  const x = canonicalTerritoryId(a);
+  const y = canonicalTerritoryId(b);
+  return x && y && x === y;
+}
+
+function roleName() {
+  return String(STATE.userDoc?.role || "").toLowerCase();
+}
+
+function canViewAllTerritories() {
+  return ["governanca", "superadmin", "admin_master"].includes(roleName());
+}
+
+function canManageApprovals() {
+  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
+}
+
+function canManageCoopUsers() {
+  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
+}
+
+function getMyTerritoryId() {
+  if (STATE.userDoc) return canonicalTerritoryId(STATE.userDoc.territoryId);
+  return getPageTerritoryId() || null;
+}
+
+function getMyTerritoryLabel() {
+  return STATE.userDoc?.territoryLabel || getTerritoryLabelById(getMyTerritoryId());
+}
+
+function canViewUserFromSameTerritory(targetUser) {
+  if (!STATE.userDoc || !targetUser) return false;
+  if (canViewAllTerritories()) return true;
+  return sameTerritory(getMyTerritoryId(), targetUser.territoryId);
+}
+
+function requireUserTerritoryAccess(targetUser, action = "acessar este participante") {
+  if (canViewUserFromSameTerritory(targetUser)) return true;
+
+  console.warn(`Acesso bloqueado ao tentar ${action}: território incompatível.`, {
+    myTerritoryId: getMyTerritoryId(),
+    targetTerritoryId: targetUser?.territoryId,
+    targetId: targetUser?.id
+  });
+
+  alert("Acesso negado: este registro pertence a outra cooperativa.");
+  return false;
+}
+
+function enforcePageTerritoryAccess() {
+  const pageTerritoryId = getPageTerritoryId();
+  const myTerritoryId = getMyTerritoryId();
+
+  if (!pageTerritoryId || canViewAllTerritories()) return true;
+
+  if (!myTerritoryId) {
+    throw new Error("Usuário sem territoryId em /users.");
+  }
+
+  if (sameTerritory(pageTerritoryId, myTerritoryId)) return true;
+
+  const config = getTerritoryConfig(myTerritoryId);
+  alert("Esta página pertence a outra cooperativa. Você será redirecionado para a sua cooperativa.");
+  window.location.href = config?.usuariosUrl || "login.html";
+  return false;
+}
+
+function getTerritoryLabelById(territoryId) {
+  const config = getTerritoryConfig(territoryId);
+  if (config) return config.label;
+  return territoryId || "Território";
+}
+
+function routeShiftLabel(value) {
+  const normalized = String(value || "").trim();
+
+  const map = {
+    segunda_manha: "Segunda-feira • Manhã",
+    segunda_tarde: "Segunda-feira • Tarde",
+    terca_manha: "Terça-feira • Manhã",
+    terca_tarde: "Terça-feira • Tarde",
+    quarta_manha: "Quarta-feira • Manhã",
+    quarta_tarde: "Quarta-feira • Tarde",
+    quinta_manha: "Quinta-feira • Manhã",
+    quinta_tarde: "Quinta-feira • Tarde",
+    sexta_manha: "Sexta-feira • Manhã",
+    sexta_tarde: "Sexta-feira • Tarde"
+  };
+
+  return map[normalized] || "Rota não definida";
+}
+
+function getTerritoryPageUrl(user) {
+  const territoryId = canonicalTerritoryId(user?.territoryId || getMyTerritoryId() || getPageTerritoryId());
+  const code = user?.code || user?.participantCode || "";
+
+  return buildPageUrl("coletas", territoryId, {
+    participantCode: code
+  });
+}
+
+/* =========================
+IMPORTAÇÃO / EXPORTAÇÃO EXCEL
+========================= */
+
+function normalizeExcelHeader(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+}
+
+function getExcelValue(row, aliases = []) {
+  const normalizedAliases = aliases.map(normalizeExcelHeader);
+  const keys = Object.keys(row || {});
+
+  for (const key of keys) {
+    const normalized = normalizeExcelHeader(key);
+
+    if (normalizedAliases.includes(normalized)) {
+      return row[key];
+    }
+  }
+
+  return null;
+}
+
+function setImportStatus(message, type = "info") {
+  if (!els.importParticipantsStatus) return;
+
+  els.importParticipantsStatus.classList.remove("hidden");
+  els.importParticipantsStatus.textContent = message;
+
+  if (type === "error") {
+    els.importParticipantsStatus.style.background = "#fee2e2";
+    els.importParticipantsStatus.style.color = "#991b1b";
+  } else if (type === "success") {
+    els.importParticipantsStatus.style.background = "#dcfce7";
+    els.importParticipantsStatus.style.color = "#166534";
+  } else {
+    els.importParticipantsStatus.style.background = "#f8fafc";
+    els.importParticipantsStatus.style.color = "#334155";
+  }
+}
+
+function buildImportedParticipant(row, index) {
+  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "vila-pinto";
+  const territoryLabel = getMyTerritoryLabel() || getTerritoryLabelById(territoryId);
+
+  const code = String(getExcelValue(row, [
+    "codigo",
+    "código",
+    "cod",
+    "participantCode",
+    "codigo participante",
+    "código participante"
+  ]) || "").trim();
+
+  const name = String(getExcelValue(row, [
+    "nome",
+    "name",
+    "participante",
+    "participantName",
+    "nome completo"
+  ]) || "").trim();
+
+  if (!name) return null;
+
+  const phone = onlyDigits(getExcelValue(row, [
+    "telefone",
+    "fone",
+    "celular",
+    "whatsapp",
+    "phone",
+    "participantPhone"
+  ]) || "");
+
+  const email = String(getExcelValue(row, [
+    "email",
+    "e-mail",
+    "participantEmail"
+  ]) || "").trim();
+
+  const cpf = onlyDigits(getExcelValue(row, [
+    "cpf",
+    "participantCpf"
+  ]) || "");
+
+  const address = String(getExcelValue(row, [
+    "endereco",
+    "endereço",
+    "endereco completo",
+    "endereço completo",
+    "logradouro",
+    "rua",
+    "address",
+    "enderecoCompleto"
+  ]) || "").trim();
+
+  const routeShift = String(getExcelValue(row, [
+    "rota",
+    "turno",
+    "routeShift",
+    "schedule"
+  ]) || "").trim();
+
+  const localType = String(getExcelValue(row, [
+    "tipo local",
+    "tipolocal",
+    "local",
+    "localType",
+    "codeLocalType"
+  ]) || "casa").trim();
+
+  const householdMembers = String(getExcelValue(row, [
+    "moradores",
+    "membros",
+    "householdMembers",
+    "quantidade moradores",
+    "quantidade de moradores"
+  ]) || "").trim();
+
+  const lat = toNumberOrNull(getExcelValue(row, [
+    "latitude",
+    "lat"
+  ]));
+
+  const lng = toNumberOrNull(getExcelValue(row, [
+    "longitude",
+    "lng",
+    "lon"
+  ]));
+
+  const generatedCode = `IMP-${String(index + 1).padStart(4, "0")}-${Date.now()}`;
+  const participantCode = code || generatedCode;
+
+  return {
+    id: participantCode.replace(/[^a-zA-Z0-9_-]/g, "_"),
+    data: {
+      name,
+      nameLower: name.toLowerCase(),
+      participantCode,
+      participantType: "participante",
+      phone: phone || null,
+      email: email || null,
+      cpf: cpf || null,
+      territoryId,
+      territoryLabel,
+      status: "aprovado",
+      approvalStatus: "approved",
+      decision: "approved",
+      inOperation: "sim",
+      inTerritory: "sim",
+      localType,
+      codeLocalType: localType,
+      householdMembers: householdMembers || null,
+      enderecoCompleto: address || null,
+      routeShift,
+      schedule: routeShift || "A definir",
+      lat: isValidCoord(lat, lng) ? lat : null,
+      lng: isValidCoord(lat, lng) ? lng : null,
+      source: "excel_import",
+      active: true,
+      importedAt: serverTimestamp(),
+      updatedAt: serverTimestamp(),
+      updatedBy: STATE.authUser?.uid || null
+    }
+  };
+}
+
+function findExistingImportedParticipant(imported) {
+  const data = imported?.data || {};
+  const code = String(data.participantCode || "").trim().toLowerCase();
+  const cpf = onlyDigits(data.cpf || "");
+  const phone = onlyDigits(data.phone || "");
+
+  return STATE.participants.find((p) => {
+    const sameCode = code && String(p.code || "").trim().toLowerCase() === code;
+    const sameCpf = cpf && onlyDigits(p.cpf || "") === cpf;
+    const samePhone = phone && onlyDigits(p.phone || "") === phone;
+    return sameCode || sameCpf || samePhone;
+  });
+}
+
+async function importParticipantsExcel(event) {
+  const file = event.target.files?.[0];
+  if (!file) return;
+
+  if (typeof XLSX === "undefined") {
+    alert("Biblioteca XLSX não carregada. Verifique se o script XLSX foi adicionado no HTML.");
+    return;
+  }
+
+  if (!canManageApprovals()) {
+    alert("Seu perfil não tem permissão para importar participantes.");
+    event.target.value = "";
+    return;
+  }
+
+  try {
+    setImportStatus("Lendo planilha...");
+
+    const data = await file.arrayBuffer();
+    const workbook = XLSX.read(data);
+    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+    const rows = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
+
+    if (!rows.length) {
+      setImportStatus("A planilha está vazia.", "error");
+      return;
+    }
+
+    const importedParticipants = rows
+      .map((row, index) => buildImportedParticipant(row, index))
+      .filter(Boolean);
+
+    if (!importedParticipants.length) {
+      setImportStatus("Nenhum participante válido encontrado. Verifique se existe a coluna Nome.", "error");
+      return;
+    }
+
+    setImportStatus(`Importando ${importedParticipants.length} participante(s)...`);
+
+    let created = 0;
+    let updated = 0;
+    let ignored = 0;
+
+    for (const imported of importedParticipants) {
+      try {
+        const existing = findExistingImportedParticipant(imported);
+        const docId = existing?.id || imported.id;
+
+        await setDoc(
+          doc(db, "participants", docId),
+          {
+            ...imported.data,
+            createdAt: existing?.raw?.createdAt || serverTimestamp(),
+            createdBy: existing?.raw?.createdBy || STATE.authUser?.uid || null
+          },
+          { merge: true }
+        );
+
+        if (existing) updated++;
+        else created++;
+      } catch (lineError) {
+        console.error("Erro ao importar linha:", imported, lineError);
+        ignored++;
+      }
+    }
+
+    setImportStatus(
+      `Importação concluída. Novos: ${created} • Atualizados: ${updated} • Ignorados: ${ignored}`,
+      "success"
+    );
+
+    showToast("Participantes importados com sucesso.");
+    await reloadAll();
+  } catch (error) {
+    console.error("Erro ao importar planilha:", error);
+    setImportStatus(`Erro ao importar planilha: ${error?.message || "erro desconhecido"}`, "error");
+    alert("Erro ao importar planilha.");
+  } finally {
+    if (els.inputImportParticipants) {
+      els.inputImportParticipants.value = "";
+    }
+  }
+}
+
+function exportParticipantsExcel() {
+  const rows = getParticipantsExportRows();
+
+  if (!rows.length) {
+    alert("Nenhum participante encontrado.");
+    return;
+  }
+
+  if (typeof XLSX === "undefined") {
+    alert("Biblioteca XLSX não carregada. Verifique se o script XLSX foi adicionado no HTML.");
+    return;
+  }
+
+  const worksheet = XLSX.utils.json_to_sheet(
+    rows.map((row) => ({
+      Nome: row.nome,
+      Código: row.codigo,
+      Telefone: row.telefone,
+      Email: row.email,
+      CPF: row.cpf,
+      Status: row.status,
+      Operação: row.operacao,
+      Rota: row.rota,
+      Território: row.territorio,
+      Endereço: row.endereco,
+      Latitude: row.latitude,
+      Longitude: row.longitude
+    }))
+  );
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Participantes");
+  XLSX.writeFile(workbook, `participantes_${formatDateFileName()}.xlsx`);
+
+  showToast("Excel exportado.");
+}
+
+/* =========================
+FILTROS E ETIQUETAS
+========================= */
+
+function ensureBaseGeneralFilters() {
+  const table = els.usersTableBody?.closest("table");
+  const panel = table?.closest(".panel-card");
+
+  if (!panel || panel.querySelector("#labelFiltersCard")) return;
+
+  const filters = document.createElement("div");
+  filters.id = "labelFiltersCard";
+  filters.className = "filters-grid";
+  filters.style.margin = "16px 0";
+
+  filters.innerHTML = `
+    <div class="field">
+      <label for="labelStatusFilter">Status</label>
+      <select id="labelStatusFilter">
+        <option value="all">Todos</option>
+        <option value="pendente">Pendentes</option>
+        <option value="aprovado">Aprovados</option>
+        <option value="inativo">Inativos</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="labelRouteFilter">Rota</label>
+      <select id="labelRouteFilter">
+        <option value="all">Todas as rotas</option>
+        <option value="">Sem rota definida</option>
+        <option value="segunda_manha">Segunda-feira • Manhã</option>
+        <option value="segunda_tarde">Segunda-feira • Tarde</option>
+        <option value="terca_manha">Terça-feira • Manhã</option>
+        <option value="terca_tarde">Terça-feira • Tarde</option>
+        <option value="quarta_manha">Quarta-feira • Manhã</option>
+        <option value="quarta_tarde">Quarta-feira • Tarde</option>
+        <option value="quinta_manha">Quinta-feira • Manhã</option>
+        <option value="quinta_tarde">Quinta-feira • Tarde</option>
+        <option value="sexta_manha">Sexta-feira • Manhã</option>
+        <option value="sexta_tarde">Sexta-feira • Tarde</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="labelSearchInput">Participante</label>
+      <input id="labelSearchInput" type="text" placeholder="Nome, código ou telefone" />
+    </div>
+
+    <div class="field">
+      <label for="labelAddressInput">Endereço</label>
+      <input id="labelAddressInput" type="text" placeholder="Rua, bairro, cidade ou CEP" />
+    </div>
+  `;
+
+  const tableWrap = panel.querySelector(".table-wrap");
+  panel.insertBefore(filters, tableWrap || table);
+
+  els.labelStatusFilter = document.getElementById("labelStatusFilter");
+  els.labelRouteFilter = document.getElementById("labelRouteFilter");
+  els.labelSearchInput = document.getElementById("labelSearchInput");
+  els.labelAddressInput = document.getElementById("labelAddressInput");
+
+  els.labelStatusFilter?.addEventListener("change", renderTable);
+  els.labelRouteFilter?.addEventListener("change", renderTable);
+  els.labelSearchInput?.addEventListener("input", renderTable);
+  els.labelAddressInput?.addEventListener("input", renderTable);
+}
+
+function ensureTableHeaderForLabels() {
+  const table = els.usersTableBody?.closest("table");
+  const headRow = table?.querySelector("thead tr");
+
+  if (!headRow) return;
+
+  headRow.innerHTML = `
+    <th>Participante</th>
+    <th>Status</th>
+    <th>Operação</th>
+    <th>Rota</th>
+    <th>Endereço</th>
+    <th>Ações</th>
+  `;
+}
+
+function loadQRCodeLib() {
+  return Promise.resolve();
+}
+
+function generateLabelHtml(user, qrUrl, targetUrl) {
+  return `
+    <section class="label-card">
+      <div class="label-top">
+        <strong>NSRU</strong>
+        <span>Etiqueta do participante</span>
+      </div>
+
+      <div class="label-content">
+        <h1>${safeText(user.name)}</h1>
+
+        <div class="label-row">
+          <span>Código do participante</span>
+          <strong>${safeText(user.code)}</strong>
+        </div>
+
+        <div class="label-row">
+          <span>Rota de coleta</span>
+          <strong>${routeShiftLabel(user.routeShift || user.schedule)}</strong>
+        </div>
+
+        <div class="label-qr">
+          <img src="${qrUrl}" alt="QR Code do participante" />
+        </div>
+
+        <p>Escaneie o QR Code para abrir a página de coleta da cooperativa.</p>
+        <small>${safeText(targetUrl)}</small>
+      </div>
+    </section>
+  `;
+}
+
+async function printParticipantLabel(userId) {
+  const user = STATE.users.find((item) => item.id === userId);
+  if (!user) return;
+  if (!requireUserTerritoryAccess(user, "imprimir etiqueta")) return;
+
+  try {
+    await loadQRCodeLib();
+
+    const targetUrl = getTerritoryPageUrl(user);
+    const qrUrl =
+      "https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=10&data=" +
+      encodeURIComponent(targetUrl);
+
+    const printWindow = window.open("", "_blank", "width=460,height=680");
+
+    if (!printWindow) {
+      alert("O navegador bloqueou a abertura da etiqueta. Permita pop-ups para esta página.");
+      return;
+    }
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>Etiqueta ${safeText(user.code)}</title>
+        <style>
+          * { box-sizing: border-box; }
+
+          body {
+            margin: 0;
+            padding: 24px;
+            font-family: Arial, sans-serif;
+            background: #f4f7ef;
+            color: #1f2a18;
+          }
+
+          .label-card {
+            width: 360px;
+            min-height: 500px;
+            margin: 0 auto;
+            background: #fff;
+            border: 2px solid #1f2a18;
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 18px 50px rgba(0, 0, 0, .12);
+          }
+
+          .label-top {
+            background: #81B92A;
+            padding: 18px;
+            text-align: center;
+            color: #1f2a18;
+          }
+
+          .label-top strong {
+            display: block;
+            font-size: 32px;
+            letter-spacing: 1px;
+          }
+
+          .label-top span {
+            display: block;
+            margin-top: 4px;
+            font-size: 14px;
+            font-weight: 700;
+          }
+
+          .label-content {
+            padding: 20px;
+            text-align: center;
+          }
+
+          .label-content h1 {
+            margin: 0 0 16px;
+            font-size: 22px;
+            line-height: 1.1;
+          }
+
+          .label-row {
+            margin-bottom: 12px;
+            padding: 12px;
+            border: 1px solid #d8e8c0;
+            border-radius: 14px;
+            text-align: left;
+            background: #fbfdf7;
+          }
+
+          .label-row span {
+            display: block;
+            font-size: 11px;
+            color: #61704f;
+            text-transform: uppercase;
+            letter-spacing: .04em;
+          }
+
+          .label-row strong {
+            display: block;
+            margin-top: 4px;
+            font-size: 18px;
+          }
+
+          .label-qr {
+            margin: 18px 0 10px;
+          }
+
+          .label-qr img {
+            width: 190px;
+            height: 190px;
+          }
+
+          p {
+            margin: 8px 0 6px;
+            color: #536044;
+            font-size: 13px;
+          }
+
+          small {
+            display: block;
+            word-break: break-all;
+            color: #7d8872;
+            font-size: 10px;
+          }
+
+          @media print {
+            body {
+              padding: 0;
+              background: #fff;
+            }
+
+            .label-card {
+              width: 100%;
+              min-height: auto;
+              margin: 0;
+              border-radius: 0;
+              box-shadow: none;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        ${generateLabelHtml(user, qrUrl, targetUrl)}
+        <script>
+          window.onload = function () {
+            window.focus();
+            window.print();
+          };
+        </script>
+      </body>
+      </html>
+    `);
+
+    printWindow.document.close();
+  } catch (error) {
+    console.error("Erro ao gerar etiqueta:", error);
+    alert("Não foi possível gerar a etiqueta do participante.");
+  }
+}
+
+function setDebug(message, strong = "Status do sistema.") {
+  if (!els.debugStatus) return;
+  els.debugStatus.classList.remove("hidden");
+  els.debugStatus.innerHTML = `<strong>${strong}</strong><span>${message}</span>`;
+}
+
+function ensureToast() {
+  if (toastEl) return toastEl;
+
+  toastEl = document.createElement("div");
+  Object.assign(toastEl.style, {
+    position: "fixed",
+    right: "20px",
+    bottom: "20px",
+    zIndex: "99999",
+    padding: "14px 18px",
+    borderRadius: "16px",
+    background: "rgba(33,42,24,.95)",
+    color: "#fff",
+    boxShadow: "0 22px 60px rgba(0,0,0,.18)",
+    fontFamily: '"Archivo Condensed", Arial, sans-serif',
+    fontSize: "16px",
+    maxWidth: "360px",
+    opacity: "0",
+    transform: "translateY(8px)",
+    transition: "all .22s ease"
+  });
+
+  document.body.appendChild(toastEl);
+  return toastEl;
+}
+
+function showToast(message) {
+  const el = ensureToast();
+  el.textContent = message;
+  el.style.opacity = "1";
+  el.style.transform = "translateY(0)";
+  window.clearTimeout(showToast._timer);
+  showToast._timer = window.setTimeout(() => {
+    el.style.opacity = "0";
+    el.style.transform = "translateY(8px)";
+  }, 3200);
+}
+
+async function maybeRequestNotificationPermission() {
+  if (STATE.notificationPermissionAsked) return;
+  STATE.notificationPermissionAsked = true;
+
+  if (!("Notification" in window)) return;
+
+  if (Notification.permission === "default") {
+    try {
+      await Notification.requestPermission();
+    } catch (_err) {}
+  }
+}
+
+function notifyNewRequest(user) {
+  showToast(`Nova solicitação: ${safeText(user.name)} • ${safeText(user.code)}`);
+
+  if ("Notification" in window && Notification.permission === "granted") {
+    try {
+      new Notification("Nova solicitação de participação", {
+        body: `${safeText(user.name)} • ${safeText(user.territoryLabel || user.territoryId)}`
+      });
+    } catch (_err) {}
+  }
+}
+
+/* =========================
+USUÁRIOS INTERNOS DA COOP
+========================= */
+
+function getCoopPermissionsPayload() {
+  return {
+    dashboard: !!els.permDashboard?.checked,
+    coletas: !!els.permColetas?.checked,
+    participants: !!els.permParticipants?.checked,
+    conteudos: !!els.permConteudos?.checked,
+    documentos: !!els.permDocumentos?.checked,
+    mapa: !!els.permMapa?.checked,
+    aprovarCadastros: !!els.permAprovarCadastros?.checked,
+    gerenciarUsuarios: !!els.permGerenciarUsuarios?.checked
+  };
+}
+
+function getCoopRolesPayload() {
+  return {
+    cooperativa: true,
+    dashboard: !!els.permDashboard?.checked,
+    coletas: !!els.permColetas?.checked,
+    participants: !!els.permParticipants?.checked,
+    conteudos: !!els.permConteudos?.checked,
+    documentos: !!els.permDocumentos?.checked,
+    mapa: !!els.permMapa?.checked,
+    aprovarCadastros: !!els.permAprovarCadastros?.checked,
+    gerenciarUsuarios: !!els.permGerenciarUsuarios?.checked
+  };
+}
+
+function usersRef() {
+  if (canViewAllTerritories()) {
+    return collection(db, "users");
+  }
+
+  const territoryId = getMyTerritoryId();
+  if (!territoryId) {
+    throw new Error("Usuário sem territoryId em /users.");
+  }
+
+  return query(collection(db, "users"), where("territoryId", "in", getTerritoryAliases(territoryId)));
+}
+
+function mapInternalUserDoc(docSnap) {
+  const data = docSnap.data() || {};
+  return {
+    id: docSnap.id,
+    uid: data.uid || docSnap.id,
+    name: data.name || data.displayName || "Usuário",
+    displayName: data.displayName || data.name || "Usuário",
+    email: data.email || "",
+    role: String(data.role || "").toLowerCase(),
+    status: String(data.status || "").toLowerCase(),
+    territoryId: canonicalTerritoryId(data.territoryId),
+    territoryLabel: data.territoryLabel || getTerritoryLabelById(data.territoryId),
+    permissions: data.permissions || {},
+    raw: data
+  };
+}
+
+function internalUserRoleLabel(role) {
+  if (role === "admin") return "Administrador";
+  if (role === "cooperativa") return "Cooperativa";
+  if (role === "operador") return "Operador";
+  if (role === "usuario") return "Usuário";
+  return role || "Perfil";
+}
+
+function renderCoopUsersList() {
+  if (!els.coopUsersList) return;
+
+  const list = STATE.coopUsers.filter((item) => {
+    if (canViewAllTerritories()) {
+      return ["admin", "cooperativa", "operador", "usuario"].includes(item.role);
+    }
+
+    return ["admin", "cooperativa", "operador", "usuario"].includes(item.role)
+      && canViewUserFromSameTerritory(item);
+  });
+
+  if (els.coopUsersCountLabel) {
+    els.coopUsersCountLabel.textContent = `${list.length} itens`;
+  }
+
+  if (!list.length) {
+    els.coopUsersList.innerHTML = `<div class="empty-state">Nenhum usuário interno da cooperativa encontrado.</div>`;
+    return;
+  }
+
+  els.coopUsersList.innerHTML = list.map((item) => {
+    const permissions = item.permissions || {};
+    const permissionLabels = [];
+    if (permissions.dashboard) permissionLabels.push("Dashboard");
+    if (permissions.coletas) permissionLabels.push("Coletas");
+    if (permissions.participants) permissionLabels.push("Participantes");
+    if (permissions.conteudos) permissionLabels.push("Conteúdos");
+    if (permissions.documentos) permissionLabels.push("Documentos");
+    if (permissions.mapa) permissionLabels.push("Mapa");
+    if (permissions.aprovarCadastros) permissionLabels.push("Aprovar cadastros");
+    if (permissions.gerenciarUsuarios) permissionLabels.push("Gerenciar usuários");
+
+    return `
+      <article class="coop-user-card">
+        <div class="coop-user-card-top">
+          <div>
+            <strong>${safeText(item.displayName || item.name)}</strong>
+            <span>${safeText(item.email)}</span>
+          </div>
+        </div>
+
+        <div class="coop-user-badges">
+          <span class="coop-user-badge">${safeText(internalUserRoleLabel(item.role))}</span>
+          <span class="coop-user-badge">${safeText(item.territoryLabel || item.territoryId)}</span>
+          <span class="coop-user-badge">${safeText(item.status || "active")}</span>
+        </div>
+
+        <div class="coop-user-permissions">
+          ${permissionLabels.length
+            ? permissionLabels.map((label) => `<span class="coop-user-permission">${safeText(label)}</span>`).join("")
+            : `<span class="coop-user-permission">Sem permissões extras</span>`
+          }
+        </div>
+      </article>
+    `;
+  }).join("");
+}
+
+async function createFirebaseAuthUser(email, password, displayName) {
+  const apiKey = auth.app.options.apiKey;
+
+  const response = await fetch(
+    `https://identitytoolkit.googleapis.com/v1/accounts:signUp?key=${apiKey}`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        displayName,
+        returnSecureToken: false
+      })
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    const message = data?.error?.message || "Erro ao criar usuário.";
+
+    if (message === "EMAIL_EXISTS") throw new Error("Este e-mail já está cadastrado.");
+    if (message.includes("WEAK_PASSWORD")) throw new Error("Senha precisa ter no mínimo 6 caracteres.");
+    if (message === "INVALID_EMAIL") throw new Error("E-mail inválido.");
+
+    throw new Error(message);
+  }
+
+  return {
+    uid: data.localId,
+    email: data.email
+  };
+}
+
+async function createCoopUserRecord() {
+  if (!canManageCoopUsers()) {
+    alert("Sem permissão.");
+    return;
+  }
+
+  const name = els.coopUserName.value.trim();
+  const displayName = els.coopUserDisplayName.value.trim() || name;
+  const email = els.coopUserEmail.value.trim().toLowerCase();
+  const password = els.coopUserPassword.value.trim();
+  const role = els.coopUserRole.value;
+
+  const territoryId = canonicalTerritoryId(canViewAllTerritories()
+    ? els.coopUserTerritory.value
+    : getMyTerritoryId());
+
+  const territoryLabel = getTerritoryLabelById(territoryId);
+
+  try {
+    els.btnCreateCoopUser.disabled = true;
+
+    const authUser = await createFirebaseAuthUser(email, password, displayName);
+
+    await setDoc(doc(db, "users", authUser.uid), {
+      uid: authUser.uid,
+      name,
+      displayName,
+      email,
+      role,
+      status: "active",
+      territoryId,
+      territoryLabel,
+      permissions: getCoopPermissionsPayload(),
+      roles: getCoopRolesPayload(),
+      createdAt: serverTimestamp()
+    });
+
+    alert("Usuário criado com sucesso!");
+    els.coopUserForm.reset();
+  } catch (e) {
+    console.error(e);
+    alert(e.message);
+  } finally {
+    els.btnCreateCoopUser.disabled = false;
+  }
+}
+
+function applyCoopUserPermissionsUI() {
+  if (!els.coopUsersSection) return;
+
+  if (!canManageCoopUsers()) {
+    els.coopUsersSection.classList.add("hidden");
+    return;
+  }
+
+  els.coopUsersSection.classList.remove("hidden");
+
+  if (!canViewAllTerritories() && els.coopUserTerritory) {
+    els.coopUserTerritory.value = getMyTerritoryId() || "vila-pinto";
+    els.coopUserTerritory.disabled = true;
+  }
+}
+
+function startUsersListener() {
+  if (STATE.unsubCoopUsers) {
+    STATE.unsubCoopUsers();
+    STATE.unsubCoopUsers = null;
+  }
+
+  try {
+    STATE.unsubCoopUsers = onSnapshot(
+      usersRef(),
+      (snapshot) => {
+        STATE.coopUsers = snapshot.docs.map(mapInternalUserDoc);
+        renderCoopUsersList();
+      },
+      async (error) => {
+        console.warn("Listener users falhou:", error);
+        try {
+          const snap = await getDocs(usersRef());
+          STATE.coopUsers = snap.docs.map(mapInternalUserDoc);
+          renderCoopUsersList();
+        } catch (fallbackError) {
+          console.error("Erro ao carregar users:", fallbackError);
+          if (els.coopUsersList) {
+            els.coopUsersList.innerHTML = `<div class="empty-state">Não foi possível carregar os usuários da cooperativa.</div>`;
+          }
+        }
+      }
+    );
+  } catch (error) {
+    console.warn("Erro ao iniciar listener users:", error);
+  }
+}
+
+/* =========================
+QUERIES
+========================= */
+
+function participantsRef() {
+  if (canViewAllTerritories()) {
+    return collection(db, "participants");
+  }
+
+  const territoryId = getMyTerritoryId();
+  if (!territoryId) {
+    throw new Error("Usuário sem territoryId em /users.");
+  }
+
+  return query(collection(db, "participants"), where("territoryId", "in", getTerritoryAliases(territoryId)));
+}
+
+function approvalRequestsRefs() {
+  if (canViewAllTerritories()) {
+    return [collection(db, "approvalRequests")];
+  }
+
+  const territoryId = getMyTerritoryId();
+  if (!territoryId) {
+    throw new Error("Usuário sem territoryId em /users.");
+  }
+
+  return [
+    query(collection(db, "approvalRequests"), where("territoryId", "in", getTerritoryAliases(territoryId))),
+    query(collection(db, "approvalRequests"), where("payloadSnapshot.territoryId", "in", getTerritoryAliases(territoryId)))
+  ];
+}
+
+function dedupeApprovalDocs(docs) {
+  const mapDocs = new Map();
+
+  docs.forEach((docSnap) => {
+    if (!mapDocs.has(docSnap.id)) {
+      mapDocs.set(docSnap.id, docSnap);
+    }
+  });
+
+  return Array.from(mapDocs.values());
+}
+
+/* =========================
+MAPEAMENTO DOS DOCS
+========================= */
+
+function mapParticipantDoc(docSnap) {
+  const data = docSnap.data() || {};
+
+  return {
+    id: docSnap.id,
+    name: data.name || data.nome || "Sem nome",
+    code: data.participantCode || "—",
+    phone: data.phone || "",
+    email: data.email || "",
+    cpf: data.cpf || "",
+    territoryId: canonicalTerritoryId(data.territoryId),
+    territoryLabel: data.territoryLabel || getTerritoryLabelById(data.territoryId),
+    status: normalizeStatus(data.status || data.approvalStatus),
+    rawStatus: data.status || "",
+    approvalStatus: data.approvalStatus || "",
+    inOperation: data.inOperation === "sim" || data.inOperation === true ? "sim" : "nao",
+    inTerritory: data.inTerritory === "sim" || data.inTerritory === true ? "sim" : "nao",
+    approvalRequestId: data.approvalRequestId || null,
+    address: buildAddress(data),
+    lat: toNumberOrNull(data.lat) ?? toNumberOrNull(data.address?.lat),
+    lng: toNumberOrNull(data.lng) ?? toNumberOrNull(data.address?.lng),
+    schedule: data.schedule || "A definir",
+    routeShift: data.routeShift || data.rota || data.schedule || "",
+    wasteKg: Number(data.wasteKg || 0),
+    raw: data
+  };
+}
+
+function mapApprovalRequestDoc(docSnap) {
+  const data = docSnap.data() || {};
+  const snapshot = data.payloadSnapshot || {};
+
+  return {
+    id: docSnap.id,
+    participantId: data.targetId || data.participantId || null,
+    participantName: data.participantName || snapshot.name || "Solicitação pendente",
+    participantCode: data.participantCode || snapshot.participantCode || "—",
+    participantPhone: data.participantPhone || snapshot.phone || "",
+    participantEmail: data.participantEmail || snapshot.email || "",
+    participantCpf: data.participantCpf || snapshot.cpf || "",
+    territoryId: canonicalTerritoryId(data.territoryId || snapshot.territoryId),
+    territoryLabel: data.territoryLabel || snapshot.territoryLabel || getTerritoryLabelById(data.territoryId || snapshot.territoryId),
+    status: String(data.status || "pending").toLowerCase().trim(),
+    raw: data
+  };
+}
+
+/* =========================
+MERGE SEM DUPLICAÇÃO
+========================= */
+
+function mergeUsers() {
+  const participantById = new Map();
+  const participantByApprovalRequestId = new Map();
+  const participantByCode = new Map();
+  const participantByCpf = new Map();
+  const participantByPhone = new Map();
+
+  STATE.participants.forEach((participant) => {
+    participantById.set(participant.id, participant);
+
+    if (participant.approvalRequestId) {
+      participantByApprovalRequestId.set(participant.approvalRequestId, participant);
+    }
+    if (participant.code && participant.code !== "—") {
+      participantByCode.set(String(participant.code).toLowerCase(), participant);
+    }
+    if (participant.cpf) {
+      participantByCpf.set(String(participant.cpf).replace(/\D/g, ""), participant);
+    }
+    if (participant.phone) {
+      participantByPhone.set(onlyDigits(participant.phone), participant);
+    }
+  });
+
+  const pendingFromRequests = STATE.approvalRequests
+    .filter((req) => !["approved", "rejected"].includes(String(req.status || "").toLowerCase().trim()))
+    .map((req) => {
+      const raw = req.raw || {};
+      const snapshot = raw.payloadSnapshot || {};
+
+      const participant =
+        participantById.get(req.participantId) ||
+        participantByApprovalRequestId.get(req.id) ||
+        participantByCode.get(String(req.participantCode || snapshot.participantCode || "").toLowerCase()) ||
+        participantByCpf.get(String(req.participantCpf || snapshot.cpf || "").replace(/\D/g, "")) ||
+        participantByPhone.get(onlyDigits(req.participantPhone || snapshot.phone || "")) ||
+        null;
+
+      return {
+        id: participant?.id || req.participantId || `approval_${req.id}`,
+        linkedApprovalRequestId: req.id,
+        approvalRequestId: req.id,
+        name: participant?.name || req.participantName || snapshot.name || "Solicitação pendente",
+        code: participant?.code || req.participantCode || snapshot.participantCode || "—",
+        phone: participant?.phone || req.participantPhone || snapshot.phone || "",
+        email: participant?.email || req.participantEmail || snapshot.email || "",
+        cpf: participant?.cpf || req.participantCpf || snapshot.cpf || "",
+        territoryId: canonicalTerritoryId(participant?.territoryId || req.territoryId || snapshot.territoryId),
+        territoryLabel: participant?.territoryLabel || req.territoryLabel || snapshot.territoryLabel || getTerritoryLabelById(participant?.territoryId || req.territoryId || snapshot.territoryId),
+        status: "pendente",
+        rawStatus: "pendente",
+        approvalStatus: "pending",
+        inOperation: "nao",
+        inTerritory: "sim",
+        address: participant?.address || buildAddress(snapshot) || "—",
+        lat: participant?.lat ?? toNumberOrNull(snapshot.lat),
+        lng: participant?.lng ?? toNumberOrNull(snapshot.lng),
+        schedule: participant?.schedule || "A definir",
+        routeShift: participant?.routeShift || snapshot.routeShift || snapshot.rota || snapshot.schedule || "",
+        wasteKg: Number(participant?.wasteKg || 0),
+        raw: participant?.raw || raw
+      };
+    });
+
+  const standaloneParticipants = STATE.participants
+    .filter((participant) => participant.status !== "inativo")
+    .map((participant) => {
+      const isPendingParticipant =
+        participant.status === "pendente" ||
+        String(participant.approvalStatus || "").toLowerCase().trim() === "pending";
+
+      return {
+        ...participant,
+        status: isPendingParticipant ? "pendente" : participant.status,
+        linkedApprovalRequestId: participant.approvalRequestId || null
+      };
+    });
+
+  const allItems = [...pendingFromRequests, ...standaloneParticipants];
+
+  function identityKey(item) {
+    const code = String(item.code || "").trim().toLowerCase();
+    const cpf = String(item.cpf || "").replace(/\D/g, "");
+    const phone = onlyDigits(item.phone || "");
+    const name = String(item.name || "").trim().toLowerCase();
+
+    return [code, cpf, phone, name].join("|");
+  }
+
+  const grouped = new Map();
+
+  allItems.forEach((item) => {
+    const key = identityKey(item);
+    if (!grouped.has(key)) grouped.set(key, []);
+    grouped.get(key).push(item);
+  });
+
+  const finalUsers = [];
+
+  grouped.forEach((items) => {
+    const approved = items.find((i) => i.status === "aprovado");
+    if (approved) {
+      finalUsers.push(approved);
+      return;
+    }
+
+    const pending = items.filter((i) => i.status === "pendente");
+
+    if (pending.length) {
+      pending.sort((a, b) => {
+        const aDate = a.raw?.createdAt?.seconds || 0;
+        const bDate = b.raw?.createdAt?.seconds || 0;
+        return bDate - aDate;
+      });
+
+      finalUsers.push(pending[0]);
+      return;
+    }
+
+    const inactive = items.find((i) => i.status === "inativo");
+    if (inactive) finalUsers.push(inactive);
+  });
+
+  const scopedUsers = canViewAllTerritories()
+    ? finalUsers
+    : finalUsers.filter((user) => canViewUserFromSameTerritory(user));
+
+  STATE.users = scopedUsers.sort((a, b) =>
+    String(a.name || "").localeCompare(String(b.name || ""), "pt-BR")
+  );
+
+  emitPendingNotifications();
+  applyFilters();
+}
+
+function emitPendingNotifications() {
+  const currentPendingIds = new Set(
+    STATE.users
+      .filter((u) => u.status === "pendente")
+      .map((u) => u.linkedApprovalRequestId || u.approvalRequestId || u.id)
+  );
+
+  currentPendingIds.forEach((id) => {
+    if (!STATE.lastPendingIds.has(id)) {
+      const user = STATE.users.find(
+        (u) => (u.linkedApprovalRequestId || u.approvalRequestId || u.id) === id
+      );
+      if (user) notifyNewRequest(user);
+    }
+  });
+
+  STATE.lastPendingIds = currentPendingIds;
+}
+
+function applyFilters() {
+  STATE.pendingPage = 0;
+STATE.activePage = 0;
+STATE.tablePage = 0;
+
+  const term = String(els.searchInput?.value || "").trim().toLowerCase();
+  const status = String(els.statusFilter?.value || "all");
+  const operation = String(els.operationFilter?.value || "all");
+
+  STATE.filteredUsers = STATE.users.filter((user) => {
+    const matchesTerm =
+      !term ||
+      String(user.name || "").toLowerCase().includes(term) ||
+      String(user.code || "").toLowerCase().includes(term) ||
+      String(user.phone || "").toLowerCase().includes(term) ||
+      String(user.email || "").toLowerCase().includes(term) ||
+      String(user.cpf || "").toLowerCase().includes(term) ||
+      String(user.address || "").toLowerCase().includes(term);
+
+    const matchesStatus = status === "all" || user.status === status;
+    const matchesOperation = operation === "all" || user.inOperation === operation;
+
+    return matchesTerm && matchesStatus && matchesOperation;
+  });
+
+  renderAll();
+}
+/* =========================
+RENDER
+========================= */
+
+function computeKpis() {
+  const total = STATE.filteredUsers.length;
+  const pending = STATE.filteredUsers.filter((u) => u.status === "pendente").length;
+  const active = STATE.filteredUsers.filter((u) => u.status === "aprovado").length;
+  const geo = STATE.filteredUsers.filter((u) => isValidCoord(u.lat, u.lng)).length;
+
+  if (els.kpiTotal) els.kpiTotal.textContent = String(total);
+  if (els.kpiPending) els.kpiPending.textContent = String(pending);
+  if (els.kpiActive) els.kpiActive.textContent = String(active);
+  if (els.kpiGeo) els.kpiGeo.textContent = String(geo);
+
+  if (els.pendingCountLabel) els.pendingCountLabel.textContent = `${pending} itens`;
+  if (els.activeCountLabel) els.activeCountLabel.textContent = `${active} itens`;
+  if (els.tableCountLabel) els.tableCountLabel.textContent = `${total} registros`;
+}
+
+function renderApprovedList() {
+  if (!els.activeList) return;
+
+  const active = STATE.filteredUsers
+    .filter((u) => u.status === "aprovado")
+    .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "pt-BR"));
+
+  if (!active.length) {
+    els.activeList.innerHTML = `<div class="empty-state">Nenhum usuário aprovado encontrado.</div>`;
+    return;
+  }
+
+  const start = STATE.activePage * STATE.pageSize;
+  const end = start + STATE.pageSize;
+  const visible = active.slice(start, end);
+  const totalPages = Math.ceil(active.length / STATE.pageSize);
+
+  els.activeList.innerHTML = `
+    ${visible.map((user) => `
+      <article class="user-item">
+        <div class="user-main">
+          <strong>${safeText(user.name)}</strong>
+          <span>Código: ${safeText(user.code)}</span>
+          <span>Telefone: ${safeText(user.phone)}</span>
+          <span>${safeText(user.address)}</span>
+        </div>
+
+        <div class="user-actions">
+          <span class="${badgeClass(user.status)}">Aprovado</span>
+          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
+          <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
+        </div>
+      </article>
+    `).join("")}
+
+    <div class="list-pagination">
+      <button class="btn btn-ghost" data-action="prev-active-page" type="button" ${STATE.activePage === 0 ? "disabled" : ""}>
+        Anteriores
+      </button>
+
+      <span>Página ${STATE.activePage + 1} de ${totalPages}</span>
+
+      <button class="btn btn-primary" data-action="next-active-page" type="button" ${STATE.activePage >= totalPages - 1 ? "disabled" : ""}>
+        Próximos
+      </button>
+    </div>
+  `;
+}
+
+function renderPendingList() {
+  if (!els.pendingList) return;
+
+  const pending = STATE.filteredUsers
+    .filter((u) => u.status === "pendente")
+    .sort((a, b) => String(a.name || "").localeCompare(String(b.name || ""), "pt-BR"));
+
+  if (!pending.length) {
+    els.pendingList.innerHTML = `<div class="empty-state">Nenhum usuário pendente de aprovação.</div>`;
+    return;
+  }
+
+  const start = STATE.pendingPage * STATE.pageSize;
+  const end = start + STATE.pageSize;
+  const visible = pending.slice(start, end);
+  const totalPages = Math.ceil(pending.length / STATE.pageSize);
+
+  els.pendingList.innerHTML = `
+    ${visible.map((user) => `
+      <article class="user-item">
+        <div class="user-main">
+          <strong>${safeText(user.name)}</strong>
+          <span>Código: ${safeText(user.code)}</span>
+          <span>Telefone: ${safeText(user.phone)}</span>
+          <span>${safeText(user.address)}</span>
+        </div>
+
+        <div class="user-actions">
+          <span class="${badgeClass(user.status)}">Pendente</span>
+          ${canManageApprovals() ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
+          ${canManageApprovals() ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
+          <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
+        </div>
+      </article>
+    `).join("")}
+
+    <div class="list-pagination">
+      <button class="btn btn-ghost" data-action="prev-pending-page" type="button" ${STATE.pendingPage === 0 ? "disabled" : ""}>
+        Anteriores
+      </button>
+
+      <span>Página ${STATE.pendingPage + 1} de ${totalPages}</span>
+
+      <button class="btn btn-primary" data-action="next-pending-page" type="button" ${STATE.pendingPage >= totalPages - 1 ? "disabled" : ""}>
+        Próximos
+      </button>
+    </div>
+  `;
+}
+function getTableFilteredUsers() {
+  const statusFilter = String(els.labelStatusFilter?.value || "all");
+  const routeFilter = String(els.labelRouteFilter?.value ?? "all");
+  const participantTerm = String(els.labelSearchInput?.value || "").trim().toLowerCase();
+  const addressTerm = String(els.labelAddressInput?.value || "").trim().toLowerCase();
+
+  return STATE.filteredUsers
+    .filter((u) => {
+      if (statusFilter === "all") return u.status !== "inativo";
+      return u.status === statusFilter;
+    })
+    .filter((user) => {
+      const routeValue = String(user.routeShift || user.schedule || "").trim();
+
+      const matchesRoute =
+        routeFilter === "all" ||
+        (routeFilter === "" && routeValue === "") ||
+        routeValue === routeFilter;
+
+      const matchesParticipant =
+        !participantTerm ||
+        String(user.name || "").toLowerCase().includes(participantTerm) ||
+        String(user.code || "").toLowerCase().includes(participantTerm) ||
+        String(user.phone || "").toLowerCase().includes(participantTerm) ||
+        String(user.email || "").toLowerCase().includes(participantTerm) ||
+        String(user.cpf || "").toLowerCase().includes(participantTerm);
+
+      const matchesAddress =
+        !addressTerm ||
+        String(user.address || "").toLowerCase().includes(addressTerm);
+
+      return matchesRoute && matchesParticipant && matchesAddress;
+    });
+}
+
+function renderTable() {
+  if (!els.usersTableBody) return;
+
+  ensureBaseGeneralFilters();
+  ensureTableHeaderForLabels();
+
+  const allUsers = getTableFilteredUsers();
+  const totalPages = Math.ceil(allUsers.length / STATE.pageSize);
+const start = STATE.tablePage * STATE.pageSize;
+const end = start + STATE.pageSize;
+const visibleUsers = allUsers.slice(start, end);
+
+  if (!allUsers.length) {
+    els.usersTableBody.innerHTML = `<tr><td colspan="6">Nenhum participante encontrado.</td></tr>`;
+    return;
+  }
+
+ els.usersTableBody.innerHTML = visibleUsers.map((user) => `
+    <tr>
+      <td>
+        <strong>${safeText(user.name)}</strong><br>
+        <small>${safeText(user.code)}</small><br>
+        <small>${safeText(user.phone)}</small>
+      </td>
+      <td><span class="${badgeClass(user.status)}">${safeText(user.status)}</span></td>
+      <td>${user.inOperation === "sim" ? "Em operação" : "Fora da operação"}</td>
+      <td>${routeShiftLabel(user.routeShift || user.schedule)}</td>
+      <td>${safeText(user.address)}</td>
+      <td>
+        <div class="table-actions">
+          <button class="btn btn-dark" data-action="print-label" data-id="${user.id}" type="button">Etiqueta</button>
+          ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
+          ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
+          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Mapa</button>
+          <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
+        </div>
+      </td>
+    </tr>
+  `).join("");
+  const tableWrap = els.usersTableBody.closest(".table-wrap");
+let pagination = document.getElementById("tablePagination");
+
+if (!pagination && tableWrap) {
+  pagination = document.createElement("div");
+  pagination.id = "tablePagination";
+  pagination.className = "list-pagination";
+  tableWrap.appendChild(pagination);
+}
+
+if (pagination) {
+  pagination.innerHTML = `
+    <button class="btn btn-ghost" data-action="prev-table-page" type="button" ${STATE.tablePage === 0 ? "disabled" : ""}>
+      Anteriores
+    </button>
+
+    <span>Página ${STATE.tablePage + 1} de ${totalPages || 1}</span>
+
+    <button class="btn btn-primary" data-action="next-table-page" type="button" ${STATE.tablePage >= totalPages - 1 ? "disabled" : ""}>
+      Próximos
+    </button>
+  `;
+}
+}
+
+function formatDateFileName() {
+  const now = new Date();
+  const yyyy = now.getFullYear();
+  const mm = String(now.getMonth() + 1).padStart(2, "0");
+  const dd = String(now.getDate()).padStart(2, "0");
+  const hh = String(now.getHours()).padStart(2, "0");
+  const min = String(now.getMinutes()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}_${hh}-${min}`;
+}
+
+function getParticipantsExportRows() {
+  ensureBaseGeneralFilters();
+
+  return getTableFilteredUsers().map((user) => ({
+    nome: safeText(user.name, ""),
+    codigo: safeText(user.code, ""),
+    telefone: safeText(user.phone, ""),
+    email: safeText(user.email, ""),
+    cpf: safeText(user.cpf, ""),
+    status: safeText(user.status, ""),
+    operacao: user.inOperation === "sim" ? "Em operação" : "Fora da operação",
+    rota: routeShiftLabel(user.routeShift || user.schedule),
+    territorio: safeText(user.territoryLabel || user.territoryId, ""),
+    endereco: safeText(user.address, ""),
+    latitude: user.lat ?? "",
+    longitude: user.lng ?? ""
+  }));
+}
+
+function csvEscape(value) {
+  const text = String(value ?? "").replace(/\r?\n|\r/g, " ").trim();
+  return `"${text.replace(/"/g, '""')}"`;
+}
+
+function downloadBlob(content, filename, mimeType) {
+  const blob = new Blob([content], { type: mimeType });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+
+  URL.revokeObjectURL(url);
+}
+
+function downloadParticipantsCsv() {
+  const rows = getParticipantsExportRows();
+
+  if (!rows.length) {
+    alert("Nenhum participante encontrado para baixar.");
+    return;
+  }
+
+  const headers = [
+    "Nome",
+    "Código",
+    "Telefone",
+    "E-mail",
+    "CPF",
+    "Status",
+    "Operação",
+    "Rota",
+    "Território",
+    "Endereço",
+    "Latitude",
+    "Longitude"
+  ];
+
+  const lines = [
+    headers.map(csvEscape).join(";"),
+    ...rows.map((row) => [
+      row.nome,
+      row.codigo,
+      row.telefone,
+      row.email,
+      row.cpf,
+      row.status,
+      row.operacao,
+      row.rota,
+      row.territorio,
+      row.endereco,
+      row.latitude,
+      row.longitude
+    ].map(csvEscape).join(";"))
+  ];
+
+  const filename = `participantes-cadastrados_${formatDateFileName()}.csv`;
+  downloadBlob(`\ufeff${lines.join("\n")}`, filename, "text/csv;charset=utf-8;");
+  showToast("CSV dos participantes baixado.");
+}
+
+function downloadParticipantsPdf() {
+  const rows = getParticipantsExportRows();
+
+  if (!rows.length) {
+    alert("Nenhum participante encontrado para baixar.");
+    return;
+  }
+
+  const jsPDF = window.jspdf?.jsPDF;
+
+  if (!jsPDF) {
+    alert("A biblioteca de PDF não foi carregada. Verifique sua conexão e tente novamente.");
+    return;
+  }
+
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4" });
+  const territory = STATE.userDoc?.territoryLabel || STATE.userDoc?.territoryId || getPageTerritoryId() || "Cooperativa";
+  const generatedAt = new Date().toLocaleString("pt-BR");
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(15);
+  doc.text("Participantes cadastrados", 14, 14);
+
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.text(`Cooperativa/Território: ${territory}`, 14, 20);
+  doc.text(`Gerado em: ${generatedAt} • Registros: ${rows.length}`, 14, 25);
+
+  doc.autoTable({
+    startY: 31,
+    head: [["Participante", "Código", "Telefone", "Status", "Operação", "Rota", "Endereço"]],
+    body: rows.map((row) => [
+      row.nome,
+      row.codigo,
+      row.telefone,
+      row.status,
+      row.operacao,
+      row.rota,
+      row.endereco
+    ]),
+    styles: {
+      fontSize: 7,
+      cellPadding: 2,
+      overflow: "linebreak"
+    },
+    headStyles: {
+      fillColor: [129, 185, 42],
+      textColor: [31, 42, 24],
+      fontStyle: "bold"
+    },
+    columnStyles: {
+      0: { cellWidth: 42 },
+      1: { cellWidth: 24 },
+      2: { cellWidth: 28 },
+      3: { cellWidth: 22 },
+      4: { cellWidth: 30 },
+      5: { cellWidth: 36 },
+      6: { cellWidth: 100 }
+    },
+    margin: { left: 14, right: 14 },
+    didDrawPage: function () {
+      const pageSize = doc.internal.pageSize;
+      const pageHeight = pageSize.height || pageSize.getHeight();
+      const pageWidth = pageSize.width || pageSize.getWidth();
+      doc.setFontSize(8);
+      doc.setTextColor(100);
+      doc.text(`Página ${doc.internal.getNumberOfPages()}`, pageWidth - 28, pageHeight - 8);
+    }
+  });
+
+  doc.save(`participantes-cadastrados_${formatDateFileName()}.pdf`);
+  showToast("PDF dos participantes baixado.");
+}
+
+/* =========================
+MAPA
+========================= */
+
+function initMap() {
+  if (!els.usersMap || typeof L === "undefined" || map) return;
+
+  map = L.map("usersMap").setView([STATE.territoryBase.lat, STATE.territoryBase.lng], 13);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap"
+  }).addTo(map);
+  enableSimpleManualMapClick();
+}
+
+function clearMap() {
+  if (!map) return;
+
+  userMarkers.forEach((marker) => map.removeLayer(marker));
+  userMarkers = [];
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  if (baseMarker) {
+    map.removeLayer(baseMarker);
+    baseMarker = null;
+  }
+}
+
+function getMapUsers() {
+  const mode = String(els.routeMode?.value || "approved");
+  const source = STATE.filteredUsers.filter((u) => u.status !== "inativo" && isValidCoord(u.lat, u.lng));
+
+  if (mode === "allgeo") return source;
+  return source.filter((u) => u.status === "aprovado");
+}
+
+function renderMap() {
+  if (!map) return;
+
+  clearMap();
+
+  const base = STATE.territoryBase || DEFAULT_BASE;
+  const points = getMapUsers();
+
+  baseMarker = L.marker([base.lat, base.lng]).addTo(map);
+  baseMarker.bindPopup(`<strong>${safeText(base.label)}</strong>`);
+
+  const bounds = [[base.lat, base.lng]];
+
+  points.forEach((user) => {
+    const marker = L.marker([user.lat, user.lng]).addTo(map);
+    marker.bindPopup(`
+      <strong>${safeText(user.name)}</strong><br>
+      Código: ${safeText(user.code)}<br>
+      Endereço: ${safeText(user.address)}<br>
+      Status: ${safeText(user.status)}<br>
+      Operação: ${user.inOperation === "sim" ? "Sim" : "Não"}
+    `);
+
+    userMarkers.push(marker);
+    bounds.push([user.lat, user.lng]);
+  });
+
+  if (bounds.length > 1) {
+    map.fitBounds(bounds, { padding: [30, 30] });
+  } else {
+    map.setView([base.lat, base.lng], 13);
+  }
+
+  if (els.mapPointsCount) els.mapPointsCount.textContent = String(points.length);
+}
+
+function nearestNeighborOrder(base, users) {
+  const remaining = [...users];
+  const ordered = [];
+  let current = { lat: base.lat, lng: base.lng };
+
+  while (remaining.length) {
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+
+    remaining.forEach((user, index) => {
+      const dx = current.lat - user.lat;
+      const dy = current.lng - user.lng;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      if (dist < bestDistance) {
+        bestDistance = dist;
+        bestIndex = index;
+      }
+    });
+
+    const next = remaining.splice(bestIndex, 1)[0];
+    ordered.push(next);
+    current = next;
+  }
+
+  return ordered;
+}
+
+async function buildRoute() {
+  if (!map) return;
+
+  const base = STATE.territoryBase || DEFAULT_BASE;
+  const points = getMapUsers();
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  if (!points.length) {
+    if (els.routeStatus) els.routeStatus.textContent = "Não há pontos com coordenadas para montar a rota.";
+    if (els.routeDistance) els.routeDistance.textContent = "0 km";
+    if (els.routeDuration) els.routeDuration.textContent = "0 min";
+    if (els.routeInfo) els.routeInfo.textContent = "Rota: sem pontos";
+    return;
+  }
+
+  const ordered = nearestNeighborOrder(base, points);
+  const coords = [
+    [base.lng, base.lat],
+    ...ordered.map((item) => [item.lng, item.lat])
+  ];
+
+  try {
+    if (els.routeStatus) els.routeStatus.textContent = "Calculando rota da cooperativa até os pontos...";
+    const url = `https://router.project-osrm.org/route/v1/driving/${coords.map((p) => `${p[0]},${p[1]}`).join(";")}?overview=full&geometries=geojson`;
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok || !data?.routes?.length) {
+      throw new Error("Falha ao calcular rota real.");
+    }
+
+    const route = data.routes[0];
+    const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+
+    routePolyline = L.polyline(latlngs, {
+      weight: 5,
+      opacity: 0.85
+    }).addTo(map);
+
+    map.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+
+    if (els.routeDistance) els.routeDistance.textContent = formatDistanceKm(route.distance);
+    if (els.routeDuration) els.routeDuration.textContent = formatDuration(route.duration);
+    if (els.routeInfo) els.routeInfo.textContent = `Rota: ${ordered.length} pontos`;
+    if (els.routeStatus) els.routeStatus.textContent = `Rota calculada com ${ordered.length} ponto(s) saindo da base da cooperativa.`;
+  } catch (error) {
+    console.error("Erro ao calcular rota:", error);
+
+    const fallback = [
+      [base.lat, base.lng],
+      ...ordered.map((item) => [item.lat, item.lng])
+    ];
+
+    routePolyline = L.polyline(fallback, {
+      weight: 5,
+      opacity: 0.85,
+      dashArray: "10, 8"
+    }).addTo(map);
+
+    map.fitBounds(routePolyline.getBounds(), { padding: [30, 30] });
+
+    if (els.routeDistance) els.routeDistance.textContent = "Estimativa";
+    if (els.routeDuration) els.routeDuration.textContent = "Estimativa";
+    if (els.routeInfo) els.routeInfo.textContent = `Rota: ${ordered.length} pontos`;
+    if (els.routeStatus) els.routeStatus.textContent = "Rota real indisponível no momento. Exibindo traçado sequencial dos pontos.";
+  }
+}
+
+async function geocodeAndUpdateParticipant(user) {
+  const address =
+    user.address ||
+    user.raw?.enderecoCompleto ||
+    user.raw?.payloadSnapshot?.enderecoCompleto ||
+    buildAddress(user.raw?.payloadSnapshot || user.raw || {});
+
+  if (!address || address === "—") {
+    alert("Este participante não possui endereço suficiente para buscar coordenadas.");
+    return null;
+  }
+
+  try {
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Buscando coordenadas do participante...";
+    }
+
+    const queryText = `${address}, Porto Alegre, RS, Brasil`;
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=1&countrycodes=br&q=${encodeURIComponent(queryText)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao consultar geolocalização.");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      alert("Não foi possível localizar este endereço no mapa.");
+      return null;
+    }
+
+    const lat = Number(data[0].lat);
+    const lng = Number(data[0].lon);
+
+    if (!isValidCoord(lat, lng)) {
+      alert("O endereço foi encontrado, mas as coordenadas são inválidas.");
+      return null;
+    }
+
+    if (user.id && !String(user.id).startsWith("approval_")) {
+      await setDoc(
+        doc(db, "participants", user.id),
+        {
+          lat,
+          lng,
+          geocodedAt: serverTimestamp(),
+          geocodedBy: STATE.authUser?.uid || null
+        },
+        { merge: true }
+      );
+    }
+
+    user.lat = lat;
+    user.lng = lng;
+
+    showToast("Coordenadas encontradas e salvas.");
+    return { lat, lng };
+  } catch (error) {
+    console.error("Erro ao buscar coordenadas:", error);
+    alert("Não foi possível buscar as coordenadas deste participante.");
+    return null;
+  }
+}
+
+async function focusUserOnMap(userId) {
+  const user = STATE.users.find((item) => item.id === userId);
+
+  if (!user) return;
+  if (!requireUserTerritoryAccess(user, "ver no mapa")) return;
+
+  if (!isValidCoord(user.lat, user.lng)) {
+    const geo = await geocodeAndUpdateParticipant(user);
+
+    if (!geo) return;
+    await reloadAll();
+  }
+
+  const updatedUser = STATE.users.find((item) => item.id === userId) || user;
+
+  if (!isValidCoord(updatedUser.lat, updatedUser.lng) || !map) {
+    alert("Ainda não foi possível localizar este participante no mapa.");
+    return;
+  }
+
+  renderMap();
+  map.setView([updatedUser.lat, updatedUser.lng], 17);
+
+  let markerFound = null;
+
+  userMarkers.forEach((marker) => {
+    const pos = marker.getLatLng();
+
+    if (
+      Math.abs(pos.lat - updatedUser.lat) < 0.000001 &&
+      Math.abs(pos.lng - updatedUser.lng) < 0.000001
+    ) {
+      markerFound = marker;
+    }
+  });
+
+  const popupHtml = `
+    <strong>${safeText(updatedUser.name)}</strong><br>
+    Código: ${safeText(updatedUser.code)}<br>
+    Endereço: ${safeText(updatedUser.address)}<br>
+    Status: ${safeText(updatedUser.status)}<br><br>
+
+    <button class="btn btn-primary" data-popup-action="add-route" data-id="${updatedUser.id}" type="button">
+      Adicionar à rota
+    </button>
+
+    <button class="btn btn-dark" data-popup-action="optimize-route" type="button">
+      Otimizar rota
+    </button>
+  `;
+
+  if (markerFound) {
+    markerFound.bindPopup(popupHtml, { maxWidth: 320 }).openPopup();
+  } else {
+    const marker = L.marker([updatedUser.lat, updatedUser.lng]).addTo(map);
+    marker.bindPopup(popupHtml, { maxWidth: 320 }).openPopup();
+    userMarkers.push(marker);
+  }
+
+  showToast(`${safeText(updatedUser.name)} localizado no mapa.`);
+}
+
+/* =========================
+ROTA MANUAL AVANÇADA
+========================= */
+
+function syncManualRouteElements() {
+  els.manualRouteAddress = document.getElementById("manualRouteAddress");
+  els.btnAddManualAddress = document.getElementById("btnAddManualAddress");
+  els.btnBuildOptimizedManualRoute = document.getElementById("btnBuildOptimizedManualRoute");
+  els.btnSaveManualRoute = document.getElementById("btnSaveManualRoute");
+  els.btnClearManualRoute = document.getElementById("btnClearManualRoute");
+  els.manualPointsList = document.getElementById("manualPointsList");
+}
+
+function renderManualPointsList() {
+  if (!els.manualPointsList) return;
+
+  if (!manualPoints.length) {
+    els.manualPointsList.innerHTML = `<div class="empty-state">Nenhum ponto manual adicionado.</div>`;
+    return;
+  }
+
+  els.manualPointsList.innerHTML = manualPoints.map((point, index) => `
+    <div class="manual-point-item">
+      <div>
+        <strong>${index + 1}. ${safeText(point.label, "Ponto manual")}</strong>
+        <span>${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</span>
+      </div>
+
+      <div class="manual-point-actions">
+        <button class="btn btn-ghost" data-action="focus-manual-point" data-index="${index}" type="button">
+          Ver
+        </button>
+
+        <button class="btn btn-danger" data-action="remove-manual-point" data-index="${index}" type="button">
+          Remover
+        </button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function addManualPoint(lat, lng, label = "Ponto manual") {
+  if (!map || typeof L === "undefined") {
+    alert("Mapa ainda não carregado.");
+    return;
+  }
+
+  if (!isValidCoord(lat, lng)) {
+    alert("Coordenadas inválidas.");
+    return;
+  }
+
+  const point = {
+    id: `manual_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    lat,
+    lng,
+    label
+  };
+
+  const marker = L.marker([lat, lng], {
+    draggable: true
+  }).addTo(map);
+
+  marker.bindPopup(`
+    <strong>${safeText(label)}</strong><br>
+    Arraste para ajustar o ponto.
+  `);
+
+  marker.on("dragend", () => {
+    const pos = marker.getLatLng();
+    point.lat = pos.lat;
+    point.lng = pos.lng;
+    renderManualPointsList();
+    showToast("Ponto manual ajustado.");
+  });
+
+  manualPoints.push(point);
+  manualMarkers.push(marker);
+
+  renderManualPointsList();
+  map.setView([lat, lng], 16);
+
+  showToast("Ponto manual adicionado.");
+}
+
+async function addManualAddressPoint() {
+  syncManualRouteElements();
+
+  const address = String(els.manualRouteAddress?.value || "").trim();
+
+  if (!address) {
+    alert("Digite um endereço.");
+    return;
+  }
+
+  try {
+    const queryText = `${address}, Porto Alegre, Rio Grande do Sul, Brasil`;
+
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Buscando endereço...";
+    }
+
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&limit=5&countrycodes=br&q=${encodeURIComponent(queryText)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro ao localizar endereço.");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      alert("Endereço não encontrado. Tente informar rua, número, bairro e cidade.");
+      if (els.routeStatus) els.routeStatus.textContent = "Endereço não encontrado.";
+      return;
+    }
+
+    const result = data[0];
+    const lat = Number(result.lat);
+    const lng = Number(result.lon);
+
+    if (!isValidCoord(lat, lng)) {
+      alert("O endereço foi localizado, mas as coordenadas são inválidas.");
+      return;
+    }
+
+    addManualPoint(lat, lng, result.display_name || address);
+    els.manualRouteAddress.value = "";
+
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Endereço adicionado à rota manual.";
+    }
+  } catch (error) {
+    console.error("Erro ao localizar endereço:", error);
+    alert("Erro ao localizar endereço. Verifique a conexão ou tente um endereço mais completo.");
+  }
+}
+
+function focusManualPoint(index) {
+  const point = manualPoints[index];
+  const marker = manualMarkers[index];
+
+  if (!point || !marker || !map) return;
+
+  map.setView([point.lat, point.lng], 17);
+  marker.openPopup();
+}
+
+function removeManualPoint(index) {
+  const marker = manualMarkers[index];
+
+  if (marker && map) {
+    map.removeLayer(marker);
+  }
+
+  manualPoints.splice(index, 1);
+  manualMarkers.splice(index, 1);
+
+  renderManualPointsList();
+  showToast("Ponto removido.");
+}
+
+function clearManualRoute() {
+  if (!map) return;
+
+  manualMarkers.forEach((marker) => {
+    map.removeLayer(marker);
+  });
+
+  manualMarkers = [];
+  manualPoints = [];
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  renderManualPointsList();
+  showToast("Rota limpa.");
+}
+
+function optimizeManualPointsByNearestNeighbor(base, points) {
+  const remaining = [...points];
+  const ordered = [];
+
+  let current = {
+    lat: base.lat,
+    lng: base.lng
+  };
+
+  while (remaining.length) {
+    let bestIndex = 0;
+    let bestDistance = Infinity;
+
+    remaining.forEach((point, index) => {
+      const dx = current.lat - point.lat;
+      const dy = current.lng - point.lng;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+
+      if (distance < bestDistance) {
+        bestDistance = distance;
+        bestIndex = index;
+      }
+    });
+
+    const next = remaining.splice(bestIndex, 1)[0];
+    ordered.push(next);
+    current = next;
+  }
+
+  return ordered;
+}
+
+async function buildOptimizedManualRoute() {
+  if (!map) return;
+
+  const base = STATE.territoryBase || DEFAULT_BASE;
+
+  if (!manualPoints.length) {
+    alert("Adicione pontos primeiro.");
+    return;
+  }
+
+  if (routePolyline) {
+    map.removeLayer(routePolyline);
+    routePolyline = null;
+  }
+
+  const ordered = optimizeManualPointsByNearestNeighbor(base, manualPoints);
+
+  const coords = [
+    [base.lng, base.lat],
+    ...ordered.map((point) => [point.lng, point.lat])
+  ];
+
+  try {
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Calculando rota...";
+    }
+
+    const url =
+      `https://router.project-osrm.org/route/v1/driving/${coords.map((p) => `${p[0]},${p[1]}`).join(";")}?overview=full&geometries=geojson`;
+
+    const response = await fetch(url);
+    const data = await response.json();
+
+    if (!response.ok || !data?.routes?.length) {
+      throw new Error("Erro rota.");
+    }
+
+    const route = data.routes[0];
+    const latlngs = route.geometry.coordinates.map(([lng, lat]) => [lat, lng]);
+
+    routePolyline = L.polyline(latlngs, {
+      weight: 5,
+      opacity: 0.9
+    }).addTo(map);
+
+    map.fitBounds(routePolyline.getBounds(), {
+      padding: [30, 30]
+    });
+
+    lastManualRouteResult = {
+      ordered,
+      distance: route.distance,
+      duration: route.duration,
+      geometry: route.geometry
+    };
+
+    if (els.routeDistance) {
+      els.routeDistance.textContent = formatDistanceKm(route.distance);
+    }
+
+    if (els.routeDuration) {
+      els.routeDuration.textContent = formatDuration(route.duration);
+    }
+
+    if (els.routeInfo) {
+      els.routeInfo.textContent = `Rota manual: ${ordered.length} ponto(s)`;
+    }
+
+    if (els.routeStatus) {
+      els.routeStatus.textContent = "Rota otimizada.";
+    }
+
+    showToast("Rota otimizada.");
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao calcular rota.");
+  }
+}
+
+async function saveManualRouteToFirebase() {
+  if (!manualPoints.length) {
+    alert("Adicione pontos.");
+    return;
+  }
+
+  try {
+    const territoryId = getMyTerritoryId() || getPageTerritoryId();
+
+    await addDoc(
+      collection(db, "manualRoutes"),
+      {
+        territoryId,
+        points: manualPoints,
+        createdAt: serverTimestamp(),
+        createdBy: STATE.authUser?.uid || null
+      }
+    );
+
+    showToast("Rota salva.");
+  } catch (error) {
+    console.error(error);
+    alert("Erro ao salvar rota.");
+  }
+}
+
+function enableSimpleManualMapClick() {
+  if (!map || manualRouteBound) return;
+
+  manualRouteBound = true;
+
+  map.on("click", (event) => {
+    const { lat, lng } = event.latlng;
+    addManualPoint(lat, lng, "Ponto criado no mapa");
+  });
+}
+
+function bindAdvancedManualRouteEvents() {
+  syncManualRouteElements();
+
+  els.btnAddManualAddress?.addEventListener("click", addManualAddressPoint);
+  els.btnBuildOptimizedManualRoute?.addEventListener("click", buildOptimizedManualRoute);
+  els.btnSaveManualRoute?.addEventListener("click", saveManualRouteToFirebase);
+  els.btnClearManualRoute?.addEventListener("click", clearManualRoute);
+
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+
+    const action = button.dataset.action;
+    const index = Number(button.dataset.index);
+
+    if (action === "focus-manual-point") {
+      focusManualPoint(index);
+    }
+
+    if (action === "remove-manual-point") {
+      removeManualPoint(index);
+    }
+  });
+}
+
+/* =========================
+MODAL
+========================= */
+
+function openUserModal(userId) {
+  const user = STATE.users.find((item) => item.id === userId);
+  if (!user || !els.userModal) return;
+  if (!requireUserTerritoryAccess(user, "abrir detalhes")) return;
+
+  if (els.modalUserId) els.modalUserId.value = user.id;
+  if (els.modalApprovalRequestId) els.modalApprovalRequestId.value = user.linkedApprovalRequestId || user.approvalRequestId || "";
+  if (els.modalUserName) els.modalUserName.value = user.name || "";
+  if (els.modalUserCode) els.modalUserCode.value = user.code || "";
+  if (els.modalUserPhone) els.modalUserPhone.value = user.phone || "";
+  if (els.modalUserStatus) els.modalUserStatus.value = user.status || "pendente";
+  if (els.modalOperation) els.modalOperation.value = user.inOperation || "nao";
+  if (els.modalTerritoryLabel) els.modalTerritoryLabel.value = user.territoryLabel || user.territoryId || "";
+  if (els.modalAddress) els.modalAddress.value = user.address || "";
+  if (els.modalLat) els.modalLat.value = user.lat ?? "";
+  if (els.modalLng) els.modalLng.value = user.lng ?? "";
+  if (els.modalRouteShift) els.modalRouteShift.value = user.routeShift || "";
+
+  if (els.modalRequestInfo) {
+    els.modalRequestInfo.textContent = user.linkedApprovalRequestId
+      ? `Solicitação vinculada: ${user.linkedApprovalRequestId}`
+      : "Sem solicitação vinculada.";
+  }
+
+  if (els.userModalStatusNote) {
+    els.userModalStatusNote.textContent =
+      user.status === "pendente"
+        ? "Este usuário está aguardando aprovação."
+        : user.status === "aprovado"
+          ? "Este usuário está aprovado."
+          : "Este usuário está inativo.";
+  }
+
+  if (els.modalApproveBtn) els.modalApproveBtn.style.display = canManageApprovals() ? "" : "none";
+  if (els.modalRejectBtn) els.modalRejectBtn.style.display = canManageApprovals() ? "" : "none";
+
+  els.userModal.classList.remove("hidden");
+  els.userModal.setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+}
+
+function closeUserModal() {
+  if (!els.userModal) return;
+  els.userModal.classList.add("hidden");
+  els.userModal.setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+}
+
+/* =========================
+APROVAÇÃO / REJEIÇÃO
+========================= */
+
+function isSameRequestIdentity(req, user) {
+  const sameCode =
+    String(req.participantCode || "").trim().toLowerCase() ===
+    String(user.code || "").trim().toLowerCase();
+
+  const sameCpf =
+    String(req.participantCpf || "").replace(/\D/g, "") ===
+    String(user.cpf || "").replace(/\D/g, "");
+
+  const samePhone =
+    onlyDigits(req.participantPhone || "") ===
+    onlyDigits(user.phone || "");
+
+  return sameCode || (sameCpf && sameCpf !== "") || (samePhone && samePhone !== "");
+}
+
+async function geocodeAddress(address) {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=br&q=${encodeURIComponent(address)}`
+    );
+
+    if (!response.ok) {
+      throw new Error("Erro geocoding");
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data) || !data.length) {
+      return null;
+    }
+
+    return {
+      lat: Number(data[0].lat),
+      lng: Number(data[0].lon),
+      label: data[0].display_name || address
+    };
+  } catch (error) {
+    console.error("Erro ao buscar coordenadas:", error);
+    return null;
+  }
+}
+
+async function upsertParticipantFromApprovedRequest(user) {
+  const participantId =
+    user.id && !String(user.id).startsWith("approval_")
+      ? user.id
+      : (user.code
+          ? user.code.replace(/[^a-zA-Z0-9_-]/g, "_")
+          : "participant_" + user.linkedApprovalRequestId);
+
+  const snapshot = user.raw?.payloadSnapshot || {};
+  const isApproved = user.status === "aprovado";
+
+  let finalLat =
+    isValidCoord(user.lat, user.lng)
+      ? user.lat
+      : (toNumberOrNull(snapshot.lat) ?? null);
+
+  let finalLng =
+    isValidCoord(user.lat, user.lng)
+      ? user.lng
+      : (toNumberOrNull(snapshot.lng) ?? null);
+
+  const addressForGeocode =
+    user.address ||
+    snapshot.enderecoCompleto ||
+    snapshot.address?.addressLine ||
+    buildAddress(snapshot);
+
+  if (!isValidCoord(finalLat, finalLng) && addressForGeocode) {
+    const geo = await geocodeAddress(`${addressForGeocode}, Porto Alegre, RS, Brasil`);
+
+    if (geo && isValidCoord(geo.lat, geo.lng)) {
+      finalLat = geo.lat;
+      finalLng = geo.lng;
+    }
+  }
+
+  const payload = {
+    name: user.name || snapshot.name || "Sem nome",
+    nameLower: String(user.name || snapshot.name || "").toLowerCase(),
+    participantCode: user.code || snapshot.participantCode || "—",
+    participantType: snapshot.participantType || "participante",
+    localType: snapshot.localType || user.raw?.localType || "casa",
+    phone: user.phone || snapshot.phone || null,
+    email: user.email || snapshot.email || null,
+    cpf: user.cpf || snapshot.cpf || null,
+    territoryId: canonicalTerritoryId(user.territoryId || snapshot.territoryId),
+    territoryLabel: user.territoryLabel || snapshot.territoryLabel || getTerritoryLabelById(user.territoryId || snapshot.territoryId),
+    inTerritory: "sim",
+    inOperation: user.inOperation || (isApproved ? "sim" : "nao"),
+    schedule: user.routeShift || user.schedule || "A definir",
+    routeShift: user.routeShift || "",
+    status: user.status || "pendente",
+    approvalStatus: isApproved ? "approved" : "pending",
+    active: isApproved,
+    approvalRequestId: user.linkedApprovalRequestId || null,
+    source: user.raw?.source || "approval_request",
+    address: snapshot.address || null,
+    enderecoCompleto: user.address || snapshot.enderecoCompleto || null,
+    lat: finalLat,
+    lng: finalLng,
+    updatedAt: serverTimestamp(),
+    updatedBy: STATE.authUser?.uid || null
+  };
+
+  await setDoc(doc(db, "participants", participantId), payload, { merge: true });
+}
+
+async function approveUser(userId) {
+  if (!canManageApprovals()) {
+    alert("Seu perfil não tem permissão para aprovar participantes.");
+    return;
+  }
+
+  const user = STATE.users.find((item) => item.id === userId);
+  if (!user) return;
+  if (!requireUserTerritoryAccess(user, "aprovar participante")) return;
+
+  try {
+    const batch = writeBatch(db);
+    const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
+
+    sameRequests.forEach((req) => {
+      batch.update(doc(db, "approvalRequests", req.id), {
+        status: "approved",
+        decision: "approved",
+        reviewedAt: serverTimestamp(),
+        reviewedBy: STATE.authUser?.uid || null,
+        reviewedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null
+      });
+    });
+
+    await batch.commit();
+
+    const modalIsCurrentUser = els.modalUserId?.value === userId;
+    const selectedRouteShift = modalIsCurrentUser ? (els.modalRouteShift?.value || user.routeShift || "") : (user.routeShift || "");
+
+    await upsertParticipantFromApprovedRequest({
+      ...user,
+      status: "aprovado",
+      inOperation: "sim",
+      routeShift: selectedRouteShift,
+      schedule: selectedRouteShift || user.schedule || "A definir"
+    });
+
+    closeUserModal();
+    showToast("Usuário aprovado com sucesso.");
+    await reloadAll();
+  } catch (error) {
+    console.error("Erro ao aprovar usuário:", error);
+    alert(`Não foi possível aprovar este usuário.\n${error?.message || ""}`);
+  }
+}
+
+async function rejectUser(userId) {
+  if (!canManageApprovals()) {
+    alert("Seu perfil não tem permissão para rejeitar participantes.");
+    return;
+  }
+
+  const user = STATE.users.find((item) => item.id === userId);
+  if (!user) return;
+  if (!requireUserTerritoryAccess(user, "rejeitar participante")) return;
+
+  try {
+    const batch = writeBatch(db);
+    const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
+
+    sameRequests.forEach((req) => {
+      batch.update(doc(db, "approvalRequests", req.id), {
+        status: "rejected",
+        decision: "rejected",
+        reviewedAt: serverTimestamp(),
+        reviewedBy: STATE.authUser?.uid || null,
+        reviewedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null
+      });
+    });
+
+    if (user.id && !String(user.id).startsWith("approval_")) {
+      batch.update(doc(db, "participants", user.id), {
+        status: "inativo",
+        approvalStatus: "rejected",
+        active: false,
+        inOperation: "nao",
+        inTerritory: "sim",
+        updatedAt: serverTimestamp(),
+        updatedBy: STATE.authUser?.uid || null
+      });
+    }
+
+    await batch.commit();
+
+    closeUserModal();
+    showToast("Solicitação rejeitada.");
+    await reloadAll();
+  } catch (error) {
+    console.error("Erro ao rejeitar usuário:", error);
+    alert(`Não foi possível rejeitar este usuário.\n${error?.message || ""}`);
+  }
+}
+
+async function saveModalUserChanges() {
+  const userId = els.modalUserId?.value;
+  if (!userId) return;
+
+  const user = STATE.users.find((item) => item.id === userId);
+  if (!user) return;
+  if (!requireUserTerritoryAccess(user, "salvar participante")) return;
+
+  const chosenStatus = els.modalUserStatus?.value || user.status;
+  const chosenOperation = chosenStatus === "aprovado" ? (els.modalOperation?.value || "sim") : "nao";
+  const chosenRouteShift = els.modalRouteShift?.value || "";
+
+  try {
+    if (chosenStatus === "inativo") {
+      await rejectUser(userId);
+      return;
+    }
+
+    await upsertParticipantFromApprovedRequest({
+      ...user,
+      name: els.modalUserName?.value?.trim() || user.name,
+      code: els.modalUserCode?.value?.trim() || user.code,
+      phone: onlyDigits(els.modalUserPhone?.value || user.phone),
+      territoryLabel: els.modalTerritoryLabel?.value?.trim() || user.territoryLabel,
+      address: els.modalAddress?.value?.trim() || user.address,
+      lat: toNumberOrNull(els.modalLat?.value) ?? user.lat,
+      lng: toNumberOrNull(els.modalLng?.value) ?? user.lng,
+      inOperation: chosenOperation,
+      status: chosenStatus,
+      routeShift: chosenRouteShift,
+      schedule: chosenRouteShift || user.schedule || "A definir"
+    });
+
+    if (chosenStatus === "aprovado") {
+      const batch = writeBatch(db);
+      const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
+
+      sameRequests.forEach((req) => {
+        batch.update(doc(db, "approvalRequests", req.id), {
+          status: "approved",
+          decision: "approved",
+          reviewedAt: serverTimestamp(),
+          reviewedBy: STATE.authUser?.uid || null,
+          reviewedByName: STATE.userDoc?.name || STATE.userDoc?.nome || null
+        });
+      });
+
+      await batch.commit();
+    }
+
+    closeUserModal();
+    showToast("Alterações salvas.");
+    await reloadAll();
+  } catch (error) {
+    console.error("Erro ao salvar alterações:", error);
+    alert("Não foi possível salvar as alterações do participante.");
+  }
+}
+
+/* =========================
+LOAD
+========================= */
+
+async function loadParticipantsInitial() {
+  try {
+    const snap = await getDocs(participantsRef());
+    STATE.participants = snap.docs.map(mapParticipantDoc);
+    mergeUsers();
+  } catch (error) {
+    console.error("Erro ao carregar participants:", error);
+    setDebug(`Erro ao carregar participants: ${error?.message || "desconhecido"}`);
+  }
+}
+
+async function loadApprovalsInitial() {
+  try {
+    const refs = approvalRequestsRefs();
+
+    if (canViewAllTerritories()) {
+      const snap = await getDocs(refs[0]);
+      STATE.approvalRequests = snap.docs.map(mapApprovalRequestDoc);
+      mergeUsers();
+      return;
+    }
+
+    const snaps = await Promise.all(refs.map((ref) => getDocs(ref)));
+    const mergedDocs = dedupeApprovalDocs(snaps.flatMap((snap) => snap.docs));
+
+    STATE.approvalRequests = mergedDocs.map(mapApprovalRequestDoc);
+    mergeUsers();
+  } catch (error) {
+    console.error("Erro ao carregar approvalRequests:", error);
+    setDebug(`Erro ao carregar approvalRequests: ${error?.message || "desconhecido"}`);
+  }
+}
+
+async function reloadAll() {
+  await loadApprovalsInitial();
+  await loadParticipantsInitial();
+
+  try {
+    const snap = await getDocs(usersRef());
+    STATE.coopUsers = snap.docs.map(mapInternalUserDoc);
+    renderCoopUsersList();
+  } catch (_error) {}
+}
+
+function startParticipantsListener() {
+  if (STATE.unsubParticipants) {
+    STATE.unsubParticipants();
+    STATE.unsubParticipants = null;
+  }
+
+  try {
+    STATE.unsubParticipants = onSnapshot(
+      participantsRef(),
+      (snapshot) => {
+        STATE.participants = snapshot.docs.map(mapParticipantDoc);
+        mergeUsers();
+      },
+      async (error) => {
+        console.warn("Listener participants falhou:", error);
+        await loadParticipantsInitial();
+      }
+    );
+  } catch (error) {
+    console.warn("Erro ao iniciar listener participants:", error);
+  }
+}
+
+function startApprovalsListener() {
+  if (STATE.unsubApprovals) {
+    if (Array.isArray(STATE.unsubApprovals)) {
+      STATE.unsubApprovals.forEach((fn) => fn && fn());
+    } else {
+      STATE.unsubApprovals();
+    }
+    STATE.unsubApprovals = null;
+  }
+
+  try {
+    const refs = approvalRequestsRefs();
+
+    if (canViewAllTerritories()) {
+      STATE.unsubApprovals = onSnapshot(
+        refs[0],
+        (snapshot) => {
+          STATE.approvalRequests = snapshot.docs.map(mapApprovalRequestDoc);
+          mergeUsers();
+        },
+        async (error) => {
+          console.warn("Listener approvalRequests falhou:", error);
+          await loadApprovalsInitial();
+        }
+      );
+      return;
+    }
+
+    const store = { a: [], b: [] };
+
+    const rebuild = () => {
+      const mergedDocs = dedupeApprovalDocs([...store.a, ...store.b]);
+      STATE.approvalRequests = mergedDocs.map(mapApprovalRequestDoc);
+      mergeUsers();
+    };
+
+    const unsubA = onSnapshot(
+      refs[0],
+      (snapshot) => {
+        store.a = snapshot.docs;
+        rebuild();
+      },
+      async (error) => {
+        console.warn("Listener approvalRequests raiz falhou:", error);
+        await loadApprovalsInitial();
+      }
+    );
+
+    const unsubB = onSnapshot(
+      refs[1],
+      (snapshot) => {
+        store.b = snapshot.docs;
+        rebuild();
+      },
+      async (error) => {
+        console.warn("Listener approvalRequests payloadSnapshot falhou:", error);
+        await loadApprovalsInitial();
+      }
+    );
+
+    STATE.unsubApprovals = [unsubA, unsubB];
+  } catch (error) {
+    console.warn("Erro ao iniciar listener approvalRequests:", error);
+  }
+}
+
+async function loadCurrentUser(uid) {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) throw new Error("Usuário autenticado sem documento em /users.");
+  return { id: snap.id, ...snap.data() };
+}
+
+async function loadTerritoryBase() {
+  const userLat = toNumberOrNull(STATE.userDoc?.cooperativeBaseLat);
+  const userLng = toNumberOrNull(STATE.userDoc?.cooperativeBaseLng);
+  const configBase = getTerritoryConfig(getMyTerritoryId())?.base;
+
+  if (isValidCoord(userLat, userLng)) {
+    STATE.territoryBase = {
+      label: STATE.userDoc?.cooperativeBaseLabel || "Base da cooperativa",
+      lat: userLat,
+      lng: userLng
+    };
+  } else if (configBase) {
+    STATE.territoryBase = configBase;
+  } else {
+    STATE.territoryBase = DEFAULT_BASE;
+  }
+
+  updateBaseInfo();
+}
+
+function updateBaseInfo() {
+  const base = STATE.territoryBase || DEFAULT_BASE;
+  if (els.baseInfo) {
+    els.baseInfo.textContent = `Base da cooperativa: ${safeText(base.label)} • ${base.lat}, ${base.lng}`;
+  }
+}
+
+function fillSidebar() {
+  if (els.sidebarUserName) {
+    els.sidebarUserName.textContent = STATE.userDoc?.name || STATE.userDoc?.nome || "Usuário";
+  }
+  if (els.sidebarTerritoryLabel) {
+    els.sidebarTerritoryLabel.textContent = STATE.userDoc?.territoryLabel || STATE.userDoc?.territoryId || "Sem território";
+  }
+
+  const pills = document.querySelectorAll(".topbar-right .status-pill");
+  const role = String(STATE.userDoc?.role || "usuario").toLowerCase();
+  const territory = STATE.userDoc?.territoryLabel || STATE.userDoc?.territoryId || "Sem território";
+  const seesAll = canViewAllTerritories();
+
+  if (pills[0]) pills[0].textContent = seesAll ? "🟢 Todos os territórios" : `🟢 ${territory}`;
+  if (pills[1]) pills[1].textContent = seesAll ? "🏢 Todas as cooperativas" : `🏢 ${territory}`;
+  if (pills[2]) pills[2].textContent = canManageApprovals() ? "🔐 Administrador" : "🔐 Leitura";
+  if (pills[3]) pills[3].textContent = `👤 ${role}`;
+}
+
+function renderAll() {
+  computeKpis();
+  renderApprovedList();
+  renderPendingList();
+  renderTable();
+  renderMap();
+  renderCoopUsersList();
+
+  setDebug(
+    `Participants: ${STATE.participants.length} • ApprovalRequests: ${STATE.approvalRequests.length} • Visíveis: ${STATE.filteredUsers.length} • Usuários internos: ${STATE.coopUsers.length}`,
+    "Dados carregados."
+  );
+}
+
+/* =========================
+MENU LATERAL RESPONSIVO
+========================= */
+
+function openSidebarMenu() {
+  document.querySelector(".sidebar")?.classList.add("open");
+  document.getElementById("mobileOverlay")?.classList.add("show");
+  document.body.classList.add("sidebar-open");
+}
+
+function closeSidebarMenu() {
+  document.querySelector(".sidebar")?.classList.remove("open");
+  document.getElementById("mobileOverlay")?.classList.remove("show");
+  document.body.classList.remove("sidebar-open");
+}
+
+function bindTerritoryNavigation() {
+  const territoryId = getCurrentTerritoryId();
+  const config = getRouteConfig(territoryId);
+
+  const navMap = {
+    navCoopHome: "home",
+    navUsuarios: "usuarios",
+    navUserCooperativa: "usuariosCooperativa",
+    navColetas: "coletas"
+  };
+
+  Object.entries(navMap).forEach(([elementId, pageName]) => {
+    const link = document.getElementById(elementId);
+    if (!link) return;
+
+    link.setAttribute("href", getRoutePage(pageName, territoryId));
+  });
+
+  document
+    .querySelectorAll('a[href="/dashboard-cooperativa.html"], a[href="dashboard-cooperativa.html"]')
+    .forEach((link) => {
+      link.setAttribute("href", getRoutePage("dashboard", territoryId));
+    });
+
+  document
+    .querySelectorAll(
+      'a[href="usuarios.html"], a[href="/usuarios.html"], a[href="usuarios-vila-pinto.html"], a[href="/usuarios-vila-pinto.html"], a[href="usuarios-cooadesc.html"], a[href="/usuarios-cooadesc.html"], a[href="usuarios-padre-cacique.html"], a[href="/usuarios-padre-cacique.html"]'
+    )
+    .forEach((link) => {
+      link.setAttribute("href", getRoutePage("usuarios", territoryId));
+    });
+
+  document
+    .querySelectorAll(
+      'a[href="cooperativa-vila-pinto.html"], a[href="/cooperativa-vila-pinto.html"], a[href="cooperativa-cooadesc.html"], a[href="/cooperativa-cooadesc.html"], a[href="cooperativa-padre-cacique.html"], a[href="/cooperativa-padre-cacique.html"]'
+    )
+    .forEach((link) => {
+      link.setAttribute("href", getRoutePage("home", territoryId));
+    });
+
+  document
+    .querySelectorAll(
+      'a[href="cadastro-coletas-vila-pinto.html"], a[href="/cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-cooadesc.html"], a[href="/cadastro-coletas-cooadesc.html"], a[href="cadastro-coletas-padre-cacique.html"], a[href="/cadastro-coletas-padre-cacique.html"]'
+    )
+    .forEach((link) => {
+      link.setAttribute("href", getRoutePage("coletas", territoryId));
+    });
+
+  console.log("Roteamento aplicado:", {
+    territorio: territoryId,
+    cooperativa: config.label,
+    coletas: getRoutePage("coletas", territoryId)
+  });
+}
+
+/* =========================
+EVENTOS
+========================= */
+
+function bindEvents() {
+  document.getElementById("menuBtn")?.addEventListener("click", openSidebarMenu);
+  document.getElementById("sidebarClose")?.addEventListener("click", closeSidebarMenu);
+  document.getElementById("mobileOverlay")?.addEventListener("click", closeSidebarMenu);
+
+  document.querySelectorAll(".sidebar .nav-link").forEach((link) => {
+    link.addEventListener("click", () => {
+      if (window.innerWidth <= 1180) closeSidebarMenu();
+    });
+  });
+
+  window.addEventListener("resize", () => {
+    if (window.innerWidth > 1180) closeSidebarMenu();
+  });
+
+  els.searchInput?.addEventListener("input", applyFilters);
+  els.statusFilter?.addEventListener("change", applyFilters);
+
+  bindAdvancedManualRouteEvents();
+
+  els.routeMode?.addEventListener("change", async () => {
+    renderMap();
+    await buildRoute();
+  });
+
+  els.btnReload?.addEventListener("click", async () => {
+    await reloadAll();
+    await buildRoute();
+    showToast("Dados atualizados.");
+  });
+
+  els.btnDownloadParticipantsCsv?.addEventListener("click", downloadParticipantsCsv);
+  els.btnDownloadParticipantsPdf?.addEventListener("click", downloadParticipantsPdf);
+  els.inputImportParticipants?.addEventListener("change", importParticipantsExcel);
+  els.btnExportParticipantsXlsx?.addEventListener("click", exportParticipantsExcel);
+
+  els.btnCenterBase?.addEventListener("click", () => {
+    const base = STATE.territoryBase || DEFAULT_BASE;
+    if (!map) return;
+    map.setView([base.lat, base.lng], 15);
+    if (baseMarker) baseMarker.openPopup();
+  });
+
+  els.btnBuildRoute?.addEventListener("click", async () => {
+    await buildRoute();
+  });
+
+  els.btnLogout?.addEventListener("click", async () => {
+    await signOut(auth);
+    window.location.href = "login.html";
+  });
+
+  document.addEventListener("click", async (event) => {
+    const popupButton = event.target.closest("[data-popup-action]");
+
+    if (popupButton) {
+      const popupAction = popupButton.dataset.popupAction;
+      const userId = popupButton.dataset.id;
+
+      if (popupAction === "add-route") {
+        const user = STATE.users.find((item) => item.id === userId);
+
+        if (!user) {
+          alert("Participante não encontrado.");
+          return;
+        }
+
+        if (!isValidCoord(user.lat, user.lng)) {
+          alert("Este participante ainda não possui coordenadas válidas.");
+          return;
+        }
+
+        addManualPoint(
+          user.lat,
+          user.lng,
+          `${safeText(user.name)} • ${safeText(user.code)}`
+        );
+
+        if (els.routeStatus) {
+          els.routeStatus.textContent = `${safeText(user.name)} adicionado à rota manual.`;
+        }
+
+        showToast("Participante adicionado à rota.");
+        return;
+      }
+
+      if (popupAction === "optimize-route") {
+        await buildOptimizedManualRoute();
+        return;
+      }
+    }
+
+    const button = event.target.closest("[data-action]");
+    if (!button) return;
+
+    const action = button.dataset.action;
+    const userId = button.dataset.id;
+
+    if (action === "focus-manual-point" || action === "remove-manual-point") return;
+if (action === "next-active-page") {
+  STATE.activePage++;
+  renderApprovedList();
+  return;
+}
+
+if (action === "prev-active-page") {
+  STATE.activePage = Math.max(0, STATE.activePage - 1);
+  renderApprovedList();
+  return;
+}
+
+if (action === "next-pending-page") {
+  STATE.pendingPage++;
+  renderPendingList();
+  return;
+}
+
+if (action === "prev-pending-page") {
+  STATE.pendingPage = Math.max(0, STATE.pendingPage - 1);
+  renderPendingList();
+  return;
+}
+
+if (action === "next-table-page") {
+  STATE.tablePage++;
+  renderTable();
+  return;
+}
+
+if (action === "prev-table-page") {
+  STATE.tablePage = Math.max(0, STATE.tablePage - 1);
+  renderTable();
+  return;
+}
+
+if (action === "load-more-pending") {
+  STATE.pendingPage++;
+  renderPendingList();
+  return;
+}
+    if (!userId) return;
+
+    if (action === "approve") return approveUser(userId);
+    if (action === "reject") return rejectUser(userId);
+    if (action === "focus") return await focusUserOnMap(userId);
+    if (action === "open") return openUserModal(userId);
+    if (action === "print-label") return printParticipantLabel(userId);
+  });
+
+  els.closeUserModal?.addEventListener("click", closeUserModal);
+  els.modalCloseBtn?.addEventListener("click", closeUserModal);
+  els.userModalBackdrop?.addEventListener("click", closeUserModal);
+
+  els.modalFocusMap?.addEventListener("click", () => {
+    const userId = els.modalUserId?.value;
+    if (userId) {
+      focusUserOnMap(userId);
+      closeUserModal();
+    }
+  });
+
+  els.modalApproveBtn?.addEventListener("click", async () => {
+    const userId = els.modalUserId?.value;
+    if (userId) await approveUser(userId);
+  });
+
+  els.modalRejectBtn?.addEventListener("click", async () => {
+    const userId = els.modalUserId?.value;
+    if (userId) await rejectUser(userId);
+  });
+
+  els.userModalForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await saveModalUserChanges();
+  });
+
+  els.coopUserForm?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    await createCoopUserRecord();
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") {
+      closeSidebarMenu();
+      closeUserModal();
+    }
+  });
+}
+
+/* =========================
+INIT
+========================= */
+
+initMap();
+bindEvents();
+
+onAuthStateChanged(auth, async (user) => {
+  try {
+    if (!user) {
+      window.location.href = "login.html";
+      return;
+    }
+
+    STATE.authUser = user;
+    STATE.userDoc = await loadCurrentUser(user.uid);
+
+    if (!enforcePageTerritoryAccess()) return;
+
+    bindTerritoryNavigation();
+    fillSidebar();
+    applyCoopUserPermissionsUI();
+
+    await loadTerritoryBase();
+    await maybeRequestNotificationPermission();
+
+    if (map) {
+      map.setView([STATE.territoryBase.lat, STATE.territoryBase.lng], 13);
+    }
+
+    await loadApprovalsInitial();
+    await loadParticipantsInitial();
+
+    try {
+      const snap = await getDocs(usersRef());
+      STATE.coopUsers = snap.docs.map(mapInternalUserDoc);
+      renderCoopUsersList();
+    } catch (error) {
+      console.error("Erro ao carregar usuários da cooperativa:", error);
+    }
+
+    startApprovalsListener();
+    startParticipantsListener();
+    startUsersListener();
+
+    setTimeout(async () => {
+      renderMap();
+      await buildRoute();
+    }, 600);
+  } catch (error) {
+    console.error(error);
+    setDebug(`Não foi possível carregar a página: ${error?.message || "erro desconhecido"}`, "Erro.");
+    alert("Não foi possível carregar a página de gestão de usuários.");
+  }
+});
