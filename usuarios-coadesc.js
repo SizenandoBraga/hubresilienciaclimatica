@@ -3577,9 +3577,21 @@ async function adicionarPontoPorCodigoOuEndereco() {
 
   const termoNormalizado = termo.toLowerCase();
 
-  const participante = STATE.users.find((user) =>
-    String(user.code || "").trim().toLowerCase() === termoNormalizado
+const participante = STATE.users.find((user) => {
+
+  const codigo =
+    String(user.code || "")
+      .trim()
+      .toLowerCase();
+
+  const endereco =
+    enderecoPesquisa(user);
+
+  return (
+    codigo === termoNormalizado ||
+    endereco.includes(termoNormalizado)
   );
+});
 
   if (participante) {
     if (isValidCoord(participante.lat, participante.lng)) {
@@ -3604,4 +3616,37 @@ async function adicionarPontoPorCodigoOuEndereco() {
   }
 
   await addManualAddressPoint();
+}
+function enderecoPesquisa(user) {
+
+  const rua =
+    user.street ||
+    user.rua ||
+    "";
+
+  const numero =
+    user.number ||
+    user.numero ||
+    "";
+
+  const bairro =
+    user.neighborhood ||
+    user.bairro ||
+    "";
+
+  const cidade =
+    user.city ||
+    user.cidade ||
+    "";
+
+  return [
+    rua,
+    numero,
+    bairro,
+    cidade
+  ]
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 }
