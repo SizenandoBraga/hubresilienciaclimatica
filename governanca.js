@@ -1,7 +1,3 @@
-import {
-  auth as authGuardioes,
-  db as dbGuardioes
-} from "./firebase-init-guardioes.js";
 
 import {
   auth as authVP,
@@ -15,6 +11,9 @@ import {
 import {
   db as dbCOADESC
 } from "./firebase-init-coadesc.js";
+import {
+  db as dbGuardioes
+} from "./firebase-init-guardioes.js";
 
 import {
   onAuthStateChanged,
