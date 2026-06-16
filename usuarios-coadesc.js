@@ -3567,6 +3567,48 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
+/* ==========================================================
+   BUSCA DE ENDEREÇO
+========================================================== */
+
+function enderecoPesquisa(user) {
+
+  const rua =
+    user.street ||
+    user.rua ||
+    "";
+
+  const numero =
+    user.number ||
+    user.numero ||
+    "";
+
+  const bairro =
+    user.neighborhood ||
+    user.bairro ||
+    "";
+
+  const cidade =
+    user.city ||
+    user.cidade ||
+    "";
+
+  return [
+    rua,
+    numero,
+    bairro,
+    cidade
+  ]
+    .join(" ")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+/* ==========================================================
+   ADICIONAR PONTO POR CÓDIGO OU ENDEREÇO
+========================================================== */
+
 async function adicionarPontoPorCodigoOuEndereco() {
   const termo = String(els.manualRouteAddress?.value || "").trim();
 
@@ -3616,37 +3658,4 @@ const participante = STATE.users.find((user) => {
   }
 
   await addManualAddressPoint();
-}
-function enderecoPesquisa(user) {
-
-  const rua =
-    user.street ||
-    user.rua ||
-    "";
-
-  const numero =
-    user.number ||
-    user.numero ||
-    "";
-
-  const bairro =
-    user.neighborhood ||
-    user.bairro ||
-    "";
-
-  const cidade =
-    user.city ||
-    user.cidade ||
-    "";
-
-  return [
-    rua,
-    numero,
-    bairro,
-    cidade
-  ]
-    .join(" ")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
 }
