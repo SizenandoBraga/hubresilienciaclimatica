@@ -2377,7 +2377,7 @@ ROTA MANUAL AVANÇADA
 
 function syncManualRouteElements() {
   els.manualRouteAddress = document.getElementById("manualRouteAddress");
-  els.btnAddManualAddress = document.getElementById("btnAddManualAddress");
+  els.btnAddManualAddress?.addEventListener("click", adicionarPontoPorCodigoOuEndereco);
   els.btnBuildOptimizedManualRoute = document.getElementById("btnBuildOptimizedManualRoute");
   els.btnSaveManualRoute = document.getElementById("btnSaveManualRoute");
   els.btnClearManualRoute = document.getElementById("btnClearManualRoute");
@@ -3566,3 +3566,40 @@ onAuthStateChanged(auth, async (user) => {
     alert("Não foi possível carregar a página de gestão de usuários.");
   }
 });
+
+async function buscarEnderecoPorCodigoParticipante() {
+  const codigo = String(els.manualRouteAddress?.value || "")
+    .trim()
+    .toLowerCase();
+
+  if (!codigo) {
+    alert("Digite o código do participante.");
+    return;
+  }
+
+  const participante = STATE.users.find((user) =>
+    String(user.code || "").trim().toLowerCase() === codigo
+  );
+
+  if (!participante) {
+    alert("Participante não encontrado com esse código.");
+    return;
+  }
+
+  if (isValidCoord(participante.lat, participante.lng)) {
+    addManualPoint(
+      participante.lat,
+      participante.lng,
+      `${participante.code} • ${participante.name} • ${participante.address}`
+    );
+    return;
+  }
+
+  if (participante.address) {
+    els.manualRouteAddress.value = participante.address;
+    await addManualAddressPoint();
+    return;
+  }
+
+  alert("Participante encontrado, mas sem endereço cadastrado.");
+}
