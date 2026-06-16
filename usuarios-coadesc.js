@@ -3570,7 +3570,6 @@ onAuthStateChanged(auth, async (user) => {
 /* ==========================================================
    UTILITÁRIOS DE BUSCA
 ========================================================== */
-
 function normalizarBuscaEndereco(value) {
   return String(value || "")
     .toLowerCase()
@@ -3593,28 +3592,23 @@ function enderecoPesquisa(user) {
     user.address,
     user.enderecoCompleto,
     raw.enderecoCompleto,
-
+    raw.address?.addressLine,
     user.rua,
     user.street,
     raw.rua,
     raw.street,
-
     user.numero,
     raw.numero,
-
     user.bairro,
     user.neighborhood,
     raw.bairro,
     raw.neighborhood,
-
     user.cidade,
     user.city,
     raw.cidade,
     raw.city,
-
     user.cep,
     raw.cep,
-
     user.uf,
     user.state,
     raw.uf,
@@ -3622,109 +3616,43 @@ function enderecoPesquisa(user) {
   ].join(" "));
 }
 
-function enderecoPesquisa(user) {
-  const enderecoCompleto =
-    user.address ||
-    user.enderecoCompleto ||
-    user.raw?.enderecoCompleto ||
-    user.raw?.address?.addressLine ||
-    "";
-
-  const rua =
-    user.street ||
-    user.rua ||
-    user.raw?.street ||
-    user.raw?.rua ||
-    "";
-
-  const numero =
-    user.number ||
-    user.numero ||
-    user.raw?.number ||
-    user.raw?.numero ||
-    "";
-
-  const bairro =
-    user.neighborhood ||
-    user.bairro ||
-    user.raw?.neighborhood ||
-    user.raw?.bairro ||
-    "";
-
-  const cidade =
-    user.city ||
-    user.cidade ||
-    user.raw?.city ||
-    user.raw?.cidade ||
-    "";
-
-  return normalizarBuscaEndereco([
-    enderecoCompleto,
-    rua,
-    numero,
-    bairro,
-    cidade
-  ].join(" "));
-}
-
-/* ==========================================================
-   ADICIONAR PONTO POR CÓDIGO OU ENDEREÇO
-========================================================== */
-
 async function adicionarPontoPorCodigoOuEndereco() {
+  const termo = String(els.manualRouteAddress?.value || "").trim();
+
+  if (!termo) {
+    alert("Digite o código do participante, rua, bairro, cidade ou CEP.");
+    return;
+  }
+
   const termoNormalizado = normalizarBuscaEndereco(termo);
-const cepPesquisado = normalizarCep(termo);
+  const cepPesquisado = normalizarCep(termo);
 
-const participante = STATE.users.find((user) => {
-  const raw = user.raw || {};
+  const participante = STATE.users.find((user) => {
+    const raw = user.raw || {};
 
-  const codigo = String(
-    user.code ||
-    user.participantCode ||
-    raw.participantCode ||
-    ""
-  )
-    .trim()
-    .toLowerCase();
+    const codigo = String(
+      user.code ||
+      user.participantCode ||
+      raw.participantCode ||
+      ""
+    ).trim().toLowerCase();
 
-  const endereco = enderecoPesquisa(user);
+    const endereco = enderecoPesquisa(user);
 
-  const cepUsuario = normalizarCep(
-    user.cep ||
-    raw.cep ||
-    user.address ||
-    raw.enderecoCompleto ||
-    ""
-  );
+    const cepUsuario = normalizarCep(
+      user.cep ||
+      raw.cep ||
+      user.address ||
+      raw.enderecoCompleto ||
+      ""
+    );
 
-  return (
-    codigo === termoNormalizado ||
-    endereco.includes(termoNormalizado) ||
-    (
-      cepPesquisado &&
-      cepUsuario.includes(cepPesquisado)
-    )
-  );
-});
-
-  const termoNormalizado =
-  normalizarBuscaEndereco(termo);
-
-const participante = STATE.users.find((user) => {
-
-  const codigo =
-    String(user.code || "")
-      .trim()
-      .toLowerCase();
-
-  const endereco =
-    enderecoPesquisa(user);
-
-  return (
-    codigo === termoNormalizado ||
-    endereco.includes(termoNormalizado)
-  );
-});
+    return (
+      codigo === termoNormalizado ||
+      endereco.includes(termoNormalizado) ||
+      (cepPesquisado && cepUsuario.includes(cepPesquisado))
+    );
+  });
 
   if (participante) {
     if (isValidCoord(participante.lat, participante.lng)) {
