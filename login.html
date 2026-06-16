@@ -188,28 +188,7 @@
   </main>
 
   <script type="module" src="login.js"></script>
- <script type="module">
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register(
-      new URL("./service-worker.js", import.meta.url)
-    );
-  });
-}
-</script>
-<script type="module">
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    try {
-      await navigator.serviceWorker.register(
-        new URL("./service-worker.js", import.meta.url)
-      );
-      console.log("Service Worker registrado");
-    } catch (error) {
-      console.error("Erro no Service Worker:", error);
-    }
-  });
-}
-</script>
+
+
 </body>
 </html>
