@@ -4,6 +4,7 @@ import {
 } from "./firebase-init-guardioes.js";
 
 import {
+  auth as authVP,
   db as dbVP
 } from "./firebase-init-vp.js";
 
@@ -14,8 +15,6 @@ import {
 import {
   db as dbCOADESC
 } from "./firebase-init-coadesc.js";
-
-import { registerAccessLog } from "./access-tracker.js";
 
 import {
   onAuthStateChanged,
@@ -77,6 +76,19 @@ const FIREBASE_SOURCES = [
 
 const auth = authGuardioes;
 
+const AUTH_SOURCES = [
+  {
+    id: "guardioes",
+    name: "Guardiões Urbanos",
+    auth: authGuardioes
+  },
+  {
+    id: "vila-pinto",
+    name: "Vila Pinto",
+    auth: authVP
+  }
+];
+
 const LOGIN_PAGE = "./login.html";
 const COOPERATIVAS_PAGE = "./cooperativas.html"; // mantido apenas por compatibilidade
 const PUBLIC_DASHBOARD_DOC = "index";
@@ -129,7 +141,11 @@ function normalizeCooperativaId(value = ""){
 
     /* aliases */
     .replace(/^coadesc$/,"cooadesc")
-    .replace(/^padre_cacique$/,"padre-cacique");
+    .replace(/^crgr-cooadesc$/,"cooadesc")
+    .replace(/^crgr-coadesc$/,"cooadesc")
+    .replace(/^crgr-vila-pinto$/,"vila-pinto")
+    .replace(/^padre_cacique$/,"padre-cacique")
+    .replace(/^crgr-padre-cacique$/,"padre-cacique");
 }
 function normalizeText(value){
   return String(value || "").trim();
@@ -208,6 +224,8 @@ function getTerritoryId(item = {}){
     item.territoryCode ||
     item.cooperativaId ||
     item.crgrId ||
+    item.sourceId ||
+    item.firebaseSource ||
     item.code ||
     item.codigo ||
     "";
@@ -632,6 +650,28 @@ function buildCooperativasAtivas({
 
   const map = new Map();
 
+  function ensureCooperativaBase(source = {}) {
+    const id = normalizeCooperativaId(source.id);
+
+    if (!id) return;
+
+    if (!map.has(id)) {
+      map.set(id, {
+        id,
+        code: id,
+        name: source.name || formatCooperativaNameFromId(id),
+        usuarios: 0,
+        participantes: 0,
+        coletas: 0,
+        residuo: 0,
+        rejeito: 0,
+        active: true
+      });
+    }
+  }
+
+  FIREBASE_SOURCES.forEach(ensureCooperativaBase);
+
   function ensureRealCooperativa(item = {}){
 
     const id =
@@ -683,21 +723,21 @@ function buildCooperativasAtivas({
 
     users.forEach((item)=>{
 
-      const id = getTerritoryId(item);
+      const id = getTerritoryId(item) || item.sourceId || item.firebaseSource;
 
       if(id) ids.add(id);
     });
 
     participants.forEach((item)=>{
 
-      const id = getTerritoryId(item);
+      const id = getTerritoryId(item) || item.sourceId || item.firebaseSource;
 
       if(id) ids.add(id);
     });
 
     coletas.forEach((item)=>{
 
-      const id = getTerritoryId(item);
+      const id = getTerritoryId(item) || item.sourceId || item.firebaseSource;
 
       if(id) ids.add(id);
     });
@@ -745,7 +785,7 @@ function buildCooperativasAtivas({
     .filter(isActive)
     .forEach((item)=>{
 
-      const id = getTerritoryId(item);
+      const id = getTerritoryId(item) || item.sourceId || item.firebaseSource;
 
       if(!map.has(id)) return;
 
@@ -760,7 +800,7 @@ function buildCooperativasAtivas({
     .filter(isActive)
     .forEach((item)=>{
 
-      const id = getTerritoryId(item);
+      const id = getTerritoryId(item) || item.sourceId || item.firebaseSource;
 
       if(!map.has(id)) return;
 
@@ -937,8 +977,9 @@ function renderCharts({coletas,cooperativas,residuo,rejeito}){
 
 function renderCooperativas(cooperativas){
   COOPERATIVAS_CACHE = cooperativas;
-const filtered = filterCooperativas(cooperativas);
-cooperativas = filtered;
+
+  const filtered = filterCooperativas(cooperativas);
+  cooperativas = filtered;
   setText("activeCoopsCount",`${cooperativas.length} ativas`);
 
   const cards = byId("cooperativasCards");
@@ -1012,7 +1053,7 @@ function renderUsuarios(users, participants) {
 
 function renderTerritorios(cooperativas){
   TERRITORIOS_CACHE = cooperativas;
-cooperativas = filterTerritorios(cooperativas);
+  cooperativas = filterTerritorios(cooperativas);
   const tbody = byId("territoriosTableBody");
   if(!tbody) return;
 
@@ -1132,7 +1173,7 @@ function filterTerritorios(items = []){
 }
 async function savePublicDashboardData(data){
   await setDoc(
-   doc(dbVP,"publicDashboard",PUBLIC_DASHBOARD_DOC),
+   doc(dbGuardioes,"publicDashboard",PUBLIC_DASHBOARD_DOC),
     {
       cooperativasAtivas:data.cooperativas.length,
       participantes:data.participants.length,
@@ -1175,7 +1216,10 @@ clearGuardiaoFilters?.addEventListener("click", () => {
   });
 
   logoutBtn?.addEventListener("click",async()=>{
-    await signOut(auth);
+    await Promise.allSettled(
+      AUTH_SOURCES.map((source) => signOut(source.auth))
+    );
+
     window.location.href = LOGIN_PAGE;
   });
 
@@ -1404,6 +1448,83 @@ function renderAccessTable(accessLogs = []) {
   }).join("");
 }
 
+
+/* =========================================================
+   LOG DE ACESSO LOCAL, COMPATÍVEL COM VERCEL
+========================================================= */
+
+async function registerAccessLogSafe({
+  db,
+  auth,
+  page,
+  pageType,
+  territoryId,
+  cooperativeName,
+  userProfile
+}) {
+  try {
+    const user = auth?.currentUser || null;
+    const logRef = doc(collection(db, "accessLogs"));
+
+    await setDoc(logRef, {
+      page: page || "governanca",
+      pageType: pageType || "logada",
+      territoryId: territoryId || "governanca",
+      cooperativeName: cooperativeName || "Governança NSRU",
+      userId: user?.uid || userProfile?.id || null,
+      userEmail: user?.email || userProfile?.email || null,
+      userName:
+        userProfile?.displayName ||
+        userProfile?.name ||
+        userProfile?.nome ||
+        user?.displayName ||
+        user?.email ||
+        "Usuário",
+      userAgent: navigator.userAgent || "",
+      url: window.location.href,
+      createdAt: serverTimestamp()
+    });
+  } catch (error) {
+    console.warn("Log de acesso ignorado:", error);
+  }
+}
+
+function waitForAuthUser(authInstance) {
+  return new Promise((resolve) => {
+    const unsubscribe = onAuthStateChanged(
+      authInstance,
+      (user) => {
+        unsubscribe();
+        resolve(user || null);
+      },
+      () => {
+        unsubscribe();
+        resolve(null);
+      }
+    );
+  });
+}
+
+async function getActiveAuthUser() {
+  for (const source of AUTH_SOURCES) {
+    const user = source.auth.currentUser || await waitForAuthUser(source.auth);
+
+    if (user) {
+      return {
+        source,
+        auth: source.auth,
+        user
+      };
+    }
+  }
+
+  return {
+    source: null,
+    auth: auth,
+    user: null
+  };
+}
+
 async function loadGovernanca(){
   const raw = await loadAllData();
 
@@ -1421,38 +1542,45 @@ async function loadGovernanca(){
 }
 bindEvents();
 
-onAuthStateChanged(auth,async(user)=>{
-  if(!user){
+async function initGovernancaPage() {
+  const active = await getActiveAuthUser();
+
+  if (!active.user) {
     window.location.href = LOGIN_PAGE;
     return;
   }
 
-  try{
-    const profile = await loadUserProfile(user.uid);
+  try {
+    const profile = await loadUserProfile(active.user.uid);
 
-    if(!profile || !isGovernancaUser(profile)){
+    if (!profile || !isGovernancaUser(profile)) {
+      console.warn("Perfil sem permissão de governança:", profile);
       window.location.href = LOGIN_PAGE;
       return;
     }
 
-    renderLoggedUser(profile,user);
-    await registerAccessLog({
-  db: dbGuardioes,
-  auth: auth,
-  page: "governanca",
-  pageType: "logada",
-  territoryId: "governanca",
-  cooperativeName: "Governança NSRU",
-  userProfile: profile
-});
+    renderLoggedUser(profile, active.user);
+
+    await registerAccessLogSafe({
+      db: dbGuardioes,
+      auth: active.auth,
+      page: "governanca",
+      pageType: "logada",
+      territoryId: "governanca",
+      cooperativeName: "Governança NSRU",
+      userProfile: profile
+    });
+
     await loadGovernanca();
 
     setSyncStatus("Indicadores carregados.");
-  }catch(error){
-    console.error(error);
-    window.location.href = LOGIN_PAGE;
+  } catch (error) {
+    console.error("Erro ao iniciar governança:", error);
+    setSyncStatus("Erro ao carregar indicadores. Veja o console.");
   }
-});
+}
+
+initGovernancaPage();
 const efficiencyModal = document.getElementById("efficiencyModal");
 const openEfficiencyModal = document.getElementById("openEfficiencyModal");
 const closeEfficiencyModal = document.getElementById("closeEfficiencyModal");
