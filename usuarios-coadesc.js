@@ -2377,7 +2377,7 @@ ROTA MANUAL AVANÇADA
 
 function syncManualRouteElements() {
   els.manualRouteAddress = document.getElementById("manualRouteAddress");
-  els.btnAddManualAddress?.addEventListener("click", adicionarPontoPorCodigoOuEndereco);
+  els.btnAddManualAddress = document.getElementById("btnAddManualAddress");
   els.btnBuildOptimizedManualRoute = document.getElementById("btnBuildOptimizedManualRoute");
   els.btnSaveManualRoute = document.getElementById("btnSaveManualRoute");
   els.btnClearManualRoute = document.getElementById("btnClearManualRoute");
@@ -2704,7 +2704,7 @@ function enableSimpleManualMapClick() {
 function bindAdvancedManualRouteEvents() {
   syncManualRouteElements();
 
-  els.btnAddManualAddress?.addEventListener("click", addManualAddressPoint);
+  els.btnAddManualAddress?.addEventListener("click", adicionarPontoPorCodigoOuEndereco);
   els.btnBuildOptimizedManualRoute?.addEventListener("click", buildOptimizedManualRoute);
   els.btnSaveManualRoute?.addEventListener("click", saveManualRouteToFirebase);
   els.btnClearManualRoute?.addEventListener("click", clearManualRoute);
@@ -3567,39 +3567,41 @@ onAuthStateChanged(auth, async (user) => {
   }
 });
 
-async function buscarEnderecoPorCodigoParticipante() {
-  const codigo = String(els.manualRouteAddress?.value || "")
-    .trim()
-    .toLowerCase();
+async function adicionarPontoPorCodigoOuEndereco() {
+  const termo = String(els.manualRouteAddress?.value || "").trim();
 
-  if (!codigo) {
-    alert("Digite o código do participante.");
+  if (!termo) {
+    alert("Digite o código do participante ou um endereço.");
     return;
   }
+
+  const termoNormalizado = termo.toLowerCase();
 
   const participante = STATE.users.find((user) =>
-    String(user.code || "").trim().toLowerCase() === codigo
+    String(user.code || "").trim().toLowerCase() === termoNormalizado
   );
 
-  if (!participante) {
-    alert("Participante não encontrado com esse código.");
+  if (participante) {
+    if (isValidCoord(participante.lat, participante.lng)) {
+      addManualPoint(
+        participante.lat,
+        participante.lng,
+        `${participante.code} • ${participante.name} • ${participante.address}`
+      );
+
+      els.manualRouteAddress.value = "";
+      return;
+    }
+
+    if (participante.address) {
+      els.manualRouteAddress.value = participante.address;
+      await addManualAddressPoint();
+      return;
+    }
+
+    alert("Participante encontrado, mas sem endereço cadastrado.");
     return;
   }
 
-  if (isValidCoord(participante.lat, participante.lng)) {
-    addManualPoint(
-      participante.lat,
-      participante.lng,
-      `${participante.code} • ${participante.name} • ${participante.address}`
-    );
-    return;
-  }
-
-  if (participante.address) {
-    els.manualRouteAddress.value = participante.address;
-    await addManualAddressPoint();
-    return;
-  }
-
-  alert("Participante encontrado, mas sem endereço cadastrado.");
+  await addManualAddressPoint();
 }
