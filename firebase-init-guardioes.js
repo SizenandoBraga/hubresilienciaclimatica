@@ -17,10 +17,5 @@ const firebaseConfig = {
   measurementId: "G-HS27X087L5"
 };
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
 
-await setPersistence(auth, browserLocalPersistence);
-
-const db = getFirestore(app);
-
-export { app, auth, db };
+export const db = getFirestore(app);
