@@ -12,5 +12,6 @@ const app = initializeApp({
 }, "guardioes");
 
 const db = getFirestore(app);
+const app = initializeApp(firebaseConfig, "guardioes");
 
 export { app, db };

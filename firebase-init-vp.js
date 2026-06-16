@@ -17,7 +17,7 @@ const firebaseConfig = {
   measurementId: "G-N3JXY8LEY7"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig, "vila-pinto");
 const auth = getAuth(app);
 
 await setPersistence(auth, browserLocalPersistence);

@@ -16,7 +16,7 @@ const firebaseConfig = {
   appId: "1:267930729524:web:5d13605433875db9945e61",
   measurementId: "G-XKBZSM5N26"
 };
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig, "padre-cacique");
 const auth = getAuth(app);
 
 await setPersistence(auth, browserLocalPersistence);

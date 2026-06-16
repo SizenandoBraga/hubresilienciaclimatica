@@ -17,7 +17,7 @@ const firebaseConfig = {
   measurementId: "G-2Y7YTT6EZS"
 };
 
-const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig, "cooadesc");
 const auth = getAuth(app);
 
 await setPersistence(auth, browserLocalPersistence);
