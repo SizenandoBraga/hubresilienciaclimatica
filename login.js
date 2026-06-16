@@ -184,9 +184,7 @@ if (!auth || !db) {
 
 /* FORÇA LIMPEZA DA SESSÃO ANTERIOR */
 
-if (auth.currentUser) {
-  await signOut(auth);
-}
+
 
     if (cardTitle) {
       cardTitle.textContent = `Entrar • ${coop.label}`;
