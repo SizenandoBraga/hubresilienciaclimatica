@@ -448,7 +448,47 @@
     </main>
   </div>
 
-  <script type="module" src="./governanca.js"></script>
+ <script>
+document.addEventListener("DOMContentLoaded", () => {
+  const navButtons = document.querySelectorAll(".gov-nav-btn[data-section]");
+  const sections = document.querySelectorAll(".gov-section");
+  const pageSubtitle = document.getElementById("pageSubtitle");
+
+  const titles = {
+    painel: "Visão executiva das cooperativas, territórios, usuários e operação.",
+    cooperativas: "Relação analítica das cooperativas ativas.",
+    usuarios: "Gestão consolidada de usuários e participantes.",
+    territorios: "Visão operacional por território.",
+    acessos: "Monitoramento de acessos públicos e logados da plataforma.",
+    guardioes: "Solicitações recebidas pelo cadastro público dos Guardiões Urbanos."
+  };
+
+  navButtons.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const sectionName = btn.dataset.section;
+
+      navButtons.forEach((b) => {
+        b.classList.remove("is-active");
+      });
+
+      btn.classList.add("is-active");
+
+      sections.forEach((section) => {
+        section.classList.toggle(
+          "is-visible",
+          section.id === `section-${sectionName}`
+        );
+      });
+
+      if (pageSubtitle) {
+        pageSubtitle.textContent = titles[sectionName] || titles.painel;
+      }
+    });
+  });
+});
+</script>
+
+<script type="module" src="./governanca.js"></script>
   <div class="gov-modal-overlay" id="efficiencyModal">
   <div class="gov-modal">
     <button type="button" class="gov-modal-close" id="closeEfficiencyModal">×</button>
