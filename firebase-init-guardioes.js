@@ -1,9 +1,5 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
-import {
-  setPersistence,
-  browserLocalPersistence
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -15,6 +11,8 @@ const firebaseConfig = {
   appId: "1:354730831720:web:7e68c4ad9e61bf310770dd",
   measurementId: "G-HS27X087L5"
 };
-const app = initializeApp(firebaseConfig);
 
+const app = initializeApp(firebaseConfig, "guardioes");
+
+export const auth = getAuth(app);
 export const db = getFirestore(app);
