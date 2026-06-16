@@ -11,6 +11,7 @@ import {
 import {
   db as dbCOADESC
 } from "./firebase-init-coadesc.js";
+
 import {
   db as dbGuardioes
 } from "./firebase-init-guardioes.js";
@@ -30,6 +31,9 @@ import {
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const auth = authVP;
+
 let COOPERATIVAS_CACHE = [];
 let USERS_CACHE = [];
 let PARTICIPANTS_CACHE = [];
@@ -73,14 +77,10 @@ const FIREBASE_SOURCES = [
   }
 ];
 
-const auth = authGuardioes;
+
 
 const AUTH_SOURCES = [
-  {
-    id: "guardioes",
-    name: "Guardiões Urbanos",
-    auth: authGuardioes
-  },
+ 
   {
     id: "vila-pinto",
     name: "Vila Pinto",
