@@ -303,6 +303,9 @@ console.log("E-mail:", email);
 
       return;
     }
+/* SALVA A COOPERATIVA ESCOLHIDA */
+sessionStorage.setItem("nsru_selected_coop", selectedCoop);
+localStorage.setItem("nsru_selected_coop", selectedCoop);
 
     window.location.href = getRedirect(profile);
 

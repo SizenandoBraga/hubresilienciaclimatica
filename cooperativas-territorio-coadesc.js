@@ -42,28 +42,28 @@ function canonicalTerritoryId(value) {
 
 const PAGE_TERRITORY = {
   territoryId: canonicalTerritoryId(
-    bodyConfig.territoryId || "padre-cacique"
+    bodyConfig.territoryId || "cooadesc"
   ),
 
   territoryLabel:
     bodyConfig.territoryLabel ||
-    "Centro de Triagem Padre Cacique",
+    "Centro de Triagem COOADESC",
 
   cooperativeName:
     bodyConfig.cooperativeName ||
-    "Padre Cacique",
+    "COOADESC",
 
   participantUrl:
     bodyConfig.participantUrl ||
-    "cadastro-participantes-padre-cacique.html",
+    "cadastro-participantes-cooadesc.html",
 
   participantsListUrl:
     bodyConfig.participantsListUrl ||
-    "usuarios-padre-cacique.html",
+    "usuarios-cooadesc.html",
 
   coletasUrl:
     bodyConfig.coletasUrl ||
-    "cadastro-coletas-padre-cacique.html"
+    "cadastro-coletas-cooadesc.html"
 };
  
 /* =========================================================
