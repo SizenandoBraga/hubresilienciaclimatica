@@ -8,7 +8,7 @@ import {
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyC7qPZTlKqhd6WQQgkU1J2vfBrOFbzc2nU",
+   apiKey: "AIzaSyC7qPZTlKqhd6WQQgkU1J2vfBrOFbzc2nU",
   authDomain: "padre-cacique.firebaseapp.com",
   projectId: "padre-cacique",
   storageBucket: "padre-cacique.firebasestorage.app",
