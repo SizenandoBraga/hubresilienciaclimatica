@@ -3568,41 +3568,65 @@ onAuthStateChanged(auth, async (user) => {
 });
 
 /* ==========================================================
-   BUSCA DE ENDEREÇO
+   UTILITÁRIOS DE BUSCA
 ========================================================== */
 
+function normalizarBuscaEndereco(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/cep\s*\d{5}-?\d{3}/g, "")
+    .replace(/\bbrasil\b/g, "")
+    .replace(/\brs\b/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function enderecoPesquisa(user) {
+  const enderecoCompleto =
+    user.address ||
+    user.enderecoCompleto ||
+    user.raw?.enderecoCompleto ||
+    user.raw?.address?.addressLine ||
+    "";
 
   const rua =
     user.street ||
     user.rua ||
+    user.raw?.street ||
+    user.raw?.rua ||
     "";
 
   const numero =
     user.number ||
     user.numero ||
+    user.raw?.number ||
+    user.raw?.numero ||
     "";
 
   const bairro =
     user.neighborhood ||
     user.bairro ||
+    user.raw?.neighborhood ||
+    user.raw?.bairro ||
     "";
 
   const cidade =
     user.city ||
     user.cidade ||
+    user.raw?.city ||
+    user.raw?.cidade ||
     "";
 
-  return [
+  return normalizarBuscaEndereco([
+    enderecoCompleto,
     rua,
     numero,
     bairro,
     cidade
-  ]
-    .join(" ")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
+  ].join(" "));
 }
 
 /* ==========================================================
@@ -3617,7 +3641,8 @@ async function adicionarPontoPorCodigoOuEndereco() {
     return;
   }
 
-  const termoNormalizado = termo.toLowerCase();
+  const termoNormalizado =
+  normalizarBuscaEndereco(termo);
 
 const participante = STATE.users.find((user) => {
 
