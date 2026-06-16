@@ -1,12 +1,26 @@
-import { auth as authVP, db as dbVP } from "./firebase-init-vp.js";
-import { db as dbPC } from "./firebase-init-pc.js";
-import { db as dbCOADESC } from "./firebase-init-coadesc.js";
-import { db as dbGuardioes } from "./firebase-init-guardioes.js";
+import {
+  auth as authGuardioes,
+  db as dbGuardioes
+} from "./firebase-init-guardioes.js";
+
+import {
+  db as dbVP
+} from "./firebase-init-vp.js";
+
+import {
+  db as dbPC
+} from "./firebase-init-pc.js";
+
+import {
+  db as dbCOADESC
+} from "./firebase-init-coadesc.js";
+
 import { registerAccessLog } from "./access-tracker.js";
+
 import {
   onAuthStateChanged,
   signOut
-} from "firebase/auth";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
   doc,
@@ -17,7 +31,10 @@ import {
   orderBy,
   setDoc,
   serverTimestamp
-} from "firebase/firestore";
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+const auth = authGuardioes;
+
 let COOPERATIVAS_CACHE = [];
 let USERS_CACHE = [];
 let PARTICIPANTS_CACHE = [];
@@ -1118,7 +1135,7 @@ clearGuardiaoFilters?.addEventListener("click", () => {
   });
 
   logoutBtn?.addEventListener("click",async()=>{
-    await signOut(authVP);
+    await signOut(auth);
     window.location.href = LOGIN_PAGE;
   });
 
@@ -1371,7 +1388,7 @@ async function loadGovernanca(){
 }
 bindEvents();
 
-onAuthStateChanged(authVP,async(user)=>{
+onAuthStateChanged(auth,async(user)=>{
   if(!user){
     window.location.href = LOGIN_PAGE;
     return;
