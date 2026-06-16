@@ -11,7 +11,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
 
@@ -22,7 +22,7 @@
   <div class="gov-shell">
     <aside class="gov-sidebar">
       <div class="gov-logo-wrap">
-        <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" class="gov-logo" />
+        <img src="./img/NSRU-Logo-Preto.png" alt="NSRU" class="gov-logo" />
       </div>
 
       <nav class="gov-nav">
@@ -30,7 +30,10 @@
         <button class="gov-nav-btn" data-section="cooperativas" type="button">Cooperativas Ativas</button>
         <button class="gov-nav-btn" data-section="usuarios" type="button">Gestão de Usuários</button>
         <button class="gov-nav-btn" data-section="territorios" type="button">Territórios</button>
+         <button class="gov-nav-btn" data-section="guardioes" type="button">Guardiões Urbanos</button>
+        <button class="gov-nav-btn" data-section="acessos" type="button">Acessos ao Site</button>
         <button class="gov-nav-btn gov-nav-btn-update" id="syncDashboardBtn" type="button">Atualizar indicadores</button>
+       
       </nav>
 
       <div class="gov-sync-box">
@@ -140,6 +143,19 @@
 
         <section class="gov-section" id="section-cooperativas">
           <div class="section-head-pro">
+            <div class="gov-filters">
+  <input id="filterCoopSearch" type="search" placeholder="Pesquisar cooperativa ou código..." />
+
+  <select id="filterCoopStatus">
+    <option value="__all__">Todos os status</option>
+    <option value="ativa">Ativas</option>
+    <option value="inativa">Inativas</option>
+  </select>
+
+  <button type="button" class="gov-filter-btn" id="clearCoopFilters">
+    Limpar filtros
+  </button>
+</div>
             <div>
               <h2>Relação de cooperativas ativas</h2>
               <p>Resumo analítico consolidado por cooperativa/território ativo.</p>
@@ -148,7 +164,6 @@
           </div>
 
           <div class="coop-grid" id="cooperativasCards"></div>
-
           <div class="table-card">
             <table class="pro-table">
               <thead>
@@ -160,7 +175,11 @@
                   <th>Coletas</th>
                   <th>Resíduo seco</th>
                   <th>Rejeito</th>
-                  <th>Eficiência</th>
+                  <th>
+                  <button type="button" class="efficiency-help-btn" id="openEfficiencyModal">
+                   Eficiência ⓘ
+                  </button>
+                  </th>
                   <th>Status</th>
                 </tr>
               </thead>
@@ -176,7 +195,28 @@
             <article class="kpi-card kpi-orange"><span>Admins</span><strong id="usersAdmins">0</strong></article>
             <article class="kpi-card kpi-dark"><span>Governança</span><strong id="usersGovernanca">0</strong></article>
           </div>
+<div class="gov-filters">
+  <input id="filterUserSearch" type="search" placeholder="Pesquisar nome, e-mail ou território..." />
 
+  <select id="filterUserRole">
+    <option value="__all__">Todos os perfis</option>
+    <option value="admin">Admin</option>
+    <option value="governanca">Governança</option>
+    <option value="gestor">Gestor</option>
+    <option value="participante">Participante</option>
+    <option value="usuario">Usuário</option>
+  </select>
+
+  <select id="filterUserStatus">
+    <option value="__all__">Todos os status</option>
+    <option value="ativo">Ativos</option>
+    <option value="inativo">Inativos/Pendentes</option>
+  </select>
+
+  <button type="button" class="gov-filter-btn" id="clearUserFilters">
+    Limpar filtros
+  </button>
+</div>
           <div class="table-card">
             <table class="pro-table wide">
               <thead>
@@ -195,6 +235,19 @@
 
         <section class="gov-section" id="section-territorios">
           <div class="table-card">
+            <div class="gov-filters">
+  <input id="filterTerritorySearch" type="search" placeholder="Pesquisar território ou código..." />
+
+  <select id="filterTerritoryStatus">
+    <option value="__all__">Todos os status</option>
+    <option value="ativo">Ativos</option>
+    <option value="inativo">Inativos</option>
+  </select>
+
+  <button type="button" class="gov-filter-btn" id="clearTerritoryFilters">
+    Limpar filtros
+  </button>
+</div>
             <table class="pro-table">
               <thead>
                 <tr>
@@ -212,10 +265,210 @@
             </table>
           </div>
         </section>
-      </section>
+        
+      <section class="gov-section" id="section-acessos">
+  <div class="kpi-grid">
+    <article class="kpi-card kpi-green">
+      <span>Acessos totais</span>
+      <strong id="accessTotal">0</strong>
+      <small>Todos os registros</small>
+    </article>
+
+    <article class="kpi-card kpi-blue">
+      <span>Acessos hoje</span>
+      <strong id="accessToday">0</strong>
+      <small>Visitas registradas no dia</small>
+    </article>
+
+    <article class="kpi-card kpi-orange">
+      <span>Últimos 7 dias</span>
+      <strong id="accessLast7Days">0</strong>
+      <small>Movimento recente</small>
+    </article>
+
+    <article class="kpi-card kpi-dark">
+      <span>Acessos logados</span>
+      <strong id="accessLogged">0</strong>
+      <small>Usuários autenticados</small>
+    </article>
+  </div>
+
+  <div class="analytics-grid">
+    <article class="chart-card chart-wide">
+      <div class="chart-head">
+        <div>
+          <h2>Acessos por cooperativa</h2>
+          <p>Distribuição dos acessos por território.</p>
+        </div>
+      </div>
+      <div id="chartAccessByCoop"></div>
+    </article>
+
+    <article class="chart-card">
+      <div class="chart-head">
+        <div>
+          <h2>Tipos de acesso</h2>
+          <p>Público x área logada.</p>
+        </div>
+      </div>
+      <div id="chartAccessType"></div>
+    </article>
+  </div>
+<div class="gov-filters">
+  <input
+    id="filterAccessSearch"
+    type="search"
+    placeholder="Pesquisar página, usuário ou cooperativa..."
+  />
+
+  <select id="filterAccessTerritory">
+    <option value="__all__">Todas as cooperativas</option>
+    <option value="geral">Geral</option>
+    <option value="vila-pinto">Vila Pinto</option>
+    <option value="cooadesc">COOADESC</option>
+    <option value="padre-cacique">Padre Cacique</option>
+    <option value="governanca">Governança</option>
+  </select>
+
+  <select id="filterAccessType">
+    <option value="__all__">Todos os tipos</option>
+    <option value="publica">Público</option>
+    <option value="logada">Logado</option>
+  </select>
+
+  <button
+    type="button"
+    class="gov-filter-btn"
+    id="clearAccessFilters"
+  >
+    Limpar filtros
+  </button>
+</div>
+
+  <div class="table-card access-table-card">
+    <div class="chart-head">
+      <div>
+        <h2>Últimos acessos</h2>
+        <p>Registros mais recentes de navegação na plataforma.</p>
+      </div>
+    </div>
+
+    <table class="pro-table wide">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Página</th>
+          <th>Cooperativa</th>
+          <th>Usuário</th>
+          <th>Tipo</th>
+          <th>Dispositivo</th>
+        </tr>
+      </thead>
+      <tbody id="accessLogsTableBody"></tbody>
+</table>
+</div>
+</section>
+
+<section class="gov-section" id="section-guardioes">
+  <div class="kpi-grid small">
+    <article class="kpi-card kpi-green">
+      <span>Total</span>
+      <strong id="guardioesTotal">0</strong>
+    </article>
+
+    <article class="kpi-card kpi-blue">
+      <span>Vila Pinto</span>
+      <strong id="guardioesVilaPinto">0</strong>
+    </article>
+
+    <article class="kpi-card kpi-orange">
+      <span>COOADESC</span>
+      <strong id="guardioesCooadesc">0</strong>
+    </article>
+
+    <article class="kpi-card kpi-dark">
+      <span>Padre Cacique</span>
+      <strong id="guardioesPadreCacique">0</strong>
+    </article>
+  </div>
+
+  <div class="gov-filters">
+    <input
+      id="filterGuardiaoSearch"
+      type="search"
+      placeholder="Pesquisar nome, WhatsApp, endereço ou CEP..."
+    />
+
+    <select id="filterGuardiaoCooperativa">
+      <option value="__all__">Todas as cooperativas</option>
+      <option value="vila-pinto">CRGR Vila Pinto</option>
+      <option value="cooadesc">CRGR COOADESC</option>
+      <option value="padre-cacique">CRGR Padre Cacique</option>
+    </select>
+
+    <select id="filterGuardiaoStatus">
+      <option value="__all__">Todos os status</option>
+      <option value="solicitado">Solicitado</option>
+      <option value="contatado">Contatado</option>
+      <option value="ativo">Ativo</option>
+    </select>
+
+    <button type="button" class="gov-filter-btn" id="clearGuardiaoFilters">
+      Limpar filtros
+    </button>
+  </div>
+
+  <div class="table-card">
+    <div class="chart-head">
+      <div>
+        <h2>Solicitações dos Guardiões Urbanos</h2>
+        <p>Cadastros enviados pela página pública dos Guardiões.</p>
+      </div>
+    </div>
+
+    <table class="pro-table wide">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Nome</th>
+          <th>WhatsApp</th>
+          <th>Endereço</th>
+          <th>CEP</th>
+          <th>Cooperativa</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+
+      <tbody id="guardioesTableBody"></tbody>
+    </table>
+  </div>
+</section>
     </main>
   </div>
 
-  <script type="module" src="governanca.js"></script>
+  <script type="module" src="./governanca.js"></script>
+  <div class="gov-modal-overlay" id="efficiencyModal">
+  <div class="gov-modal">
+    <button type="button" class="gov-modal-close" id="closeEfficiencyModal">×</button>
+
+    <span class="modal-kicker">Indicador de eficiência</span>
+    <h2>Aproveitamento dos resíduos</h2>
+
+    <p>
+      A eficiência mostra quanto do material recebido foi aproveitado como
+      resíduo seco reciclável, em relação ao total composto por resíduo seco
+      mais rejeito.
+    </p>
+
+    <div class="formula-box">
+      Eficiência = Resíduo seco ÷ (Resíduo seco + Rejeito)
+    </div>
+
+    <p>
+      Quanto maior o percentual, melhor o aproveitamento dos resíduos recebidos.
+    </p>
+  </div>
+</div>
 </body>
 </html>
