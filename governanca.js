@@ -35,6 +35,8 @@ import {
 
 const auth = authGuardioes;
 
+
+
 let COOPERATIVAS_CACHE = [];
 let USERS_CACHE = [];
 let PARTICIPANTS_CACHE = [];
