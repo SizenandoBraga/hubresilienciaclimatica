@@ -1,4 +1,21 @@
 import {
+  auth,
+  db as dbGuardioes
+} from "./firebase-init.js";
+
+import {
+  db as dbVilaPinto
+} from "./firebase-init-vp.js";
+
+import {
+  db as dbCooadesc
+} from "./firebase-init-coadesc.js";
+
+import {
+  db as dbPadreCacique
+} from "./firebase-init-pc.js";
+
+import {
   signInWithEmailAndPassword,
   sendPasswordResetEmail,
   setPersistence,

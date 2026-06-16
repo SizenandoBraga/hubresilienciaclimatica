@@ -1,9 +1,12 @@
-import { auth, db } from "./firebase-init.js";
-
+import { auth as authVP, db as dbVP } from "./firebase-init-vp.js";
+import { db as dbPC } from "./firebase-init-pc.js";
+import { db as dbCOADESC } from "./firebase-init-coadesc.js";
+import { db as dbGuardioes } from "./firebase-init-guardioes.js";
+import { registerAccessLog } from "./access-tracker.js";
 import {
   onAuthStateChanged,
   signOut
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+} from "firebase/auth";
 
 import {
   doc,
@@ -14,7 +17,51 @@ import {
   orderBy,
   setDoc,
   serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+} from "firebase/firestore";
+let COOPERATIVAS_CACHE = [];
+let USERS_CACHE = [];
+let PARTICIPANTS_CACHE = [];
+let TERRITORIOS_CACHE = [];
+
+const filterCoopSearch = document.getElementById("filterCoopSearch");
+const filterCoopStatus = document.getElementById("filterCoopStatus");
+const clearCoopFilters = document.getElementById("clearCoopFilters");
+
+const filterUserSearch = document.getElementById("filterUserSearch");
+const filterUserRole = document.getElementById("filterUserRole");
+const filterUserStatus = document.getElementById("filterUserStatus");
+const clearUserFilters = document.getElementById("clearUserFilters");
+
+const filterTerritorySearch = document.getElementById("filterTerritorySearch");
+const filterTerritoryStatus = document.getElementById("filterTerritoryStatus");
+const clearTerritoryFilters = document.getElementById("clearTerritoryFilters");
+
+let GUARDIOES_CACHE = [];
+
+const filterGuardiaoSearch = document.getElementById("filterGuardiaoSearch");
+const filterGuardiaoCooperativa = document.getElementById("filterGuardiaoCooperativa");
+const filterGuardiaoStatus = document.getElementById("filterGuardiaoStatus");
+const clearGuardiaoFilters = document.getElementById("clearGuardiaoFilters");
+
+const FIREBASE_SOURCES = [
+  {
+    id: "vila-pinto",
+    name: "Vila Pinto",
+    db: dbVP
+  },
+  {
+    id: "cooadesc",
+    name: "COOADESC",
+    db: dbCOADESC
+  },
+  {
+    id: "padre-cacique",
+    name: "Padre Cacique",
+    db: dbPC
+  }
+];
+
+const auth = authVP;
 
 const LOGIN_PAGE = "./login.html";
 const COOPERATIVAS_PAGE = "./cooperativas.html";
@@ -38,7 +85,9 @@ const SECTION_TITLES = {
   painel: "Visão executiva das cooperativas, territórios, usuários e operação.",
   cooperativas: "Relação analítica das cooperativas ativas.",
   usuarios: "Gestão consolidada de usuários e participantes.",
-  territorios: "Visão operacional por território."
+  territorios: "Visão operacional por território.",
+  acessos: "Monitoramento de acessos públicos e logados da plataforma.",
+  guardioes: "Solicitações recebidas pelo cadastro público dos Guardiões Urbanos."
 };
 
 function byId(id){
@@ -289,47 +338,231 @@ function getRejeito(coleta = {}){
 
   return total;
 }
+async function loadGuardioesSolicitacoes(){
+  return await loadCollectionSafeFromDb(
+    dbGuardioes,
+    "solicitacoes_guardioes",
+    {
+      id: "guardioes",
+      name: "Guardiões Urbanos"
+    }
+  );
+}
 
-async function loadCollectionSafe(name){
-  try{
-    const snap = await getDocs(query(collection(db,name),orderBy("createdAt","desc")));
-    return snap.docs.map((d)=>({id:d.id,...d.data()}));
-  }catch{
-    try{
-      const snap = await getDocs(collection(db,name));
-      return snap.docs.map((d)=>({id:d.id,...d.data()}));
-    }catch(error){
-      console.warn(`Não foi possível ler ${name}:`,error);
+function filterGuardioes(items = []){
+  const search = normalizeFilter(filterGuardiaoSearch?.value || "");
+  const cooperativa = filterGuardiaoCooperativa?.value || "__all__";
+  const status = filterGuardiaoStatus?.value || "__all__";
+
+  return items.filter((item) => {
+    const itemCoop = normalizeCooperativaId(item.cooperativa || item.cooperativaId || "");
+    const itemStatus = lower(item.status || "solicitado");
+
+    if (cooperativa !== "__all__" && itemCoop !== cooperativa) return false;
+    if (status !== "__all__" && itemStatus !== status) return false;
+
+    if (search) {
+      const haystack = normalizeFilter([
+        item.nome,
+        item.name,
+        item.whatsapp,
+        item.endereco,
+        item.cep,
+        item.cooperativa,
+        item.status
+      ].join(" "));
+
+      if (!haystack.includes(search)) return false;
+    }
+
+    return true;
+  });
+}
+
+function formatGuardiaoDate(item = {}){
+  const date = getDate(item);
+
+  if (!date) return "-";
+
+  return date.toLocaleString("pt-BR");
+}
+
+function renderGuardioes(items = []){
+  GUARDIOES_CACHE = items;
+
+  const filtered = filterGuardioes(items);
+
+  setText("guardioesTotal", filtered.length);
+  setText("guardioesVilaPinto", filtered.filter((i) =>
+    normalizeCooperativaId(i.cooperativa) === "vila-pinto"
+  ).length);
+
+  setText("guardioesCooadesc", filtered.filter((i) =>
+    normalizeCooperativaId(i.cooperativa) === "cooadesc"
+  ).length);
+
+  setText("guardioesPadreCacique", filtered.filter((i) =>
+    normalizeCooperativaId(i.cooperativa) === "padre-cacique"
+  ).length);
+
+  const tbody = byId("guardioesTableBody");
+  if (!tbody) return;
+
+  if (!filtered.length) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="8">Nenhuma solicitação encontrada.</td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((item) => {
+    const coopId = normalizeCooperativaId(
+      item.cooperativa || item.cooperativaId || ""
+    );
+
+    const status = lower(item.status || "solicitado");
+
+    const whatsappLimpo = String(item.whatsapp || "").replace(/\D/g, "");
+
+    const whatsappLink = whatsappLimpo
+      ? `https://wa.me/55${whatsappLimpo}`
+      : "#";
+
+    return `
+      <tr>
+        <td>${formatGuardiaoDate(item)}</td>
+        <td>${item.nome || item.name || "-"}</td>
+
+        <td>
+          <a href="${whatsappLink}" target="_blank" rel="noopener noreferrer">
+            ${item.whatsapp || "-"}
+          </a>
+        </td>
+
+        <td>${item.endereco || "-"}</td>
+        <td>${item.cep || "-"}</td>
+        <td>${formatCooperativaNameFromId(coopId)}</td>
+
+        <td>
+          <span class="status-pill ${status === "contatado" ? "" : "inactive"}">
+            ${status}
+          </span>
+        </td>
+
+        <td>
+          <a
+            href="${whatsappLink}"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="gov-filter-btn"
+          >
+            WhatsApp
+          </a>
+        </td>
+      </tr>
+    `;
+  }).join("");
+}
+
+async function loadCollectionSafeFromDb(dbInstance, name, source = {}) {
+  try {
+    const snap = await getDocs(
+      query(
+        collection(dbInstance, name),
+        orderBy("createdAt", "desc")
+      )
+    );
+
+    return snap.docs.map((d) => ({
+      id: d.id,
+      sourceId: source.id,
+      sourceName: source.name,
+      firebaseSource: source.id,
+      ...d.data()
+    }));
+  } catch {
+    try {
+      const snap = await getDocs(collection(dbInstance, name));
+
+      return snap.docs.map((d) => ({
+        id: d.id,
+        sourceId: source.id,
+        sourceName: source.name,
+        firebaseSource: source.id,
+        ...d.data()
+      }));
+    } catch (error) {
+      console.warn(`Não foi possível ler ${name} em ${source.name}:`, error);
       return [];
     }
   }
 }
 
-async function loadUserProfile(uid){
-  const snap = await getDoc(doc(db,"users",uid));
-  return snap.exists() ? {id:snap.id,...snap.data()} : null;
+async function loadCollectionFromAllDbs(name) {
+  const results = await Promise.all(
+    FIREBASE_SOURCES.map((source) =>
+      loadCollectionSafeFromDb(source.db, name, source)
+    )
+  );
+
+  return results.flat();
 }
 
-async function loadAllData(){
-  const [users,participants,coletas,approvalRequests,territories,cooperativas,crgrs] =
-    await Promise.all([
-      loadCollectionSafe("users"),
-      loadCollectionSafe("participants"),
-      loadCollectionSafe("coletas"),
-      loadCollectionSafe("approvalRequests"),
-      loadCollectionSafe("territories"),
-      loadCollectionSafe("cooperativas"),
-      loadCollectionSafe("crgrs")
-    ]);
+async function loadUserProfile(uid) {
+  for (const source of FIREBASE_SOURCES) {
+    try {
+      const snap = await getDoc(
+        doc(source.db, "users", uid)
+      );
 
-  const rawCoops = [...territories,...cooperativas,...crgrs];
+      if (snap.exists()) {
+        return {
+          id: snap.id,
+          sourceId: source.id,
+          sourceName: source.name,
+          ...snap.data()
+        };
+      }
+    } catch (error) {
+      console.warn(`Erro ao buscar usuário em ${source.name}:`, error);
+    }
+  }
+
+  return null;
+}
+
+async function loadAllData() {
+  const [
+    users,
+    participants,
+    coletas,
+    approvalRequests,
+    territories,
+    cooperativas,
+    crgrs,
+    accessLogs
+  ] = await Promise.all([
+    loadCollectionFromAllDbs("users"),
+    loadCollectionFromAllDbs("participants"),
+    loadCollectionFromAllDbs("coletas"),
+    loadCollectionFromAllDbs("approvalRequests"),
+    loadCollectionFromAllDbs("territories"),
+    loadCollectionFromAllDbs("cooperativas"),
+    loadCollectionFromAllDbs("crgrs"),
+    loadCollectionFromAllDbs("accessLogs")
+  ]);
+
+  const rawCoops = [...territories, ...cooperativas, ...crgrs];
 
   return {
     users,
     participants,
     coletas,
     approvalRequests,
-    crgrs: rawCoops
+    crgrs: rawCoops,
+    accessLogs
   };
 }
 
@@ -646,6 +879,9 @@ function renderCharts({coletas,cooperativas,residuo,rejeito}){
 }
 
 function renderCooperativas(cooperativas){
+  COOPERATIVAS_CACHE = cooperativas;
+const filtered = filterCooperativas(cooperativas);
+cooperativas = filtered;
   setText("activeCoopsCount",`${cooperativas.length} ativas`);
 
   const cards = byId("cooperativasCards");
@@ -686,45 +922,40 @@ function renderCooperativas(cooperativas){
   }
 }
 
-function renderUsuarios(users,participants){
+function renderUsuarios(users, participants) {
+  USERS_CACHE = users;
+  PARTICIPANTS_CACHE = participants;
+
   const tbody = byId("usersTableBody");
+  const unified = filterUsuarios(users, participants);
 
-  const unified = [
-    ...users.map((item)=>({
-      name:item.name || item.displayName || item.email || "Usuário",
-      email:item.email || "-",
-      territory:item.territoryLabel || item.territoryId || "-",
-      role:normalizeRole(item),
-      status:isActive(item) ? "Ativo" : "Inativo"
-    })),
-    ...participants.map((item)=>({
-      name:item.name || item.fullName || "Participante",
-      email:item.email || "-",
-      territory:item.territoryLabel || item.territoryId || "-",
-      role:"participante",
-      status:isActive(item) ? "Ativo" : "Pendente"
-    }))
-  ];
+  setText("usersTotal", unified.length);
+  setText("usersAtivos", unified.filter((i) => i.status === "Ativo").length);
+  setText("usersAdmins", unified.filter((i) => i.role === "admin").length);
+  setText("usersGovernanca", unified.filter((i) =>
+    ["governanca", "gestor"].includes(i.role)
+  ).length);
 
-  setText("usersTotal",unified.length);
-  setText("usersAtivos",unified.filter((i)=>i.status === "Ativo").length);
-  setText("usersAdmins",users.filter((i)=>normalizeRole(i) === "admin").length);
-  setText("usersGovernanca",users.filter((i)=>["governanca","gestor"].includes(normalizeRole(i))).length);
+  if (!tbody) return;
 
-  if(!tbody) return;
-
-  tbody.innerHTML = unified.map((item)=>`
+  tbody.innerHTML = unified.map((item) => `
     <tr>
       <td>${item.name}</td>
       <td>${item.email}</td>
       <td>${item.territory}</td>
       <td>${item.role}</td>
-      <td><span class="status-pill ${item.status !== "Ativo" ? "inactive" : ""}">${item.status}</span></td>
+      <td>
+        <span class="status-pill ${item.status !== "Ativo" ? "inactive" : ""}">
+          ${item.status}
+        </span>
+      </td>
     </tr>
   `).join("");
 }
 
 function renderTerritorios(cooperativas){
+  TERRITORIOS_CACHE = cooperativas;
+cooperativas = filterTerritorios(cooperativas);
   const tbody = byId("territoriosTableBody");
   if(!tbody) return;
 
@@ -741,10 +972,110 @@ function renderTerritorios(cooperativas){
     </tr>
   `).join("");
 }
+function normalizeFilter(value){
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
 
+function filterCooperativas(items = []){
+  const search = normalizeFilter(filterCoopSearch?.value || "");
+  const status = filterCoopStatus?.value || "__all__";
+
+  return items.filter((item) => {
+    if (status === "ativa" && item.active === false) return false;
+    if (status === "inativa" && item.active !== false) return false;
+
+    if (search) {
+      const haystack = normalizeFilter([
+        item.name,
+        item.code,
+        item.id
+      ].join(" "));
+
+      if (!haystack.includes(search)) return false;
+    }
+
+    return true;
+  });
+}
+
+function filterUsuarios(users = [], participants = []) {
+  const search = normalizeFilter(filterUserSearch?.value || "");
+  const roleFilter = filterUserRole?.value || "__all__";
+  const statusFilter = filterUserStatus?.value || "__all__";
+
+  const unified = [
+    ...users.map((item) => ({
+      name: item.name || item.displayName || item.email || "Usuário",
+      email: item.email || "-",
+      territory:
+        item.sourceName ||
+        formatCooperativaNameFromId(item.sourceId || item.territoryId) ||
+        "-",
+      role: normalizeRole(item),
+      status: isActive(item) ? "Ativo" : "Inativo"
+    })),
+
+    ...participants.map((item) => ({
+      name: item.name || item.fullName || item.nome || "Participante",
+      email: item.email || "-",
+      territory:
+        item.sourceName ||
+        formatCooperativaNameFromId(item.sourceId || item.territoryId) ||
+        "-",
+      role: "participante",
+      status: isActive(item) ? "Ativo" : "Pendente"
+    }))
+  ];
+
+  return unified.filter((item) => {
+    if (roleFilter !== "__all__" && item.role !== roleFilter) return false;
+    if (statusFilter === "ativo" && item.status !== "Ativo") return false;
+    if (statusFilter === "inativo" && item.status === "Ativo") return false;
+
+    if (search) {
+      const haystack = normalizeFilter([
+        item.name,
+        item.email,
+        item.territory,
+        item.role,
+        item.status
+      ].join(" "));
+
+      if (!haystack.includes(search)) return false;
+    }
+
+    return true;
+  });
+}
+
+function filterTerritorios(items = []){
+  const search = normalizeFilter(filterTerritorySearch?.value || "");
+  const status = filterTerritoryStatus?.value || "__all__";
+
+  return items.filter((item) => {
+    if (status === "ativo" && item.active === false) return false;
+    if (status === "inativo" && item.active !== false) return false;
+
+    if (search) {
+      const haystack = normalizeFilter([
+        item.name,
+        item.code,
+        item.id
+      ].join(" "));
+
+      if (!haystack.includes(search)) return false;
+    }
+
+    return true;
+  });
+}
 async function savePublicDashboardData(data){
   await setDoc(
-    doc(db,"publicDashboard",PUBLIC_DASHBOARD_DOC),
+   doc(dbVP,"publicDashboard",PUBLIC_DASHBOARD_DOC),
     {
       cooperativasAtivas:data.cooperativas.length,
       participantes:data.participants.length,
@@ -762,12 +1093,32 @@ function setSyncStatus(text){
 }
 
 function bindEvents(){
+  filterGuardiaoSearch?.addEventListener("input", () =>
+  renderGuardioes(GUARDIOES_CACHE)
+);
+
+filterGuardiaoCooperativa?.addEventListener("change", () =>
+  renderGuardioes(GUARDIOES_CACHE)
+);
+
+filterGuardiaoStatus?.addEventListener("change", () =>
+  renderGuardioes(GUARDIOES_CACHE)
+);
+
+clearGuardiaoFilters?.addEventListener("click", () => {
+  if (filterGuardiaoSearch) filterGuardiaoSearch.value = "";
+  if (filterGuardiaoCooperativa) filterGuardiaoCooperativa.value = "__all__";
+  if (filterGuardiaoStatus) filterGuardiaoStatus.value = "__all__";
+
+  renderGuardioes(GUARDIOES_CACHE);
+});
+
   navButtons.forEach((btn)=>{
     btn.addEventListener("click",()=>showSection(btn.dataset.section));
   });
 
   logoutBtn?.addEventListener("click",async()=>{
-    await signOut(auth);
+    await signOut(authVP);
     window.location.href = LOGIN_PAGE;
   });
 
@@ -789,10 +1140,225 @@ function bindEvents(){
 
     setSyncStatus(`Atualizado em ${new Date().toLocaleString("pt-BR")}`);
   });
+
+filterCoopSearch?.addEventListener("input", () => renderCooperativas(COOPERATIVAS_CACHE));
+filterCoopStatus?.addEventListener("change", () => renderCooperativas(COOPERATIVAS_CACHE));
+clearCoopFilters?.addEventListener("click", () => {
+  if (filterCoopSearch) filterCoopSearch.value = "";
+  if (filterCoopStatus) filterCoopStatus.value = "__all__";
+  renderCooperativas(COOPERATIVAS_CACHE);
+});
+
+filterUserSearch?.addEventListener("input", () => renderUsuarios(USERS_CACHE, PARTICIPANTS_CACHE));
+filterUserRole?.addEventListener("change", () => renderUsuarios(USERS_CACHE, PARTICIPANTS_CACHE));
+filterUserStatus?.addEventListener("change", () => renderUsuarios(USERS_CACHE, PARTICIPANTS_CACHE));
+clearUserFilters?.addEventListener("click", () => {
+  if (filterUserSearch) filterUserSearch.value = "";
+  if (filterUserRole) filterUserRole.value = "__all__";
+  if (filterUserStatus) filterUserStatus.value = "__all__";
+  renderUsuarios(USERS_CACHE, PARTICIPANTS_CACHE);
+});
+
+filterTerritorySearch?.addEventListener("input", () => renderTerritorios(TERRITORIOS_CACHE));
+filterTerritoryStatus?.addEventListener("change", () => renderTerritorios(TERRITORIOS_CACHE));
+clearTerritoryFilters?.addEventListener("click", () => {
+  if (filterTerritorySearch) filterTerritorySearch.value = "";
+  if (filterTerritoryStatus) filterTerritoryStatus.value = "__all__";
+  renderTerritorios(TERRITORIOS_CACHE);
+});
+}
+
+function accessDate(item = {}) {
+  const raw =
+    item.createdAt?.toDate?.() ||
+    item.createdAt ||
+    item.createdAtISO ||
+    item.date ||
+    null;
+
+  const date = raw instanceof Date ? raw : new Date(raw);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function accessTerritory(item = {}) {
+  const id = normalizeCooperativaId(
+    item.territoryId ||
+    item.cooperativeId ||
+    item.cooperativaId ||
+    item.cooperativeName ||
+    item.cooperativa ||
+    "geral"
+  );
+
+  if (id === "vila-pinto") return "Vila Pinto";
+  if (id === "cooadesc") return "COOADESC";
+  if (id === "padre-cacique") return "Padre Cacique";
+
+  return "Geral";
+}
+
+function accessDevice(item = {}) {
+  const ua = lower(item.userAgent || "");
+
+  if (ua.includes("mobile") || ua.includes("android") || ua.includes("iphone")) {
+    return "Celular";
+  }
+
+  if (ua.includes("tablet") || ua.includes("ipad")) {
+    return "Tablet";
+  }
+
+  return "Computador";
+}
+
+function renderAccessDashboard(accessLogs = []) {
+  const now = new Date();
+
+  const todayStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate()
+  );
+
+  const last7Start = new Date(todayStart);
+  last7Start.setDate(last7Start.getDate() - 6);
+
+  const total = accessLogs.length;
+
+  const today = accessLogs.filter((item) => {
+    const date = accessDate(item);
+    return date && date >= todayStart;
+  }).length;
+
+  const last7 = accessLogs.filter((item) => {
+    const date = accessDate(item);
+    return date && date >= last7Start;
+  }).length;
+
+  const logged = accessLogs.filter((item) => {
+    return item.userId || item.userEmail;
+  }).length;
+
+  setText("accessTotal", formatNumber(total));
+  setText("accessToday", formatNumber(today));
+  setText("accessLast7Days", formatNumber(last7));
+  setText("accessLogged", formatNumber(logged));
+
+  renderAccessCharts(accessLogs);
+  renderAccessTable(accessLogs);
+}
+
+function renderAccessCharts(accessLogs = []) {
+  const coopMap = new Map();
+
+  accessLogs.forEach((item) => {
+    const label = accessTerritory(item);
+    coopMap.set(label, (coopMap.get(label) || 0) + 1);
+  });
+
+  const coopItems = Array.from(coopMap.entries())
+    .map(([name, total]) => ({ name, total }))
+    .sort((a, b) => b.total - a.total);
+
+  renderChart("chartAccessByCoop", {
+    chart: {
+      type: "bar",
+      height: 350,
+      toolbar: { show: false },
+      fontFamily: "Archivo Condensed"
+    },
+    series: [
+      {
+        name: "Acessos",
+        data: coopItems.map((item) => item.total)
+      }
+    ],
+    xaxis: {
+      categories: coopItems.map((item) => item.name)
+    },
+    plotOptions: {
+      bar: {
+        borderRadius: 8,
+        columnWidth: "48%"
+      }
+    },
+    colors: ["#81B92A"],
+    dataLabels: { enabled: true },
+    grid: { borderColor: "rgba(60,58,57,.08)" }
+  });
+
+  const publicos = accessLogs.filter((item) => {
+    return item.pageType === "publica" || !item.userId;
+  }).length;
+
+  const logados = accessLogs.filter((item) => {
+    return item.pageType === "logada" || item.userId;
+  }).length;
+
+  renderChart("chartAccessType", {
+    chart: {
+      type: "donut",
+      height: 330,
+      fontFamily: "Archivo Condensed"
+    },
+    series: [publicos, logados],
+    labels: ["Público", "Logado"],
+    colors: ["#53ACDE", "#EF6B22"],
+    legend: { position: "bottom" },
+    plotOptions: {
+      pie: {
+        donut: { size: "72%" }
+      }
+    }
+  });
+}
+
+function renderAccessTable(accessLogs = []) {
+  const tbody = byId("accessLogsTableBody");
+
+  if (!tbody) return;
+
+  const rows = [...accessLogs]
+    .sort((a, b) => {
+      const dateA = accessDate(a)?.getTime() || 0;
+      const dateB = accessDate(b)?.getTime() || 0;
+      return dateB - dateA;
+    })
+    .slice(0, 50);
+
+  tbody.innerHTML = rows.map((item) => {
+    const date = accessDate(item);
+
+    return `
+      <tr>
+        <td>${date ? date.toLocaleString("pt-BR") : "-"}</td>
+        <td>${item.page || item.url || "-"}</td>
+        <td>${accessTerritory(item)}</td>
+        <td>${item.userName || item.userEmail || "Visitante"}</td>
+        <td>
+          <span class="status-pill ${item.userId ? "" : "inactive"}">
+            ${item.userId ? "Logado" : "Público"}
+          </span>
+        </td>
+        <td>${accessDevice(item)}</td>
+      </tr>
+    `;
+  }).join("");
 }
 
 async function loadGovernanca(){
   const raw = await loadAllData();
+
+  const guardioes = await loadCollectionSafeFromDb(
+    dbGuardioes,
+    "solicitacoes_guardioes",
+    {
+      id: "guardioes",
+      name: "Guardiões Urbanos"
+    }
+  );
+
   const cooperativas = buildCooperativasAtivas(raw);
   const totals = renderKPIs({...raw,cooperativas});
 
@@ -800,11 +1366,12 @@ async function loadGovernanca(){
   renderCooperativas(cooperativas);
   renderUsuarios(raw.users,raw.participants);
   renderTerritorios(cooperativas);
+  renderAccessDashboard(raw.accessLogs || []);
+  renderGuardioes(guardioes);
 }
-
 bindEvents();
 
-onAuthStateChanged(auth,async(user)=>{
+onAuthStateChanged(authVP,async(user)=>{
   if(!user){
     window.location.href = LOGIN_PAGE;
     return;
@@ -819,11 +1386,37 @@ onAuthStateChanged(auth,async(user)=>{
     }
 
     renderLoggedUser(profile,user);
+    await registerAccessLog({
+  db: dbVP,
+  auth: authVP,
+  page: "governanca",
+  pageType: "logada",
+  territoryId: "governanca",
+  cooperativeName: "Governança NSRU",
+  userProfile: profile
+});
     await loadGovernanca();
 
     setSyncStatus("Indicadores carregados.");
   }catch(error){
     console.error(error);
     window.location.href = LOGIN_PAGE;
+  }
+});
+const efficiencyModal = document.getElementById("efficiencyModal");
+const openEfficiencyModal = document.getElementById("openEfficiencyModal");
+const closeEfficiencyModal = document.getElementById("closeEfficiencyModal");
+
+openEfficiencyModal?.addEventListener("click", () => {
+  efficiencyModal?.classList.add("show");
+});
+
+closeEfficiencyModal?.addEventListener("click", () => {
+  efficiencyModal?.classList.remove("show");
+});
+
+efficiencyModal?.addEventListener("click", (event) => {
+  if (event.target === efficiencyModal) {
+    efficiencyModal.classList.remove("show");
   }
 });
