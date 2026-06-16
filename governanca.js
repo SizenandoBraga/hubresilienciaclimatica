@@ -32,11 +32,6 @@ import {
   setDoc,
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-const auth = authGuardioes;
-
-
-
 let COOPERATIVAS_CACHE = [];
 let USERS_CACHE = [];
 let PARTICIPANTS_CACHE = [];
@@ -80,10 +75,10 @@ const FIREBASE_SOURCES = [
   }
 ];
 
-const auth = authVP;
+const auth = authGuardioes;
 
 const LOGIN_PAGE = "./login.html";
-const COOPERATIVAS_PAGE = "./cooperativas.html";
+const COOPERATIVAS_PAGE = "./cooperativas.html"; // mantido apenas por compatibilidade
 const PUBLIC_DASHBOARD_DOC = "index";
 
 let charts = {};
@@ -158,11 +153,23 @@ function normalizeRole(data = {}){
 
 function isGovernancaUser(userData = {}){
   const role = normalizeRole(userData);
+  const status = lower(userData.status || "active");
 
-  return lower(userData.status) === "active" && (
+  const isActiveProfile =
+    status === "active" ||
+    status === "ativo" ||
+    userData.active === true ||
+    userData.ativo === true;
+
+  return isActiveProfile && (
     role === "governanca" ||
     role === "gestor" ||
-    userData.roles?.governanca === true
+    role === "superadmin" ||
+    role === "admin_master" ||
+    userData.roles?.governanca === true ||
+    userData.roles?.gestor === true ||
+    userData.roles?.superadmin === true ||
+    userData.roles?.admin_master === true
   );
 }
 
@@ -358,7 +365,7 @@ function getRejeito(coleta = {}){
   return total;
 }
 async function loadGuardioesSolicitacoes(){
-  return await loadCollectionSafeFromDb(
+  const diretas = await loadCollectionSafeFromDb(
     dbGuardioes,
     "solicitacoes_guardioes",
     {
@@ -366,6 +373,20 @@ async function loadGuardioesSolicitacoes(){
       name: "Guardiões Urbanos"
     }
   );
+
+  if (diretas.length) return diretas;
+
+  const subcolecoes = await Promise.all(
+    FIREBASE_SOURCES.map((source) =>
+      loadCollectionSafeFromDb(
+        dbGuardioes,
+        `cooperativas/${source.id}/solicitacoes`,
+        source
+      )
+    )
+  );
+
+  return subcolecoes.flat();
 }
 
 function filterGuardioes(items = []){
@@ -530,6 +551,23 @@ async function loadCollectionFromAllDbs(name) {
 }
 
 async function loadUserProfile(uid) {
+  try {
+    const snap = await getDoc(
+      doc(dbGuardioes, "users", uid)
+    );
+
+    if (snap.exists()) {
+      return {
+        id: snap.id,
+        sourceId: "guardioes",
+        sourceName: "Guardiões Urbanos",
+        ...snap.data()
+      };
+    }
+  } catch (error) {
+    console.warn("Erro ao buscar usuário no banco dos Guardiões:", error);
+  }
+
   for (const source of FIREBASE_SOURCES) {
     try {
       const snap = await getDoc(
@@ -846,7 +884,7 @@ function renderCharts({coletas,cooperativas,residuo,rejeito}){
   const eficiencia = Math.round((residuo / totalMaterial) * 100);
 
   renderChart("chartColetasMes",{
-    chart:{type:"area",height:330,toolbar:{show:false},fontFamily:"Archivo Condensed"},
+    chart:{type:"area",height:330,toolbar:{show:false},fontFamily:"Archivo"},
     series:[{name:"Coletas",data:monthly.map((i)=>i.total)}],
     xaxis:{categories:monthly.map((i)=>i.label)},
     stroke:{curve:"smooth",width:4},
@@ -858,7 +896,7 @@ function renderCharts({coletas,cooperativas,residuo,rejeito}){
   });
 
   renderChart("chartComposicao",{
-    chart:{type:"donut",height:330,fontFamily:"Archivo Condensed"},
+    chart:{type:"donut",height:330,fontFamily:"Archivo"},
     series:[Math.round(residuo),Math.round(rejeito)],
     labels:["Resíduo seco","Rejeito"],
     colors:["#81B92A","#EF6B22"],
@@ -868,7 +906,7 @@ function renderCharts({coletas,cooperativas,residuo,rejeito}){
   });
 
   renderChart("chartEficiencia",{
-    chart:{type:"radialBar",height:330,fontFamily:"Archivo Condensed"},
+    chart:{type:"radialBar",height:330,fontFamily:"Archivo"},
     series:[eficiencia],
     colors:["#53ACDE"],
     labels:["Eficiência"],
@@ -887,7 +925,7 @@ function renderCharts({coletas,cooperativas,residuo,rejeito}){
     .slice(0,8);
 
   renderChart("chartRankingCooperativas",{
-    chart:{type:"bar",height:350,toolbar:{show:false},fontFamily:"Archivo Condensed"},
+    chart:{type:"bar",height:350,toolbar:{show:false},fontFamily:"Archivo"},
     series:[{name:"Resíduo seco kg",data:ranking.map((i)=>Math.round(i.residuo))}],
     xaxis:{categories:ranking.map((i)=>i.name)},
     plotOptions:{bar:{horizontal:true,borderRadius:8}},
@@ -1285,7 +1323,7 @@ function renderAccessCharts(accessLogs = []) {
       type: "bar",
       height: 350,
       toolbar: { show: false },
-      fontFamily: "Archivo Condensed"
+      fontFamily: "Archivo"
     },
     series: [
       {
@@ -1319,7 +1357,7 @@ function renderAccessCharts(accessLogs = []) {
     chart: {
       type: "donut",
       height: 330,
-      fontFamily: "Archivo Condensed"
+      fontFamily: "Archivo"
     },
     series: [publicos, logados],
     labels: ["Público", "Logado"],
@@ -1369,14 +1407,7 @@ function renderAccessTable(accessLogs = []) {
 async function loadGovernanca(){
   const raw = await loadAllData();
 
-  const guardioes = await loadCollectionSafeFromDb(
-    dbGuardioes,
-    "solicitacoes_guardioes",
-    {
-      id: "guardioes",
-      name: "Guardiões Urbanos"
-    }
-  );
+  const guardioes = await loadGuardioesSolicitacoes();
 
   const cooperativas = buildCooperativasAtivas(raw);
   const totals = renderKPIs({...raw,cooperativas});
@@ -1400,14 +1431,14 @@ onAuthStateChanged(auth,async(user)=>{
     const profile = await loadUserProfile(user.uid);
 
     if(!profile || !isGovernancaUser(profile)){
-      window.location.href = COOPERATIVAS_PAGE;
+      window.location.href = LOGIN_PAGE;
       return;
     }
 
     renderLoggedUser(profile,user);
     await registerAccessLog({
-  db: dbVP,
-  auth: authVP,
+  db: dbGuardioes,
+  auth: auth,
   page: "governanca",
   pageType: "logada",
   territoryId: "governanca",
