@@ -1,4 +1,5 @@
 import { auth, db } from "./firebase-init-coadesc.js";
+
 import {
   onAuthStateChanged,
   signOut
@@ -11,10 +12,8 @@ import {
   query,
   onSnapshot,
   updateDoc,
-  orderBy,
   deleteDoc,
-  serverTimestamp,
-  getDocs
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================================================
@@ -41,31 +40,14 @@ function canonicalTerritoryId(value) {
 }
 
 const PAGE_TERRITORY = {
-  territoryId: canonicalTerritoryId(
-    bodyConfig.territoryId || "cooadesc"
-  ),
-
-  territoryLabel:
-    bodyConfig.territoryLabel ||
-    "Centro de Triagem COOADESC",
-
-  cooperativeName:
-    bodyConfig.cooperativeName ||
-    "COOADESC",
-
-  participantUrl:
-    bodyConfig.participantUrl ||
-    "cadastro-participantes-cooadesc.html",
-
-  participantsListUrl:
-    bodyConfig.participantsListUrl ||
-    "usuarios-cooadesc.html",
-
-  coletasUrl:
-    bodyConfig.coletasUrl ||
-    "cadastro-coletas-cooadesc.html"
+  territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
+  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Vila Pinto",
+  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto",
+  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
+  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
+  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html"
 };
- 
+
 /* =========================================================
    ELEMENTOS
 ========================================================= */
@@ -144,7 +126,6 @@ const STATE = {
   recentPageSize: 10,
   recentLimit: 10
 };
-
 
 /* =========================================================
    HELPERS
@@ -2030,117 +2011,6 @@ function openEditColetaModal(item) {
     }
   );
 }
-async function carregarSolicitacoesGuardioes(cooperativaId) {
-  const tbody = document.getElementById("guardioesCoopTableBody");
-  const indicador = document.getElementById("indicatorGuardioesSolicitacoes");
-
-  if (!tbody) return;
-
-  try {
-    const snap = await getDocs(
-      query(
-        collection(dbGuardioes, "cooperativas", cooperativaId, "solicitacoes"),
-        orderBy("createdAt", "desc")
-      )
-    );
-
-    if (indicador) {
-      indicador.textContent = snap.size;
-    }
-
-    if (snap.empty) {
-      tbody.innerHTML = `
-        <tr>
-          <td colspan="7">Nenhuma solicitação encontrada.</td>
-        </tr>
-      `;
-      return;
-    }
-
-    tbody.innerHTML = snap.docs.map((docItem) => {
-      const item = docItem.data();
-      const id = docItem.id;
-
-      const data =
-        item.createdAt?.toDate?.().toLocaleString("pt-BR") ||
-        "-";
-
-      const status = item.status || "solicitado";
-      const whatsappLimpo = String(item.whatsapp || "").replace(/\D/g, "");
-      const whatsappLink = whatsappLimpo
-        ? `https://wa.me/55${whatsappLimpo}`
-        : "#";
-
-      return `
-        <tr>
-          <td>${escapeHtml(data)}</td>
-          <td>${escapeHtml(item.nome || "-")}</td>
-          <td>
-            <a href="${whatsappLink}" target="_blank" rel="noopener noreferrer">
-              ${escapeHtml(item.whatsapp || "-")}
-            </a>
-          </td>
-          <td>${escapeHtml(item.endereco || "-")}</td>
-          <td>${escapeHtml(item.cep || "-")}</td>
-          <td>
-            <span class="status-pill ${status === "contatado" ? "" : "inactive"}">
-              ${escapeHtml(status)}
-            </span>
-          </td>
-          <td>
-            <button
-              type="button"
-              class="table-btn view"
-              data-contatar-guardiao="${escapeHtml(id)}"
-              data-whatsapp="${escapeHtml(whatsappLink)}"
-            >
-              Entrar em contato
-            </button>
-          </td>
-        </tr>
-      `;
-    }).join("");
-
-  } catch (error) {
-    console.error("Erro ao carregar solicitações dos Guardiões:", error);
-
-    if (indicador) indicador.textContent = "0";
-
-    tbody.innerHTML = `
-      <tr>
-        <td colspan="7">Erro ao carregar solicitações.</td>
-      </tr>
-    `;
-  }
-}
-async function marcarGuardiaoComoContatado(solicitacaoId) {
-  if (!solicitacaoId) return;
-
-  try {
-    await updateDoc(
-      doc(
-        dbGuardioes,
-        "cooperativas",
-        PAGE_TERRITORY.territoryId,
-        "solicitacoes",
-        solicitacaoId
-      ),
-      {
-        status: "contatado",
-        contactedAt: serverTimestamp(),
-        contactedBy: STATE.currentUser?.uid || null,
-        updatedAt: serverTimestamp()
-      }
-    );
-
-    await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
-
-  } catch (error) {
-    console.error("Erro ao atualizar solicitação:", error);
-    alert("Erro ao atualizar solicitação.");
-  }
-}
-
 
 async function toggleCancelColetaRecord(coletaId) {
 
@@ -2371,11 +2241,10 @@ function setupRecentColetasActions() {
       /* =====================================================
          CANCELAR / REATIVAR
       ===================================================== */
-
       const cancelButton =
-        event.target.closest(
-          "[data-cancel-coleta]"
-        );
+  event.target.closest(
+    "[data-cancel-coleta]"
+  );
 
       if (cancelButton) {
 
@@ -2388,7 +2257,6 @@ function setupRecentColetasActions() {
 
         return;
       }
-
       /* =====================================================
          EXCLUIR
       ===================================================== */
@@ -2403,43 +2271,7 @@ function setupRecentColetasActions() {
         const coletaId =
           deleteButton.dataset.deleteColeta;
 
-        deleteColetaRecord(
-          coletaId
-        );
-
-        return;
-      }
-
-      /* =====================================================
-         GUARDIÕES URBANOS
-      ===================================================== */
-
-      const contatoGuardiaoBtn =
-        event.target.closest(
-          "[data-contatar-guardiao]"
-        );
-
-      if (contatoGuardiaoBtn) {
-
-        const solicitacaoId =
-          contatoGuardiaoBtn.dataset.contatarGuardiao;
-
-        const whatsappLink =
-          contatoGuardiaoBtn.dataset.whatsapp;
-
-        marcarGuardiaoComoContatado(
-          solicitacaoId
-        );
-
-        if (
-          whatsappLink &&
-          whatsappLink !== "#"
-        ) {
-          window.open(
-            whatsappLink,
-            "_blank"
-          );
-        }
+        deleteColetaRecord(coletaId);
 
         return;
       }
@@ -2649,11 +2481,38 @@ function listenDashboardData() {
   });
 
 listenCollection("coletas", (items) => {
-  STATE.coletas = items
-    .filter(itemBelongsToTerritory);
+  const todasDoFirebase = items.map((item) => ({
+    id: item.id,
+    data: formatDateLabel(item),
+    codigo: getParticipantCode(item),
+    participante: getParticipantName(item),
+    fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+    status: getColetaStatusLabel(item),
+    territorio:
+      item.territoryId ||
+      item.territory ||
+      item.cooperativeId ||
+      item.payloadSnapshot?.territoryId ||
+      "-"
+  }));
+
+  console.table(todasDoFirebase);
+
+ STATE.coletas = items
+  .filter(itemBelongsToTerritory)
+
+  console.table(
+    STATE.coletas.map((item) => ({
+      id: item.id,
+      data: formatDateLabel(item),
+      codigo: getParticipantCode(item),
+      participante: getParticipantName(item),
+      fluxo: formatFluxoLabel(getTipoRecebimento(item)),
+      status: getColetaStatusLabel(item)
+    }))
+  );
 
   STATE.recentPage = 0;
-
   populateEntregaFilter(STATE.coletas);
 
   updateKpis();
@@ -2820,21 +2679,11 @@ function boot() {
       validateProfile(profile);
 
       STATE.profile = profile;
-      await registerAccessLog({
-  db,
-  auth,
-  page: "painel-cooperativa",
-  pageType: "logada",
-  territoryId: PAGE_TERRITORY.territoryId,
-  cooperativeName: PAGE_TERRITORY.cooperativeName,
-  userProfile: profile
-});
-  
+
       applyPermissionRules(profile);
       fillHeader(profile);
       applyRoleVisibility(profile);
       listenDashboardData();
-      await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
 
       setCoopSyncStatus("Indicadores carregados em tempo real.");
 
