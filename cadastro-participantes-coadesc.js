@@ -5,7 +5,8 @@ import {
   serverTimestamp,
   getDocs,
   query,
-  where
+  where,
+  runTransaction
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
@@ -289,6 +290,58 @@ function assertRuntimeConfig() {
    CÓDIGO SEQUENCIAL
 ========================= */
 
+function getCodeNumberFromValue(code, prefix) {
+  const text = String(code || "").trim();
+
+  if (!text.startsWith(`${prefix}-`)) return 0;
+
+  const numberPart = Number(text.split("-")[1]);
+
+  return Number.isFinite(numberPart) ? numberPart : 0;
+}
+
+async function getCurrentMaxCodeNumber(prefix) {
+  const territoryId = getCanonicalTerritoryId();
+
+  let maxNumber = 0;
+
+  const participantsSnap = await getDocs(
+    query(
+      collection(db, "participants"),
+      where("territoryId", "==", territoryId)
+    )
+  );
+
+  participantsSnap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+
+    maxNumber = Math.max(
+      maxNumber,
+      getCodeNumberFromValue(data.participantCode, prefix)
+    );
+  });
+
+  const approvalsSnap = await getDocs(
+    query(
+      collection(db, "approvalRequests"),
+      where("territoryId", "==", territoryId)
+    )
+  );
+
+  approvalsSnap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const snapshot = data.payloadSnapshot || {};
+
+    maxNumber = Math.max(
+      maxNumber,
+      getCodeNumberFromValue(data.participantCode, prefix),
+      getCodeNumberFromValue(snapshot.participantCode, prefix)
+    );
+  });
+
+  return maxNumber;
+}
+
 async function generateSequentialCode() {
   const territoryKey = getCodeTerritoryKey();
   const localTypeKey = getCodeLocalType();
@@ -296,35 +349,48 @@ async function generateSequentialCode() {
   const config = CODE_CONFIG[territoryKey]?.[localTypeKey];
 
   if (!config) {
-    throw new Error(`Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`);
+    throw new Error(
+      `Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`
+    );
   }
 
   const { prefix, start } = config;
 
-  const q = query(
-    collection(db, "participants"),
-    where("territoryId", "==", getCanonicalTerritoryId()),
-    where("codeLocalType", "==", localTypeKey)
-  );
+  const counterId = `${territoryKey}_${localTypeKey}`;
+  const counterRef = doc(db, "codeCounters", counterId);
 
-  const snapshot = await getDocs(q);
+  const maxExistingNumber = await getCurrentMaxCodeNumber(prefix);
 
-  let maxNumber = 0;
+  const nextNumber = await runTransaction(db, async (transaction) => {
+    const counterSnap = await transaction.get(counterRef);
 
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-    const code = String(data.participantCode || "").trim();
+    const currentCounter = counterSnap.exists()
+      ? Number(counterSnap.data()?.current || 0)
+      : 0;
 
-    if (!code.startsWith(`${prefix}-`)) return;
+    const baseNumber = Math.max(
+      currentCounter,
+      maxExistingNumber,
+      start - 1
+    );
 
-    const numberPart = Number(code.split("-")[1]);
+    const newNumber = baseNumber + 1;
 
-    if (Number.isFinite(numberPart) && numberPart > maxNumber) {
-      maxNumber = numberPart;
-    }
+    transaction.set(
+      counterRef,
+      {
+        territoryId: getCanonicalTerritoryId(),
+        territoryKey,
+        localTypeKey,
+        prefix,
+        current: newNumber,
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+
+    return newNumber;
   });
-
-  const nextNumber = Math.max(start, maxNumber + 1);
 
   return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
@@ -844,23 +910,28 @@ function buildApprovalRequestPayload(participantId, participantData) {
 }
 
 async function saveRegistration() {
-  if (!STATE.generatedCode || STATE.generatedCode === "Será gerado ao concluir") {
-    STATE.generatedCode = await generateSequentialCode();
+  STATE.generatedCode = await generateSequentialCode();
 
-    if (els.generatedCode) {
-      els.generatedCode.value = STATE.generatedCode;
-    }
+  if (els.generatedCode) {
+    els.generatedCode.value = STATE.generatedCode;
   }
 
   const participantPayload = buildParticipantPayload();
-  const participantRef = await addDoc(collection(db, "participants"), participantPayload);
+
+  const participantRef = await addDoc(
+    collection(db, "participants"),
+    participantPayload
+  );
 
   const approvalRequestPayload = buildApprovalRequestPayload(
     participantRef.id,
     participantPayload
   );
 
-  const approvalRef = await addDoc(collection(db, "approvalRequests"), approvalRequestPayload);
+  const approvalRef = await addDoc(
+    collection(db, "approvalRequests"),
+    approvalRequestPayload
+  );
 
   return {
     participantId: participantRef.id,
