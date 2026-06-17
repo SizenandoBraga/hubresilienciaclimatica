@@ -569,18 +569,25 @@ async function fetchCEP(cep) {
 }
 
 async function geocodeAddress() {
+  const cep = onlyDigits(els.cep?.value || "");
   const street = String(els.street?.value || "").trim();
   const number = String(els.number?.value || "").trim();
   const neighborhood = String(els.neighborhood?.value || "").trim();
   const city = String(els.city?.value || "").trim();
-  const state = String(els.state?.value || "").trim();
-  const cep = onlyDigits(els.cep?.value);
+  const state = String(els.state?.value || "").trim().toUpperCase();
 
-  if (!street || !number || !city || !state) {
+  if (!cep || cep.length !== 8 || !number) {
     return null;
   }
 
-  const queryText = `${street}, ${number}, ${neighborhood}, ${city}, ${state}, Brasil, ${cep}`;
+  const queryText = [
+    street && number ? `${street}, ${number}` : "",
+    neighborhood,
+    city,
+    state,
+    `CEP ${cep}`,
+    "Brasil"
+  ].filter(Boolean).join(", ");
 
   const url = new URL(CONFIG.nominatimBase);
   url.searchParams.set("format", "jsonv2");
@@ -595,7 +602,7 @@ async function geocodeAddress() {
   });
 
   if (!response.ok) {
-    throw new Error("Falha ao geocodificar endereço.");
+    throw new Error("Falha ao buscar coordenadas pelo CEP e número.");
   }
 
   const results = await response.json();
@@ -634,11 +641,12 @@ async function handleBuscarCep() {
 }
 
 async function tryGeocodeWhenReady(force = false) {
+  const cep = onlyDigits(els.cep?.value || "");
+  const number = String(els.number?.value || "").trim();
+
   const requiredReady =
-    String(els.street?.value || "").trim() &&
-    String(els.number?.value || "").trim() &&
-    String(els.city?.value || "").trim() &&
-    String(els.state?.value || "").trim();
+    cep.length === 8 &&
+    number;
 
   if (!requiredReady) {
     if (force) resetGeo();
