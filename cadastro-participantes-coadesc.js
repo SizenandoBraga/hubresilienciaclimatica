@@ -20,7 +20,7 @@ const CONFIG = {
   territoryId: String(BODY.dataset.territoryId || "").trim(),
   territoryLabel: String(BODY.dataset.territoryLabel || "").trim(),
   territorySlug: String(BODY.dataset.territorySlug || "").trim(),
-  redirectAfterSuccess: String(BODY.dataset.redirectUrl || "index.html").trim(),
+  redirectAfterSuccess: String(BODY.dataset.redirectUrl || "cooperativa-cooadesc.html").trim(),
   viacepBase: "https://viacep.com.br/ws",
   nominatimBase: "https://nominatim.openstreetmap.org/search"
 };
