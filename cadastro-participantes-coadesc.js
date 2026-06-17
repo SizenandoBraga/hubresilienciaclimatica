@@ -292,13 +292,78 @@ function assertRuntimeConfig() {
 function getCodeNumberFromValue(code, prefix) {
   const text = String(code || "").trim();
 
-  if (!text.startsWith(`${prefix}-`)) return 0;
+  if (!text.startsWith(`${prefix}-`)) return null;
 
   const numberPart = Number(text.split("-")[1]);
 
-  return Number.isFinite(numberPart) ? numberPart : 0;
+  return Number.isFinite(numberPart) ? numberPart : null;
 }
 
+function isApprovedParticipant(data = {}) {
+  const status = String(data.status || "").toLowerCase();
+  const approvalStatus = String(data.approvalStatus || "").toLowerCase();
+
+  return (
+    status === "aprovado" ||
+    status === "approved" ||
+    status === "ativo" ||
+    status === "active" ||
+    approvalStatus === "approved" ||
+    approvalStatus === "aprovado"
+  );
+}
+
+async function getUsedCodeNumbers(prefix) {
+  const territoryId = getCanonicalTerritoryId();
+  const usedNumbers = new Set();
+
+  const participantsSnap = await getDocs(
+    query(
+      collection(db, "participants"),
+      where("territoryId", "==", territoryId)
+    )
+  );
+
+  participantsSnap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+
+    if (!isApprovedParticipant(data)) return;
+
+    const number = getCodeNumberFromValue(
+      data.participantCode,
+      prefix
+    );
+
+    if (number) usedNumbers.add(number);
+  });
+
+  return usedNumbers;
+}
+
+async function generateSequentialCode() {
+  const territoryKey = getCodeTerritoryKey();
+  const localTypeKey = getCodeLocalType();
+
+  const config = CODE_CONFIG[territoryKey]?.[localTypeKey];
+
+  if (!config) {
+    throw new Error(
+      `Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`
+    );
+  }
+
+  const { prefix, start } = config;
+
+  const usedNumbers = await getUsedCodeNumbers(prefix);
+
+  let nextNumber = start;
+
+  while (usedNumbers.has(nextNumber)) {
+    nextNumber++;
+  }
+
+  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
+}
 async function getCurrentMaxCodeNumber(prefix) {
   const territoryId = getCanonicalTerritoryId();
 
