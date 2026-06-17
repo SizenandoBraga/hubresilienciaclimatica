@@ -99,6 +99,7 @@ const els = {
   cep: $("cep"),
   btnBuscarCep: $("btnBuscarCep"),
   number: $("number"),
+  complement: $("complement"),
   street: $("street"),
   neighborhood: $("neighborhood"),
   city: $("city"),
@@ -684,6 +685,7 @@ function buildAddressLabel() {
   const cepDigits = onlyDigits(els.cep?.value || "");
   const street = String(els.street?.value || "").trim();
   const number = String(els.number?.value || "").trim();
+  const complement = String(els.complement?.value || "").trim();
   const neighborhood = String(els.neighborhood?.value || "").trim();
   const city = String(els.city?.value || "").trim();
   const state = String(els.state?.value || "").trim().toUpperCase();
@@ -691,6 +693,7 @@ function buildAddressLabel() {
 
   const enderecoCompleto = [
     street && number ? `${street}, ${number}` : street || number,
+    complement,
     neighborhood,
     city || state ? `${city}${city && state ? ", " : ""}${state}` : "",
     cepDigits ? `CEP ${formatCEP(cepDigits)}` : "",
@@ -712,6 +715,7 @@ function buildParticipantPayload() {
 
   const street = String(els.street?.value || "").trim();
   const number = String(els.number?.value || "").trim();
+  const complement = String(els.complement?.value || "").trim();
   const neighborhood = String(els.neighborhood?.value || "").trim();
   const city = String(els.city?.value || "").trim();
   const state = String(els.state?.value || "").trim().toUpperCase();
@@ -743,6 +747,8 @@ function buildParticipantPayload() {
     rua: street || null,
     street: street || null,
     numero: number || null,
+    complemento: complement || null,
+    complement: complement || null,
     neighborhood: neighborhood || null,
     bairro: neighborhood || null,
     city: city || null,
@@ -829,6 +835,18 @@ function buildApprovalRequestPayload(participantId, participantData) {
       territoryId,
       territoryLabel,
       enderecoCompleto: participantData.enderecoCompleto,
+      cep: participantData.cep || null,
+      rua: participantData.rua || null,
+      street: participantData.street || null,
+      numero: participantData.numero || null,
+      complemento: participantData.complemento || null,
+      complement: participantData.complement || null,
+      bairro: participantData.bairro || null,
+      neighborhood: participantData.neighborhood || null,
+      cidade: participantData.cidade || null,
+      city: participantData.city || null,
+      uf: participantData.uf || null,
+      state: participantData.state || null,
       referencePoint: participantData.referencePoint,
       lat: participantData.lat ?? null,
       lng: participantData.lng ?? null,
