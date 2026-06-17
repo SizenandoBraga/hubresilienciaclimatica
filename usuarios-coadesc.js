@@ -57,8 +57,8 @@ const ROUTES = {
     },
     base: {
       label: "COOADESC",
-      lat: -30.003,
-      lng: -51.206
+      lat: -29.978149536151548, 
+      lng: -51.19897147117521
     }
   },
 
