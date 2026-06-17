@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init.js";
+import { auth, db } from "./firebase-init-vp.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   collection,
@@ -2704,7 +2704,7 @@ function enableSimpleManualMapClick() {
 function bindAdvancedManualRouteEvents() {
   syncManualRouteElements();
 
-  els.btnAddManualAddress?.addEventListener("click", addManualAddressPoint);
+  els.btnAddManualAddress?.addEventListener("click", adicionarPontoPorCodigoOuEndereco);
   els.btnBuildOptimizedManualRoute?.addEventListener("click", buildOptimizedManualRoute);
   els.btnSaveManualRoute?.addEventListener("click", saveManualRouteToFirebase);
   els.btnClearManualRoute?.addEventListener("click", clearManualRoute);
@@ -3566,3 +3566,115 @@ onAuthStateChanged(auth, async (user) => {
     alert("Não foi possível carregar a página de gestão de usuários.");
   }
 });
+
+/* ==========================================================
+   UTILITÁRIOS DE BUSCA
+========================================================== */
+function normalizarBuscaEndereco(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizarCep(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function enderecoPesquisa(user) {
+  const raw = user.raw || {};
+
+  return normalizarBuscaEndereco([
+    user.address,
+    user.enderecoCompleto,
+    raw.enderecoCompleto,
+    raw.address?.addressLine,
+    user.rua,
+    user.street,
+    raw.rua,
+    raw.street,
+    user.numero,
+    raw.numero,
+    user.bairro,
+    user.neighborhood,
+    raw.bairro,
+    raw.neighborhood,
+    user.cidade,
+    user.city,
+    raw.cidade,
+    raw.city,
+    user.cep,
+    raw.cep,
+    user.uf,
+    user.state,
+    raw.uf,
+    raw.state
+  ].join(" "));
+}
+
+async function adicionarPontoPorCodigoOuEndereco() {
+  const termo = String(els.manualRouteAddress?.value || "").trim();
+
+  if (!termo) {
+    alert("Digite o código do participante, rua, bairro, cidade ou CEP.");
+    return;
+  }
+
+  const termoNormalizado = normalizarBuscaEndereco(termo);
+  const cepPesquisado = normalizarCep(termo);
+
+  const participante = STATE.users.find((user) => {
+    const raw = user.raw || {};
+
+    const codigo = String(
+      user.code ||
+      user.participantCode ||
+      raw.participantCode ||
+      ""
+    ).trim().toLowerCase();
+
+    const endereco = enderecoPesquisa(user);
+
+    const cepUsuario = normalizarCep(
+      user.cep ||
+      raw.cep ||
+      user.address ||
+      raw.enderecoCompleto ||
+      ""
+    );
+
+    return (
+      codigo === termoNormalizado ||
+      endereco.includes(termoNormalizado) ||
+      (cepPesquisado && cepUsuario.includes(cepPesquisado))
+    );
+  });
+
+  if (participante) {
+    if (isValidCoord(participante.lat, participante.lng)) {
+      addManualPoint(
+        participante.lat,
+        participante.lng,
+        `${participante.code} • ${participante.name} • ${participante.address}`
+      );
+
+      els.manualRouteAddress.value = "";
+      return;
+    }
+
+    if (participante.address) {
+      els.manualRouteAddress.value = participante.address;
+      await addManualAddressPoint();
+      return;
+    }
+
+    alert("Participante encontrado, mas sem endereço cadastrado.");
+    return;
+  }
+
+  await addManualAddressPoint();
+}
