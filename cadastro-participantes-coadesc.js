@@ -432,7 +432,10 @@ async function generateSequentialCode() {
   const { prefix, start } = config;
 
   const usedNumbers = await getUsedCodeNumbers(prefix);
-
+console.log(
+  "Números utilizados:",
+  [...usedNumbers].sort((a,b)=>a-b)
+);
   let nextNumber = start;
 
   while (usedNumbers.has(nextNumber)) {
