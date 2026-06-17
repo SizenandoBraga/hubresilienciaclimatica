@@ -341,15 +341,7 @@ async function getCurrentMaxCodeNumber(prefix) {
   return maxNumber;
 }
 
-function getCodeNumberFromValue(code, prefix) {
-  const text = String(code || "").trim();
 
-  if (!text.startsWith(`${prefix}-`)) return null;
-
-  const numberPart = Number(text.split("-")[1]);
-
-  return Number.isFinite(numberPart) ? numberPart : null;
-}
 
 function isCodeStillInUse(data = {}) {
   const status = String(data.status || "").toLowerCase();
@@ -437,10 +429,7 @@ console.log(
   [...usedNumbers].sort((a,b)=>a-b)
 );
 
-alert(
-  "Números utilizados: " +
-  [...usedNumbers].sort((a,b)=>a-b).join(", ")
-);
+
   let nextNumber = start;
 
   while (usedNumbers.has(nextNumber)) {
