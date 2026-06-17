@@ -436,6 +436,11 @@ console.log(
   "Números utilizados:",
   [...usedNumbers].sort((a,b)=>a-b)
 );
+
+alert(
+  "Números utilizados: " +
+  [...usedNumbers].sort((a,b)=>a-b).join(", ")
+);
   let nextNumber = start;
 
   while (usedNumbers.has(nextNumber)) {
