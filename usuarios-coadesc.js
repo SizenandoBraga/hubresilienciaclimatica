@@ -2700,6 +2700,146 @@ function enableSimpleManualMapClick() {
     addManualPoint(lat, lng, "Ponto criado no mapa");
   });
 }
+function normalizarBuscaMapa(value) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[.,]/g, " ")
+    .replace(/-/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function normalizarCep(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function montarTextoBuscaParticipante(user = {}) {
+  const raw = user.raw || {};
+
+  return normalizarBuscaMapa([
+    user.code,
+    raw.participantCode,
+
+    user.name,
+    raw.name,
+    raw.fullName,
+
+    user.phone,
+    raw.phone,
+
+    user.address,
+    raw.address,
+    raw.enderecoCompleto,
+
+    raw.rua,
+    raw.street,
+
+    raw.numero,
+
+    raw.complemento,
+    raw.complement,
+
+    raw.bairro,
+    raw.neighborhood,
+
+    raw.cidade,
+    raw.city,
+
+    raw.cep,
+
+    raw.uf,
+    raw.state
+  ].join(" "));
+}
+
+function buscarParticipantePorCodigoOuEndereco(termo) {
+  const termoNormalizado = normalizarBuscaMapa(termo);
+  const cepPesquisado = normalizarCep(termo);
+
+  return STATE.users.find((user) => {
+    const raw = user.raw || {};
+
+    const codigo = String(
+      user.code ||
+      user.participantCode ||
+      raw.participantCode ||
+      ""
+    )
+      .trim()
+      .toLowerCase();
+
+    const codigoNormalizado =
+      normalizarBuscaMapa(codigo);
+
+    const cepUsuario = normalizarCep(
+      user.cep ||
+      raw.cep ||
+      user.address ||
+      raw.enderecoCompleto ||
+      ""
+    );
+
+    const textoBusca =
+      montarTextoBuscaParticipante(user);
+
+    return (
+      codigoNormalizado === termoNormalizado ||
+      textoBusca.includes(termoNormalizado) ||
+      (
+        cepPesquisado &&
+        cepUsuario.includes(cepPesquisado)
+      )
+    );
+  });
+}
+
+async function adicionarPontoPorCodigoOuEndereco() {
+  const termo = String(
+    els.manualRouteAddress?.value || ""
+  ).trim();
+
+  if (!termo) {
+    alert("Digite o código do participante, CEP ou endereço.");
+    return;
+  }
+
+  const participante =
+    buscarParticipantePorCodigoOuEndereco(termo);
+
+  if (participante) {
+    const label = [
+      participante.code,
+      participante.name,
+      participante.address
+    ].filter(Boolean).join(" • ");
+
+    if (isValidCoord(participante.lat, participante.lng)) {
+      addManualPoint(
+        participante.lat,
+        participante.lng,
+        label
+      );
+
+      els.manualRouteAddress.value = "";
+      showToast("Participante adicionado ao mapa.");
+      return;
+    }
+
+    if (participante.address) {
+      els.manualRouteAddress.value = participante.address;
+      await addManualAddressPoint();
+      showToast("Endereço do participante enviado para o mapa.");
+      return;
+    }
+
+    alert("Participante encontrado, mas sem endereço cadastrado.");
+    return;
+  }
+
+  await addManualAddressPoint();
+}
 
 function bindAdvancedManualRouteEvents() {
   syncManualRouteElements();

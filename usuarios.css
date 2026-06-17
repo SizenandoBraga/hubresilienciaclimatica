@@ -1649,4 +1649,93 @@ th {
   .list-pagination .btn {
     width: 100%;
   }
+}.improved-map-search {
+  background: linear-gradient(135deg, #ffffff 0%, #f7fbef 100%);
+  border: 1px solid rgba(129, 185, 42, .28);
+  border-radius: 22px;
+  padding: 22px;
+  box-shadow: 0 18px 45px rgba(31, 30, 29, .08);
+}
+
+.improved-map-search .manual-route-head h3 {
+  margin: 6px 0 8px;
+  font-size: 1.35rem;
+}
+
+.improved-map-search .manual-route-head p {
+  margin: 0 0 18px;
+  color: #5f666a;
+  line-height: 1.45;
+}
+
+.manual-route-search-box {
+  background: #ffffff;
+  border: 1px solid rgba(60, 58, 57, .12);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.manual-route-search-box label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 800;
+  color: #1f1e1d;
+}
+
+.manual-route-search-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+}
+
+.manual-route-search-row input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(60, 58, 57, .16);
+  padding: 0 14px;
+  font-size: 1rem;
+}
+
+.manual-route-search-box small {
+  display: block;
+  margin-top: 10px;
+  color: #69716b;
+  line-height: 1.35;
+}
+
+.manual-route-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.manual-route-tip {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 14px;
+  background: rgba(129, 185, 42, .13);
+  color: #354128;
+  font-weight: 700;
+}
+
+.manual-points-list {
+  margin-top: 14px;
+}
+
+@media (max-width: 720px) {
+  .manual-route-search-row {
+    grid-template-columns: 1fr;
+  }
+
+  .manual-route-actions {
+    flex-direction: column;
+  }
+
+  .manual-route-actions .btn,
+  .manual-route-search-row .btn {
+    width: 100%;
+  }
 }

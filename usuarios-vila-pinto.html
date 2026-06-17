@@ -50,11 +50,11 @@
 -->
 
 <body
- data-territory-id="vila-pinto"
+data-territory-id="vila-pinto"
   data-territory-label="Centro de Triagem Vila Pinto"
   data-coop-home="/cooperativa-vila-pinto.html"
   data-coletas-url="/cadastro-coletas-vila-pinto.html"
-  data-user-coop-url="/user-cooperativa.html"
+  data-user-coop-url="/usuario-cooperativa-vila-pinto.html"
 >
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
@@ -260,29 +260,40 @@
             </div>
 
            
-<div class="manual-route-card">
+<div class="manual-route-card improved-map-search">
   <div class="manual-route-head">
     <div>
-      <span class="section-kicker">Rota manual</span>
-      <h3>Adicionar endereços à rota</h3>
-      <p>Digite um endereço ou clique diretamente no mapa para criar pontos manuais.</p>
+      <span class="section-kicker">Busca e rota manual</span>
+      <h3>Adicionar participante ou endereço ao mapa</h3>
+      <p>
+        Busque pelo <strong>código do participante</strong>, CEP, rua, bairro, cidade
+        ou endereço completo. Também é possível clicar diretamente no mapa.
+      </p>
     </div>
   </div>
 
-  <div class="manual-route-grid">
-    <div class="field">
-      <label for="manualRouteAddress">Endereço</label>
+  <div class="manual-route-search-box">
+    <label for="manualRouteAddress">Código, CEP ou endereço</label>
+
+    <div class="manual-route-search-row">
       <input
         id="manualRouteAddress"
         type="text"
-        placeholder="Rua, número, bairro, cidade"
+        placeholder="Ex.: COD-0012, 90250-596, Rua Seiscentos e Noventa e Oito..."
       />
+
+      <button class="btn btn-primary" id="btnAddManualAddress" type="button">
+        Adicionar ao mapa
+      </button>
     </div>
 
-    <button class="btn btn-primary" id="btnAddManualAddress" type="button">
-      Adicionar ponto
-    </button>
+    <small>
+      Exemplos: <strong>COD-0012</strong>, <strong>90250-596</strong>,
+      <strong>Farrapos</strong> ou <strong>Rua + número</strong>.
+    </small>
+  </div>
 
+  <div class="manual-route-actions">
     <button class="btn btn-dark" id="btnBuildOptimizedManualRoute" type="button">
       Otimizar rota
     </button>
@@ -292,12 +303,12 @@
     </button>
 
     <button class="btn btn-ghost" id="btnClearManualRoute" type="button">
-      Limpar
+      Limpar pontos
     </button>
   </div>
 
   <div class="manual-route-tip">
-    No computador ou celular, clique no mapa para adicionar pontos manuais.
+    💡 Dica: digite o código do participante para puxar automaticamente o endereço salvo no cadastro.
   </div>
 
   <div class="manual-points-list" id="manualPointsList">
