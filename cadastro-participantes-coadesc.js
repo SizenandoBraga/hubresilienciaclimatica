@@ -254,7 +254,7 @@ function isValidCPF(cpf = "") {
 function getCanonicalTerritoryId() {
   return CONFIG.territoryId;
 }
-CÓDIGO
+
 function getCanonicalTerritoryLabel() {
   return CONFIG.territoryLabel;
 }
