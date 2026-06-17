@@ -5,9 +5,7 @@ import {
   serverTimestamp,
   getDocs,
   query,
-  where,
-  doc,
-  runTransaction
+  where
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
@@ -343,6 +341,82 @@ async function getCurrentMaxCodeNumber(prefix) {
   return maxNumber;
 }
 
+function getCodeNumberFromValue(code, prefix) {
+  const text = String(code || "").trim();
+
+  if (!text.startsWith(`${prefix}-`)) return null;
+
+  const numberPart = Number(text.split("-")[1]);
+
+  return Number.isFinite(numberPart) ? numberPart : null;
+}
+
+function isCodeStillInUse(data = {}) {
+  const status = String(data.status || "").toLowerCase();
+  const approvalStatus = String(data.approvalStatus || "").toLowerCase();
+  const decision = String(data.decision || "").toLowerCase();
+
+  return ![
+    "rejected",
+    "rejeitado",
+    "inativo",
+    "inactive",
+    "cancelado"
+  ].includes(status)
+  && ![
+    "rejected",
+    "rejeitado"
+  ].includes(approvalStatus)
+  && decision !== "rejected";
+}
+
+async function getUsedCodeNumbers(prefix) {
+  const territoryId = getCanonicalTerritoryId();
+  const usedNumbers = new Set();
+
+  const participantsSnap = await getDocs(
+    query(
+      collection(db, "participants"),
+      where("territoryId", "==", territoryId)
+    )
+  );
+
+  participantsSnap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+
+    if (!isCodeStillInUse(data)) return;
+
+    const number = getCodeNumberFromValue(
+      data.participantCode,
+      prefix
+    );
+
+    if (number) usedNumbers.add(number);
+  });
+
+  const approvalsSnap = await getDocs(
+    query(
+      collection(db, "approvalRequests"),
+      where("territoryId", "==", territoryId)
+    )
+  );
+
+  approvalsSnap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+    const snapshot = data.payloadSnapshot || {};
+
+    if (!isCodeStillInUse(data)) return;
+
+    const number =
+      getCodeNumberFromValue(data.participantCode, prefix) ||
+      getCodeNumberFromValue(snapshot.participantCode, prefix);
+
+    if (number) usedNumbers.add(number);
+  });
+
+  return usedNumbers;
+}
+
 async function generateSequentialCode() {
   const territoryKey = getCodeTerritoryKey();
   const localTypeKey = getCodeLocalType();
@@ -357,41 +431,13 @@ async function generateSequentialCode() {
 
   const { prefix, start } = config;
 
-  const counterId = `${territoryKey}_${localTypeKey}`;
-  const counterRef = doc(db, "codeCounters", counterId);
+  const usedNumbers = await getUsedCodeNumbers(prefix);
 
-  const maxExistingNumber = await getCurrentMaxCodeNumber(prefix);
+  let nextNumber = start;
 
-  const nextNumber = await runTransaction(db, async (transaction) => {
-    const counterSnap = await transaction.get(counterRef);
-
-    const currentCounter = counterSnap.exists()
-      ? Number(counterSnap.data()?.current || 0)
-      : 0;
-
-    const baseNumber = Math.max(
-      currentCounter,
-      maxExistingNumber,
-      start - 1
-    );
-
-    const newNumber = baseNumber + 1;
-
-    transaction.set(
-      counterRef,
-      {
-        territoryId: getCanonicalTerritoryId(),
-        territoryKey,
-        localTypeKey,
-        prefix,
-        current: newNumber,
-        updatedAt: serverTimestamp()
-      },
-      { merge: true }
-    );
-
-    return newNumber;
-  });
+  while (usedNumbers.has(nextNumber)) {
+    nextNumber++;
+  }
 
   return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
