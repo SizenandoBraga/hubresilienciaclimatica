@@ -867,6 +867,7 @@ function ensureTableHeaderForLabels() {
 
   headRow.innerHTML = `
     <th>Participante</th>
+    <th>Criado em</th>
     <th>Status</th>
     <th>Operação</th>
     <th>Rota</th>
@@ -1459,6 +1460,11 @@ function mapParticipantDoc(docSnap) {
     phone: data.phone || "",
     email: data.email || "",
     cpf: data.cpf || "",
+createdAt:
+  data.createdAt?.toDate?.() ||
+  data.createdAt ||
+  data.createdAtISO ||
+  null,
     territoryId: canonicalTerritoryId(data.territoryId),
     territoryLabel: data.territoryLabel || getTerritoryLabelById(data.territoryId),
     status: normalizeStatus(data.status || data.approvalStatus),
@@ -1476,6 +1482,32 @@ function mapParticipantDoc(docSnap) {
     raw: data
   };
 }
+function formatCreatedAt(value) {
+  if (!value) return "-";
+
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString(
+    "pt-BR",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  );
+}
+
+ 
+
 
 function mapApprovalRequestDoc(docSnap) {
   const data = docSnap.data() || {};
@@ -1724,6 +1756,7 @@ function renderApprovedList() {
         <div class="user-main">
           <strong>${safeText(user.name)}</strong>
           <span>Código: ${safeText(user.code)}</span>
+          <span>Criado em: ${formatCreatedAt(user.createdAt)}</span>
           <span>Telefone: ${safeText(user.phone)}</span>
           <span>${safeText(user.address)}</span>
         </div>
@@ -1842,26 +1875,40 @@ function renderTable() {
 
   const allUsers = getTableFilteredUsers();
   const totalPages = Math.ceil(allUsers.length / STATE.pageSize);
-const start = STATE.tablePage * STATE.pageSize;
-const end = start + STATE.pageSize;
-const visibleUsers = allUsers.slice(start, end);
+
+  const start = STATE.tablePage * STATE.pageSize;
+  const end = start + STATE.pageSize;
+  const visibleUsers = allUsers.slice(start, end);
 
   if (!allUsers.length) {
-    els.usersTableBody.innerHTML = `<tr><td colspan="6">Nenhum participante encontrado.</td></tr>`;
+    els.usersTableBody.innerHTML = `
+      <tr>
+        <td colspan="7">Nenhum participante encontrado.</td>
+      </tr>
+    `;
     return;
   }
 
- els.usersTableBody.innerHTML = visibleUsers.map((user) => `
+  els.usersTableBody.innerHTML = visibleUsers.map((user) => `
     <tr>
       <td>
         <strong>${safeText(user.name)}</strong><br>
         <small>${safeText(user.code)}</small><br>
         <small>${safeText(user.phone)}</small>
       </td>
-      <td><span class="${badgeClass(user.status)}">${safeText(user.status)}</span></td>
+
+      <td>${formatCreatedAt(user.createdAt)}</td>
+
+      <td>
+        <span class="${badgeClass(user.status)}">
+          ${safeText(user.status)}
+        </span>
+      </td>
+
       <td>${user.inOperation === "sim" ? "Em operação" : "Fora da operação"}</td>
       <td>${routeShiftLabel(user.routeShift || user.schedule)}</td>
       <td>${safeText(user.address)}</td>
+
       <td>
         <div class="table-actions">
           <button class="btn btn-dark" data-action="print-label" data-id="${user.id}" type="button">Etiqueta</button>
@@ -1873,29 +1920,30 @@ const visibleUsers = allUsers.slice(start, end);
       </td>
     </tr>
   `).join("");
+
   const tableWrap = els.usersTableBody.closest(".table-wrap");
-let pagination = document.getElementById("tablePagination");
+  let pagination = document.getElementById("tablePagination");
 
-if (!pagination && tableWrap) {
-  pagination = document.createElement("div");
-  pagination.id = "tablePagination";
-  pagination.className = "list-pagination";
-  tableWrap.appendChild(pagination);
-}
+  if (!pagination && tableWrap) {
+    pagination = document.createElement("div");
+    pagination.id = "tablePagination";
+    pagination.className = "list-pagination";
+    tableWrap.appendChild(pagination);
+  }
 
-if (pagination) {
-  pagination.innerHTML = `
-    <button class="btn btn-ghost" data-action="prev-table-page" type="button" ${STATE.tablePage === 0 ? "disabled" : ""}>
-      Anteriores
-    </button>
+  if (pagination) {
+    pagination.innerHTML = `
+      <button class="btn btn-ghost" data-action="prev-table-page" type="button" ${STATE.tablePage === 0 ? "disabled" : ""}>
+        Anteriores
+      </button>
 
-    <span>Página ${STATE.tablePage + 1} de ${totalPages || 1}</span>
+      <span>Página ${STATE.tablePage + 1} de ${totalPages || 1}</span>
 
-    <button class="btn btn-primary" data-action="next-table-page" type="button" ${STATE.tablePage >= totalPages - 1 ? "disabled" : ""}>
-      Próximos
-    </button>
-  `;
-}
+      <button class="btn btn-primary" data-action="next-table-page" type="button" ${STATE.tablePage >= totalPages - 1 ? "disabled" : ""}>
+        Próximos
+      </button>
+    `;
+  }
 }
 
 function formatDateFileName() {
@@ -2096,6 +2144,137 @@ function clearMap() {
     map.removeLayer(baseMarker);
     baseMarker = null;
   }
+}
+function limparCep(value) {
+  return String(value || "").replace(/\D/g, "");
+}
+
+function montarEnderecoParaGeocode(address) {
+  const texto = String(address || "").trim();
+
+  if (!texto) return "";
+
+  if (texto.toLowerCase().includes("brasil")) {
+    return texto;
+  }
+
+  return `${texto}, Porto Alegre, RS, Brasil`;
+}
+
+async function geocodeEnderecoNominatim(address) {
+  const addressQuery = montarEnderecoParaGeocode(address);
+
+  if (!addressQuery) return null;
+
+  const url = new URL("https://nominatim.openstreetmap.org/search");
+
+  url.searchParams.set("format", "jsonv2");
+  url.searchParams.set("limit", "1");
+  url.searchParams.set("countrycodes", "br");
+  url.searchParams.set("q", addressQuery);
+
+  const response = await fetch(url.toString(), {
+    headers: {
+      Accept: "application/json"
+    }
+  });
+
+  if (!response.ok) return null;
+
+  const results = await response.json();
+
+  if (!Array.isArray(results) || !results.length) {
+    return null;
+  }
+
+  const result = results[0];
+
+  return {
+    lat: Number(result.lat),
+    lng: Number(result.lon),
+    label: result.display_name || addressQuery
+  };
+}
+
+async function buscarCoordenadasPorParticipante(user = {}) {
+  const raw = user.raw || {};
+
+  const cep = limparCep(
+    raw.cep ||
+    user.cep ||
+    ""
+  );
+
+  const rua =
+    raw.rua ||
+    raw.street ||
+    user.rua ||
+    user.street ||
+    "";
+
+  const numero =
+    raw.numero ||
+    user.numero ||
+    "";
+
+  const bairro =
+    raw.bairro ||
+    raw.neighborhood ||
+    user.bairro ||
+    user.neighborhood ||
+    "";
+
+  const cidade =
+    raw.cidade ||
+    raw.city ||
+    user.cidade ||
+    user.city ||
+    "Porto Alegre";
+
+  const uf =
+    raw.uf ||
+    raw.state ||
+    user.uf ||
+    user.state ||
+    "RS";
+
+  const tentativas = [
+    [
+      rua && numero ? `${rua}, ${numero}` : rua,
+      bairro,
+      cidade,
+      uf,
+      cep ? `CEP ${cep}` : "",
+      "Brasil"
+    ].filter(Boolean).join(", "),
+
+    [
+      rua && numero ? `${rua}, ${numero}` : rua,
+      cidade,
+      uf,
+      "Brasil"
+    ].filter(Boolean).join(", "),
+
+    [
+      cep ? `CEP ${cep}` : "",
+      cidade,
+      uf,
+      "Brasil"
+    ].filter(Boolean).join(", "),
+
+    user.address,
+    raw.enderecoCompleto
+  ].filter(Boolean);
+
+  for (const endereco of tentativas) {
+    const geo = await geocodeEnderecoNominatim(endereco);
+
+    if (geo && isValidCoord(geo.lat, geo.lng)) {
+      return geo;
+    }
+  }
+
+  return null;
 }
 
 function getMapUsers() {
@@ -2807,17 +2986,19 @@ async function adicionarPontoPorCodigoOuEndereco() {
     buscarParticipantePorCodigoOuEndereco(termo);
 
   if (participante) {
-    const label = [
+    const labelBase = [
       participante.code,
-      participante.name,
-      participante.address
+      participante.name
     ].filter(Boolean).join(" • ");
 
     if (isValidCoord(participante.lat, participante.lng)) {
       addManualPoint(
         participante.lat,
         participante.lng,
-        label
+        [
+          labelBase,
+          participante.address
+        ].filter(Boolean).join(" • ")
       );
 
       els.manualRouteAddress.value = "";
@@ -2825,14 +3006,27 @@ async function adicionarPontoPorCodigoOuEndereco() {
       return;
     }
 
-    if (participante.address) {
-      els.manualRouteAddress.value = participante.address;
-      await addManualAddressPoint();
-      showToast("Endereço do participante enviado para o mapa.");
+    const geo =
+      await buscarCoordenadasPorParticipante(participante);
+
+    if (geo && isValidCoord(geo.lat, geo.lng)) {
+      addManualPoint(
+        geo.lat,
+        geo.lng,
+        [
+          labelBase,
+          geo.label
+        ].filter(Boolean).join(" • ")
+      );
+
+      els.manualRouteAddress.value = "";
+      showToast("Coordenadas encontradas pelo CEP/endereço.");
       return;
     }
 
-    alert("Participante encontrado, mas sem endereço cadastrado.");
+    alert(
+      "Participante encontrado, mas não foi possível localizar coordenadas pelo CEP/endereço cadastrado."
+    );
     return;
   }
 
