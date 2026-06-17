@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-vp.js";
+import { auth, db } from "./firebase-init-pc.js";
 import {
   onAuthStateChanged,
   signOut
