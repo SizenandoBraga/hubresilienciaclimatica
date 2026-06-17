@@ -57,8 +57,8 @@ const ROUTES = {
     },
     base: {
       label: "COOADESC",
-      lat: -30.003,
-      lng: -51.206
+      lat: -29.978149536151548, 
+      lng: -51.19897147117521
     }
   },
 
@@ -2711,9 +2711,7 @@ function normalizarBuscaMapa(value) {
     .trim();
 }
 
-function normalizarCep(value) {
-  return String(value || "").replace(/\D/g, "");
-}
+
 
 function montarTextoBuscaParticipante(user = {}) {
   const raw = user.raw || {};
@@ -3756,65 +3754,3 @@ function enderecoPesquisa(user) {
   ].join(" "));
 }
 
-async function adicionarPontoPorCodigoOuEndereco() {
-  const termo = String(els.manualRouteAddress?.value || "").trim();
-
-  if (!termo) {
-    alert("Digite o código do participante, rua, bairro, cidade ou CEP.");
-    return;
-  }
-
-  const termoNormalizado = normalizarBuscaEndereco(termo);
-  const cepPesquisado = normalizarCep(termo);
-
-  const participante = STATE.users.find((user) => {
-    const raw = user.raw || {};
-
-    const codigo = String(
-      user.code ||
-      user.participantCode ||
-      raw.participantCode ||
-      ""
-    ).trim().toLowerCase();
-
-    const endereco = enderecoPesquisa(user);
-
-    const cepUsuario = normalizarCep(
-      user.cep ||
-      raw.cep ||
-      user.address ||
-      raw.enderecoCompleto ||
-      ""
-    );
-
-    return (
-      codigo === termoNormalizado ||
-      endereco.includes(termoNormalizado) ||
-      (cepPesquisado && cepUsuario.includes(cepPesquisado))
-    );
-  });
-
-  if (participante) {
-    if (isValidCoord(participante.lat, participante.lng)) {
-      addManualPoint(
-        participante.lat,
-        participante.lng,
-        `${participante.code} • ${participante.name} • ${participante.address}`
-      );
-
-      els.manualRouteAddress.value = "";
-      return;
-    }
-
-    if (participante.address) {
-      els.manualRouteAddress.value = participante.address;
-      await addManualAddressPoint();
-      return;
-    }
-
-    alert("Participante encontrado, mas sem endereço cadastrado.");
-    return;
-  }
-
-  await addManualAddressPoint();
-}
