@@ -867,6 +867,7 @@ function ensureTableHeaderForLabels() {
 
   headRow.innerHTML = `
     <th>Participante</th>
+    <th>Criado em</th>
     <th>Status</th>
     <th>Operação</th>
     <th>Rota</th>
@@ -1459,6 +1460,11 @@ function mapParticipantDoc(docSnap) {
     phone: data.phone || "",
     email: data.email || "",
     cpf: data.cpf || "",
+createdAt:
+  data.createdAt?.toDate?.() ||
+  data.createdAt ||
+  data.createdAtISO ||
+  null,
     territoryId: canonicalTerritoryId(data.territoryId),
     territoryLabel: data.territoryLabel || getTerritoryLabelById(data.territoryId),
     status: normalizeStatus(data.status || data.approvalStatus),
@@ -1476,6 +1482,32 @@ function mapParticipantDoc(docSnap) {
     raw: data
   };
 }
+function formatCreatedAt(value) {
+  if (!value) return "-";
+
+  const date =
+    value instanceof Date
+      ? value
+      : new Date(value);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
+
+  return date.toLocaleString(
+    "pt-BR",
+    {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit"
+    }
+  );
+}
+
+  return date.toLocaleDateString("pt-BR");
+
 
 function mapApprovalRequestDoc(docSnap) {
   const data = docSnap.data() || {};
@@ -1724,6 +1756,7 @@ function renderApprovedList() {
         <div class="user-main">
           <strong>${safeText(user.name)}</strong>
           <span>Código: ${safeText(user.code)}</span>
+          <span>Criado em: ${formatCreatedAt(user.createdAt)}</span>
           <span>Telefone: ${safeText(user.phone)}</span>
           <span>${safeText(user.address)}</span>
         </div>
@@ -1854,10 +1887,21 @@ const visibleUsers = allUsers.slice(start, end);
  els.usersTableBody.innerHTML = visibleUsers.map((user) => `
     <tr>
       <td>
-        <strong>${safeText(user.name)}</strong><br>
-        <small>${safeText(user.code)}</small><br>
-        <small>${safeText(user.phone)}</small>
-      </td>
+  <strong>${safeText(user.name)}</strong><br>
+
+  <small>
+    Código: ${safeText(user.code)}
+  </small><br>
+
+  <small>
+    Telefone: ${safeText(user.phone)}
+  </small><br>
+
+  <small style="color:#666;">
+    Cadastro:
+    ${formatCreatedAt(user.createdAt)}
+  </small>
+</td>
       <td><span class="${badgeClass(user.status)}">${safeText(user.status)}</span></td>
       <td>${user.inOperation === "sim" ? "Em operação" : "Fora da operação"}</td>
       <td>${routeShiftLabel(user.routeShift || user.schedule)}</td>
@@ -2794,41 +2838,45 @@ function buscarParticipantePorCodigoOuEndereco(termo) {
 }
 
 async function adicionarPontoPorCodigoOuEndereco() {
-  const termo = String(
-    els.manualRouteAddress?.value || ""
-  ).trim();
+  const termo = String(els.manualRouteAddress?.value || "").trim();
 
   if (!termo) {
     alert("Digite o código do participante, CEP ou endereço.");
     return;
   }
 
-  const participante =
-    buscarParticipantePorCodigoOuEndereco(termo);
+  const participante = buscarParticipantePorCodigoOuEndereco(termo);
 
   if (participante) {
+    const raw = participante.raw || {};
+
+    const enderecoBusca = [
+      raw.rua || raw.street,
+      raw.numero,
+      raw.bairro || raw.neighborhood,
+      raw.cidade || raw.city,
+      raw.uf || raw.state,
+      raw.cep ? `CEP ${raw.cep}` : "",
+      "Brasil"
+    ].filter(Boolean).join(", ");
+
     const label = [
       participante.code,
       participante.name,
-      participante.address
+      enderecoBusca || participante.address
     ].filter(Boolean).join(" • ");
 
     if (isValidCoord(participante.lat, participante.lng)) {
-      addManualPoint(
-        participante.lat,
-        participante.lng,
-        label
-      );
-
+      addManualPoint(participante.lat, participante.lng, label);
       els.manualRouteAddress.value = "";
       showToast("Participante adicionado ao mapa.");
       return;
     }
 
-    if (participante.address) {
-      els.manualRouteAddress.value = participante.address;
+    if (enderecoBusca || participante.address) {
+      els.manualRouteAddress.value = enderecoBusca || participante.address;
       await addManualAddressPoint();
-      showToast("Endereço do participante enviado para o mapa.");
+      showToast("Endereço do participante enviado para busca no mapa.");
       return;
     }
 
@@ -2838,7 +2886,6 @@ async function adicionarPontoPorCodigoOuEndereco() {
 
   await addManualAddressPoint();
 }
-
 function bindAdvancedManualRouteEvents() {
   syncManualRouteElements();
 
