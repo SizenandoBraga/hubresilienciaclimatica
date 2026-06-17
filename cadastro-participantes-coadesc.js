@@ -318,29 +318,38 @@ function isApprovedParticipant(data = {}) {
 
 async function getUsedCodeNumbers(prefix) {
   const territoryId = getCanonicalTerritoryId();
+
   const usedNumbers = new Set();
 
-  const participantsSnap = await getDocs(
+  const snap = await getDocs(
     query(
       collection(db, "participants"),
       where("territoryId", "==", territoryId)
     )
   );
 
-  participantsSnap.forEach((docSnap) => {
-    const data = docSnap.data() || {};
+  snap.forEach((docSnap) => {
+    const data = docSnap.data();
 
-    if (!isApprovedParticipant(data)) return;
+    const code =
+      data.participantCode ||
+      "";
 
-    const number = getCodeNumberFromValue(
-      data.participantCode,
-      prefix
-    );
+    const number =
+      getCodeNumberFromValue(
+        code,
+        prefix
+      );
 
     if (number !== null) {
       usedNumbers.add(number);
     }
   });
+
+  console.log(
+    "CODIGOS ENCONTRADOS:",
+    [...usedNumbers]
+  );
 
   return usedNumbers;
 }
