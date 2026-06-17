@@ -254,7 +254,7 @@ function isValidCPF(cpf = "") {
 function getCanonicalTerritoryId() {
   return CONFIG.territoryId;
 }
-
+CÓDIGO
 function getCanonicalTerritoryLabel() {
   return CONFIG.territoryLabel;
 }
@@ -300,8 +300,9 @@ function getCodeNumberFromValue(code, prefix) {
 }
 
 function isApprovedParticipant(data = {}) {
-  const status = String(data.status || "").toLowerCase();
-  const approvalStatus = String(data.approvalStatus || "").toLowerCase();
+  const status = String(data.status || "").toLowerCase().trim();
+  const approvalStatus = String(data.approvalStatus || "").toLowerCase().trim();
+  const decision = String(data.decision || "").toLowerCase().trim();
 
   return (
     status === "aprovado" ||
@@ -309,7 +310,9 @@ function isApprovedParticipant(data = {}) {
     status === "ativo" ||
     status === "active" ||
     approvalStatus === "approved" ||
-    approvalStatus === "aprovado"
+    approvalStatus === "aprovado" ||
+    decision === "approved" ||
+    decision === "aprovado"
   );
 }
 
@@ -334,7 +337,9 @@ async function getUsedCodeNumbers(prefix) {
       prefix
     );
 
-    if (number) usedNumbers.add(number);
+    if (number !== null) {
+      usedNumbers.add(number);
+    }
   });
 
   return usedNumbers;
@@ -353,147 +358,7 @@ async function generateSequentialCode() {
   }
 
   const { prefix, start } = config;
-
   const usedNumbers = await getUsedCodeNumbers(prefix);
-
-  let nextNumber = start;
-
-  while (usedNumbers.has(nextNumber)) {
-    nextNumber++;
-  }
-
-  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
-}
-async function getCurrentMaxCodeNumber(prefix) {
-  const territoryId = getCanonicalTerritoryId();
-
-  let maxNumber = 0;
-
-  const participantsSnap = await getDocs(
-    query(
-      collection(db, "participants"),
-      where("territoryId", "==", territoryId)
-    )
-  );
-
-  participantsSnap.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-
-    maxNumber = Math.max(
-      maxNumber,
-      getCodeNumberFromValue(data.participantCode, prefix)
-    );
-  });
-
-  const approvalsSnap = await getDocs(
-    query(
-      collection(db, "approvalRequests"),
-      where("territoryId", "==", territoryId)
-    )
-  );
-
-  approvalsSnap.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-    const snapshot = data.payloadSnapshot || {};
-
-    maxNumber = Math.max(
-      maxNumber,
-      getCodeNumberFromValue(data.participantCode, prefix),
-      getCodeNumberFromValue(snapshot.participantCode, prefix)
-    );
-  });
-
-  return maxNumber;
-}
-
-
-
-function isCodeStillInUse(data = {}) {
-  const status = String(data.status || "").toLowerCase();
-  const approvalStatus = String(data.approvalStatus || "").toLowerCase();
-  const decision = String(data.decision || "").toLowerCase();
-
-  return ![
-    "rejected",
-    "rejeitado",
-    "inativo",
-    "inactive",
-    "cancelado"
-  ].includes(status)
-  && ![
-    "rejected",
-    "rejeitado"
-  ].includes(approvalStatus)
-  && decision !== "rejected";
-}
-
-async function getUsedCodeNumbers(prefix) {
-  const territoryId = getCanonicalTerritoryId();
-  const usedNumbers = new Set();
-
-  const participantsSnap = await getDocs(
-    query(
-      collection(db, "participants"),
-      where("territoryId", "==", territoryId)
-    )
-  );
-
-  participantsSnap.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-
-    if (!isCodeStillInUse(data)) return;
-
-    const number = getCodeNumberFromValue(
-      data.participantCode,
-      prefix
-    );
-
-    if (number) usedNumbers.add(number);
-  });
-
-  const approvalsSnap = await getDocs(
-    query(
-      collection(db, "approvalRequests"),
-      where("territoryId", "==", territoryId)
-    )
-  );
-
-  approvalsSnap.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-    const snapshot = data.payloadSnapshot || {};
-
-    if (!isCodeStillInUse(data)) return;
-
-    const number =
-      getCodeNumberFromValue(data.participantCode, prefix) ||
-      getCodeNumberFromValue(snapshot.participantCode, prefix);
-
-    if (number) usedNumbers.add(number);
-  });
-
-  return usedNumbers;
-}
-
-async function generateSequentialCode() {
-  const territoryKey = getCodeTerritoryKey();
-  const localTypeKey = getCodeLocalType();
-
-  const config = CODE_CONFIG[territoryKey]?.[localTypeKey];
-
-  if (!config) {
-    throw new Error(
-      `Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`
-    );
-  }
-
-  const { prefix, start } = config;
-
-  const usedNumbers = await getUsedCodeNumbers(prefix);
-console.log(
-  "Números utilizados:",
-  [...usedNumbers].sort((a,b)=>a-b)
-);
-
 
   let nextNumber = start;
 
