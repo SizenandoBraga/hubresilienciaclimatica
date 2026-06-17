@@ -1506,7 +1506,7 @@ function formatCreatedAt(value) {
   );
 }
 
-  return date.toLocaleDateString("pt-BR");
+ 
 
 
 function mapApprovalRequestDoc(docSnap) {
@@ -1875,37 +1875,40 @@ function renderTable() {
 
   const allUsers = getTableFilteredUsers();
   const totalPages = Math.ceil(allUsers.length / STATE.pageSize);
-const start = STATE.tablePage * STATE.pageSize;
-const end = start + STATE.pageSize;
-const visibleUsers = allUsers.slice(start, end);
+
+  const start = STATE.tablePage * STATE.pageSize;
+  const end = start + STATE.pageSize;
+  const visibleUsers = allUsers.slice(start, end);
 
   if (!allUsers.length) {
-    els.usersTableBody.innerHTML = `<tr><td colspan="6">Nenhum participante encontrado.</td></tr>`;
+    els.usersTableBody.innerHTML = `
+      <tr>
+        <td colspan="7">Nenhum participante encontrado.</td>
+      </tr>
+    `;
     return;
   }
 
- els.usersTableBody.innerHTML = visibleUsers.map((user) => `
+  els.usersTableBody.innerHTML = visibleUsers.map((user) => `
     <tr>
       <td>
-  <strong>${safeText(user.name)}</strong><br>
+        <strong>${safeText(user.name)}</strong><br>
+        <small>${safeText(user.code)}</small><br>
+        <small>${safeText(user.phone)}</small>
+      </td>
 
-  <small>
-    Código: ${safeText(user.code)}
-  </small><br>
+      <td>${formatCreatedAt(user.createdAt)}</td>
 
-  <small>
-    Telefone: ${safeText(user.phone)}
-  </small><br>
+      <td>
+        <span class="${badgeClass(user.status)}">
+          ${safeText(user.status)}
+        </span>
+      </td>
 
-  <small style="color:#666;">
-    Cadastro:
-    ${formatCreatedAt(user.createdAt)}
-  </small>
-</td>
-      <td><span class="${badgeClass(user.status)}">${safeText(user.status)}</span></td>
       <td>${user.inOperation === "sim" ? "Em operação" : "Fora da operação"}</td>
       <td>${routeShiftLabel(user.routeShift || user.schedule)}</td>
       <td>${safeText(user.address)}</td>
+
       <td>
         <div class="table-actions">
           <button class="btn btn-dark" data-action="print-label" data-id="${user.id}" type="button">Etiqueta</button>
@@ -1917,29 +1920,30 @@ const visibleUsers = allUsers.slice(start, end);
       </td>
     </tr>
   `).join("");
+
   const tableWrap = els.usersTableBody.closest(".table-wrap");
-let pagination = document.getElementById("tablePagination");
+  let pagination = document.getElementById("tablePagination");
 
-if (!pagination && tableWrap) {
-  pagination = document.createElement("div");
-  pagination.id = "tablePagination";
-  pagination.className = "list-pagination";
-  tableWrap.appendChild(pagination);
-}
+  if (!pagination && tableWrap) {
+    pagination = document.createElement("div");
+    pagination.id = "tablePagination";
+    pagination.className = "list-pagination";
+    tableWrap.appendChild(pagination);
+  }
 
-if (pagination) {
-  pagination.innerHTML = `
-    <button class="btn btn-ghost" data-action="prev-table-page" type="button" ${STATE.tablePage === 0 ? "disabled" : ""}>
-      Anteriores
-    </button>
+  if (pagination) {
+    pagination.innerHTML = `
+      <button class="btn btn-ghost" data-action="prev-table-page" type="button" ${STATE.tablePage === 0 ? "disabled" : ""}>
+        Anteriores
+      </button>
 
-    <span>Página ${STATE.tablePage + 1} de ${totalPages || 1}</span>
+      <span>Página ${STATE.tablePage + 1} de ${totalPages || 1}</span>
 
-    <button class="btn btn-primary" data-action="next-table-page" type="button" ${STATE.tablePage >= totalPages - 1 ? "disabled" : ""}>
-      Próximos
-    </button>
-  `;
-}
+      <button class="btn btn-primary" data-action="next-table-page" type="button" ${STATE.tablePage >= totalPages - 1 ? "disabled" : ""}>
+        Próximos
+      </button>
+    `;
+  }
 }
 
 function formatDateFileName() {
