@@ -1763,7 +1763,14 @@ function renderApprovedList() {
 
         <div class="user-actions">
           <span class="${badgeClass(user.status)}">Aprovado</span>
-          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
+          <button
+  class="btn ${isValidCoord(user.lat, user.lng) ? "btn-success" : "btn-danger"}"
+  data-action="focus"
+  data-id="${user.id}"
+  type="button"
+>
+  ${isValidCoord(user.lat, user.lng) ? "Mapa OK" : "Sem mapa"}
+</button>
           <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
         </div>
       </article>
@@ -1914,7 +1921,14 @@ function renderTable() {
           <button class="btn btn-dark" data-action="print-label" data-id="${user.id}" type="button">Etiqueta</button>
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
-          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Mapa</button>
+          <button
+  class="btn ${isValidCoord(user.lat, user.lng) ? "btn-success" : "btn-danger"}"
+  data-action="focus"
+  data-id="${user.id}"
+  type="button"
+>
+  ${isValidCoord(user.lat, user.lng) ? "Mapa" : "Sem coordenada"}
+</button>
           <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
         </div>
       </td>
