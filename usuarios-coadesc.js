@@ -251,7 +251,63 @@ function toNumberOrNull(value) {
 
   return Number.isFinite(n) ? n : null;
 }
+function getCodeNumberFromValue(code, prefix) {
+  const text = String(code || "").trim();
 
+  if (!text.startsWith(`${prefix}-`)) return null;
+
+  const numberPart = Number(text.split("-")[1]);
+
+  return Number.isFinite(numberPart) ? numberPart : null;
+}
+
+function isApprovedForCode(data = {}) {
+  const status = String(data.status || "").toLowerCase().trim();
+  const approvalStatus = String(data.approvalStatus || "").toLowerCase().trim();
+  const active = data.active === true;
+
+  return (
+    status === "aprovado" ||
+    status === "approved" ||
+    status === "ativo" ||
+    status === "active" ||
+    approvalStatus === "approved" ||
+    approvalStatus === "aprovado" ||
+    active === true
+  );
+}
+
+async function generateApprovedParticipantCode() {
+  const prefix = "COD";
+  const start = 1;
+  const territoryId = canonicalTerritoryId(getPageTerritoryId() || getMyTerritoryId() || "cooadesc") || "cooadesc";
+  const aliases = getTerritoryAliases(territoryId);
+
+  const snap = await getDocs(
+    query(
+      collection(db, "participants"),
+      where("territoryId", "in", aliases)
+    )
+  );
+
+  let maxNumber = 0;
+
+  snap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+
+    if (!isApprovedForCode(data)) return;
+
+    const number = getCodeNumberFromValue(data.participantCode, prefix);
+
+    if (number !== null && number > maxNumber) {
+      maxNumber = number;
+    }
+  });
+
+  const nextNumber = Math.max(start, maxNumber + 1);
+
+  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
+}
 function isValidCoord(lat, lng) {
   return (
     Number.isFinite(lat) &&
@@ -530,7 +586,7 @@ function setImportStatus(message, type = "info") {
   }
 }
 
-function buildImportedParticipant(row, index) {
+async function buildImportedParticipant(row, index) {
   const territoryId = getMyTerritoryId() || getPageTerritoryId() || "vila-pinto";
   const territoryLabel = getMyTerritoryLabel() || getTerritoryLabelById(territoryId);
 
@@ -618,8 +674,7 @@ function buildImportedParticipant(row, index) {
     "lon"
   ]));
 
-  const generatedCode = `IMP-${String(index + 1).padStart(4, "0")}-${Date.now()}`;
-  const participantCode = code || generatedCode;
+  const participantCode = code || await generateApprovedParticipantCode();
 
   return {
     id: participantCode.replace(/[^a-zA-Z0-9_-]/g, "_"),
@@ -697,9 +752,9 @@ async function importParticipantsExcel(event) {
       return;
     }
 
-    const importedParticipants = rows
-      .map((row, index) => buildImportedParticipant(row, index))
-      .filter(Boolean);
+    const importedParticipants = (await Promise.all(
+      rows.map((row, index) => buildImportedParticipant(row, index))
+    )).filter(Boolean);
 
     if (!importedParticipants.length) {
       setImportStatus("Nenhum participante válido encontrado. Verifique se existe a coluna Nome.", "error");
@@ -1517,7 +1572,7 @@ function mapApprovalRequestDoc(docSnap) {
     id: docSnap.id,
     participantId: data.targetId || data.participantId || null,
     participantName: data.participantName || snapshot.name || "Solicitação pendente",
-    participantCode: data.participantCode || snapshot.participantCode || "—",
+    participantCode: data.participantCode || snapshot.participantCode || "Aguardando aprovação",
     participantPhone: data.participantPhone || snapshot.phone || "",
     participantEmail: data.participantEmail || snapshot.email || "",
     participantCpf: data.participantCpf || snapshot.cpf || "",
@@ -1812,7 +1867,7 @@ function renderPendingList() {
       <article class="user-item">
         <div class="user-main">
           <strong>${safeText(user.name)}</strong>
-          <span>Código: ${safeText(user.code)}</span>
+          <span>Código: ${user.status === "pendente" ? "Será gerado após aprovação" : safeText(user.code)}</span>
           <span>Telefone: ${safeText(user.phone)}</span>
           <span>${safeText(user.address)}</span>
         </div>
@@ -3210,7 +3265,7 @@ async function upsertParticipantFromApprovedRequest(user) {
   const payload = {
     name: user.name || snapshot.name || "Sem nome",
     nameLower: String(user.name || snapshot.name || "").toLowerCase(),
-    participantCode: user.code || snapshot.participantCode || "—",
+    participantCode: user.generatedCode || user.code || snapshot.participantCode || null,
     participantType: snapshot.participantType || "participante",
     localType: snapshot.localType || user.raw?.localType || "casa",
     phone: user.phone || snapshot.phone || null,
@@ -3249,11 +3304,18 @@ async function approveUser(userId) {
   if (!requireUserTerritoryAccess(user, "aprovar participante")) return;
 
   try {
+    const generatedCode =
+      user.code && user.code !== "—" && user.code !== "Aguardando aprovação"
+        ? user.code
+        : await generateApprovedParticipantCode();
+
     const batch = writeBatch(db);
     const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
 
     sameRequests.forEach((req) => {
       batch.update(doc(db, "approvalRequests", req.id), {
+        participantCode: generatedCode,
+        codeStatus: "gerado",
         status: "approved",
         decision: "approved",
         reviewedAt: serverTimestamp(),
@@ -3269,6 +3331,8 @@ async function approveUser(userId) {
 
     await upsertParticipantFromApprovedRequest({
       ...user,
+      code: generatedCode,
+      generatedCode,
       status: "aprovado",
       inOperation: "sim",
       routeShift: selectedRouteShift,
@@ -3349,10 +3413,16 @@ async function saveModalUserChanges() {
       return;
     }
 
+    const generatedCodeForApproval =
+      chosenStatus === "aprovado" && (!user.code || user.code === "—" || user.code === "Aguardando aprovação")
+        ? await generateApprovedParticipantCode()
+        : null;
+
     await upsertParticipantFromApprovedRequest({
       ...user,
       name: els.modalUserName?.value?.trim() || user.name,
-      code: els.modalUserCode?.value?.trim() || user.code,
+      code: generatedCodeForApproval || els.modalUserCode?.value?.trim() || user.code,
+      generatedCode: generatedCodeForApproval || undefined,
       phone: onlyDigits(els.modalUserPhone?.value || user.phone),
       territoryLabel: els.modalTerritoryLabel?.value?.trim() || user.territoryLabel,
       address: els.modalAddress?.value?.trim() || user.address,
@@ -3370,6 +3440,8 @@ async function saveModalUserChanges() {
 
       sameRequests.forEach((req) => {
         batch.update(doc(db, "approvalRequests", req.id), {
+          participantCode: generatedCodeForApproval || els.modalUserCode?.value?.trim() || user.code || null,
+          codeStatus: "gerado",
           status: "approved",
           decision: "approved",
           reviewedAt: serverTimestamp(),

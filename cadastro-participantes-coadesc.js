@@ -786,7 +786,8 @@ function buildParticipantPayload() {
     codeLocalType: getCodeLocalType(),
     registerType: STATE.registerType,
     participantType: STATE.registerType,
-    participantCode: STATE.generatedCode,
+    participantCode: null,
+codeStatus: "aguardando_aprovacao",
 
     cep: cepDigits || null,
     rua: street || null,
@@ -846,7 +847,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
     territoryId,
     territoryLabel,
 
-    participantCode: participantData.participantCode,
+    participantCode: null,
+codeStatus: "aguardando_aprovacao",
     participantName: participantData.name,
     participantEmail: participantData.email || null,
     participantPhone: participantData.phone,
@@ -871,7 +873,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
       email: participantData.email || null,
       phone: participantData.phone,
       cpf: participantData.cpf || null,
-      participantCode: participantData.participantCode,
+      participantCode: null,
+codeStatus: "aguardando_aprovacao",
       registerType: participantData.registerType,
       localType: participantData.localType,
       codeLocalType: participantData.codeLocalType,
@@ -893,12 +896,6 @@ function buildApprovalRequestPayload(participantId, participantData) {
 }
 
 async function saveRegistration() {
-  STATE.generatedCode = await generateSequentialCode();
-
-  if (els.generatedCode) {
-    els.generatedCode.value = STATE.generatedCode;
-  }
-
   const participantPayload = buildParticipantPayload();
 
   const participantRef = await addDoc(
@@ -918,8 +915,7 @@ async function saveRegistration() {
 
   return {
     participantId: participantRef.id,
-    approvalRequestId: approvalRef.id,
-    participantCode: participantPayload.participantCode
+    approvalRequestId: approvalRef.id
   };
 }
 
@@ -1131,7 +1127,7 @@ function bindSubmit() {
       const result = await saveRegistration();
 
       showMessage(
-        `Cadastro enviado com sucesso para análise da cooperativa. Código gerado: ${result.participantCode}`,
+        "Cadastro enviado com sucesso para análise da cooperativa. O código será gerado após a aprovação.",
         "success"
       );
 
