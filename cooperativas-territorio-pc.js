@@ -961,7 +961,7 @@ function fillHeader(profile) {
     } else {
       els.accessBanner.className = "access-banner show cooperativa";
       els.accessBanner.innerHTML =
-        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa ${PAGE_TERRITORY.cooperativeName}.`;
+        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa CCPA.`;
     }
   }
 
