@@ -40,12 +40,12 @@ function canonicalTerritoryId(value) {
 }
 
 const PAGE_TERRITORY = {
-  territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
-  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Vila Pinto",
-  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto",
-  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
-  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
-  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html"
+  territoryId: canonicalTerritoryId(bodyConfig.territoryId || "padre-cacique"),
+  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Padre Cacique",
+  cooperativeName: bodyConfig.cooperativeName || "Padre Cacique",
+  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-padre-cacique.html",
+  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-padre-cacique.html",
+  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-padre-cacique.html"
 };
 
 /* =========================================================
