@@ -195,13 +195,18 @@
 
           <div class="field">
             <label for="fotoResiduo">Fotos do resíduo <small>(opcional)</small></label>
-            <input type="file" id="fotoResiduo" multiple>
+            <input type="file" id="fotoResiduo" accept="image/*" multiple>
+            <small>Você pode selecionar mais de uma imagem. Limite recomendado: 10 fotos.</small>
           </div>
 
           <div class="field">
             <label for="fotoNaoComercializado">Fotos do não comercializado e rejeito <small>(opcional)</small></label>
-            <input type="file" id="fotoNaoComercializado" multiple>
+            <input type="file" id="fotoNaoComercializado" accept="image/*" multiple>
+            <small>Você pode selecionar mais de uma imagem. Limite recomendado: 10 fotos.</small>
           </div>
+
+          <div id="previewResiduo" class="preview-grid span-2"></div>
+          <div id="previewNaoComercializado" class="preview-grid span-2"></div>
 
           <div class="form-actions span-2">
             <button type="submit" class="btn primary">Salvar coleta de recebimento</button>

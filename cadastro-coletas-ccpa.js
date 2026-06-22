@@ -479,6 +479,110 @@ function getExtras() {
 }
 
 /* =========================
+   FOTOS DO RECEBIMENTO
+   - Mantém uma lista própria para cada campo.
+   - Permite selecionar fotos em mais de uma rodada.
+   - Mostra prévia e permite remover antes de salvar.
+========================= */
+
+const MAX_FOTOS = 10;
+
+const inputFotosResiduo = $("fotoResiduo");
+const previewResiduo = $("previewResiduo");
+let fotosResiduo = [];
+
+const inputFotosNaoComercializado = $("fotoNaoComercializado");
+const previewNaoComercializado = $("previewNaoComercializado");
+let fotosNaoComercializado = [];
+
+function bindPhotoInput(input, getFiles, setFiles, renderPreview, label) {
+  input?.addEventListener("change", (event) => {
+    const currentFiles = getFiles();
+    const selectedFiles = Array.from(event.target.files || []);
+    const imagens = selectedFiles.filter((file) => String(file.type || "").startsWith("image/"));
+
+    if (!imagens.length) {
+      input.value = "";
+      return;
+    }
+
+    if (currentFiles.length + imagens.length > MAX_FOTOS) {
+      alert(`Máximo de ${MAX_FOTOS} fotos em ${label}.`);
+      input.value = "";
+      return;
+    }
+
+    setFiles([...currentFiles, ...imagens]);
+    renderPreview();
+    input.value = "";
+  });
+}
+
+function renderPhotoPreview(previewEl, files, removeAt) {
+  if (!previewEl) return;
+
+  previewEl.innerHTML = "";
+
+  files.forEach((file, index) => {
+    const reader = new FileReader();
+
+    reader.onload = (event) => {
+      const div = document.createElement("div");
+      div.className = "preview-item";
+
+      div.innerHTML = `
+        <img src="${event.target.result}" alt="Pré-visualização da foto ${index + 1}">
+        <button type="button" class="preview-remove" data-index="${index}" aria-label="Remover foto">×</button>
+      `;
+
+      previewEl.appendChild(div);
+
+      div.querySelector(".preview-remove")?.addEventListener("click", () => {
+        removeAt(index);
+      });
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+function renderPreviewResiduo() {
+  renderPhotoPreview(previewResiduo, fotosResiduo, (index) => {
+    fotosResiduo.splice(index, 1);
+    renderPreviewResiduo();
+  });
+}
+
+function renderPreviewNaoComercializado() {
+  renderPhotoPreview(previewNaoComercializado, fotosNaoComercializado, (index) => {
+    fotosNaoComercializado.splice(index, 1);
+    renderPreviewNaoComercializado();
+  });
+}
+
+function wireRecebimentoPhotos() {
+  bindPhotoInput(
+    inputFotosResiduo,
+    () => fotosResiduo,
+    (files) => {
+      fotosResiduo = files;
+    },
+    renderPreviewResiduo,
+    "fotos do resíduo"
+  );
+
+  bindPhotoInput(
+    inputFotosNaoComercializado,
+    () => fotosNaoComercializado,
+    (files) => {
+      fotosNaoComercializado = files;
+    },
+    renderPreviewNaoComercializado,
+    "fotos do não comercializado e rejeito"
+  );
+}
+
+/* =========================
    FOTOS DO FINAL DO TURNO
 ========================= */
 
@@ -486,7 +590,6 @@ const inputFotosFinalTurno = $("fotoFinalTurno");
 const previewFinalTurno = $("previewFinalTurno");
 
 let fotosFinalTurno = [];
-const MAX_FOTOS = 10;
 
 inputFotosFinalTurno?.addEventListener("change", (e) => {
   const files = Array.from(e.target.files || []);
@@ -583,8 +686,9 @@ async function salvarRecebimento() {
   const pesoRejeitoKg = parseNum($("pesoRejeitoKg")?.value);
   const pesoNaoComercializadoKg = parseNum($("pesoNaoComercializadoKg")?.value);
 
-  const fotoResiduoFile = $("fotoResiduo")?.files?.[0] || null;
-  const fotoNaoComercializadoFile = $("fotoNaoComercializado")?.files?.[0] || null;
+  // As fotos ficam em arrays para permitir múltiplas seleções e remoção antes do envio.
+  const fotosResiduoFiles = fotosResiduo;
+  const fotosNaoComercializadoFiles = fotosNaoComercializado;
 
   if (!STATE.operacao) {
     throw new Error("Salve primeiro a etapa da operação.");
@@ -599,21 +703,16 @@ async function salvarRecebimento() {
     throw new Error("Preencha todos os campos obrigatórios do recebimento.");
   }
 
-  let fotoResiduo = null;
-  let fotoNaoComercializado = null;
+  const fotosResiduoUploads = await compressManyImages(fotosResiduoFiles);
+  const fotosNaoComercializadoUploads = await compressManyImages(fotosNaoComercializadoFiles);
 
-  if (fotoResiduoFile) {
-    fotoResiduo = await compressImageFile(fotoResiduoFile);
-  }
-
-  if (fotoNaoComercializadoFile) {
-    fotoNaoComercializado = await compressImageFile(fotoNaoComercializadoFile);
-  }
+  const fotoResiduoUrls = fotosResiduoUploads.map((item) => item.dataUrl);
+  const fotoNaoComercializadoUrls = fotosNaoComercializadoUploads.map((item) => item.dataUrl);
 
   const recebimentoPhotos = [
-    fotoResiduo?.dataUrl || null,
-    fotoNaoComercializado?.dataUrl || null
-  ].filter(Boolean);
+    ...fotoResiduoUrls,
+    ...fotoNaoComercializadoUrls
+  ];
 
   const payload = {
     createdAt: serverTimestamp(),
@@ -632,7 +731,7 @@ async function salvarRecebimento() {
     flowType: "recebimento",
     observacao: STATE.operacao.opNotes || null,
 
-    photoUrl: fotoResiduo?.dataUrl || null,
+    photoUrl: recebimentoPhotos[0] || null,
     photos: recebimentoPhotos,
 
     recebimento: {
@@ -642,14 +741,20 @@ async function salvarRecebimento() {
       pesoRejeitoKg,
       pesoNaoComercializadoKg,
 
-      fotoResiduoUrl: fotoResiduo?.dataUrl || null,
-      fotoNaoComercializadoUrl: fotoNaoComercializado?.dataUrl || null,
+      // Campos antigos mantidos para compatibilidade com dashboards já existentes.
+      fotoResiduoUrl: fotoResiduoUrls[0] || null,
+      fotoNaoComercializadoUrl: fotoNaoComercializadoUrls[0] || null,
 
+      // Novos campos com múltiplas imagens por categoria.
+      fotoResiduoUrls,
+      fotoNaoComercializadoUrls,
       photos: recebimentoPhotos,
 
       uploads: {
-        fotoResiduo,
-        fotoNaoComercializado
+        fotoResiduo: fotosResiduoUploads[0] || null,
+        fotoNaoComercializado: fotosNaoComercializadoUploads[0] || null,
+        fotosResiduo: fotosResiduoUploads,
+        fotosNaoComercializado: fotosNaoComercializadoUploads
       }
     }
   };
@@ -747,6 +852,11 @@ function resetRecebimentoForm() {
     btn.classList.remove("active");
     btn.setAttribute("aria-pressed", "false");
   });
+
+  fotosResiduo = [];
+  fotosNaoComercializado = [];
+  renderPreviewResiduo();
+  renderPreviewNaoComercializado();
 }
 
 function resetFinalTurnoForm() {
@@ -903,6 +1013,7 @@ function wireForms() {
 async function init() {
   wireChoices();
   wireExtras();
+  wireRecebimentoPhotos();
   wireForms();
 
   if ($("opDate")) {
