@@ -1,11 +1,8 @@
-import { db } from "./firebase-init-pc.js";
+import { db } from "./firebase-init-ccpa.js";
 import {
   addDoc,
   collection,
-  serverTimestamp,
-  getDocs,
-  query,
-  where
+  serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
@@ -23,26 +20,12 @@ const CONFIG = {
   nominatimBase: "https://nominatim.openstreetmap.org/search"
 };
 
-const CODE_CONFIG = {
-  "vila-pinto": {
-    casa: { prefix: "VPD", start: 300 },
-    condominio: { prefix: "VPCD", start: 10 },
-    comercio: { prefix: "VPCM", start: 10 },
-    outro: { prefix: "VPO", start: 300 }
-  },
-  "cooadesc": {
-    casa: { prefix: "COD", start: 1 },
-    condominio: { prefix: "COCD", start: 1 },
-    comercio: { prefix: "COCM", start: 1 },
-    outro: { prefix: "COO", start: 1 }
-  },
-  "ccpa": {
-    casa: { prefix: "PCD", start: 1 },
-    condominio: { prefix: "PCCD", start: 1 },
-    comercio: { prefix: "PCCM", start: 1 },
-    outro: { prefix: "PCO", start: 1 }
-  }
-};
+/*
+  Na página pública da CCPA, o código do participante NÃO é gerado no envio.
+  Ele fica pendente para ser definido/aprovado pela cooperativa na área restrita.
+  Isso evita leitura pública da coleção participants e respeita o texto exibido no HTML.
+*/
+const PENDING_CODE_LABEL = "Será gerado após aprovação";
 
 /* =========================
    STATE
@@ -291,43 +274,9 @@ function assertRuntimeConfig() {
 ========================= */
 
 async function generateSequentialCode() {
-  const territoryKey = getCodeTerritoryKey();
-  const localTypeKey = getCodeLocalType();
-
-  const config = CODE_CONFIG[territoryKey]?.[localTypeKey];
-
-  if (!config) {
-    throw new Error(`Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`);
-  }
-
-  const { prefix, start } = config;
-
-  const q = query(
-    collection(db, "participants"),
-    where("territoryId", "==", getCanonicalTerritoryId()),
-    where("codeLocalType", "==", localTypeKey)
-  );
-
-  const snapshot = await getDocs(q);
-
-  let maxNumber = 0;
-
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-    const code = String(data.participantCode || "").trim();
-
-    if (!code.startsWith(`${prefix}-`)) return;
-
-    const numberPart = Number(code.split("-")[1]);
-
-    if (Number.isFinite(numberPart) && numberPart > maxNumber) {
-      maxNumber = numberPart;
-    }
-  });
-
-  const nextNumber = Math.max(start, maxNumber + 1);
-
-  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
+  // Mantido como função assíncrona para preservar o fluxo existente,
+  // mas sem consultar o Firestore no formulário público.
+  return null;
 }
 
 function getRegisterTypeByLocalType(localType) {
@@ -386,13 +335,10 @@ function syncRegisterTypeUI() {
 
 async function setRegisterType(registerType, regenerate = true) {
   STATE.registerType = registerType;
-
-  if (regenerate || !STATE.generatedCode) {
-    STATE.generatedCode = await generateSequentialCode();
-  }
+  STATE.generatedCode = "";
 
   if (els.generatedCode) {
-    els.generatedCode.value = STATE.generatedCode;
+    els.generatedCode.value = PENDING_CODE_LABEL;
   }
 
   syncRegisterTypeUI();
@@ -417,7 +363,7 @@ async function setLocalType(localType) {
     console.warn("Não foi possível gerar o código neste momento:", error);
 
     if (els.generatedCode) {
-      els.generatedCode.value = "Será gerado ao concluir";
+      els.generatedCode.value = PENDING_CODE_LABEL;
     }
   }
 }
@@ -749,7 +695,8 @@ function buildParticipantPayload() {
     codeLocalType: getCodeLocalType(),
     registerType: STATE.registerType,
     participantType: STATE.registerType,
-    participantCode: STATE.generatedCode,
+    participantCode: null,
+    codeStatus: "pending_generation",
 
     cep: cepDigits || null,
     rua: street || null,
@@ -811,7 +758,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
     territoryId,
     territoryLabel,
 
-    participantCode: participantData.participantCode,
+    participantCode: participantData.participantCode || null,
+    codeStatus: participantData.codeStatus || "pending_generation",
     participantName: participantData.name,
     participantEmail: participantData.email || null,
     participantPhone: participantData.phone,
@@ -836,7 +784,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
       email: participantData.email || null,
       phone: participantData.phone,
       cpf: participantData.cpf || null,
-      participantCode: participantData.participantCode,
+      participantCode: participantData.participantCode || null,
+    codeStatus: participantData.codeStatus || "pending_generation",
       registerType: participantData.registerType,
       localType: participantData.localType,
       codeLocalType: participantData.codeLocalType,
@@ -870,13 +819,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
 }
 
 async function saveRegistration() {
-  if (!STATE.generatedCode || STATE.generatedCode === "Será gerado ao concluir") {
-    STATE.generatedCode = await generateSequentialCode();
-
-    if (els.generatedCode) {
-      els.generatedCode.value = STATE.generatedCode;
-    }
-  }
+  // O código fica pendente para aprovação/administração da cooperativa.
+  STATE.generatedCode = "";
 
   const participantPayload = buildParticipantPayload();
   const participantRef = await addDoc(collection(db, "participants"), participantPayload);
@@ -1103,7 +1047,7 @@ function bindSubmit() {
       const result = await saveRegistration();
 
       showMessage(
-        `Cadastro enviado com sucesso para análise da cooperativa. Código gerado: ${result.participantCode}`,
+        `Cadastro enviado com sucesso para análise da cooperativa. O código será gerado após aprovação.`,
         "success"
       );
 
@@ -1156,7 +1100,7 @@ async function initDefaults() {
     console.warn("Não foi possível gerar o código inicial:", error);
 
     if (els.generatedCode) {
-      els.generatedCode.value = "Será gerado ao concluir";
+      els.generatedCode.value = PENDING_CODE_LABEL;
     }
   }
 }
