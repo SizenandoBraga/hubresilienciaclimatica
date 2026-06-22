@@ -1,4 +1,10 @@
-import { auth, db } from "./firebase-init-pc.js";
+/* =========================================================
+   COOPERATIVA CCPA • NSRU
+   Arquivo consolidado e exclusivo para a CCPA.
+   Mantém Firebase da CCPA e filtra somente registros territoryId/territory/cooperativeId = "ccpa".
+========================================================= */
+
+import { auth, db } from "./firebase-init-ccpa.js";
 
 import {
   onAuthStateChanged,
@@ -27,25 +33,27 @@ function canonicalTerritoryId(value) {
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[̀-ͯ]/g, "")
     .replaceAll("_", "-")
     .replace(/\s+/g, "-");
 
-  if (!raw) return "vila-pinto";
-  if (raw === "crgr-vila-pinto" || raw === "vila-pinto" || raw === "vp") return "vila-pinto";
-  if (raw === "crgr-cooadesc" || raw === "crgr-coadesc" || raw === "cooadesc" || raw === "coadesc") return "cooadesc";
-  if (raw === "crgr-padre-cacique" || raw === "padre-cacique" || raw === "padre") return "padre-cacique";
+  if (
+    raw === "ccpa" ||
+    raw === "cooperativa-dos-catadores-de-porto-alegre"
+  ) {
+    return "ccpa";
+  }
 
-  return raw;
+  return "ccpa";
 }
 
 const PAGE_TERRITORY = {
-  territoryId: canonicalTerritoryId(bodyConfig.territoryId || "padre-cacique"),
-  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Padre Cacique",
-  cooperativeName: bodyConfig.cooperativeName || "Padre Cacique",
-  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-padre-cacique.html",
-  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-padre-cacique.html",
-  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-padre-cacique.html"
+  territoryId: "ccpa",
+  territoryLabel: "CCPA",
+  cooperativeName: "Cooperativa dos Catadores de Porto Alegre - CCPA",
+  participantUrl: "cadastro-participantes-ccpa.html",
+  participantsListUrl: "usuarios-ccpa.html",
+  coletasUrl: "cadastro-coletas-ccpa.html"
 };
 
 /* =========================================================
@@ -230,8 +238,6 @@ function getParticipantCode(item = {}) {
 }
 
 function itemBelongsToTerritory(item = {}) {
-  const code = getParticipantCode(item).toUpperCase();
-
   const fields = [
     item.territoryId,
     item.territory,
@@ -260,47 +266,16 @@ function itemBelongsToTerritory(item = {}) {
     item.finalTurno?.cooperativeId
   ]
     .filter(Boolean)
-    .map(canonicalTerritoryId);
+    .map((value) => String(value).trim().toLowerCase())
+    .map((value) =>
+      value
+        .normalize("NFD")
+        .replace(/[̀-ͯ]/g, "")
+        .replaceAll("_", "-")
+        .replace(/\s+/g, "-")
+    );
 
-  const current = PAGE_TERRITORY.territoryId;
-
-  if (fields.includes(current)) return true;
-
-  const hasOtherTerritory = fields.some((field) =>
-    ["vila-pinto", "cooadesc", "padre-cacique"].includes(field) &&
-    field !== current
-  );
-
-  if (hasOtherTerritory) return false;
-
-  if (current === "vila-pinto") {
-    if (
-      code.startsWith("VPD") ||
-      code.startsWith("VP") ||
-      code.startsWith("C") ||
-      code.startsWith("F") ||
-      code === "FAMILIAS"
-    ) return true;
-
-    if (
-      code.startsWith("COA") ||
-      code.startsWith("COO") ||
-      code.startsWith("PC") ||
-      code.startsWith("PCA")
-    ) return false;
-
-    return true;
-  }
-
-  if (current === "cooadesc") {
-    return code.startsWith("COA") || code.startsWith("COO") || code.startsWith("CD");
-  }
-
-  if (current === "padre-cacique") {
-    return code.startsWith("PC") || code.startsWith("PCA") || code.startsWith("PDC");
-  }
-
-  return true;
+  return fields.includes("ccpa");
 }
 
 /* =========================================================
@@ -949,7 +924,7 @@ function fillHeader(profile) {
     profile.displayName ||
     profile.name ||
     profile.nome ||
-    (isAdmin ? "Administrador VP" : "Usuário");
+    (isAdmin ? "Administrador CCPA" : "Usuário");
 
   setText(els.userNameTop, name);
 
@@ -961,7 +936,7 @@ function fillHeader(profile) {
     } else {
       els.accessBanner.className = "access-banner show cooperativa";
       els.accessBanner.innerHTML =
-        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa CCPA.`;
+        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa ${escapeHtml(PAGE_TERRITORY.territoryLabel)}.`;
     }
   }
 
@@ -2454,8 +2429,9 @@ function applyRoleVisibility(profile) {
   const canManageUsers = isAdminUser(profile.role) || isGovernancaUser(profile.role);
 
   const userLinks = [
-    document.querySelector('a[href="usuario-cooperativa-vila-pinto.html"]'),
-    document.querySelector('a[href="usuarios.html"]')
+    document.querySelector('a[href="usuarios-cooperativa-ccpa.html"]'),
+    document.querySelector('a[href="usuarios-ccpa.html"]'),
+    document.querySelector('a[href="usuario-cooperativa-ccpa.html"]')
   ].filter(Boolean);
 
   userLinks.forEach((link) => {
@@ -2482,36 +2458,7 @@ function listenDashboardData() {
   });
 
 listenCollection("coletas", (items) => {
-  const todasDoFirebase = items.map((item) => ({
-    id: item.id,
-    data: formatDateLabel(item),
-    codigo: getParticipantCode(item),
-    participante: getParticipantName(item),
-    fluxo: formatFluxoLabel(getTipoRecebimento(item)),
-    status: getColetaStatusLabel(item),
-    territorio:
-      item.territoryId ||
-      item.territory ||
-      item.cooperativeId ||
-      item.payloadSnapshot?.territoryId ||
-      "-"
-  }));
-
-  console.table(todasDoFirebase);
-
- STATE.coletas = items
-  .filter(itemBelongsToTerritory)
-
-  console.table(
-    STATE.coletas.map((item) => ({
-      id: item.id,
-      data: formatDateLabel(item),
-      codigo: getParticipantCode(item),
-      participante: getParticipantName(item),
-      fluxo: formatFluxoLabel(getTipoRecebimento(item)),
-      status: getColetaStatusLabel(item)
-    }))
-  );
+  STATE.coletas = items.filter(itemBelongsToTerritory);
 
   STATE.recentPage = 0;
   populateEntregaFilter(STATE.coletas);

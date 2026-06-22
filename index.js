@@ -12,7 +12,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const VALID_CRGR_IDS = [
     "vila-pinto",
     "cooadesc",
-    "padre-cacique"
+    "ccpa"
   ];
 
   const $ = (selector, scope = document) => scope.querySelector(selector);
@@ -56,16 +56,17 @@ document.addEventListener("DOMContentLoaded", () => {
       active: true,
       color: "#2FA8D8"
     },
+    
     {
-      id: "padrecacique",
-      code: "padrecacique",
-      territoryId: "padre-cacique",
-      name: "CRGR Padre Cacique",
-      territoryLabel: "CRGR Padre Cacique",
+      id: "ccpa",
+      code: "ccpa",
+      territoryId: "ccpa",
+      name: "CCPA",
+      territoryLabel: "CCPA",
       lat: -30.140122365657504,
       lng: -51.1268772051727,
       address: "Estrada do Rincão, 6781 • Belém Velho • Porto Alegre/RS",
-      page: "padre-cacique.html",
+      page: "ccpa.html",
       active: true,
       color: "#ef6b22"
     }
@@ -143,11 +144,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (
+      raw==="ccpa" ||
       raw === "padrecacique" ||
       raw === "padre-cacique" ||
       raw === "crgr-padre-cacique"
     ) {
-      return "padre-cacique";
+      return "ccpa";
     }
 
     return raw;
@@ -367,12 +369,13 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (
+      base.includes("ccpa") ||
       base.includes("padre") ||
       base.includes("cacique") ||
       base.includes("crgr_padre_cacique") ||
       base.includes("padre-cacique")
     ) {
-      return "padre-cacique.html";
+      return "ccpa.html";
     }
 
     return "#";
@@ -385,7 +388,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (base.includes("vila")) return "#62B32F";
     if (base.includes("cooadesc") || base.includes("coadesc")) return "#2FA8D8";
-    if (base.includes("padre") || base.includes("cacique")) return "#ef6b22";
+    if (base.includes("ccpa") || base.includes("ccpa")) return "#ef6b22";
 
     const colors = ["#62B32F", "#2FA8D8", "#ef6b22"];
     return colors[index % colors.length];

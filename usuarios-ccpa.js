@@ -62,18 +62,18 @@ const ROUTES = {
     }
   },
 
-  "padre-cacique": {
-    label: "Cooperativa Padre Cacique",
-    aliases: ["padre-cacique", "crgr-padre-cacique", "crgr_padre_cacique"],
+  "ccpa": {
+    label: "CCPA",
+    aliases: ["ccpa", "padre-cacique", "crgr-padre-cacique", "crgr_padre_cacique"],
     pages: {
-      home: "cooperativa-padre-cacique.html",
-      usuarios: "usuarios-padre-cacique.html",
-      coletas: "cadastro-coletas-padre-cacique.html",
-      usuariosCooperativa: "usuario-cooperativa-padre-cacique.html",
-      dashboard: "dashboard-cooperativa-padre-cacique.html"
+      home: "cooperativa-ccpa.html",
+      usuarios: "usuarios-ccpa.html",
+      coletas: "cadastro-coletas-ccpa.html",
+      usuariosCooperativa: "usuario-cooperativa-ccpa.html",
+      dashboard: "dashboard-cooperativa-ccpa.html"
     },
     base: {
-      label: "Padre Cacique",
+      label: "CCPA",
       lat: -30.140122365657504,
       lng: -51.1268772051727
     }
@@ -3621,7 +3621,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="usuarios.html"], a[href="/usuarios.html"], a[href="usuarios-vila-pinto.html"], a[href="/usuarios-vila-pinto.html"], a[href="usuarios-cooadesc.html"], a[href="/usuarios-cooadesc.html"], a[href="usuarios-padre-cacique.html"], a[href="/usuarios-padre-cacique.html"]'
+      'a[href="usuarios.html"], a[href="/usuarios.html"], a[href="usuarios-vila-pinto.html"], a[href="/usuarios-vila-pinto.html"], a[href="usuarios-cooadesc.html"], a[href="/usuarios-cooadesc.html"], a[href="usuarios-ccpa.html"], a[href="/usuarios-ccpa.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("usuarios", territoryId));
@@ -3629,7 +3629,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="cooperativa-vila-pinto.html"], a[href="/cooperativa-vila-pinto.html"], a[href="cooperativa-cooadesc.html"], a[href="/cooperativa-cooadesc.html"], a[href="cooperativa-padre-cacique.html"], a[href="/cooperativa-padre-cacique.html"]'
+      'a[href="cooperativa-vila-pinto.html"], a[href="/cooperativa-vila-pinto.html"], a[href="cooperativa-cooadesc.html"], a[href="/cooperativa-cooadesc.html"], a[href="cooperativa-ccpa.html"], a[href="/cooperativa-ccpa.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("home", territoryId));
@@ -3637,7 +3637,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="cadastro-coletas-vila-pinto.html"], a[href="/cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-cooadesc.html"], a[href="/cadastro-coletas-cooadesc.html"], a[href="cadastro-coletas-padre-cacique.html"], a[href="/cadastro-coletas-padre-cacique.html"]'
+      'a[href="cadastro-coletas-vila-pinto.html"], a[href="/cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-cooadesc.html"], a[href="/cadastro-coletas-cooadesc.html"], a[href="cadastro-coletas-ccpa.html"], a[href="/cadastro-coletas-ccpa.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("coletas", territoryId));

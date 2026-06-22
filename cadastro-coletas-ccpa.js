@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-pc.js";
+import { auth, db } from "./firebase-init-ccpa.js";
 import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   addDoc,
@@ -10,7 +10,7 @@ import {
 
 /* =========================
    CONFIGURAÇÃO DA PÁGINA DINÂMICA
-   Funciona para Vila Pinto, COOADESC e Padre Cacique
+   Funciona para Vila Pinto, COOADESC e CCPA
 ========================= */
 
 const TERRITORY_FALLBACKS = {
@@ -26,10 +26,10 @@ const TERRITORY_FALLBACKS = {
     backUrl: "cooperativa-cooadesc.html"
   },
 
-  "padre-cacique": {
-    territoryId: "padre-cacique",
-    territoryLabel: "Padre Cacique",
-    backUrl: "cooperativa-padre-cacique.html"
+  "ccpa": {
+    territoryId: "ccpa",
+    territoryLabel: "CCPA",
+    backUrl: "cooperativa-ccpa.html"
   }
 };
 

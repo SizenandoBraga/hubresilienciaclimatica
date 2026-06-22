@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-pc.js";
+import { auth, db } from "./firebase-init-ccpa.js";
 
 import {
   onAuthStateChanged
@@ -173,19 +173,7 @@ const CHART_COLORS = {
 };
 
 const COOP_BASES = {
-  "vila-pinto": {
-    lat: -30.048729170292532,
-    lng: -51.15652604283108
-  },
-  cooadesc: {
-    lat: -30.003,
-    lng: -51.206
-  },
-  coadesc: {
-    lat: -30.003,
-    lng: -51.206
-  },
-  "padre-cacique": {
+  ccpa: {
     lat: -30.140122365657504,
     lng: -51.1268772051727
   }
@@ -561,157 +549,30 @@ function setDbStatus(text) {
    TERRITÓRIO
 ========================= */
 
-function getTerritoryAliases(value) {
-  const v = normalizeTerritory(value);
-
-  if (!v) return [];
-
-  if (
-    v === "vila-pinto" ||
-    v === "crgr-vila-pinto" ||
-    v === "vp"
-  ) {
-    return [
-      "vila-pinto",
-      "crgr-vila-pinto",
-      "vp",
-      "vila pinto"
-    ];
-  }
-
-  if (
-    v === "cooadesc" ||
-    v === "coadesc" ||
-    v === "crgr-cooadesc" ||
-    v === "crgr-coadesc"
-  ) {
-    return [
-      "cooadesc",
-      "coadesc",
-      "crgr-cooadesc",
-      "crgr-coadesc"
-    ];
-  }
-
-  if (
-    v === "padre-cacique" ||
-    v === "crgr-padre-cacique" ||
-    v === "padre"
-  ) {
-    return [
-      "padre-cacique",
-      "crgr-padre-cacique",
-      "padre",
-      "padre cacique"
-    ];
-  }
-
-  return [v];
+function getTerritoryAliases() {
+  return ["ccpa"];
 }
 
-function resolvePageTerritory(profile = {}) {
-  const bodyTerritory = normalizeTerritory(
-    document.body?.dataset?.territoryId || ""
-  );
-
-  const urlTerritory = normalizeTerritory(
-    new URLSearchParams(window.location.search).get("territory") || ""
-  );
-
-  const profileTerritory = normalizeTerritory(
-    profile.territoryId ||
-    profile.territory ||
-    profile.cooperativeId ||
-    ""
-  );
-
-  return bodyTerritory || urlTerritory || profileTerritory || "vila-pinto";
+function resolvePageTerritory() {
+  return "ccpa";
 }
 
 function itemBelongsToPageTerritory(item = {}) {
-  const aliases = getTerritoryAliases(pageTerritoryId);
-
-  if (!aliases.length) return true;
-
-  const code = String(
-    item.participantCode ||
-    item.codigoParticipante ||
-    item.codigo ||
-    item.familyCode ||
-    item.code ||
-    item.payloadSnapshot?.participantCode ||
-    item.payloadSnapshot?.codigoParticipante ||
-    item.payloadSnapshot?.familyCode ||
-    item.recebimento?.participantCode ||
-    item.finalTurno?.participantCode ||
+  const territoryId = normalizeTerritory(
+    item.territoryId ||
+    item.territory ||
+    item.territorio ||
+    item.cooperativeId ||
+    item.cooperativaId ||
+    item.payloadSnapshot?.territoryId ||
+    item.payloadSnapshot?.territory ||
+    item.payloadSnapshot?.territorio ||
+    item.payloadSnapshot?.cooperativeId ||
+    item.payloadSnapshot?.cooperativaId ||
     ""
-  ).trim().toUpperCase();
+  );
 
-  const territoryFields = [
-    item.territoryId,
-    item.territory,
-    item.territorio,
-    item.territoryLabel,
-    item.cooperativeId,
-    item.cooperativaId,
-    item.cooperativeName,
-    item.cooperativa,
-    item.localCrgr,
-    item.crgr,
-    item.payloadSnapshot?.territoryId,
-    item.payloadSnapshot?.territory,
-    item.payloadSnapshot?.territorio,
-    item.payloadSnapshot?.territoryLabel,
-    item.payloadSnapshot?.cooperativeId,
-    item.payloadSnapshot?.cooperativaId,
-    item.payloadSnapshot?.cooperativa,
-    item.payloadSnapshot?.localCrgr,
-    item.payloadSnapshot?.crgr
-  ].filter(Boolean);
-
-  const hasTerritoryMatch = territoryFields.some((field) => {
-    const normalized = normalizeTerritory(field);
-    return aliases.includes(normalized);
-  });
-
-  if (hasTerritoryMatch) return true;
-
-  if (aliases.includes("vila-pinto")) {
-    return (
-      code.startsWith("VPD") ||
-      code.startsWith("VP") ||
-      code.startsWith("C") ||
-      code.startsWith("F")
-    );
-  }
-
-  if (aliases.includes("cooadesc") || aliases.includes("coadesc")) {
-    return (
-      code.startsWith("COA") ||
-      code.startsWith("COO") ||
-      code.startsWith("CD")
-    );
-  }
-
-  if (aliases.includes("padre-cacique")) {
-    return (
-      code.startsWith("PC") ||
-      code.startsWith("PCA") ||
-      code.startsWith("PDC")
-    );
-  }
-
-  /*
-    Fallback de segurança:
-    se o documento não tem território nem código reconhecido,
-    não bloqueia a renderização. Isso evita tela vazia por falta
-    de padronização nos documentos antigos.
-  */
-  if (!territoryFields.length && !code) {
-    return true;
-  }
-
-  return false;
+  return territoryId === "ccpa";
 }
 
 /* =========================
@@ -1556,7 +1417,8 @@ async function getUserProfile(uid) {
       name: auth.currentUser?.email || "Usuário",
       role: "admin",
       status: "active",
-      territoryId: document.body?.dataset?.territoryId || "vila-pinto"
+      territoryId: "ccpa",
+      territoryLabel: "CCPA"
     };
   }
 
@@ -2896,13 +2758,7 @@ async function saveEdit() {
 ========================= */
 
 function getCoopBase() {
-  const aliases = getTerritoryAliases(pageTerritoryId);
-
-  if (aliases.includes("cooadesc")) return COOP_BASES.cooadesc;
-  if (aliases.includes("coadesc")) return COOP_BASES.coadesc;
-  if (aliases.includes("padre-cacique")) return COOP_BASES["padre-cacique"];
-
-  return COOP_BASES["vila-pinto"];
+  return COOP_BASES.ccpa;
 }
 
 function initMap() {

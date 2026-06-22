@@ -36,7 +36,7 @@ const CODE_CONFIG = {
     comercio: { prefix: "COCM", start: 1 },
     outro: { prefix: "COO", start: 1 }
   },
-  "padre-cacique": {
+  "ccpa": {
     casa: { prefix: "PCD", start: 1 },
     condominio: { prefix: "PCCD", start: 1 },
     comercio: { prefix: "PCCM", start: 1 },

@@ -30,10 +30,10 @@ const COOPS = {
     redirect: "./cooperativa-cooadesc.html"
   },
 
-  "padre-cacique": {
-    label: "Padre Cacique",
-    init: () => import("./firebase-init-pc.js"),
-    redirect: "./cooperativa-padre-cacique.html"
+  "ccpa": {
+    label: "CCPA",
+    init: () => import("./firebase-init-ccpa.js"),
+    redirect: "./cooperativa-ccpa.html"
   },
 
 "governanca": {
@@ -151,8 +151,8 @@ function getRedirect(profile) {
     return "./cooperativa-cooadesc.html";
   }
 
-  if (territory === "padre-cacique" || territory === "padrecacique") {
-    return "./cooperativa-padre-cacique.html";
+  if (territory === "ccpa" || territory === "ccpa") {
+    return "./cooperativa-ccpa.html";
   }
 
   return COOPS[selectedCoop]?.redirect || "./login.html";

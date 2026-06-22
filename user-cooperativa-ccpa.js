@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-pc.js";
+import { auth, db } from "./firebase-init-ccpa.js";
 import {
   onAuthStateChanged,
   signOut
@@ -154,7 +154,7 @@ function getTerritoryLabelById(id) {
 
   if (territory === "vila-pinto") return "Centro de Triagem Vila Pinto";
   if (territory === "cooadesc" || territory === "coadesc") return "COOADESC";
-  if (territory === "padre-cacique") return "Padre Cacique";
+  if (territory === "ccpa") return "CCPA";
 
   return id || "Cooperativa";
 }
