@@ -209,6 +209,8 @@ const els = {
   btnPrint: document.getElementById("btnPrint"),
   btnExportPDF: document.getElementById("btnExportPDF"),
   btnExportExcel: document.getElementById("btnExportExcel"),
+  btnExportTablePDF: document.getElementById("btnExportTablePDF"),
+  btnExportTableExcel: document.getElementById("btnExportTableExcel"),
 
   txtPeriodo: document.getElementById("txtPeriodo"),
   txtRegistrosTopo: document.getElementById("txtRegistrosTopo"),
@@ -2920,7 +2922,13 @@ function renderRouteToPoint(code) {
 ========================= */
 
 function getExportBaseItems() {
-  return Array.isArray(tableFilteredColetas) && tableFilteredColetas.length
+  /*
+    Exporta a mesma base que aparece na seção "Tabela de coletas".
+    Importante: quando o filtro da tabela retorna zero registros,
+    não devemos cair para filteredColetas, pois isso exportaria dados que
+    o usuário não está vendo.
+  */
+  return Array.isArray(tableFilteredColetas)
     ? tableFilteredColetas
     : filteredColetas;
 }
@@ -2971,6 +2979,12 @@ async function exportExcel() {
   }
 
   const rows = getExportRows(getExportBaseItems());
+
+  if (!rows.length) {
+    alert("Nenhuma coleta encontrada para exportar.");
+    return;
+  }
+
   const ws = XLSX.utils.json_to_sheet(rows);
   const wb = XLSX.utils.book_new();
 
@@ -2985,8 +2999,12 @@ async function exportPDF() {
   }
 
   const { jsPDF } = window.jspdf;
-
   const rows = getExportRows(getExportBaseItems());
+
+  if (!rows.length) {
+    alert("Nenhuma coleta encontrada para exportar.");
+    return;
+  }
 
   const pdf = new jsPDF({
     orientation: "landscape",
@@ -2998,20 +3016,30 @@ async function exportPDF() {
   pdf.text("Dashboard de Coletas Seletivas", 40, 40);
 
   pdf.setFontSize(10);
-  pdf.text(`Emitido em ${formatDateTimeBR(new Date())}`, 40, 58);
+  pdf.text("Cooperativa: CCPA", 40, 58);
+  pdf.text(`Emitido em ${formatDateTimeBR(new Date())} • Registros exportados: ${rows.length}`, 40, 74);
 
   if (typeof pdf.autoTable === "function") {
     pdf.autoTable({
-      startY: 80,
-      head: [Object.keys(rows[0] || {})],
+      startY: 96,
+      head: [Object.keys(rows[0])],
       body: rows.map((row) => Object.values(row)),
       styles: {
-        fontSize: 8
+        fontSize: 7,
+        cellPadding: 3,
+        overflow: "linebreak"
       },
       headStyles: {
-        fillColor: [129, 185, 42]
+        fillColor: [129, 185, 42],
+        textColor: [31, 42, 24]
+      },
+      margin: {
+        left: 24,
+        right: 24
       }
     });
+  } else {
+    pdf.text("Plugin autoTable não carregado. Não foi possível montar a tabela no PDF.", 40, 96);
   }
 
   pdf.save(`dashboard-coletas-${buildExportFileStamp()}.pdf`);
@@ -3046,6 +3074,8 @@ function bindEvents() {
   els.btnPrint?.addEventListener("click", () => window.print());
   els.btnExportExcel?.addEventListener("click", exportExcel);
   els.btnExportPDF?.addEventListener("click", exportPDF);
+  els.btnExportTableExcel?.addEventListener("click", exportExcel);
+  els.btnExportTablePDF?.addEventListener("click", exportPDF);
 
   els.chartMainType?.addEventListener("change", () => renderCharts(filteredColetas));
   els.chartFlowType?.addEventListener("change", () => renderCharts(filteredColetas));

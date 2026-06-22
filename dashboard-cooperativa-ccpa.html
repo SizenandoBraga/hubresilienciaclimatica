@@ -22,6 +22,30 @@
 <meta name="theme-color" content="#81B92A">
 
   <link rel="stylesheet" href="./dashboard-cooperativa.css">
+
+  <style>
+    .table-export-actions{
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+      justify-content:flex-end;
+    }
+    .export-table-btn-pdf{
+      background:#fff7ed;
+      border-color:rgba(239,107,34,.35);
+      color:#9a3412;
+    }
+    @media (max-width: 760px){
+      .table-export-actions{
+        width:100%;
+        justify-content:stretch;
+      }
+      .table-export-actions .export-table-btn{
+        flex:1 1 100%;
+      }
+    }
+  </style>
 </head>
 <body data-territory-id="ccpa" data-coop-label="CCPA">
   <div class="bg-grid"></div>
@@ -442,9 +466,15 @@
         </p>
       </div>
 
-      <button class="export-table-btn" type="button" id="btnExportExcel">
-        ⬇ Exportar tabela
-      </button>
+      <div class="table-export-actions">
+        <button class="export-table-btn" type="button" id="btnExportTableExcel">
+          ⬇ Exportar Excel
+        </button>
+
+        <button class="export-table-btn export-table-btn-pdf" type="button" id="btnExportTablePDF">
+          ⬇ Exportar PDF
+        </button>
+      </div>
     </div>
 
     <div class="table-summary-cards table-summary-cards-modern">
