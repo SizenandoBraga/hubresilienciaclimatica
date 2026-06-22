@@ -151,9 +151,14 @@ function getRedirect(profile) {
     return "./cooperativa-cooadesc.html";
   }
 
-  if (territory === "ccpa" || territory === "ccpa") {
-    return "./cooperativa-ccpa.html";
-  }
+ if (
+  territory === "ccpa" ||
+  territory === "padre-cacique" ||
+  territory === "crgr-padre-cacique" ||
+  territory === "padre"
+) {
+  return "./cooperativa-ccpa.html";
+}
 
   return COOPS[selectedCoop]?.redirect || "./login.html";
 }
