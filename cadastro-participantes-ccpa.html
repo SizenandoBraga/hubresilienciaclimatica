@@ -5,23 +5,25 @@
   <meta http-equiv="Content-Language" content="pt-BR" />
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Cadastro de Participantes • CCPA</title>
+  <title>Cadastro de Participantes • Cooperativa CCPA</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
 
+  <link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#81B92A">
+
   <link rel="stylesheet" href="cadastro-participantes.css">
 </head>
 
 <body
-  data-territory-id="padre-cacique"
+  data-territory-id="ccpa"
   data-territory-label="CCPA"
-  data-territory-slug="padre-cacique"
-  data-redirect-url="/padre-cacique.html"
+  data-territory-slug="ccpa"
+  data-redirect-url="/cooperativa-ccpa.html"
 >
- <div class="page-bg"></div>
+  <div class="page-bg"></div>
   <div class="page-noise"></div>
 
   <header class="site-header">
@@ -37,19 +39,19 @@
       </a>
 
       <div class="site-header-actions">
-        <a class="site-login-btn" href="/padre-cacique.html">Voltar ao território →</a>
+        <a class="site-login-btn" href="/cooperativa-ccpa.html">Voltar à cooperativa →</a>
       </div>
 
       <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu" type="button">☰</button>
     </div>
 
-  <div class="site-mobile-menu" id="mobileMenu">
+    <div class="site-mobile-menu" id="mobileMenu">
       <a href="/index.html">Início</a>
-      <a href="padre-cacique.html">Voltar ao território</a>
+      <a href="/cooperativa-ccpa.html">Voltar à página da cooperativa</a>
     </div>
   </header>
 
-<main class="page-shell">
+  <main class="page-shell">
     <section class="wizard-header glass-card">
       <div class="wizard-header-top">
         <div>
@@ -61,7 +63,7 @@
         <div class="wizard-meta">
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Território</span>
-            <strong id="territoryLabelView">CCPA</strong>
+            <strong id="territoryLabelView">Cooperativa CCPA</strong>
           </div>
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Acesso</span>
@@ -244,27 +246,22 @@
             </div>
 
             <div class="field">
-  <label for="complement">10) Complemento</label>
-  <input type="text" id="complement" placeholder="Apto, bloco, casa, fundos...">
-</div>
-
-            <div class="field">
-              <label for="street">11) Rua</label>
+              <label for="street">10) Rua</label>
               <input type="text" id="street">
             </div>
 
             <div class="field">
-              <label for="neighborhood">12) Bairro</label>
+              <label for="neighborhood">11) Bairro</label>
               <input type="text" id="neighborhood">
             </div>
 
             <div class="field">
-              <label for="city">13) Cidade</label>
+              <label for="city">12) Cidade</label>
               <input type="text" id="city">
             </div>
 
             <div class="field">
-              <label for="state">14) UF</label>
+              <label for="state">13) UF</label>
               <input type="text" id="state">
             </div>
 
@@ -376,7 +373,7 @@
       </p>
       <div class="success-modal-actions">
         <button type="button" class="btn-primary" id="closeSuccessModal">
-          Fechar e voltar à página do território
+          Fechar e voltar à página da cooperativa
         </button>
       </div>
     </div>
