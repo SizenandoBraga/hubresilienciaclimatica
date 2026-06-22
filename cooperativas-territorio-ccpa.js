@@ -1229,28 +1229,187 @@ function getSortedRealizadas() {
       return dateB - dateA;
     });
 }
+function normalizeImageUrl(value) {
+  if (!value) return "";
+
+  if (typeof value === "string") {
+    return value.trim();
+  }
+
+  if (typeof value === "object") {
+    return String(
+      value.dataUrl ||
+      value.url ||
+      value.downloadUrl ||
+      value.photoUrl ||
+      value.imageUrl ||
+      value.src ||
+      ""
+    ).trim();
+  }
+
+  return "";
+}
+
+function pushImageUrl(target, value) {
+  if (Array.isArray(value)) {
+    value.forEach((item) => pushImageUrl(target, item));
+    return;
+  }
+
+  const url = normalizeImageUrl(value);
+
+  if (url && !target.includes(url)) {
+    target.push(url);
+  }
+}
+
+function getColetaImageGroups(item = {}) {
+  const groups = [
+    {
+      title: "Fotos do resíduo",
+      type: "residuo",
+      urls: []
+    },
+    {
+      title: "Fotos do não comercializado e rejeito",
+      type: "nao-comercializado",
+      urls: []
+    },
+    {
+      title: "Fotos do final do turno",
+      type: "final-turno",
+      urls: []
+    },
+    {
+      title: "Outras imagens da coleta",
+      type: "geral",
+      urls: []
+    }
+  ];
+
+  const byType = Object.fromEntries(groups.map((group) => [group.type, group.urls]));
+
+  /* =====================================================
+     Recebimento: compatível com o formato antigo e novo.
+     - Formato antigo: fotoResiduoUrl / fotoNaoComercializadoUrl
+     - Formato novo: fotoResiduoUrls / fotoNaoComercializadoUrls
+     - Fallbacks: photos, uploads, photoUrl
+  ===================================================== */
+
+  pushImageUrl(byType["residuo"], item.fotoResiduoUrl);
+  pushImageUrl(byType["residuo"], item.fotoResiduoUrls);
+  pushImageUrl(byType["residuo"], item.residuoPhotos);
+  pushImageUrl(byType["residuo"], item.residuoPhotoUrls);
+  pushImageUrl(byType["residuo"], item.recebimento?.fotoResiduoUrl);
+  pushImageUrl(byType["residuo"], item.recebimento?.fotoResiduoUrls);
+  pushImageUrl(byType["residuo"], item.recebimento?.residuoPhotos);
+  pushImageUrl(byType["residuo"], item.recebimento?.residuoPhotoUrls);
+  pushImageUrl(byType["residuo"], item.recebimento?.uploads?.fotoResiduo);
+  pushImageUrl(byType["residuo"], item.recebimento?.uploads?.fotosResiduo);
+  pushImageUrl(byType["residuo"], item.recebimento?.uploads?.residuo);
+
+  pushImageUrl(byType["nao-comercializado"], item.fotoNaoComercializadoUrl);
+  pushImageUrl(byType["nao-comercializado"], item.fotoNaoComercializadoUrls);
+  pushImageUrl(byType["nao-comercializado"], item.naoComercializadoPhotos);
+  pushImageUrl(byType["nao-comercializado"], item.naoComercializadoPhotoUrls);
+  pushImageUrl(byType["nao-comercializado"], item.recebimento?.fotoNaoComercializadoUrl);
+  pushImageUrl(byType["nao-comercializado"], item.recebimento?.fotoNaoComercializadoUrls);
+  pushImageUrl(byType["nao-comercializado"], item.recebimento?.naoComercializadoPhotos);
+  pushImageUrl(byType["nao-comercializado"], item.recebimento?.naoComercializadoPhotoUrls);
+  pushImageUrl(byType["nao-comercializado"], item.recebimento?.uploads?.fotoNaoComercializado);
+  pushImageUrl(byType["nao-comercializado"], item.recebimento?.uploads?.fotosNaoComercializado);
+  pushImageUrl(byType["nao-comercializado"], item.recebimento?.uploads?.naoComercializado);
+
+  pushImageUrl(byType["final-turno"], item.finalTurno?.photos);
+  pushImageUrl(byType["final-turno"], item.finalTurno?.photoUrls);
+  pushImageUrl(byType["final-turno"], item.finalTurno?.uploads);
+  pushImageUrl(byType["final-turno"], item.fotosFinalTurno);
+  pushImageUrl(byType["final-turno"], item.finalTurnoPhotos);
+
+  pushImageUrl(byType["geral"], item.photos);
+  pushImageUrl(byType["geral"], item.photoUrls);
+  pushImageUrl(byType["geral"], item.photoUrl);
+  pushImageUrl(byType["geral"], item.imageUrl);
+  pushImageUrl(byType["geral"], item.imagemUrl);
+  pushImageUrl(byType["geral"], item.fotoUrl);
+  pushImageUrl(byType["geral"], item.coletaImageUrl);
+  pushImageUrl(byType["geral"], item.recebimento?.photos);
+  pushImageUrl(byType["geral"], item.recebimento?.photoUrls);
+  pushImageUrl(byType["geral"], item.finalTurno?.photoUrl);
+  pushImageUrl(byType["geral"], item.payloadSnapshot?.photos);
+  pushImageUrl(byType["geral"], item.payloadSnapshot?.photoUrls);
+  pushImageUrl(byType["geral"], item.payloadSnapshot?.photoUrl);
+  pushImageUrl(byType["geral"], item.payloadSnapshot?.imageUrl);
+  pushImageUrl(byType["geral"], item.payloadSnapshot?.imagemUrl);
+  pushImageUrl(byType["geral"], item.payloadSnapshot?.fotoUrl);
+
+  const alreadyClassified = new Set([
+    ...byType["residuo"],
+    ...byType["nao-comercializado"],
+    ...byType["final-turno"]
+  ]);
+
+  byType["geral"] = byType["geral"].filter((url) => !alreadyClassified.has(url));
+
+  return groups
+    .map((group) => ({
+      ...group,
+      urls: group.type === "geral" ? byType["geral"] : group.urls
+    }))
+    .filter((group) => group.urls.length);
+}
+
+function getColetaImageUrls(item = {}) {
+  return getColetaImageGroups(item).flatMap((group) => group.urls);
+}
+
 function getColetaImageUrl(item = {}) {
-  return (
-    item.imageUrl ||
-    item.imagemUrl ||
-    item.photoUrl ||
-    item.fotoUrl ||
-    item.coletaImageUrl ||
-    item.recebimento?.imageUrl ||
-    item.recebimento?.imagemUrl ||
-    item.finalTurno?.imageUrl ||
-    item.finalTurno?.imagemUrl ||
-    item.payloadSnapshot?.imageUrl ||
-    item.payloadSnapshot?.imagemUrl ||
-    item.payloadSnapshot?.fotoUrl ||
-    ""
-  );
+  return getColetaImageUrls(item)[0] || "";
+}
+
+function renderColetaImageGallery(groups = []) {
+  if (!groups.length) {
+    return `
+      <div class="empty-materials">
+        Nenhuma imagem encontrada neste registro.
+      </div>
+    `;
+  }
+
+  return groups.map((group) => {
+    return `
+      <section class="coleta-gallery-section">
+        <h3>${escapeHtml(group.title)} (${group.urls.length})</h3>
+
+        <div class="coleta-gallery-grid">
+          ${group.urls.map((url, index) => `
+            <article class="coleta-gallery-card">
+              <a href="${escapeHtml(url)}" target="_blank" rel="noopener">
+                <img
+                  src="${escapeHtml(url)}"
+                  alt="${escapeHtml(group.title)} ${index + 1}"
+                  loading="lazy"
+                />
+
+                <div class="coleta-gallery-caption">
+                  <span>Imagem ${index + 1}</span>
+                  <strong>Abrir</strong>
+                </div>
+              </a>
+            </article>
+          `).join("")}
+        </div>
+      </section>
+    `;
+  }).join("");
 }
 
 function openColetaImageModal(item = {}) {
-  const imageUrl = getColetaImageUrl(item);
+  const imageGroups = getColetaImageGroups(item);
+  const imageCount = imageGroups.reduce((acc, group) => acc + group.urls.length, 0);
 
-  if (!imageUrl) {
+  if (!imageCount) {
     alert("Esta coleta não possui imagem salva.");
     return;
   }
@@ -1267,11 +1426,19 @@ function openColetaImageModal(item = {}) {
       <button class="coleta-modal-close" id="closeColetaImageModal" type="button">×</button>
 
       <div class="coleta-modal-head">
-        <h2>Imagem da coleta</h2>
-        <p>${escapeHtml(getParticipantName(item))} • ${escapeHtml(formatDateLabel(item))}</p>
+        <div>
+          <h2>Imagens da coleta</h2>
+          <p>${escapeHtml(getParticipantName(item))} • ${escapeHtml(formatDateLabel(item))}</p>
+
+          <div class="coleta-image-summary">
+            <span>${imageCount} imagem(ns)</span>
+            <span>${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</span>
+            <span>${escapeHtml(getParticipantCode(item) || "Sem código")}</span>
+          </div>
+        </div>
       </div>
 
-      <img src="${escapeHtml(imageUrl)}" alt="Imagem da coleta" />
+      ${renderColetaImageGallery(imageGroups)}
     </div>
   `;
 
@@ -1321,6 +1488,9 @@ function renderRecentColetas() {
     const rejeito = formatKg(getRejeito(item));
     const naoComercializado = formatKg(getNaoComercializado(item));
     const tipo = getParticipantTypeLabel(item);
+    const imageCount = getColetaImageUrls(item).length;
+    const imageButtonClass = imageCount ? "has-images" : "no-images";
+    const imageButtonLabel = imageCount ? `Imagens (${imageCount})` : "Sem imagem";
 
     return `
       <tr class="
@@ -1368,11 +1538,11 @@ function renderRecentColetas() {
   </button>
 
   <button
-    class="table-btn image"
+    class="table-btn image ${imageButtonClass}"
     type="button"
     data-image-coleta="${escapeHtml(item.id)}"
   >
-    Imagem
+    ${escapeHtml(imageButtonLabel)}
   </button>
 
   <button
@@ -1516,6 +1686,11 @@ function openColetaModal(item) {
         <div class="coleta-materials-list">
           ${renderMaterialsList(item)}
         </div>
+      </div>
+
+      <div class="coleta-materials-box">
+        <h3>Imagens salvas</h3>
+        ${renderColetaImageGallery(getColetaImageGroups(item))}
       </div>
     </div>
   `;
