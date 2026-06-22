@@ -1,0 +1,276 @@
+/* =========================================================
+   NSRU • Dashboard CCPA
+   Complemento visual para minimizar/maximizar seções
+   Use este arquivo depois de dashboard-cooperativa.css
+========================================================= */
+
+.dashboard-section-toolbar{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  margin:18px 0;
+  padding:16px;
+  border:1px solid rgba(129,185,42,.22);
+  border-radius:22px;
+  background:rgba(255,255,255,.86);
+  box-shadow:0 18px 45px rgba(15,23,42,.06);
+  backdrop-filter:blur(12px);
+}
+
+.dashboard-section-toolbar strong{
+  display:block;
+  color:#1f2a18;
+  font-size:1.05rem;
+  line-height:1.1;
+}
+
+.dashboard-section-toolbar span{
+  display:block;
+  margin-top:3px;
+  color:#64748b;
+  font-size:.92rem;
+}
+
+.dashboard-section-toolbar-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+.section-global-btn{
+  appearance:none;
+  border:0;
+  border-radius:999px;
+  padding:11px 16px;
+  cursor:pointer;
+  color:#fff;
+  font-weight:800;
+  letter-spacing:.01em;
+  background:linear-gradient(135deg,#81B92A,#5f941f);
+  box-shadow:0 14px 32px rgba(129,185,42,.22);
+  transition:transform .18s ease, box-shadow .18s ease, filter .18s ease;
+}
+
+.section-global-btn.ghost{
+  color:#1f2a18;
+  background:#fff;
+  border:1px solid rgba(129,185,42,.32);
+  box-shadow:0 10px 26px rgba(15,23,42,.06);
+}
+
+.section-global-btn:hover{
+  transform:translateY(-1px);
+  filter:saturate(1.04);
+}
+
+.section-global-btn:active{
+  transform:translateY(0);
+}
+
+.collapsible-panel{
+  position:relative;
+  overflow:hidden;
+  transition:box-shadow .22s ease, border-color .22s ease, transform .22s ease;
+}
+
+.collapsible-panel:hover{
+  transform:translateY(-1px);
+}
+
+.collapsible-panel-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+}
+
+.section-toggle-btn{
+  appearance:none;
+  border:1px solid rgba(129,185,42,.30);
+  background:#fff;
+  color:#1f2a18;
+  min-width:128px;
+  height:42px;
+  padding:0 13px 0 16px;
+  border-radius:999px;
+  cursor:pointer;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  gap:9px;
+  font-weight:800;
+  white-space:nowrap;
+  box-shadow:0 12px 26px rgba(15,23,42,.06);
+  transition:background .2s ease, color .2s ease, border-color .2s ease, transform .2s ease;
+}
+
+.section-toggle-btn i{
+  display:inline-grid;
+  place-items:center;
+  width:22px;
+  height:22px;
+  border-radius:999px;
+  background:rgba(129,185,42,.14);
+  color:#5f941f;
+  font-style:normal;
+  line-height:1;
+  transition:transform .22s ease, background .22s ease, color .22s ease;
+}
+
+.section-toggle-btn:hover{
+  color:#fff;
+  background:#81B92A;
+  border-color:#81B92A;
+}
+
+.section-toggle-btn:hover i{
+  color:#1f2a18;
+  background:#fff;
+}
+
+.collapsible-panel-content{
+  display:grid;
+  grid-template-rows:1fr;
+  opacity:1;
+  transition:grid-template-rows .28s ease, opacity .22s ease, margin .22s ease, padding .22s ease;
+}
+
+.collapsible-panel-content > *{
+  min-height:0;
+}
+
+.collapsible-panel.is-collapsed .collapsible-panel-content{
+  grid-template-rows:0fr;
+  opacity:0;
+  pointer-events:none;
+  margin-top:0 !important;
+}
+
+.collapsible-panel.is-collapsed .collapsible-panel-content > *{
+  overflow:hidden;
+}
+
+.collapsible-panel.is-collapsed .section-toggle-btn{
+  background:#1f2a18;
+  color:#fff;
+  border-color:#1f2a18;
+}
+
+.collapsible-panel.is-collapsed .section-toggle-btn i{
+  transform:rotate(-90deg);
+  color:#1f2a18;
+  background:#81B92A;
+}
+
+.collapsible-panel.is-collapsed .panel-inner{
+  padding-bottom:18px;
+}
+
+.collapsible-panel.is-collapsed .panel-head,
+.collapsible-panel.is-collapsed .table-dashboard-head{
+  margin-bottom:0;
+}
+
+.collapsible-panel.is-collapsed::after{
+  content:"Seção minimizada";
+  display:inline-flex;
+  align-items:center;
+  margin:0 0 18px 18px;
+  padding:7px 12px;
+  border-radius:999px;
+  background:rgba(129,185,42,.12);
+  color:#4f7d1c;
+  font-size:.82rem;
+  font-weight:800;
+}
+
+.collapsible-panel .chart-card,
+.collapsible-panel .table-wrap,
+.collapsible-panel .route-map-wrap,
+.collapsible-panel .material-card,
+.collapsible-panel .summary-card,
+.collapsible-panel .reject-card{
+  transition:transform .2s ease, box-shadow .2s ease;
+}
+
+.collapsible-panel:not(.is-collapsed) .chart-card:hover,
+.collapsible-panel:not(.is-collapsed) .material-card:hover,
+.collapsible-panel:not(.is-collapsed) .summary-card:hover,
+.collapsible-panel:not(.is-collapsed) .reject-card:hover{
+  transform:translateY(-2px);
+}
+
+.table-dashboard-panel .collapsible-panel-content{
+  gap:0;
+}
+
+@media (max-width: 980px){
+  .dashboard-section-toolbar{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+
+  .dashboard-section-toolbar-actions{
+    width:100%;
+    justify-content:stretch;
+  }
+
+  .section-global-btn{
+    flex:1 1 150px;
+  }
+
+  .collapsible-panel-head{
+    align-items:stretch;
+    flex-direction:column;
+  }
+
+  .section-toggle-btn{
+    width:100%;
+  }
+}
+
+@media (max-width: 560px){
+  .dashboard-section-toolbar{
+    margin:14px 0;
+    padding:14px;
+    border-radius:18px;
+  }
+
+  .dashboard-section-toolbar strong{
+    font-size:1rem;
+  }
+
+  .dashboard-section-toolbar span{
+    font-size:.86rem;
+  }
+
+  .section-global-btn,
+  .section-toggle-btn{
+    min-height:44px;
+    font-size:.92rem;
+  }
+
+  .collapsible-panel.is-collapsed::after{
+    margin-left:14px;
+  }
+}
+
+@media print{
+  .dashboard-section-toolbar,
+  .section-toggle-btn{
+    display:none !important;
+  }
+
+  .collapsible-panel .collapsible-panel-content{
+    display:block !important;
+    opacity:1 !important;
+    pointer-events:auto !important;
+  }
+
+  .collapsible-panel.is-collapsed::after{
+    display:none !important;
+  }
+}
