@@ -1803,7 +1803,7 @@ function mergeUsers() {
   );
 
   emitPendingNotifications();
-  applyFilters();
+  applyFilters({ preservePages: true });
 }
 
 function emitPendingNotifications() {
@@ -1825,10 +1825,19 @@ function emitPendingNotifications() {
   STATE.lastPendingIds = currentPendingIds;
 }
 
-function applyFilters() {
-  STATE.pendingPage = 0;
-STATE.activePage = 0;
-STATE.tablePage = 0;
+function clampPage(value, totalItems) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / STATE.pageSize));
+  return Math.min(Math.max(0, Number(value || 0)), totalPages - 1);
+}
+
+function applyFilters(options = {}) {
+  const preservePages = options?.preservePages === true;
+
+  if (!preservePages) {
+    STATE.pendingPage = 0;
+    STATE.activePage = 0;
+    STATE.tablePage = 0;
+  }
 
   const term = String(els.searchInput?.value || "").trim().toLowerCase();
   const status = String(els.statusFilter?.value || "all");
@@ -1849,6 +1858,15 @@ STATE.tablePage = 0;
 
     return matchesTerm && matchesStatus && matchesOperation;
   });
+
+  if (preservePages) {
+    const pendingCount = STATE.filteredUsers.filter((u) => u.status === "pendente").length;
+    const activeCount = STATE.filteredUsers.filter((u) => u.status === "aprovado").length;
+
+    STATE.pendingPage = clampPage(STATE.pendingPage, pendingCount);
+    STATE.activePage = clampPage(STATE.activePage, activeCount);
+    STATE.tablePage = clampPage(STATE.tablePage, STATE.filteredUsers.length);
+  }
 
   renderAll();
 }
@@ -2020,7 +2038,9 @@ function renderTable() {
   ensureTableHeaderForLabels();
 
   const allUsers = getTableFilteredUsers();
-  const totalPages = Math.ceil(allUsers.length / STATE.pageSize);
+  const totalPages = Math.max(1, Math.ceil(allUsers.length / STATE.pageSize));
+
+  STATE.tablePage = Math.min(STATE.tablePage, totalPages - 1);
 
   const start = STATE.tablePage * STATE.pageSize;
   const end = start + STATE.pageSize;
