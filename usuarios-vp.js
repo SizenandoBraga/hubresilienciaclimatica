@@ -23,21 +23,13 @@ const DEFAULT_BASE = {
 const ROUTES = {
   "vila-pinto": {
     label: "Centro de Triagem Vila Pinto",
-    aliases: [
-      "vila-pinto",
-      "vila pinto",
-      "centro-de-triagem-vila-pinto",
-      "centro de triagem vila pinto",
-      "ctvp",
-      "crgr-vila-pinto",
-      "crgr_vila_pinto"
-    ],
+    aliases: ["vila-pinto", "crgr-vila-pinto", "crgr_vila_pinto"],
     pages: {
       home: "cooperativa-vila-pinto.html",
       usuarios: "usuarios-vila-pinto.html",
       coletas: "cadastro-coletas-vila-pinto.html",
       usuariosCooperativa: "usuario-cooperativa-vila-pinto.html",
-      dashboard: "dashboard-cooperativa.html"
+      dashboard: "dashboard-cooperativa-vila-pinto.html"
     },
     base: {
       label: "Centro de Triagem Vila Pinto",
@@ -67,6 +59,29 @@ const ROUTES = {
       label: "COOADESC",
       lat: -29.978149536151548, 
       lng: -51.19897147117521
+    }
+  },
+
+
+  ccpa: {
+    label: "CCPA",
+    aliases: [
+      "ccpa",
+      "cooperativa-dos-catadores-de-porto-alegre",
+      "crgr-ccpa",
+      "crgr_ccpa"
+    ],
+    pages: {
+      home: "cooperativa-ccpa.html",
+      usuarios: "usuarios-ccpa.html",
+      coletas: "cadastro-coletas-ccpa.html",
+      usuariosCooperativa: "usuario-cooperativa-ccpa.html",
+      dashboard: "dashboard-cooperativa-ccpa.html"
+    },
+    base: {
+      label: "CCPA",
+      lat: -30.140122365657504,
+      lng: -51.1268772051727
     }
   },
 
@@ -259,7 +274,124 @@ function toNumberOrNull(value) {
 
   return Number.isFinite(n) ? n : null;
 }
+function getCodeNumberFromValue(code, prefix) {
+  const text = String(code || "").trim();
 
+  if (!text.startsWith(`${prefix}-`)) return null;
+
+  const numberPart = Number(text.split("-")[1]);
+
+  return Number.isFinite(numberPart) ? numberPart : null;
+}
+
+function isApprovedForCode(data = {}) {
+  const status = String(data.status || "").toLowerCase().trim();
+  const approvalStatus = String(data.approvalStatus || "").toLowerCase().trim();
+  const active = data.active === true;
+
+  return (
+    status === "aprovado" ||
+    status === "approved" ||
+    status === "ativo" ||
+    status === "active" ||
+    approvalStatus === "approved" ||
+    approvalStatus === "aprovado" ||
+    active === true
+  );
+}
+
+
+const APPROVED_CODE_CONFIG = {
+  cooadesc: {
+    casa: { prefix: "COD", start: 1 },
+    condominio: { prefix: "COCD", start: 1 },
+    comercio: { prefix: "COCM", start: 1 },
+    outro: { prefix: "COO", start: 1 }
+  },
+  "vila-pinto": {
+    casa: { prefix: "VPD", start: 300 },
+    condominio: { prefix: "VPCD", start: 10 },
+    comercio: { prefix: "VPCM", start: 10 },
+    outro: { prefix: "VPO", start: 300 }
+  },
+  ccpa: {
+    casa: { prefix: "CCPA", start: 1 },
+    condominio: { prefix: "CCPACD", start: 1 },
+    comercio: { prefix: "CCPACM", start: 1 },
+    outro: { prefix: "CCPAO", start: 1 }
+  }
+};
+
+function getApprovedCodeLocalType(user = {}) {
+  const raw = user.raw || {};
+  const snapshot = raw.payloadSnapshot || {};
+
+  const value = normalizeRouteKey(
+    user.codeLocalType ||
+    user.localType ||
+    raw.codeLocalType ||
+    raw.localType ||
+    snapshot.codeLocalType ||
+    snapshot.localType ||
+    "casa"
+  );
+
+  if (value.includes("condominio")) return "condominio";
+  if (value.includes("comercio")) return "comercio";
+  if (value.includes("outro")) return "outro";
+
+  return "casa";
+}
+
+async function generateApprovedParticipantCode(userForCode = {}) {
+  const territoryId =
+    canonicalTerritoryId(
+      userForCode.territoryId ||
+      userForCode.raw?.territoryId ||
+      userForCode.raw?.payloadSnapshot?.territoryId ||
+      getPageTerritoryId() ||
+      getMyTerritoryId() ||
+      "vila-pinto"
+    ) || "vila-pinto";
+
+  const localTypeKey = getApprovedCodeLocalType(userForCode);
+  const codeConfig =
+    APPROVED_CODE_CONFIG[territoryId]?.[localTypeKey] ||
+    APPROVED_CODE_CONFIG[territoryId]?.casa ||
+    APPROVED_CODE_CONFIG["vila-pinto"]?.casa;
+
+  if (!codeConfig) {
+    throw new Error(`Configuração de código não encontrada para ${territoryId}/${localTypeKey}.`);
+  }
+
+  const { prefix, start } = codeConfig;
+  const aliases = getTerritoryAliases(territoryId);
+
+  const snap = await getDocs(
+    query(
+      collection(db, "participants"),
+      where("territoryId", "in", aliases)
+    )
+  );
+
+  let maxNumber = 0;
+
+  snap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+
+    if (!isApprovedForCode(data)) return;
+
+    const number = getCodeNumberFromValue(data.participantCode, prefix);
+
+    if (number !== null && number > maxNumber) {
+      maxNumber = number;
+    }
+  });
+
+  const nextNumber = Math.max(start, maxNumber + 1);
+
+  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
+}
 function isValidCoord(lat, lng) {
   return (
     Number.isFinite(lat) &&
@@ -335,27 +467,6 @@ function normalizeTerritory(value) {
 function canonicalTerritoryId(value) {
   const normalized = normalizeRouteKey(value);
 
-  /*
-    Página exclusiva da Vila Pinto.
-    Muitos documentos antigos/novos podem chegar com variações do território,
-    por exemplo: "vila-pinto", "crgr_vila_pinto" ou
-    "Centro de Triagem Vila Pinto". Todas essas formas precisam cair no
-    mesmo território canônico para os pendentes aparecerem corretamente.
-  */
-  const vilaPintoAliases = [
-    "vila-pinto",
-    "vila pinto",
-    "centro-de-triagem-vila-pinto",
-    "centro de triagem vila pinto",
-    "ctvp",
-    "crgr-vila-pinto",
-    "crgr_vila_pinto"
-  ].map(normalizeRouteKey);
-
-  if (vilaPintoAliases.includes(normalized)) {
-    return "vila-pinto";
-  }
-
   for (const [key, config] of Object.entries(ROUTES)) {
     const aliases = [key, ...(config.aliases || [])].map(normalizeRouteKey);
 
@@ -366,7 +477,11 @@ function canonicalTerritoryId(value) {
 }
 
 function getCurrentTerritoryId() {
-  return "vila-pinto";
+  return canonicalTerritoryId(
+    document.body?.dataset?.territoryId ||
+    STATE.userDoc?.territoryId ||
+    "vila-pinto"
+  );
 }
 
 function getRouteConfig(territoryId) {
@@ -398,15 +513,9 @@ function getTerritoryConfig(territoryId) {
 }
 
 function getTerritoryAliases(territoryId) {
-  return Array.from(new Set([
-    "vila-pinto",
-    "vila pinto",
-    "Centro de Triagem Vila Pinto",
-    "centro-de-triagem-vila-pinto",
-    "ctvp",
-    "crgr-vila-pinto",
-    "crgr_vila_pinto"
-  ].filter(Boolean)));
+  const config = getTerritoryConfig(territoryId);
+  const canonical = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
+  return Array.from(new Set([canonical, ...(config?.aliases || [])].filter(Boolean)));
 }
 
 function getPageTerritoryId() {
@@ -428,15 +537,7 @@ function canViewAllTerritories() {
 }
 
 function canManageApprovals() {
-  const role = roleName();
-  const permissions = STATE.userDoc?.permissions || {};
-  const roles = STATE.userDoc?.roles || {};
-
-  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(role) ||
-    permissions.aprovarCadastros === true ||
-    permissions.participants === true ||
-    roles.aprovarCadastros === true ||
-    roles.participants === true;
+  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
 }
 
 function canManageCoopUsers() {
@@ -444,12 +545,8 @@ function canManageCoopUsers() {
 }
 
 function getMyTerritoryId() {
-  if (STATE.userDoc?.territoryId) {
-    const canonical = canonicalTerritoryId(STATE.userDoc.territoryId);
-    if (canonical) return canonical;
-  }
-
-  return "vila-pinto";
+  if (STATE.userDoc) return canonicalTerritoryId(STATE.userDoc.territoryId);
+  return getPageTerritoryId() || null;
 }
 
 function getMyTerritoryLabel() {
@@ -573,7 +670,7 @@ function setImportStatus(message, type = "info") {
   }
 }
 
-function buildImportedParticipant(row, index) {
+async function buildImportedParticipant(row, index) {
   const territoryId = getMyTerritoryId() || getPageTerritoryId() || "vila-pinto";
   const territoryLabel = getMyTerritoryLabel() || getTerritoryLabelById(territoryId);
 
@@ -661,8 +758,7 @@ function buildImportedParticipant(row, index) {
     "lon"
   ]));
 
-  const generatedCode = `IMP-${String(index + 1).padStart(4, "0")}-${Date.now()}`;
-  const participantCode = code || generatedCode;
+  const participantCode = code || await generateApprovedParticipantCode({ localType, codeLocalType: localType, territoryId });
 
   return {
     id: participantCode.replace(/[^a-zA-Z0-9_-]/g, "_"),
@@ -740,9 +836,9 @@ async function importParticipantsExcel(event) {
       return;
     }
 
-    const importedParticipants = rows
-      .map((row, index) => buildImportedParticipant(row, index))
-      .filter(Boolean);
+    const importedParticipants = (await Promise.all(
+      rows.map((row, index) => buildImportedParticipant(row, index))
+    )).filter(Boolean);
 
     if (!importedParticipants.length) {
       setImportStatus("Nenhum participante válido encontrado. Verifique se existe a coluna Nome.", "error");
@@ -1489,37 +1585,6 @@ function dedupeApprovalDocs(docs) {
   return Array.from(mapDocs.values());
 }
 
-function isVilaPintoRecord(data = {}) {
-  const snapshot = data.payloadSnapshot || {};
-  const values = [
-    data.territoryId,
-    data.territory,
-    data.territorio,
-    data.territoryLabel,
-    snapshot.territoryId,
-    snapshot.territory,
-    snapshot.territorio,
-    snapshot.territoryLabel
-  ];
-
-  return values.some((value) => canonicalTerritoryId(value) === "vila-pinto");
-}
-
-function isPendingApprovalStatus(value) {
-  const status = String(value || "pending").toLowerCase().trim();
-
-  return ![
-    "approved",
-    "aprovado",
-    "rejected",
-    "rejeitado",
-    "inactive",
-    "inativo",
-    "cancelado",
-    "cancelada"
-  ].includes(status);
-}
-
 /* =========================
 MAPEAMENTO DOS DOCS
 ========================= */
@@ -1591,7 +1656,7 @@ function mapApprovalRequestDoc(docSnap) {
     id: docSnap.id,
     participantId: data.targetId || data.participantId || null,
     participantName: data.participantName || snapshot.name || "Solicitação pendente",
-    participantCode: data.participantCode || snapshot.participantCode || "—",
+    participantCode: data.participantCode || snapshot.participantCode || "Aguardando aprovação",
     participantPhone: data.participantPhone || snapshot.phone || "",
     participantEmail: data.participantEmail || snapshot.email || "",
     participantCpf: data.participantCpf || snapshot.cpf || "",
@@ -1631,7 +1696,7 @@ function mergeUsers() {
   });
 
   const pendingFromRequests = STATE.approvalRequests
-    .filter((req) => isPendingApprovalStatus(req.status))
+    .filter((req) => !["approved", "rejected"].includes(String(req.status || "").toLowerCase().trim()))
     .map((req) => {
       const raw = req.raw || {};
       const snapshot = raw.payloadSnapshot || {};
@@ -1837,7 +1902,14 @@ function renderApprovedList() {
 
         <div class="user-actions">
           <span class="${badgeClass(user.status)}">Aprovado</span>
-          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
+          <button
+  class="btn ${isValidCoord(user.lat, user.lng) ? "btn-success" : "btn-danger"}"
+  data-action="focus"
+  data-id="${user.id}"
+  type="button"
+>
+  ${isValidCoord(user.lat, user.lng) ? "Mapa OK" : "Sem mapa"}
+</button>
           <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
         </div>
       </article>
@@ -1879,7 +1951,7 @@ function renderPendingList() {
       <article class="user-item">
         <div class="user-main">
           <strong>${safeText(user.name)}</strong>
-          <span>Código: ${safeText(user.code)}</span>
+          <span>Código: ${user.status === "pendente" ? "Será gerado após aprovação" : safeText(user.code)}</span>
           <span>Telefone: ${safeText(user.phone)}</span>
           <span>${safeText(user.address)}</span>
         </div>
@@ -1988,7 +2060,14 @@ function renderTable() {
           <button class="btn btn-dark" data-action="print-label" data-id="${user.id}" type="button">Etiqueta</button>
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
-          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Mapa</button>
+          <button
+  class="btn ${isValidCoord(user.lat, user.lng) ? "btn-success" : "btn-danger"}"
+  data-action="focus"
+  data-id="${user.id}"
+  type="button"
+>
+  ${isValidCoord(user.lat, user.lng) ? "Mapa" : "Sem coordenada"}
+</button>
           <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
         </div>
       </td>
@@ -3270,7 +3349,7 @@ async function upsertParticipantFromApprovedRequest(user) {
   const payload = {
     name: user.name || snapshot.name || "Sem nome",
     nameLower: String(user.name || snapshot.name || "").toLowerCase(),
-    participantCode: user.code || snapshot.participantCode || "—",
+    participantCode: user.generatedCode || user.code || snapshot.participantCode || null,
     participantType: snapshot.participantType || "participante",
     localType: snapshot.localType || user.raw?.localType || "casa",
     phone: user.phone || snapshot.phone || null,
@@ -3309,11 +3388,18 @@ async function approveUser(userId) {
   if (!requireUserTerritoryAccess(user, "aprovar participante")) return;
 
   try {
+    const generatedCode =
+      user.code && user.code !== "—" && user.code !== "Aguardando aprovação"
+        ? user.code
+        : await generateApprovedParticipantCode(user);
+
     const batch = writeBatch(db);
     const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
 
     sameRequests.forEach((req) => {
       batch.update(doc(db, "approvalRequests", req.id), {
+        participantCode: generatedCode,
+        codeStatus: "gerado",
         status: "approved",
         decision: "approved",
         reviewedAt: serverTimestamp(),
@@ -3329,6 +3415,8 @@ async function approveUser(userId) {
 
     await upsertParticipantFromApprovedRequest({
       ...user,
+      code: generatedCode,
+      generatedCode,
       status: "aprovado",
       inOperation: "sim",
       routeShift: selectedRouteShift,
@@ -3409,10 +3497,16 @@ async function saveModalUserChanges() {
       return;
     }
 
+    const generatedCodeForApproval =
+      chosenStatus === "aprovado" && (!user.code || user.code === "—" || user.code === "Aguardando aprovação")
+        ? await generateApprovedParticipantCode(user)
+        : null;
+
     await upsertParticipantFromApprovedRequest({
       ...user,
       name: els.modalUserName?.value?.trim() || user.name,
-      code: els.modalUserCode?.value?.trim() || user.code,
+      code: generatedCodeForApproval || els.modalUserCode?.value?.trim() || user.code,
+      generatedCode: generatedCodeForApproval || undefined,
       phone: onlyDigits(els.modalUserPhone?.value || user.phone),
       territoryLabel: els.modalTerritoryLabel?.value?.trim() || user.territoryLabel,
       address: els.modalAddress?.value?.trim() || user.address,
@@ -3430,6 +3524,8 @@ async function saveModalUserChanges() {
 
       sameRequests.forEach((req) => {
         batch.update(doc(db, "approvalRequests", req.id), {
+          participantCode: generatedCodeForApproval || els.modalUserCode?.value?.trim() || user.code || null,
+          codeStatus: "gerado",
           status: "approved",
           decision: "approved",
           reviewedAt: serverTimestamp(),
@@ -3471,26 +3567,13 @@ async function loadApprovalsInitial() {
 
     if (canViewAllTerritories()) {
       const snap = await getDocs(refs[0]);
-      STATE.approvalRequests = snap.docs
-        .filter((docItem) => isVilaPintoRecord(docItem.data() || {}))
-        .map(mapApprovalRequestDoc);
+      STATE.approvalRequests = snap.docs.map(mapApprovalRequestDoc);
       mergeUsers();
       return;
     }
 
     const snaps = await Promise.all(refs.map((ref) => getDocs(ref)));
-    let mergedDocs = dedupeApprovalDocs(snaps.flatMap((snap) => snap.docs));
-
-    /*
-      Fallback importante: em versões antigas do cadastro, alguns documentos
-      podem ter sido salvos com territoryLabel, territoryId alternativo ou só
-      dentro de payloadSnapshot. Se a query filtrada não trouxer nada, lemos a
-      coleção e filtramos no cliente por aliases da Vila Pinto.
-    */
-    if (!mergedDocs.length) {
-      const allSnap = await getDocs(collection(db, "approvalRequests"));
-      mergedDocs = allSnap.docs.filter((docItem) => isVilaPintoRecord(docItem.data() || {}));
-    }
+    const mergedDocs = dedupeApprovalDocs(snaps.flatMap((snap) => snap.docs));
 
     STATE.approvalRequests = mergedDocs.map(mapApprovalRequestDoc);
     mergeUsers();
@@ -3545,25 +3628,56 @@ function startApprovalsListener() {
   }
 
   try {
-    /*
-      Para a Vila Pinto, usamos listener direto na coleção e filtramos por
-      aliases no cliente. Isso evita que pendentes deixem de aparecer quando o
-      cadastro salvou territoryId/territoryLabel em formatos diferentes.
-    */
-    STATE.unsubApprovals = onSnapshot(
-      collection(db, "approvalRequests"),
-      (snapshot) => {
-        STATE.approvalRequests = snapshot.docs
-          .filter((docItem) => isVilaPintoRecord(docItem.data() || {}))
-          .map(mapApprovalRequestDoc);
+    const refs = approvalRequestsRefs();
 
-        mergeUsers();
+    if (canViewAllTerritories()) {
+      STATE.unsubApprovals = onSnapshot(
+        refs[0],
+        (snapshot) => {
+          STATE.approvalRequests = snapshot.docs.map(mapApprovalRequestDoc);
+          mergeUsers();
+        },
+        async (error) => {
+          console.warn("Listener approvalRequests falhou:", error);
+          await loadApprovalsInitial();
+        }
+      );
+      return;
+    }
+
+    const store = { a: [], b: [] };
+
+    const rebuild = () => {
+      const mergedDocs = dedupeApprovalDocs([...store.a, ...store.b]);
+      STATE.approvalRequests = mergedDocs.map(mapApprovalRequestDoc);
+      mergeUsers();
+    };
+
+    const unsubA = onSnapshot(
+      refs[0],
+      (snapshot) => {
+        store.a = snapshot.docs;
+        rebuild();
       },
       async (error) => {
-        console.warn("Listener approvalRequests falhou:", error);
+        console.warn("Listener approvalRequests raiz falhou:", error);
         await loadApprovalsInitial();
       }
     );
+
+    const unsubB = onSnapshot(
+      refs[1],
+      (snapshot) => {
+        store.b = snapshot.docs;
+        rebuild();
+      },
+      async (error) => {
+        console.warn("Listener approvalRequests payloadSnapshot falhou:", error);
+        await loadApprovalsInitial();
+      }
+    );
+
+    STATE.unsubApprovals = [unsubA, unsubB];
   } catch (error) {
     console.warn("Erro ao iniciar listener approvalRequests:", error);
   }
