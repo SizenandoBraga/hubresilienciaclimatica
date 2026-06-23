@@ -309,10 +309,10 @@ const APPROVED_CODE_CONFIG = {
     outro: { prefix: "COO", start: 1 }
   },
   "vila-pinto": {
-    casa: { prefix: "VPD", start: 300 },
-    condominio: { prefix: "VPCD", start: 10 },
-    comercio: { prefix: "VPCM", start: 10 },
-    outro: { prefix: "VPO", start: 300 }
+    casa: { prefix: "VPD", start: 275 },
+    condominio: { prefix: "VPCD", start: 3 },
+    comercio: { prefix: "VPCM", start: 0 },
+    outro: { prefix: "VPO", start: 0 }
   },
   ccpa: {
     casa: { prefix: "CCPA", start: 1 },
