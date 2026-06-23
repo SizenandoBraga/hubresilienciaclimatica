@@ -10,15 +10,18 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700&display=swap" rel="stylesheet">
-<link rel="manifest" href="./manifest.webmanifest">
+
+  <link rel="manifest" href="./manifest.webmanifest">
 <meta name="theme-color" content="#81B92A">
+
   <link rel="stylesheet" href="cadastro-participantes.css">
 </head>
+
 <body
   data-territory-id="vila-pinto"
   data-territory-label="Centro de Triagem Vila Pinto"
   data-territory-slug="vila-pinto"
-  data-redirect-url="vila-pinto.html"
+  data-redirect-url="/cooperativa-vila-pinto.html"
 >
   <div class="page-bg"></div>
   <div class="page-noise"></div>
@@ -36,19 +39,19 @@
       </a>
 
       <div class="site-header-actions">
-        <a class="site-login-btn" href="/vila-pinto.html">Voltar ao território →</a>
+        <a class="site-login-btn" href="/cooperativa-vila-pinto.html">Voltar a cooperativa →</a>
       </div>
 
       <button class="site-menu-toggle" id="menuToggle" aria-label="Abrir menu" type="button">☰</button>
     </div>
 
-  <div class="site-mobile-menu" id="mobileMenu">
+    <div class="site-mobile-menu" id="mobileMenu">
       <a href="/index.html">Início</a>
-      <a href="/vila-pinto.html">Voltar ao território</a>
+      <a href="/cooperativa-vila-pinto.html">Voltar à página da cooperativa</a>
     </div>
   </header>
 
-<main class="page-shell">
+  <main class="page-shell">
     <section class="wizard-header glass-card">
       <div class="wizard-header-top">
         <div>
@@ -60,7 +63,7 @@
         <div class="wizard-meta">
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Território</span>
-            <strong id="territoryLabelView">Vila Pinto</strong>
+            <strong id="territoryLabelView">Centro de Triagem Vila Pinto</strong>
           </div>
           <div class="wizard-meta-item">
             <span class="wizard-meta-label">Acesso</span>
@@ -196,9 +199,11 @@
             </div>
 
             <div class="field">
-              <label for="generatedCode">6) Código gerado</label>
-              <input type="text" id="generatedCode" readonly>
-            </div>
+  <label>Código do participante</label>
+  <div class="info-box">
+    O código será gerado automaticamente após a aprovação da cooperativa.
+  </div>
+</div>
 
             <div class="field">
               <label for="cpf">7) CPF</label>
@@ -366,34 +371,22 @@
         Seu cadastro foi enviado para a cooperativa e ficará aguardando aprovação do administrador.
         Em breve nossa equipe poderá entrar em contato.
       </p>
-   <div class="success-modal-actions">
+     <div class="success-modal-actions">
 
-  <button
-    type="button"
-    class="btn-secondary"
-    id="newParticipantRegistration"
-  >
-    + Fazer novo cadastro
-  </button>
+    <button
+        type="button"
+        class="btn-secondary"
+        id="newParticipantRegistration">
+        + Fazer novo cadastro
+    </button>
 
-  <button
-    type="button"
-    class="btn-primary"
-    id="closeSuccessModal"
-  >
-    Voltar para a Cooperativa Vila Pinto
-  </button>
+    <button
+        type="button"
+        class="btn-primary"
+        id="closeSuccessModal">
+        Voltar para a Cooperativa Vila Pinto
+    </button>
 
-</div>
-
-<div class="success-modal-extra">
-  <button
-    type="button"
-    class="btn-outline"
-    id="newParticipantRegistrationBottom"
-  >
-    Cadastrar outro participante
-  </button>
 </div>
     </div>
   </div>

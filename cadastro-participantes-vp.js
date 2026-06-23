@@ -9,32 +9,32 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-   CONFIGURAÇÃO FIXA • VILA PINTO
-   Este arquivo é exclusivo para o cadastro público de participantes
-   do território Centro de Triagem Vila Pinto.
+   CONFIGURAÇÃO • VILA PINTO
+   Mesmo fluxo usado nas demais cooperativas:
+   - cadastro público cria participante pendente;
+   - cria approvalRequests;
+   - participantCode fica null;
+   - código definitivo só deve ser gerado na aprovação.
 ========================= */
 
+const BODY = document.body;
+
 const CONFIG = {
-  territoryId: "vila-pinto",
-  territoryLabel: "Centro de Triagem Vila Pinto",
-  territorySlug: "vila-pinto",
-  redirectAfterSuccess: "vila-pinto.html",
+  territoryId: String(BODY.dataset.territoryId || "").trim(),
+  territoryLabel: String(BODY.dataset.territoryLabel || "").trim(),
+  territorySlug: String(BODY.dataset.territorySlug || "").trim(),
+  redirectAfterSuccess: String(BODY.dataset.redirectUrl || "cooperativa-vila-pinto.html").trim(),
   viacepBase: "https://viacep.com.br/ws",
   nominatimBase: "https://nominatim.openstreetmap.org/search"
 };
 
-/*
-  Prefixos oficiais usados apenas pela Vila Pinto.
-  - casa: participantes/domicílios
-  - condominio: condomínios
-  - comercio: comércios
-  - outro: outros tipos de local
-*/
-const VILA_PINTO_CODE_CONFIG = {
-  casa: { prefix: "VPD", start: 300 },
-  condominio: { prefix: "VPCD", start: 10 },
-  comercio: { prefix: "VPCM", start: 10 },
-  outro: { prefix: "VPO", start: 300 }
+const CODE_CONFIG = {
+  "vila-pinto": {
+    casa: { prefix: "VPD", start: 300 },
+    condominio: { prefix: "VPCD", start: 10 },
+    comercio: { prefix: "VPCM", start: 10 },
+    outro: { prefix: "VPO", start: 300 }
+  }
 };
 
 /* =========================
@@ -245,11 +245,19 @@ function isValidCPF(cpf = "") {
 ========================= */
 
 function getCanonicalTerritoryId() {
-  return "vila-pinto";
+  return CONFIG.territoryId;
 }
 
 function getCanonicalTerritoryLabel() {
-  return "Centro de Triagem Vila Pinto";
+  return CONFIG.territoryLabel;
+}
+
+function getCodeTerritoryKey() {
+  return String(CONFIG.territorySlug || CONFIG.territoryId || "")
+    .toLowerCase()
+    .replace(/^crgr_/, "")
+    .replace(/_/g, "-")
+    .trim();
 }
 
 function getCodeLocalType() {
@@ -263,8 +271,16 @@ function getCodeLocalType() {
 }
 
 function assertRuntimeConfig() {
-  if (CONFIG.territoryId !== "vila-pinto") {
-    throw new Error("Este JS é exclusivo do cadastro de participantes da Vila Pinto.");
+  if (getCodeTerritoryKey() !== "vila-pinto") {
+    throw new Error(
+      "Este arquivo é exclusivo do cadastro de participantes da Vila Pinto."
+    );
+  }
+
+  if (!CONFIG.territoryId || !CONFIG.territoryLabel) {
+    throw new Error(
+      "Configuração do território ausente. Verifique os atributos data-territory-id e data-territory-label no body."
+    );
   }
 }
 
@@ -272,40 +288,91 @@ function assertRuntimeConfig() {
    CÓDIGO SEQUENCIAL
 ========================= */
 
-async function generateSequentialCode() {
-  const localTypeKey = getCodeLocalType();
-  const config = VILA_PINTO_CODE_CONFIG[localTypeKey];
+function getCodeNumberFromValue(code, prefix) {
+  const text = String(code || "").trim();
 
-  if (!config) {
-    throw new Error(`Configuração de código da Vila Pinto não encontrada para o tipo "${localTypeKey}".`);
-  }
+  if (!text.startsWith(`${prefix}-`)) return null;
 
-  const { prefix, start } = config;
+  const numberPart = Number(text.split("-")[1]);
 
-  const q = query(
-    collection(db, "participants"),
-    where("territoryId", "==", getCanonicalTerritoryId()),
-    where("codeLocalType", "==", localTypeKey)
+  return Number.isFinite(numberPart) ? numberPart : null;
+}
+
+function isApprovedParticipant(data = {}) {
+  const status = String(data.status || "").toLowerCase().trim();
+  const approvalStatus = String(data.approvalStatus || "").toLowerCase().trim();
+  const decision = String(data.decision || "").toLowerCase().trim();
+
+  return (
+    status === "aprovado" ||
+    status === "approved" ||
+    status === "ativo" ||
+    status === "active" ||
+    approvalStatus === "approved" ||
+    approvalStatus === "aprovado" ||
+    decision === "approved" ||
+    decision === "aprovado"
+  );
+}
+
+async function getUsedCodeNumbers(prefix) {
+  const territoryId = getCanonicalTerritoryId();
+
+  const usedNumbers = new Set();
+
+  const snap = await getDocs(
+    query(
+      collection(db, "participants"),
+      where("territoryId", "==", territoryId)
+    )
   );
 
-  const snapshot = await getDocs(q);
+  snap.forEach((docSnap) => {
+    const data = docSnap.data();
 
-  let maxNumber = 0;
+    const code =
+      data.participantCode ||
+      "";
 
-  snapshot.forEach((docSnap) => {
-    const data = docSnap.data() || {};
-    const code = String(data.participantCode || "").trim();
+    const number =
+      getCodeNumberFromValue(
+        code,
+        prefix
+      );
 
-    if (!code.startsWith(`${prefix}-`)) return;
-
-    const numberPart = Number(code.split("-")[1]);
-
-    if (Number.isFinite(numberPart) && numberPart > maxNumber) {
-      maxNumber = numberPart;
+    if (number !== null) {
+      usedNumbers.add(number);
     }
   });
 
-  const nextNumber = Math.max(start, maxNumber + 1);
+  console.log(
+    "CODIGOS ENCONTRADOS:",
+    [...usedNumbers]
+  );
+
+  return usedNumbers;
+}
+
+async function generateSequentialCode() {
+  const territoryKey = getCodeTerritoryKey();
+  const localTypeKey = getCodeLocalType();
+
+  const config = CODE_CONFIG[territoryKey]?.[localTypeKey];
+
+  if (!config) {
+    throw new Error(
+      `Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`
+    );
+  }
+
+  const { prefix, start } = config;
+  const usedNumbers = await getUsedCodeNumbers(prefix);
+
+  let nextNumber = start;
+
+  while (usedNumbers.has(nextNumber)) {
+    nextNumber++;
+  }
 
   return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
 }
@@ -367,12 +434,15 @@ function syncRegisterTypeUI() {
 async function setRegisterType(registerType, regenerate = true) {
   STATE.registerType = registerType;
 
-  if (regenerate || !STATE.generatedCode) {
-    STATE.generatedCode = await generateSequentialCode();
-  }
+  /*
+    Cadastro público da Vila Pinto:
+    o código NÃO é gerado neste formulário.
+    Ele será criado somente no momento da aprovação pela cooperativa.
+  */
+  STATE.generatedCode = "";
 
   if (els.generatedCode) {
-    els.generatedCode.value = STATE.generatedCode;
+    els.generatedCode.value = "";
   }
 
   syncRegisterTypeUI();
@@ -397,7 +467,7 @@ async function setLocalType(localType) {
     console.warn("Não foi possível gerar o código neste momento:", error);
 
     if (els.generatedCode) {
-      els.generatedCode.value = "Será gerado ao concluir";
+      els.generatedCode.value = "";
     }
   }
 }
@@ -718,7 +788,8 @@ function buildParticipantPayload() {
     codeLocalType: getCodeLocalType(),
     registerType: STATE.registerType,
     participantType: STATE.registerType,
-    participantCode: STATE.generatedCode,
+    participantCode: null,
+codeStatus: "aguardando_aprovacao",
 
     cep: cepDigits || null,
     rua: street || null,
@@ -778,7 +849,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
     territoryId,
     territoryLabel,
 
-    participantCode: participantData.participantCode,
+    participantCode: null,
+codeStatus: "aguardando_aprovacao",
     participantName: participantData.name,
     participantEmail: participantData.email || null,
     participantPhone: participantData.phone,
@@ -803,7 +875,8 @@ function buildApprovalRequestPayload(participantId, participantData) {
       email: participantData.email || null,
       phone: participantData.phone,
       cpf: participantData.cpf || null,
-      participantCode: participantData.participantCode,
+      participantCode: null,
+codeStatus: "aguardando_aprovacao",
       registerType: participantData.registerType,
       localType: participantData.localType,
       codeLocalType: participantData.codeLocalType,
@@ -825,28 +898,26 @@ function buildApprovalRequestPayload(participantId, participantData) {
 }
 
 async function saveRegistration() {
-  if (!STATE.generatedCode || STATE.generatedCode === "Será gerado ao concluir") {
-    STATE.generatedCode = await generateSequentialCode();
-
-    if (els.generatedCode) {
-      els.generatedCode.value = STATE.generatedCode;
-    }
-  }
-
   const participantPayload = buildParticipantPayload();
-  const participantRef = await addDoc(collection(db, "participants"), participantPayload);
+
+  const participantRef = await addDoc(
+    collection(db, "participants"),
+    participantPayload
+  );
 
   const approvalRequestPayload = buildApprovalRequestPayload(
     participantRef.id,
     participantPayload
   );
 
-  const approvalRef = await addDoc(collection(db, "approvalRequests"), approvalRequestPayload);
+  const approvalRef = await addDoc(
+    collection(db, "approvalRequests"),
+    approvalRequestPayload
+  );
 
   return {
     participantId: participantRef.id,
-    approvalRequestId: approvalRef.id,
-    participantCode: participantPayload.participantCode
+    approvalRequestId: approvalRef.id
   };
 }
 
@@ -868,7 +939,6 @@ function closeSuccessModal() {
   els.successModal.classList.add("hidden");
   els.successModal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
-
   window.location.href = "cooperativa-vila-pinto.html";
 }
 
@@ -1059,7 +1129,7 @@ function bindSubmit() {
       const result = await saveRegistration();
 
       showMessage(
-        `Cadastro enviado com sucesso para análise da cooperativa. Código gerado: ${result.participantCode}`,
+        "Cadastro enviado com sucesso para análise da cooperativa. O código será gerado após a aprovação.",
         "success"
       );
 
@@ -1112,7 +1182,7 @@ async function initDefaults() {
     console.warn("Não foi possível gerar o código inicial:", error);
 
     if (els.generatedCode) {
-      els.generatedCode.value = "Será gerado ao concluir";
+      els.generatedCode.value = "";
     }
   }
 }
