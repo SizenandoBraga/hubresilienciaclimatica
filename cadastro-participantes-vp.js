@@ -1,4 +1,4 @@
-import { db } from "./firebase-init.js";
+import { db } from "./firebase-init-vp.js";
 import {
   addDoc,
   collection,
@@ -9,39 +9,32 @@ import {
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 /* =========================
-   CONFIG DINÂMICA
+   CONFIGURAÇÃO FIXA • VILA PINTO
+   Este arquivo é exclusivo para o cadastro público de participantes
+   do território Centro de Triagem Vila Pinto.
 ========================= */
 
-const BODY = document.body;
-
 const CONFIG = {
-  territoryId: String(BODY.dataset.territoryId || "").trim(),
-  territoryLabel: String(BODY.dataset.territoryLabel || "").trim(),
-  territorySlug: String(BODY.dataset.territorySlug || "").trim(),
-  redirectAfterSuccess: String(BODY.dataset.redirectUrl || "index.html").trim(),
+  territoryId: "vila-pinto",
+  territoryLabel: "Centro de Triagem Vila Pinto",
+  territorySlug: "vila-pinto",
+  redirectAfterSuccess: "vila-pinto.html",
   viacepBase: "https://viacep.com.br/ws",
   nominatimBase: "https://nominatim.openstreetmap.org/search"
 };
 
-const CODE_CONFIG = {
-  "vila-pinto": {
-    casa: { prefix: "VPD", start: 300 },
-    condominio: { prefix: "VPCD", start: 10 },
-    comercio: { prefix: "VPCM", start: 10 },
-    outro: { prefix: "VPO", start: 300 }
-  },
-  "cooadesc": {
-    casa: { prefix: "COD", start: 1 },
-    condominio: { prefix: "COCD", start: 1 },
-    comercio: { prefix: "COCM", start: 1 },
-    outro: { prefix: "COO", start: 1 }
-  },
-  "padre-cacique": {
-    casa: { prefix: "PCD", start: 1 },
-    condominio: { prefix: "PCCD", start: 1 },
-    comercio: { prefix: "PCCM", start: 1 },
-    outro: { prefix: "PCO", start: 1 }
-  }
+/*
+  Prefixos oficiais usados apenas pela Vila Pinto.
+  - casa: participantes/domicílios
+  - condominio: condomínios
+  - comercio: comércios
+  - outro: outros tipos de local
+*/
+const VILA_PINTO_CODE_CONFIG = {
+  casa: { prefix: "VPD", start: 300 },
+  condominio: { prefix: "VPCD", start: 10 },
+  comercio: { prefix: "VPCM", start: 10 },
+  outro: { prefix: "VPO", start: 300 }
 };
 
 /* =========================
@@ -252,19 +245,11 @@ function isValidCPF(cpf = "") {
 ========================= */
 
 function getCanonicalTerritoryId() {
-  return CONFIG.territoryId;
+  return "vila-pinto";
 }
 
 function getCanonicalTerritoryLabel() {
-  return CONFIG.territoryLabel;
-}
-
-function getCodeTerritoryKey() {
-  return String(CONFIG.territorySlug || CONFIG.territoryId || "")
-    .toLowerCase()
-    .replace(/^crgr_/, "")
-    .replace(/_/g, "-")
-    .trim();
+  return "Centro de Triagem Vila Pinto";
 }
 
 function getCodeLocalType() {
@@ -278,10 +263,8 @@ function getCodeLocalType() {
 }
 
 function assertRuntimeConfig() {
-  if (!CONFIG.territoryId || !CONFIG.territoryLabel) {
-    throw new Error(
-      "Configuração do território ausente. Verifique os atributos data-territory-id e data-territory-label no body."
-    );
+  if (CONFIG.territoryId !== "vila-pinto") {
+    throw new Error("Este JS é exclusivo do cadastro de participantes da Vila Pinto.");
   }
 }
 
@@ -290,13 +273,11 @@ function assertRuntimeConfig() {
 ========================= */
 
 async function generateSequentialCode() {
-  const territoryKey = getCodeTerritoryKey();
   const localTypeKey = getCodeLocalType();
-
-  const config = CODE_CONFIG[territoryKey]?.[localTypeKey];
+  const config = VILA_PINTO_CODE_CONFIG[localTypeKey];
 
   if (!config) {
-    throw new Error(`Configuração de código não encontrada para ${territoryKey}/${localTypeKey}.`);
+    throw new Error(`Configuração de código da Vila Pinto não encontrada para o tipo "${localTypeKey}".`);
   }
 
   const { prefix, start } = config;
