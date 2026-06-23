@@ -23,7 +23,15 @@ const DEFAULT_BASE = {
 const ROUTES = {
   "vila-pinto": {
     label: "Centro de Triagem Vila Pinto",
-    aliases: ["vila-pinto", "crgr-vila-pinto", "crgr_vila_pinto"],
+    aliases: [
+      "vila-pinto",
+      "vila pinto",
+      "centro-de-triagem-vila-pinto",
+      "centro de triagem vila pinto",
+      "ctvp",
+      "crgr-vila-pinto",
+      "crgr_vila_pinto"
+    ],
     pages: {
       home: "cooperativa-vila-pinto.html",
       usuarios: "usuarios-vila-pinto.html",
@@ -327,6 +335,27 @@ function normalizeTerritory(value) {
 function canonicalTerritoryId(value) {
   const normalized = normalizeRouteKey(value);
 
+  /*
+    Página exclusiva da Vila Pinto.
+    Muitos documentos antigos/novos podem chegar com variações do território,
+    por exemplo: "vila-pinto", "crgr_vila_pinto" ou
+    "Centro de Triagem Vila Pinto". Todas essas formas precisam cair no
+    mesmo território canônico para os pendentes aparecerem corretamente.
+  */
+  const vilaPintoAliases = [
+    "vila-pinto",
+    "vila pinto",
+    "centro-de-triagem-vila-pinto",
+    "centro de triagem vila pinto",
+    "ctvp",
+    "crgr-vila-pinto",
+    "crgr_vila_pinto"
+  ].map(normalizeRouteKey);
+
+  if (vilaPintoAliases.includes(normalized)) {
+    return "vila-pinto";
+  }
+
   for (const [key, config] of Object.entries(ROUTES)) {
     const aliases = [key, ...(config.aliases || [])].map(normalizeRouteKey);
 
@@ -337,11 +366,7 @@ function canonicalTerritoryId(value) {
 }
 
 function getCurrentTerritoryId() {
-  return canonicalTerritoryId(
-    document.body?.dataset?.territoryId ||
-    STATE.userDoc?.territoryId ||
-    "vila-pinto"
-  );
+  return "vila-pinto";
 }
 
 function getRouteConfig(territoryId) {
@@ -373,9 +398,15 @@ function getTerritoryConfig(territoryId) {
 }
 
 function getTerritoryAliases(territoryId) {
-  const config = getTerritoryConfig(territoryId);
-  const canonical = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
-  return Array.from(new Set([canonical, ...(config?.aliases || [])].filter(Boolean)));
+  return Array.from(new Set([
+    "vila-pinto",
+    "vila pinto",
+    "Centro de Triagem Vila Pinto",
+    "centro-de-triagem-vila-pinto",
+    "ctvp",
+    "crgr-vila-pinto",
+    "crgr_vila_pinto"
+  ].filter(Boolean)));
 }
 
 function getPageTerritoryId() {
@@ -397,7 +428,15 @@ function canViewAllTerritories() {
 }
 
 function canManageApprovals() {
-  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(roleName());
+  const role = roleName();
+  const permissions = STATE.userDoc?.permissions || {};
+  const roles = STATE.userDoc?.roles || {};
+
+  return ["admin", "governanca", "gestor", "superadmin", "admin_master"].includes(role) ||
+    permissions.aprovarCadastros === true ||
+    permissions.participants === true ||
+    roles.aprovarCadastros === true ||
+    roles.participants === true;
 }
 
 function canManageCoopUsers() {
@@ -405,8 +444,12 @@ function canManageCoopUsers() {
 }
 
 function getMyTerritoryId() {
-  if (STATE.userDoc) return canonicalTerritoryId(STATE.userDoc.territoryId);
-  return getPageTerritoryId() || null;
+  if (STATE.userDoc?.territoryId) {
+    const canonical = canonicalTerritoryId(STATE.userDoc.territoryId);
+    if (canonical) return canonical;
+  }
+
+  return "vila-pinto";
 }
 
 function getMyTerritoryLabel() {
@@ -1446,6 +1489,37 @@ function dedupeApprovalDocs(docs) {
   return Array.from(mapDocs.values());
 }
 
+function isVilaPintoRecord(data = {}) {
+  const snapshot = data.payloadSnapshot || {};
+  const values = [
+    data.territoryId,
+    data.territory,
+    data.territorio,
+    data.territoryLabel,
+    snapshot.territoryId,
+    snapshot.territory,
+    snapshot.territorio,
+    snapshot.territoryLabel
+  ];
+
+  return values.some((value) => canonicalTerritoryId(value) === "vila-pinto");
+}
+
+function isPendingApprovalStatus(value) {
+  const status = String(value || "pending").toLowerCase().trim();
+
+  return ![
+    "approved",
+    "aprovado",
+    "rejected",
+    "rejeitado",
+    "inactive",
+    "inativo",
+    "cancelado",
+    "cancelada"
+  ].includes(status);
+}
+
 /* =========================
 MAPEAMENTO DOS DOCS
 ========================= */
@@ -1557,7 +1631,7 @@ function mergeUsers() {
   });
 
   const pendingFromRequests = STATE.approvalRequests
-    .filter((req) => !["approved", "rejected"].includes(String(req.status || "").toLowerCase().trim()))
+    .filter((req) => isPendingApprovalStatus(req.status))
     .map((req) => {
       const raw = req.raw || {};
       const snapshot = raw.payloadSnapshot || {};
@@ -3397,13 +3471,26 @@ async function loadApprovalsInitial() {
 
     if (canViewAllTerritories()) {
       const snap = await getDocs(refs[0]);
-      STATE.approvalRequests = snap.docs.map(mapApprovalRequestDoc);
+      STATE.approvalRequests = snap.docs
+        .filter((docItem) => isVilaPintoRecord(docItem.data() || {}))
+        .map(mapApprovalRequestDoc);
       mergeUsers();
       return;
     }
 
     const snaps = await Promise.all(refs.map((ref) => getDocs(ref)));
-    const mergedDocs = dedupeApprovalDocs(snaps.flatMap((snap) => snap.docs));
+    let mergedDocs = dedupeApprovalDocs(snaps.flatMap((snap) => snap.docs));
+
+    /*
+      Fallback importante: em versões antigas do cadastro, alguns documentos
+      podem ter sido salvos com territoryLabel, territoryId alternativo ou só
+      dentro de payloadSnapshot. Se a query filtrada não trouxer nada, lemos a
+      coleção e filtramos no cliente por aliases da Vila Pinto.
+    */
+    if (!mergedDocs.length) {
+      const allSnap = await getDocs(collection(db, "approvalRequests"));
+      mergedDocs = allSnap.docs.filter((docItem) => isVilaPintoRecord(docItem.data() || {}));
+    }
 
     STATE.approvalRequests = mergedDocs.map(mapApprovalRequestDoc);
     mergeUsers();
@@ -3458,56 +3545,25 @@ function startApprovalsListener() {
   }
 
   try {
-    const refs = approvalRequestsRefs();
-
-    if (canViewAllTerritories()) {
-      STATE.unsubApprovals = onSnapshot(
-        refs[0],
-        (snapshot) => {
-          STATE.approvalRequests = snapshot.docs.map(mapApprovalRequestDoc);
-          mergeUsers();
-        },
-        async (error) => {
-          console.warn("Listener approvalRequests falhou:", error);
-          await loadApprovalsInitial();
-        }
-      );
-      return;
-    }
-
-    const store = { a: [], b: [] };
-
-    const rebuild = () => {
-      const mergedDocs = dedupeApprovalDocs([...store.a, ...store.b]);
-      STATE.approvalRequests = mergedDocs.map(mapApprovalRequestDoc);
-      mergeUsers();
-    };
-
-    const unsubA = onSnapshot(
-      refs[0],
+    /*
+      Para a Vila Pinto, usamos listener direto na coleção e filtramos por
+      aliases no cliente. Isso evita que pendentes deixem de aparecer quando o
+      cadastro salvou territoryId/territoryLabel em formatos diferentes.
+    */
+    STATE.unsubApprovals = onSnapshot(
+      collection(db, "approvalRequests"),
       (snapshot) => {
-        store.a = snapshot.docs;
-        rebuild();
+        STATE.approvalRequests = snapshot.docs
+          .filter((docItem) => isVilaPintoRecord(docItem.data() || {}))
+          .map(mapApprovalRequestDoc);
+
+        mergeUsers();
       },
       async (error) => {
-        console.warn("Listener approvalRequests raiz falhou:", error);
+        console.warn("Listener approvalRequests falhou:", error);
         await loadApprovalsInitial();
       }
     );
-
-    const unsubB = onSnapshot(
-      refs[1],
-      (snapshot) => {
-        store.b = snapshot.docs;
-        rebuild();
-      },
-      async (error) => {
-        console.warn("Listener approvalRequests payloadSnapshot falhou:", error);
-        await loadApprovalsInitial();
-      }
-    );
-
-    STATE.unsubApprovals = [unsubA, unsubB];
   } catch (error) {
     console.warn("Erro ao iniciar listener approvalRequests:", error);
   }
