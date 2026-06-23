@@ -5,7 +5,7 @@
   <meta http-equiv="Content-Language" content="pt-BR">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>NSRU • Dashboard de Coletas</title>
+  <title>NSRU • Dashboard Vila Pinto</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -18,13 +18,15 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
+
   <link rel="manifest" href="./manifest.webmanifest">
-<meta name="theme-color" content="#81B92A">
-<link rel="icon" type="image/png" href="img/favicon.png">
-<link rel="apple-touch-icon" href="img/favicon.png">
+  <meta name="theme-color" content="#81B92A">
+
   <link rel="stylesheet" href="./dashboard-cooperativa.css">
+  <link rel="stylesheet" href="./dashboard-cooperativa-colapsavel.css">
 </head>
-<body data-territory-id="vila-pinto">
+
+<body data-territory-id="vila-pinto" data-coop-label="Vila Pinto">
   <div class="bg-grid"></div>
   <div class="noise"></div>
   <div class="cursor-glow" id="cursorGlow"></div>
@@ -115,9 +117,7 @@
             <a class="btn btn-orange" href="cooperativa-vila-pinto.html">Voltar ao menu da cooperativa</a>
           </div>
 
-          <p class="hint">
-            O painel mostra indicadores, materiais, rejeitos, gráficos, mapa de rotas e tabela completa das coletas.
-          </p>
+          <p class="hint">O painel mostra indicadores, materiais, rejeitos, gráficos, mapa de rotas e tabela completa das coletas.</p>
         </div>
 
         <div class="side-section">
@@ -189,12 +189,8 @@
       <section class="top">
         <div class="top-inner">
           <div class="title">
-            
             <h1>Dashboard de Coletas Seletivas</h1>
-            <p>
-              Visualização operacional das coletas registradas com indicadores organizados por projeto,
-              materiais, rejeitos, série histórica, gráficos e tabela operacional.
-            </p>
+            <p>Visualização operacional das coletas registradas com indicadores organizados por projeto, materiais, rejeitos, série histórica, gráficos e tabela operacional.</p>
           </div>
 
           <div class="top-actions">
@@ -205,394 +201,353 @@
             <button class="mini-btn mini-btn-green" id="btnExportExcel" type="button">Baixar Excel</button>
           </div>
         </div>
-<!--
-        <div class="kpis" aria-label="Indicadores principais">
-          <div class="kpi kpi-orange">
-            <div class="kpi-head"><span class="kpi-icon">📦</span><span class="klabel">Total de coletas</span></div>
-            <p class="kvalue" id="k_totalColetas">0</p>
-            <p class="khint">Quantidade total no período filtrado.</p>
-          </div>
+      </section>
 
-          <div class="kpi">
-            <div class="kpi-head"><span class="kpi-icon">👥</span><span class="klabel">Participantes</span></div>
-            <p class="kvalue" id="k_participantes">0</p>
-            <p class="khint">Participantes distintos com operação no período.</p>
-          </div>
-
-          <div class="kpi">
-            <div class="kpi-head"><span class="kpi-icon">♻️</span><span class="klabel">Resíduo seco (kg)</span></div>
-            <p class="kvalue" id="k_residuoSeco">0</p>
-            <p class="khint">Somatório de recebimento e materiais do turno.</p>
-          </div>
-
-          <div class="kpi kpi-orange-soft">
-            <div class="kpi-head"><span class="kpi-icon">🚯</span><span class="klabel">Rejeito total (kg)</span></div>
-            <p class="kvalue" id="k_rejeito">0</p>
-            <p class="khint">Peso rejeitado no período.</p>
-          </div>
-
-          <div class="kpi">
-            <div class="kpi-head"><span class="kpi-icon">🕒</span><span class="klabel">Final de turno</span></div>
-            <p class="kvalue" id="k_finalTurno">0</p>
-            <p class="khint">Quantidade de fechamentos operacionais.</p>
-          </div>
+      <nav class="dashboard-section-toolbar" aria-label="Controle das seções">
+        <div>
+          <strong>Seções do dashboard</strong>
+          <span>Minimize o que não estiver usando para navegar melhor no mobile e no desktop.</span>
         </div>
-      </section>-->
+        <div class="dashboard-section-toolbar-actions">
+          <button type="button" class="section-global-btn" id="btnExpandAllSections">Expandir tudo</button>
+          <button type="button" class="section-global-btn ghost" id="btnCollapseAllSections">Recolher tudo</button>
+        </div>
+      </nav>
 
-      <section class="panel">
+      <section class="panel collapsible-panel" data-section-key="resumo-projeto">
         <div class="panel-inner">
-          <div class="panel-head">
+          <div class="panel-head collapsible-panel-head">
             <div class="hgroup">
               <h2>Seção 1 • Resumo do projeto</h2>
               <p>Dias de operação, número de operações e perfis de origem do recebimento.</p>
             </div>
+            <button class="section-toggle-btn" type="button" aria-expanded="true"><span>Minimizar</span><i>⌄</i></button>
           </div>
 
-          <div class="project-summary-grid">
-            <div class="summary-card wide green-bg">
-              <div class="summary-card-icon">📅</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Dias de operação</div>
-                <div class="summary-card-value" id="k_totalDiasProjeto">0</div>
-                <div class="summary-card-sub" id="k_inicioProjeto">Início: —</div>
+          <div class="collapsible-panel-content">
+            <div class="project-summary-grid">
+              <div class="summary-card wide green-bg">
+                <div class="summary-card-icon">📅</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Dias de operação</div>
+                  <div class="summary-card-value" id="k_totalDiasProjeto">0</div>
+                  <div class="summary-card-sub" id="k_inicioProjeto">Início: —</div>
+                </div>
               </div>
-            </div>
 
-            <div class="summary-card green-bg">
-              <div class="summary-card-icon">🧾</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Número de operações</div>
-                <div class="summary-card-value" id="k_operacoesRealizadas">0</div>
+              <div class="summary-card green-bg">
+                <div class="summary-card-icon">🧾</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Número de operações</div>
+                  <div class="summary-card-value" id="k_operacoesRealizadas">0</div>
+                </div>
               </div>
-            </div>
 
-            <div class="summary-card blue-bg">
-              <div class="summary-card-icon">👤</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Participantes</div>
-                <div class="summary-card-value" id="k_participantesProjeto">0</div>
-                <div class="summary-card-sub">participantes com atividade</div>
+              <div class="summary-card blue-bg">
+                <div class="summary-card-icon">👤</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Participantes</div>
+                  <div class="summary-card-value" id="k_participantesProjeto">0</div>
+                  <div class="summary-card-sub">participantes com atividade</div>
+                </div>
               </div>
-            </div>
 
-            <div class="summary-card blue-bg">
-              <div class="summary-card-icon">🏢</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Condomínio</div>
-                <div class="summary-card-value" id="k_condominiosParticipantes">0</div>
-                <div class="summary-card-sub">participantes do tipo condomínio</div>
+              <div class="summary-card blue-bg">
+                <div class="summary-card-icon">🏢</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Condomínio</div>
+                  <div class="summary-card-value" id="k_condominiosParticipantes">0</div>
+                  <div class="summary-card-sub">participantes do tipo condomínio</div>
+                </div>
               </div>
-            </div>
 
-            <div class="summary-card orange-bg">
-              <div class="summary-card-icon">📍</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Entrega voluntária</div>
-                <div class="summary-card-value" id="k_entregaVoluntaria">0</div>
-                <div class="summary-card-sub">registros no período</div>
+              <div class="summary-card orange-bg">
+                <div class="summary-card-icon">📍</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Entrega voluntária</div>
+                  <div class="summary-card-value" id="k_entregaVoluntaria">0</div>
+                  <div class="summary-card-sub">registros no período</div>
+                </div>
               </div>
-            </div>
 
-            <div class="summary-card green-bg">
-              <div class="summary-card-icon">🏪</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Comércio</div>
-                <div class="summary-card-value" id="k_comercioParticipantes">0</div>
-                <div class="summary-card-sub">participantes do tipo comércio</div>
+              <div class="summary-card green-bg">
+                <div class="summary-card-icon">🏪</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Comércio</div>
+                  <div class="summary-card-value" id="k_comercioParticipantes">0</div>
+                  <div class="summary-card-sub">participantes do tipo comércio</div>
+                </div>
               </div>
-            </div>
 
-            <div class="summary-card wide blue-bg">
-              <div class="summary-card-icon">♻️</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Recebimento de resíduos</div>
-                <div class="summary-card-value"><span id="k_totalReciclavelKg">0</span> kg</div>
-                <div class="summary-card-sub">
-                  <strong id="k_totalReciclavelPct">0%</strong> do total • Receita estimada <strong id="k_receitaTotal">R$ 0,00</strong>
+              <div class="summary-card wide blue-bg">
+                <div class="summary-card-icon">♻️</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Recebimento de resíduos</div>
+                  <div class="summary-card-value"><span id="k_totalReciclavelKg">0</span> kg</div>
+                  <div class="summary-card-sub"><strong id="k_totalReciclavelPct">0%</strong> do total • Receita estimada <strong id="k_receitaTotal">R$ 0,00</strong></div>
+                </div>
+              </div>
+
+              <div class="summary-card reject-soft">
+                <div class="summary-card-icon">🚯</div>
+                <div class="summary-card-copy">
+                  <div class="summary-card-label">Rejeito total</div>
+                  <div class="summary-card-value"><span id="k_totalRejeitoKg">0</span> kg</div>
+                  <div class="summary-card-sub"><strong id="k_totalRejeitoPct">0%</strong> do total</div>
                 </div>
               </div>
             </div>
-
-            <div class="summary-card reject-soft">
-              <div class="summary-card-icon">🚯</div>
-              <div class="summary-card-copy">
-                <div class="summary-card-label">Rejeito total</div>
-                <div class="summary-card-value"><span id="k_totalRejeitoKg">0</span> kg</div>
-                <div class="summary-card-sub"><strong id="k_totalRejeitoPct">0%</strong> do total</div>
-              </div>
-            </div>
           </div>
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel collapsible-panel" data-section-key="tipos-materiais">
         <div class="panel-inner">
-          <div class="panel-head">
+          <div class="panel-head collapsible-panel-head">
             <div class="hgroup">
               <h2>Seção 2 • Tipos de materiais</h2>
-              <p>Materiais recicláveis e fluxos especiais exibidos juntos em cards visuais, com peso e identificação por material.</p>
+              <p>Materiais recicláveis e fluxos especiais exibidos juntos em cards visuais.</p>
             </div>
+            <button class="section-toggle-btn" type="button" aria-expanded="true"><span>Minimizar</span><i>⌄</i></button>
           </div>
-          <div class="material-cards enhanced" id="materialCards"></div>
 
-          <!-- IDs técnicos para compatibilidade com o JS.
-               O óleo deve aparecer visualmente junto nos cards de materiais. -->
-          <div class="hidden" aria-hidden="true">
-            <span id="k_oleoKg">0 kg</span>
-            <span id="k_oleoPct">—</span>
+          <div class="collapsible-panel-content">
+            <div class="material-cards enhanced" id="materialCards"></div>
+            <div class="hidden" aria-hidden="true">
+              <span id="k_oleoKg">0 kg</span>
+              <span id="k_oleoPct">—</span>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="panel">
+      <section class="panel collapsible-panel" data-section-key="tipos-rejeitos">
         <div class="panel-inner">
-          <div class="panel-head">
+          <div class="panel-head collapsible-panel-head">
             <div class="hgroup">
               <h2>Seção 3 • Tipos de rejeitos</h2>
               <p>Distribuição dos rejeitos e materiais não comercializados.</p>
             </div>
+            <button class="section-toggle-btn" type="button" aria-expanded="true"><span>Minimizar</span><i>⌄</i></button>
           </div>
 
-          <div class="reject-grid">
-            <div class="reject-card">
-              <div class="reject-name">Não reciclável</div>
-              <div class="reject-value"><span id="k_rejeitoNaoReciclavelPct">0%</span></div>
-              <div class="reject-kg" id="k_rejeitoNaoReciclavelKg">0 kg</div>
-            </div>
+          <div class="collapsible-panel-content">
+            <div class="reject-grid">
+              <div class="reject-card">
+                <div class="reject-name">Não reciclável</div>
+                <div class="reject-value"><span id="k_rejeitoNaoReciclavelPct">0%</span></div>
+                <div class="reject-kg" id="k_rejeitoNaoReciclavelKg">0 kg</div>
+              </div>
 
-            <div class="reject-card">
-              <div class="reject-name">Não comercializado</div>
-              <div class="reject-value"><span id="k_naoComercializadoPct">0%</span></div>
-              <div class="reject-kg" id="k_naoComercializadoKg">0 kg</div>
+              <div class="reject-card">
+                <div class="reject-name">Não comercializado</div>
+                <div class="reject-value"><span id="k_naoComercializadoPct">0%</span></div>
+                <div class="reject-kg" id="k_naoComercializadoKg">0 kg</div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="panel">
- <section class="panel">
-  <div class="panel-inner">
-    <div class="panel-head">
-      <div class="hgroup">
-        <h2>Seção 4 • Evolução diária das coletas</h2>
-        <p>
-          Gráficos consolidados por data da operação. Cada data aparece uma única vez, somando as coletas e os pesos do dia.
-        </p>
-      </div>
-    </div>
-
-    <div class="charts-side-by-side">
-      <div class="chart-card">
-        <div class="chart-title">Peso por data da operação</div>
-        <div class="canvas-wrap medium">
-          <canvas id="weightTimelineChart"></canvas>
-        </div>
-      </div>
-
-      <div class="chart-card">
-        <div class="chart-title">Quantidade de coletas por data</div>
-        <div class="canvas-wrap medium">
-          <canvas id="mainChart"></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-</section>
-<!--
-      <section class="panel">
+      <section class="panel collapsible-panel" data-section-key="evolucao-diaria">
         <div class="panel-inner">
-          <div class="panel-head">
+          <div class="panel-head collapsible-panel-head">
             <div class="hgroup">
-              <h2>Pontos de coleta dos participantes</h2>
-              <p>Mapa com rota da cooperativa até cada ponto cadastrado.</p>
+              <h2>Seção 4 • Evolução diária das coletas</h2>
+              <p>Gráficos consolidados por data da operação.</p>
             </div>
+            <button class="section-toggle-btn" type="button" aria-expanded="true"><span>Minimizar</span><i>⌄</i></button>
           </div>
 
-          <div class="route-layout">
-            <div class="route-map-wrap">
-              <div id="collectionRouteMap"></div>
-            </div>
-
-            <aside class="route-side">
-              <div class="route-summary-card">
-                <div class="route-summary-title">Rota selecionada</div>
-                <div class="route-summary-line"><strong>Origem:</strong> <span id="routeOriginLabel">—</span></div>
-                <div class="route-summary-line"><strong>Destino:</strong> <span id="routeDestLabel">—</span></div>
-                <div class="route-summary-line"><strong>Distância:</strong> <span id="routeDistanceLabel">—</span></div>
-                <div class="route-summary-line"><strong>Tempo estimado:</strong> <span id="routeTimeLabel">—</span></div>
+          <div class="collapsible-panel-content">
+            <div class="charts-side-by-side">
+              <div class="chart-card">
+                <div class="chart-title">Peso por data da operação</div>
+                <div class="canvas-wrap medium">
+                  <canvas id="weightTimelineChart"></canvas>
+                </div>
               </div>
 
-              <div class="collection-points-grid" id="collectionPointsGrid"></div>
-            </aside>
+              <div class="chart-card">
+                <div class="chart-title">Quantidade de coletas por data</div>
+                <div class="canvas-wrap medium">
+                  <canvas id="mainChart"></canvas>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-      </section>-->
+      </section>
 
-     <section class="panel table-dashboard-panel">
-  <div class="panel-inner">
-    <div class="table-dashboard-head">
-      <div>
-        <div class="table-title-row">
-          <span class="table-title-icon">▦</span>
-          <h2>Tabela de coletas</h2>
+      <section class="panel collapsible-panel" data-section-key="mapa-rotas">
+        <div class="panel-inner">
+          <div class="panel-head collapsible-panel-head">
+            <div class="hgroup">
+              <h2>Seção 5 • Pontos de coleta dos participantes</h2>
+              <p>Mapa com rota da cooperativa até cada ponto cadastrado.</p>
+            </div>
+            <button class="section-toggle-btn" type="button" aria-expanded="true"><span>Minimizar</span><i>⌄</i></button>
+          </div>
+
+          <div class="collapsible-panel-content">
+            <div class="route-layout">
+              <div class="route-map-wrap">
+                <div id="collectionRouteMap"></div>
+              </div>
+
+              <aside class="route-side">
+                <div class="route-summary-card">
+                  <div class="route-summary-title">Rota selecionada</div>
+                  <div class="route-summary-line"><strong>Origem:</strong> <span id="routeOriginLabel">—</span></div>
+                  <div class="route-summary-line"><strong>Destino:</strong> <span id="routeDestLabel">—</span></div>
+                  <div class="route-summary-line"><strong>Distância:</strong> <span id="routeDistanceLabel">—</span></div>
+                  <div class="route-summary-line"><strong>Tempo estimado:</strong> <span id="routeTimeLabel">—</span></div>
+                </div>
+
+                <div class="collection-points-grid" id="collectionPointsGrid"></div>
+              </aside>
+            </div>
+          </div>
         </div>
+      </section>
 
-        <p>
-          Visualização detalhada dos registros com filtros rápidos, leitura operacional e edição dos dados registrados.
-        </p>
-      </div>
+      <section class="panel table-dashboard-panel collapsible-panel" data-section-key="tabela-coletas">
+        <div class="panel-inner">
+          <div class="table-dashboard-head collapsible-panel-head">
+            <div>
+              <div class="table-title-row">
+                <span class="table-title-icon">▦</span>
+                <h2>Tabela de coletas</h2>
+              </div>
+              <p>Visualização detalhada dos registros com filtros rápidos, leitura operacional e edição dos dados registrados.</p>
+            </div>
+            <button class="section-toggle-btn" type="button" aria-expanded="true"><span>Minimizar</span><i>⌄</i></button>
+          </div>
 
-      <button class="export-table-btn" type="button" id="btnExportExcel">
-        ⬇ Exportar tabela
-      </button>
-    </div>
+          <div class="collapsible-panel-content">
+            <div class="table-summary-cards table-summary-cards-modern">
+              <div class="mini-summary-card summary-green">
+                <span class="summary-icon">◎</span>
+                <div>
+                  <span class="mini-summary-label">Registros visíveis</span>
+                  <strong id="tableVisibleCount">0</strong>
+                </div>
+              </div>
 
-    <div class="table-summary-cards table-summary-cards-modern">
-      <div class="mini-summary-card summary-green">
-        <span class="summary-icon">◎</span>
-        <div>
-          <span class="mini-summary-label">Registros visíveis</span>
-          <strong id="tableVisibleCount">0</strong>
+              <div class="mini-summary-card summary-blue">
+                <span class="summary-icon">▽</span>
+                <div>
+                  <span class="mini-summary-label">Filtrados na tabela</span>
+                  <strong id="tableFilteredCount">0</strong>
+                </div>
+              </div>
+
+              <div class="mini-summary-card summary-orange">
+                <span class="summary-icon">◷</span>
+                <div>
+                  <span class="mini-summary-label">Última atualização</span>
+                  <strong id="tableLastUpdate">—</strong>
+                </div>
+              </div>
+            </div>
+
+            <div class="table-filters-pro table-filters-modern">
+              <div class="table-filter-field search">
+                <label for="tSearch">Busca na tabela</label>
+                <input id="tSearch" type="text" placeholder="participante, código, observação..." />
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tFluxo">Fluxo</label>
+                <select id="tFluxo">
+                  <option value="__all__">Todos</option>
+                  <option value="recebimento">Recebimento</option>
+                  <option value="final_turno">Final do turno</option>
+                </select>
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tEntrega">Entrega</label>
+                <select id="tEntrega">
+                  <option value="__all__">Todas</option>
+                </select>
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tStatus">Status</label>
+                <select id="tStatus">
+                  <option value="__all__">Todos</option>
+                  <option value="ativo">Ativo</option>
+                  <option value="editado">Editado</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
+              </div>
+
+              <div class="table-filter-field">
+                <label for="tTipoCadastro">Tipo cadastro</label>
+                <select id="tTipoCadastro">
+                  <option value="__all__">Todos</option>
+                  <option value="participante">Participante</option>
+                  <option value="condominio">Condomínio</option>
+                  <option value="comercio">Comércio</option>
+                  <option value="outro">Outro</option>
+                </select>
+              </div>
+
+              <div class="table-filter-actions">
+                <button type="button" class="btn btn-primary" id="btnApplyTableFilters">Filtrar tabela</button>
+                <button type="button" class="btn btn-ghost" id="btnClearTableFilters">Limpar tabela</button>
+              </div>
+            </div>
+
+            <div class="table-wrap table-wrap-pro table-wrap-modern">
+              <table id="tbl" class="table-pro table-pro-modern">
+                <thead>
+                  <tr>
+                    <th>Data</th>
+                    <th>Participante</th>
+                    <th>Código</th>
+                    <th>Tipo de recebimento</th>
+                    <th>Status</th>
+                    <th>Detalhes</th>
+                    <th>Ações</th>
+                  </tr>
+                </thead>
+                <tbody id="tableColetasBody"></tbody>
+              </table>
+            </div>
+
+            <div class="table-footer-controls table-footer-modern">
+              <button type="button" class="table-page-btn" id="btnPrevColetas">← Voltar 10</button>
+              <div class="table-page-indicator" id="tablePageIndicator">Mostrando 0-0 de 0</div>
+              <button type="button" class="table-page-btn primary" id="btnNextColetas">Avançar +10 →</button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div class="mini-summary-card summary-blue">
-        <span class="summary-icon">▽</span>
-        <div>
-          <span class="mini-summary-label">Filtrados na tabela</span>
-          <strong id="tableFilteredCount">0</strong>
-        </div>
-      </div>
-
-      <div class="mini-summary-card summary-orange">
-        <span class="summary-icon">◷</span>
-        <div>
-          <span class="mini-summary-label">Última atualização</span>
-          <strong id="tableLastUpdate">—</strong>
-        </div>
-      </div>
-    </div>
-
-    <div class="table-filters-pro table-filters-modern">
-      <div class="table-filter-field search">
-        <label for="tSearch">Busca na tabela</label>
-        <input id="tSearch" type="text" placeholder="participante, código, observação..." />
-      </div>
-
-      <div class="table-filter-field">
-        <label for="tFluxo">Fluxo</label>
-        <select id="tFluxo">
-          <option value="__all__">Todos</option>
-          <option value="recebimento">Recebimento</option>
-          <option value="final_turno">Final do turno</option>
-        </select>
-      </div>
-
-      <div class="table-filter-field">
-        <label for="tEntrega">Entrega</label>
-        <select id="tEntrega">
-          <option value="__all__">Todas</option>
-        </select>
-      </div>
-
-      <div class="table-filter-field">
-        <label for="tStatus">Status</label>
-        <select id="tStatus">
-          <option value="__all__">Todos</option>
-          <option value="ativo">Ativo</option>
-          <option value="editado">Editado</option>
-          <option value="cancelado">Cancelado</option>
-        </select>
-      </div>
-
-      <div class="table-filter-field">
-        <label for="tTipoCadastro">Tipo cadastro</label>
-        <select id="tTipoCadastro">
-          <option value="__all__">Todos</option>
-          <option value="participante">Participante</option>
-          <option value="condominio">Condomínio</option>
-          <option value="comercio">Comércio</option>
-          <option value="outro">Outro</option>
-        </select>
-      </div>
-
-      <div class="table-filter-actions">
-        <button type="button" class="btn btn-primary" id="btnApplyTableFilters">
-          Filtrar tabela
-        </button>
-
-        <button type="button" class="btn btn-ghost" id="btnClearTableFilters">
-          Limpar tabela
-        </button>
-      </div>
-    </div>
-
-    <div class="table-wrap table-wrap-pro table-wrap-modern">
-      <table id="tbl" class="table-pro table-pro-modern">
-        <thead>
-          <tr>
-            <th>Data</th>
-            <th>Participante</th>
-            <th>Código</th>
-            <th>Tipo de recebimento</th>
-            <th>Status</th>
-            <th>Detalhes</th>
-            <th>Ações</th>
-          </tr>
-        </thead>
-
-        <tbody id="tableColetasBody"></tbody>
-      </table>
-    </div>
-
-    <div class="table-footer-controls table-footer-modern">
-      <button type="button" class="table-page-btn" id="btnPrevColetas">
-        ← Voltar 10
-      </button>
-
-      <div class="table-page-indicator" id="tablePageIndicator">
-        Mostrando 0-0 de 0
-      </div>
-
-      <button type="button" class="table-page-btn primary" id="btnNextColetas">
-        Avançar +10 →
-      </button>
-    </div>
-  </div>
-</section>
+      </section>
 
       <div class="foot">© <span id="year"></span> • NSRU • Dashboard de Coletas</div>
     </main>
   </div>
 
   <div id="photoModal" class="modal" aria-hidden="true">
-  <div class="modal-backdrop" data-close="photoModal"></div>
-
-  <div class="modal-card modal-photo">
-    <button
-      type="button"
-      class="modal-close"
-      data-close="photoModal"
-      aria-label="Fechar"
-    >×</button>
-
-    <div class="modal-head">
-      <h3>Visualizar foto</h3>
-      <p>Imagem do registro selecionado.</p>
-    </div>
-
-    <div class="modal-body">
-      <img id="photoModalImg" src="" alt="Foto ampliada da coleta">
+    <div class="modal-backdrop" data-close="photoModal"></div>
+    <div class="modal-card modal-photo">
+      <button type="button" class="modal-close" data-close="photoModal" aria-label="Fechar">×</button>
+      <div class="modal-head">
+        <h3>Visualizar foto</h3>
+        <p>Imagem do registro selecionado.</p>
+      </div>
+      <div class="modal-body">
+        <img id="photoModalImg" src="" alt="Foto ampliada da coleta">
+      </div>
     </div>
   </div>
-</div>
 
   <div class="modal" id="editModal" aria-hidden="true">
     <div class="modal-backdrop" data-close="editModal"></div>
     <div class="modal-card">
       <button class="modal-close" data-close="editModal" aria-label="Fechar">×</button>
-
       <div class="modal-head">
         <h3>Editar registro</h3>
         <p>Atualize os dados incorretos antes de salvar.</p>
@@ -671,6 +626,61 @@
       </div>
     </div>
   </div>
+
+  <script>
+    (function () {
+      const STORAGE_PREFIX = "nsru-dashboard-vila-pinto-section:";
+
+      function setPanelState(panel, collapsed) {
+        const key = panel.dataset.sectionKey || "section";
+        const btn = panel.querySelector(".section-toggle-btn");
+        const label = btn?.querySelector("span");
+
+        panel.classList.toggle("is-collapsed", collapsed);
+
+        if (btn) {
+          btn.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        }
+
+        if (label) {
+          label.textContent = collapsed ? "Maximizar" : "Minimizar";
+        }
+
+        localStorage.setItem(STORAGE_PREFIX + key, collapsed ? "collapsed" : "expanded");
+      }
+
+      function initCollapsiblePanels() {
+        const panels = Array.from(document.querySelectorAll(".collapsible-panel[data-section-key]"));
+
+        panels.forEach((panel) => {
+          const key = panel.dataset.sectionKey;
+          const saved = localStorage.getItem(STORAGE_PREFIX + key);
+          const shouldStartCollapsed = saved === "collapsed";
+
+          setPanelState(panel, shouldStartCollapsed);
+
+          const btn = panel.querySelector(".section-toggle-btn");
+          btn?.addEventListener("click", () => {
+            setPanelState(panel, !panel.classList.contains("is-collapsed"));
+          });
+        });
+
+        document.getElementById("btnExpandAllSections")?.addEventListener("click", () => {
+          panels.forEach((panel) => setPanelState(panel, false));
+        });
+
+        document.getElementById("btnCollapseAllSections")?.addEventListener("click", () => {
+          panels.forEach((panel) => setPanelState(panel, true));
+        });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initCollapsiblePanels);
+      } else {
+        initCollapsiblePanels();
+      }
+    })();
+  </script>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
