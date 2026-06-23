@@ -868,7 +868,8 @@ function closeSuccessModal() {
   els.successModal.classList.add("hidden");
   els.successModal.setAttribute("aria-hidden", "true");
   document.body.style.overflow = "";
-  window.location.href = CONFIG.redirectAfterSuccess;
+
+  window.location.href = "cooperativa-vila-pinto.html";
 }
 
 /* =========================
