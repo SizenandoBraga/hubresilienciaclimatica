@@ -6,7 +6,7 @@
   <meta name="google" content="notranslate" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
-  <title>NSRU • Usuários da cooperativa • Centro de Triagem Vila Pinto</title>
+  <title>NSRU • Usuários da cooperativa • CCPA</title>
   <meta name="theme-color" content="#81B92A" />
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -18,15 +18,18 @@
   <script type="module" src="./app-install.js"></script>
 </head>
 
+
 <body
-  data-territory-id="vila-pinto"
-  data-territory-label="Centro de Triagem Vila Pinto"
-  data-coop-home="cooperativa-vila-pinto.html"
-  data-users-url="usuarios-cooperativa-vila-pinto.html"
-  data-participants-url="usuarios-vila-pinto.html"
-  data-coletas-url="cadastro-coletas-vila-pinto.html"
-  data-dashboard-url="dashboard-cooperativa-vila-pinto.html"
+  data-territory-id="ccpa"
+  data-territory-label="CCPA"
+  data-coop-home="cooperativa-ccpa.html"
+  data-users-url="usuarios-cooperativa-ccpa.html"
+  data-participant-url="cadastro-participantes-ccpa.html"
+  data-participants-url="usuarios-ccpa.html"
+  data-coletas-url="cadastro-coletas-ccpa.html"
+  data-dashboard-url="dashboard-cooperativa-ccpa.html"
 >
+
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
   <div class="app-shell">
@@ -42,32 +45,30 @@
       <nav class="sidebar-nav">
         <p class="nav-label">Menu</p>
 
-        <a href="cooperativa-vila-pinto.html" class="nav-link" data-nav="home">
+        <a href="cooperativa-ccpa.html" class="nav-link" data-nav="home">
           <span class="nav-ico">🏠</span>
           <span>Painel inicial</span>
         </a>
-<!--
-        
-        <a href="usuarios-vila-pinto.html" class="nav-link" data-nav="participants">
+
+        <a href="usuarios-ccpa.html" class="nav-link" data-nav="participants">
           <span class="nav-ico">👥</span>
           <span>Participantes cadastrados</span>
-        </a>-->
+        </a>
 
-        <a href="usuarios-cooperativa-vila-pinto.html" class="nav-link active" data-nav="users">
+        <a href="usuarios-cooperativa-ccpa.html" class="nav-link active" data-nav="users">
           <span class="nav-ico">🧑‍💼</span>
           <span>Usuários da cooperativa</span>
         </a>
-<!--
-       
-        <a href="cadastro-coletas-vila-pinto.html" class="nav-link" data-nav="coletas">
+
+        <a href="cadastro-coletas-ccpa.html" class="nav-link" data-nav="coletas">
           <span class="nav-ico">♻️</span>
           <span>Registro de coletas</span>
         </a>
 
-        <a href="dashboard-cooperativa.html" class="nav-link" data-nav="dashboard">
+        <a href="dashboard-cooperativa-ccpa.html" class="nav-link" data-nav="dashboard">
           <span class="nav-ico">📊</span>
           <span>Dashboard da cooperativa</span>
-        </a> -->
+        </a>
       </nav>
 
       <div class="sidebar-bottom">
@@ -92,7 +93,7 @@
         </div>
 
         <div class="topbar-right">
-          <span class="status-pill status-green" id="territoryPill">🟢 Centro de Triagem Vila Pinto</span>
+          <span class="status-pill status-green" id="territoryPill">🟢 CCPA</span>
           <span class="status-pill status-lime" id="coopPill">🏢 Cooperativa</span>
           <span class="status-pill status-orange" id="permissionPill">🔐 Gestão de usuários</span>
           <span class="status-pill status-purple" id="rolePill">👤 Perfil</span>
@@ -101,7 +102,7 @@
 
       <section class="notice-banner">
         <strong>Gestão individual por território.</strong>
-        <span>Esta página gerencia somente os usuários vinculados à cooperativa: Centro de Triagem Vila Pinto.</span>
+        <span>Esta página gerencia somente os usuários vinculados à cooperativa: CCPA.</span>
       </section>
 
       <section class="hero-card">
@@ -162,7 +163,7 @@
                 <div class="field">
                   <label for="coopUserTerritory">Cooperativa / território</label>
                   <select id="coopUserTerritory" disabled>
-                    <option value="vila-pinto" selected>Vila Pinto</option>
+                    <option value="ccpa" selected>CCPA</option>
                   </select>
                 </div>
               </div>
@@ -177,7 +178,7 @@
                   <label class="permission-item"><input type="checkbox" id="permDashboard" checked /><span>Dashboard</span></label>
                   <label class="permission-item"><input type="checkbox" id="permColetas" checked /><span>Registro de coletas</span></label>
                   <label class="permission-item"><input type="checkbox" id="permParticipants" checked /><span>Participantes</span></label>
-                  <label class="permission-item"><input type="checkbox" id="permConteudos" checked /><span>Acessar Moodle</span></label>
+                  <label class="permission-item"><input type="checkbox" id="permConteudos" checked /><span>Conteúdos</span></label>
                   <label class="permission-item"><input type="checkbox" id="permDocumentos" checked /><span>Documentos</span></label>
                   <label class="permission-item"><input type="checkbox" id="permMapa" checked /><span>Mapa / rotas</span></label>
                   <label class="permission-item"><input type="checkbox" id="permAprovarCadastros" /><span>Aprovar cadastros</span></label>

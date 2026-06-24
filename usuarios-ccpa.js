@@ -1,5 +1,3 @@
-/* usuarios-ccpa.js — versão completa para CCPA
-   Baseado na página de usuários da Vila Pinto, com território e Firebase ajustados. */
 import { auth, db } from "./firebase-init-ccpa.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {

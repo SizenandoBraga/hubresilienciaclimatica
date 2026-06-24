@@ -1,6 +1,4 @@
-/* usuarios-cooadesc.js — versão completa para COOADESC
-   Baseado na página de usuários da Vila Pinto, com território e Firebase ajustados. */
-import { auth, db } from "./firebase-init-coadesc.js";
+import { auth, db } from "./firebase-init-cooadesc.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   collection,
