@@ -1,0 +1,121 @@
+/* ==========================================================
+   Sidebar colapsável por card — Dashboard NSRU
+   Arquivo: dashboard-sidebar-colapsavel.css
+========================================================== */
+
+.sidebar .collapsible-side-section {
+  overflow: hidden;
+}
+
+.side-section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.side-section-title {
+  min-width: 0;
+  flex: 1;
+}
+
+.side-section-head h3 {
+  margin: 0;
+}
+
+.side-section-toggle {
+  border: 1px solid rgba(255, 255, 255, .12);
+  background: rgba(255, 255, 255, .08);
+  color: inherit;
+  border-radius: 999px;
+  padding: 7px 10px;
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    border-color .18s ease,
+    opacity .18s ease;
+}
+
+.side-section-toggle:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .14);
+  border-color: rgba(255, 255, 255, .22);
+}
+
+.side-section-toggle:focus-visible {
+  outline: 3px solid rgba(129, 185, 42, .38);
+  outline-offset: 3px;
+}
+
+.side-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  transition: transform .22s ease;
+}
+
+.side-section-content {
+  display: grid;
+  gap: inherit;
+  animation: sidebarSectionOpen .18s ease both;
+}
+
+.collapsible-side-section.is-collapsed {
+  padding-bottom: 14px;
+}
+
+.collapsible-side-section.is-collapsed .side-section-head {
+  margin-bottom: 0;
+}
+
+.collapsible-side-section.is-collapsed .side-section-content {
+  display: none;
+}
+
+.collapsible-side-section.is-collapsed .side-toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.collapsible-side-section.is-collapsed .side-toggle-label {
+  content: "Expandir";
+}
+
+@keyframes sidebarSectionOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 680px) {
+  .side-section-head {
+    align-items: center;
+  }
+
+  .side-section-toggle {
+    padding: 7px 9px;
+  }
+
+  .side-toggle-label {
+    display: none;
+  }
+}
