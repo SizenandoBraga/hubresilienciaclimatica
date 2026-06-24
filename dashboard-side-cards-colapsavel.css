@@ -1,0 +1,116 @@
+/* ==========================================================
+   Cards da sidebar com minimizar / maximizar individual
+   Dashboard NSRU — CCPA
+   Arquivo: dashboard-side-cards-colapsavel.css
+========================================================== */
+
+.sidebar .side-card-collapsible {
+  overflow: hidden;
+}
+
+.side-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.side-card-title {
+  flex: 1;
+  min-width: 0;
+}
+
+.side-card-title h3 {
+  margin: 0;
+}
+
+.side-card-toggle {
+  border: 1px solid rgba(255, 255, 255, .14);
+  background: rgba(255, 255, 255, .08);
+  color: inherit;
+  min-height: 32px;
+  padding: 7px 10px;
+  border-radius: 999px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  white-space: nowrap;
+  transition:
+    transform .18s ease,
+    background .18s ease,
+    border-color .18s ease,
+    box-shadow .18s ease;
+}
+
+.side-card-toggle:hover {
+  transform: translateY(-1px);
+  background: rgba(255, 255, 255, .14);
+  border-color: rgba(255, 255, 255, .24);
+}
+
+.side-card-toggle:focus-visible {
+  outline: 3px solid rgba(129, 185, 42, .35);
+  outline-offset: 3px;
+}
+
+.side-card-toggle-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 14px;
+  height: 14px;
+  transition: transform .22s ease;
+}
+
+.side-card-content {
+  animation: sideCardOpen .18s ease both;
+}
+
+.side-card-collapsible.is-collapsed .side-card-head {
+  margin-bottom: 0;
+}
+
+.side-card-collapsible.is-collapsed .side-card-content {
+  display: none;
+}
+
+.side-card-collapsible.is-collapsed .side-card-toggle-icon {
+  transform: rotate(-90deg);
+}
+
+.side-card-collapsible.is-collapsed {
+  padding-bottom: 14px;
+}
+
+@keyframes sideCardOpen {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .side-card-head {
+    align-items: center;
+  }
+
+  .side-card-toggle {
+    padding-inline: 9px;
+  }
+
+  .side-card-toggle-label {
+    display: none;
+  }
+}
