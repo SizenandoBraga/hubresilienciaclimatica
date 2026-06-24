@@ -24,6 +24,110 @@
 
   <link rel="stylesheet" href="./dashboard-cooperativa.css">
   <link rel="stylesheet" href="./dashboard-cooperativa-colapsavel.css">
+
+  <style>
+    /* ==========================================================
+       MENU LATERAL ABRE / FECHA — DASHBOARD
+       Mantém o mobile original e recolhe somente no desktop.
+    ========================================================== */
+    .sidebar-toggle-desktop {
+      position: fixed;
+      left: 292px;
+      top: 22px;
+      z-index: 80;
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(255, 255, 255, .18);
+      border-radius: 999px;
+      background: rgba(129, 185, 42, .96);
+      color: #1f2a18;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, .22);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: left .25s ease, transform .25s ease, background .2s ease;
+    }
+
+    .sidebar-toggle-desktop:hover {
+      transform: scale(1.04);
+      background: #93ca3b;
+    }
+
+    body.dashboard-sidebar-collapsed .sidebar-toggle-desktop {
+      left: 82px;
+    }
+
+    body.dashboard-sidebar-collapsed .sidebar-toggle-desktop .toggle-icon {
+      transform: rotate(180deg);
+    }
+
+    .sidebar-toggle-desktop .toggle-icon {
+      display: inline-block;
+      transition: transform .25s ease;
+      line-height: 1;
+    }
+
+    @media (min-width: 1101px) {
+      body.dashboard-sidebar-collapsed .shell {
+        grid-template-columns: 92px minmax(0, 1fr);
+      }
+
+      body.dashboard-sidebar-collapsed .sidebar {
+        width: 92px;
+        min-width: 92px;
+      }
+
+      body.dashboard-sidebar-collapsed .side-inner {
+        padding-left: 12px;
+        padding-right: 12px;
+      }
+
+      body.dashboard-sidebar-collapsed .brand {
+        justify-content: center;
+        padding-left: 8px;
+        padding-right: 8px;
+      }
+
+      body.dashboard-sidebar-collapsed .brand > div:not(.brand-logo-wrap),
+      body.dashboard-sidebar-collapsed .side-section h3 span:not(.chip):not(.dot),
+      body.dashboard-sidebar-collapsed .side-section .field,
+      body.dashboard-sidebar-collapsed .side-section .hint,
+      body.dashboard-sidebar-collapsed .quick-participant-preview {
+        display: none !important;
+      }
+
+      body.dashboard-sidebar-collapsed .side-section {
+        padding: 10px 8px;
+      }
+
+      body.dashboard-sidebar-collapsed .side-section h3 {
+        justify-content: center;
+        margin: 0;
+      }
+
+      body.dashboard-sidebar-collapsed .chip {
+        display: none !important;
+      }
+
+      body.dashboard-sidebar-collapsed .brand-logo-wrap {
+        margin: 0 auto;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .sidebar-toggle-desktop {
+        display: none;
+      }
+
+      body.dashboard-sidebar-collapsed .shell,
+      body.dashboard-sidebar-collapsed .sidebar {
+        width: auto;
+        min-width: 0;
+      }
+    }
+  </style>
 </head>
 
 <body data-territory-id="ccpa" data-coop-label="CCPA">
@@ -32,6 +136,17 @@
   <div class="cursor-glow" id="cursorGlow"></div>
 
   <div class="shell">
+
+    <button
+      class="sidebar-toggle-desktop"
+      id="dashboardSidebarToggle"
+      type="button"
+      aria-label="Recolher menu lateral"
+      aria-expanded="true"
+      title="Recolher / expandir menu lateral"
+    >
+      <span class="toggle-icon">‹</span>
+    </button>
     <aside class="sidebar" aria-label="Filtros e navegação">
       <div class="side-inner">
         <a class="brand" href="index.html" aria-label="Voltar para a Home">
@@ -626,6 +741,43 @@
       </div>
     </div>
   </div>
+
+
+  <script>
+    (function () {
+      const STORAGE_KEY = "nsru-dashboard-ccpa-sidebar";
+
+      function setSidebarCollapsed(collapsed) {
+        const button = document.getElementById("dashboardSidebarToggle");
+
+        document.body.classList.toggle("dashboard-sidebar-collapsed", collapsed);
+
+        if (button) {
+          button.setAttribute("aria-expanded", collapsed ? "false" : "true");
+          button.setAttribute("aria-label", collapsed ? "Expandir menu lateral" : "Recolher menu lateral");
+          button.title = collapsed ? "Expandir menu lateral" : "Recolher menu lateral";
+        }
+
+        localStorage.setItem(STORAGE_KEY, collapsed ? "collapsed" : "expanded");
+      }
+
+      function initDashboardSidebarToggle() {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        setSidebarCollapsed(saved === "collapsed");
+
+        document.getElementById("dashboardSidebarToggle")?.addEventListener("click", () => {
+          setSidebarCollapsed(!document.body.classList.contains("dashboard-sidebar-collapsed"));
+        });
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener("DOMContentLoaded", initDashboardSidebarToggle);
+      } else {
+        initDashboardSidebarToggle();
+      }
+    })();
+  </script>
+
 
   <script>
     (function () {
