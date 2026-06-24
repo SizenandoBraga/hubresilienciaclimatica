@@ -30,9 +30,9 @@
   PARA VILA PINTO:
   data-territory-id="vila-pinto"
   data-territory-label="Centro de Triagem Vila Pinto"
-  data-coop-home="/cooperativa-vila-pinto.html"
-  data-coletas-url="/cadastro-coletas-vila-pinto.html"
-  data-user-coop-url="/user-cooperativa.html"
+  data-coop-home="cooperativa-vila-pinto.html"
+  data-coletas-url="cadastro-coletas-vila-pinto.html"
+  data-user-coop-url="usuario-cooperativa-vila-pinto.html"
 
   PARA COOADESC:
   data-territory-id="cooadesc"
@@ -50,11 +50,11 @@
 -->
 
 <body
-data-territory-id="cooadesc"
+ data-territory-id="cooadesc"
   data-territory-label="COOADESC"
-  data-coop-home="cooperativa-cooadesc.html"
-  data-coletas-url="cadastro-coletas-cooadesc.html"
-  data-user-coop-url="user-cooperativa.html"
+  data-coop-home="/cooperativa-cooadesc.html"
+  data-coletas-url="/cadastro-coletas-cooadesc.html"
+  data-user-coop-url="/user-cooperativa-coadesc.html"
 >
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
@@ -83,7 +83,7 @@ data-territory-id="cooadesc"
           <span>Participantes cadastrados</span>
         </a>
 
-        <a href="cadastro-participantes-cooadesc.html" class="nav-link" id="cadastroParticipantesLink">
+        <a href="cadastro-participantes-cooadesc.html"nav-link" id="cadastroParticipantesLink">
         <span class="nav-ico">👥</span>
         <span>Cadastrar Participantes</span>
         </a>
@@ -275,12 +275,11 @@ data-territory-id="cooadesc"
   <div class="manual-route-search-box">
     <label for="manualRouteAddress">Código, CEP ou endereço</label>
 
-    <div class="manual-route-search-row">
-      <input
-        id="manualRouteAddress"
-        type="text"
-        placeholder="Ex.: COD-0012, 90250-596, Rua Seiscentos e Noventa e Oito..."
-      />
+  <input
+  id="manualRouteAddress"
+  type="text"
+  placeholder="Ex.: CCPA-0001, 90000-000, Rua + número..."
+/>
 
       <button class="btn btn-primary" id="btnAddManualAddress" type="button">
         Adicionar ao mapa
@@ -288,7 +287,7 @@ data-territory-id="cooadesc"
     </div>
 
     <small>
-      Exemplos: <strong>COD-0012</strong>, <strong>90250-596</strong>,
+      Exemplos: <strong>VPD-0300</strong>, <strong>90250-596</strong>,
       <strong>Farrapos</strong> ou <strong>Rua + número</strong>.
     </small>
   </div>

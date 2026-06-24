@@ -1,3 +1,5 @@
+/* usuarios-cooadesc.js — versão completa para COOADESC
+   Baseado na página de usuários da Vila Pinto, com território e Firebase ajustados. */
 import { auth, db } from "./firebase-init-coadesc.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
@@ -29,7 +31,7 @@ const ROUTES = {
       usuarios: "usuarios-vila-pinto.html",
       coletas: "cadastro-coletas-vila-pinto.html",
       usuariosCooperativa: "usuario-cooperativa-vila-pinto.html",
-      dashboard: "dashboard-cooperativa.html"
+      dashboard: "dashboard-cooperativa-vila-pinto.html"
     },
     base: {
       label: "Centro de Triagem Vila Pinto",
@@ -59,6 +61,29 @@ const ROUTES = {
       label: "COOADESC",
       lat: -29.978149536151548, 
       lng: -51.19897147117521
+    }
+  },
+
+
+  ccpa: {
+    label: "CCPA",
+    aliases: [
+      "ccpa",
+      "cooperativa-dos-catadores-de-porto-alegre",
+      "crgr-ccpa",
+      "crgr_ccpa"
+    ],
+    pages: {
+      home: "cooperativa-ccpa.html",
+      usuarios: "usuarios-ccpa.html",
+      coletas: "cadastro-coletas-ccpa.html",
+      usuariosCooperativa: "usuario-cooperativa-ccpa.html",
+      dashboard: "dashboard-cooperativa-ccpa.html"
+    },
+    base: {
+      label: "CCPA",
+      lat: -30.140122365657504,
+      lng: -51.1268772051727
     }
   },
 
@@ -277,10 +302,71 @@ function isApprovedForCode(data = {}) {
   );
 }
 
-async function generateApprovedParticipantCode() {
-  const prefix = "COD";
-  const start = 1;
-  const territoryId = canonicalTerritoryId(getPageTerritoryId() || getMyTerritoryId() || "cooadesc") || "cooadesc";
+
+const APPROVED_CODE_CONFIG = {
+  cooadesc: {
+    casa: { prefix: "COD", start: 1 },
+    condominio: { prefix: "COCD", start: 1 },
+    comercio: { prefix: "COCM", start: 1 },
+    outro: { prefix: "COO", start: 1 }
+  },
+  "vila-pinto": {
+    casa: { prefix: "VPD", start: 275 },
+    condominio: { prefix: "VPCD", start: 3 },
+    comercio: { prefix: "VPCM", start: 0 },
+    outro: { prefix: "VPO", start: 0 }
+  },
+  ccpa: {
+    casa: { prefix: "CCPA", start: 1 },
+    condominio: { prefix: "CCPACD", start: 1 },
+    comercio: { prefix: "CCPACM", start: 1 },
+    outro: { prefix: "CCPAO", start: 1 }
+  }
+};
+
+function getApprovedCodeLocalType(user = {}) {
+  const raw = user.raw || {};
+  const snapshot = raw.payloadSnapshot || {};
+
+  const value = normalizeRouteKey(
+    user.codeLocalType ||
+    user.localType ||
+    raw.codeLocalType ||
+    raw.localType ||
+    snapshot.codeLocalType ||
+    snapshot.localType ||
+    "casa"
+  );
+
+  if (value.includes("condominio")) return "condominio";
+  if (value.includes("comercio")) return "comercio";
+  if (value.includes("outro")) return "outro";
+
+  return "casa";
+}
+
+async function generateApprovedParticipantCode(userForCode = {}) {
+  const territoryId =
+    canonicalTerritoryId(
+      userForCode.territoryId ||
+      userForCode.raw?.territoryId ||
+      userForCode.raw?.payloadSnapshot?.territoryId ||
+      getPageTerritoryId() ||
+      getMyTerritoryId() ||
+      "cooadesc"
+    ) || "cooadesc";
+
+  const localTypeKey = getApprovedCodeLocalType(userForCode);
+  const codeConfig =
+    APPROVED_CODE_CONFIG[territoryId]?.[localTypeKey] ||
+    APPROVED_CODE_CONFIG[territoryId]?.casa ||
+    APPROVED_CODE_CONFIG["cooadesc"]?.casa;
+
+  if (!codeConfig) {
+    throw new Error(`Configuração de código não encontrada para ${territoryId}/${localTypeKey}.`);
+  }
+
+  const { prefix, start } = codeConfig;
   const aliases = getTerritoryAliases(territoryId);
 
   const snap = await getDocs(
@@ -396,18 +482,18 @@ function getCurrentTerritoryId() {
   return canonicalTerritoryId(
     document.body?.dataset?.territoryId ||
     STATE.userDoc?.territoryId ||
-    "vila-pinto"
+    "cooadesc"
   );
 }
 
 function getRouteConfig(territoryId) {
   const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
-  return ROUTES[key] || ROUTES["vila-pinto"];
+  return ROUTES[key] || ROUTES["cooadesc"];
 }
 
 function getRoutePage(pageName, territoryId) {
   const config = getRouteConfig(territoryId);
-  return config.pages?.[pageName] || ROUTES["vila-pinto"].pages?.[pageName] || "login.html";
+  return config.pages?.[pageName] || ROUTES["cooadesc"].pages?.[pageName] || "login.html";
 }
 
 function buildPageUrl(pageName, territoryId, params = {}) {
@@ -425,7 +511,7 @@ function buildPageUrl(pageName, territoryId, params = {}) {
 
 function getTerritoryConfig(territoryId) {
   const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
-  return TERRITORIES[key] || TERRITORIES["vila-pinto"];
+  return TERRITORIES[key] || TERRITORIES["cooadesc"];
 }
 
 function getTerritoryAliases(territoryId) {
@@ -587,7 +673,7 @@ function setImportStatus(message, type = "info") {
 }
 
 async function buildImportedParticipant(row, index) {
-  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "vila-pinto";
+  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "cooadesc";
   const territoryLabel = getMyTerritoryLabel() || getTerritoryLabelById(territoryId);
 
   const code = String(getExcelValue(row, [
@@ -674,7 +760,7 @@ async function buildImportedParticipant(row, index) {
     "lon"
   ]));
 
-  const participantCode = code || await generateApprovedParticipantCode();
+  const participantCode = code || await generateApprovedParticipantCode({ localType, codeLocalType: localType, territoryId });
 
   return {
     id: participantCode.replace(/[^a-zA-Z0-9_-]/g, "_"),
@@ -1419,7 +1505,7 @@ function applyCoopUserPermissionsUI() {
   els.coopUsersSection.classList.remove("hidden");
 
   if (!canViewAllTerritories() && els.coopUserTerritory) {
-    els.coopUserTerritory.value = getMyTerritoryId() || "vila-pinto";
+    els.coopUserTerritory.value = getMyTerritoryId() || "cooadesc";
     els.coopUserTerritory.disabled = true;
   }
 }
@@ -1719,7 +1805,7 @@ function mergeUsers() {
   );
 
   emitPendingNotifications();
-  applyFilters();
+  applyFilters({ preservePages: true });
 }
 
 function emitPendingNotifications() {
@@ -1741,10 +1827,19 @@ function emitPendingNotifications() {
   STATE.lastPendingIds = currentPendingIds;
 }
 
-function applyFilters() {
-  STATE.pendingPage = 0;
-STATE.activePage = 0;
-STATE.tablePage = 0;
+function clampPage(value, totalItems) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / STATE.pageSize));
+  return Math.min(Math.max(0, Number(value || 0)), totalPages - 1);
+}
+
+function applyFilters(options = {}) {
+  const preservePages = options?.preservePages === true;
+
+  if (!preservePages) {
+    STATE.pendingPage = 0;
+    STATE.activePage = 0;
+    STATE.tablePage = 0;
+  }
 
   const term = String(els.searchInput?.value || "").trim().toLowerCase();
   const status = String(els.statusFilter?.value || "all");
@@ -1765,6 +1860,15 @@ STATE.tablePage = 0;
 
     return matchesTerm && matchesStatus && matchesOperation;
   });
+
+  if (preservePages) {
+    const pendingCount = STATE.filteredUsers.filter((u) => u.status === "pendente").length;
+    const activeCount = STATE.filteredUsers.filter((u) => u.status === "aprovado").length;
+
+    STATE.pendingPage = clampPage(STATE.pendingPage, pendingCount);
+    STATE.activePage = clampPage(STATE.activePage, activeCount);
+    STATE.tablePage = clampPage(STATE.tablePage, STATE.filteredUsers.length);
+  }
 
   renderAll();
 }
@@ -1936,7 +2040,9 @@ function renderTable() {
   ensureTableHeaderForLabels();
 
   const allUsers = getTableFilteredUsers();
-  const totalPages = Math.ceil(allUsers.length / STATE.pageSize);
+  const totalPages = Math.max(1, Math.ceil(allUsers.length / STATE.pageSize));
+
+  STATE.tablePage = Math.min(STATE.tablePage, totalPages - 1);
 
   const start = STATE.tablePage * STATE.pageSize;
   const end = start + STATE.pageSize;
@@ -3307,7 +3413,7 @@ async function approveUser(userId) {
     const generatedCode =
       user.code && user.code !== "—" && user.code !== "Aguardando aprovação"
         ? user.code
-        : await generateApprovedParticipantCode();
+        : await generateApprovedParticipantCode(user);
 
     const batch = writeBatch(db);
     const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
@@ -3415,7 +3521,7 @@ async function saveModalUserChanges() {
 
     const generatedCodeForApproval =
       chosenStatus === "aprovado" && (!user.code || user.code === "—" || user.code === "Aguardando aprovação")
-        ? await generateApprovedParticipantCode()
+        ? await generateApprovedParticipantCode(user)
         : null;
 
     await upsertParticipantFromApprovedRequest({

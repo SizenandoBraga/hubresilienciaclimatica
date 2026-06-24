@@ -1,3 +1,5 @@
+/* usuarios-ccpa.js — versão completa para CCPA
+   Baseado na página de usuários da Vila Pinto, com território e Firebase ajustados. */
 import { auth, db } from "./firebase-init-ccpa.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
@@ -29,7 +31,7 @@ const ROUTES = {
       usuarios: "usuarios-vila-pinto.html",
       coletas: "cadastro-coletas-vila-pinto.html",
       usuariosCooperativa: "usuario-cooperativa-vila-pinto.html",
-      dashboard: "dashboard-cooperativa.html"
+      dashboard: "dashboard-cooperativa-vila-pinto.html"
     },
     base: {
       label: "Centro de Triagem Vila Pinto",
@@ -62,9 +64,15 @@ const ROUTES = {
     }
   },
 
-  "ccpa": {
+
+  ccpa: {
     label: "CCPA",
-    aliases: ["ccpa", "padre-cacique", "crgr-padre-cacique", "crgr_padre_cacique"],
+    aliases: [
+      "ccpa",
+      "cooperativa-dos-catadores-de-porto-alegre",
+      "crgr-ccpa",
+      "crgr_ccpa"
+    ],
     pages: {
       home: "cooperativa-ccpa.html",
       usuarios: "usuarios-ccpa.html",
@@ -74,6 +82,23 @@ const ROUTES = {
     },
     base: {
       label: "CCPA",
+      lat: -30.140122365657504,
+      lng: -51.1268772051727
+    }
+  },
+
+  "padre-cacique": {
+    label: "Cooperativa Padre Cacique",
+    aliases: ["padre-cacique", "crgr-padre-cacique", "crgr_padre_cacique"],
+    pages: {
+      home: "cooperativa-padre-cacique.html",
+      usuarios: "usuarios-padre-cacique.html",
+      coletas: "cadastro-coletas-padre-cacique.html",
+      usuariosCooperativa: "usuario-cooperativa-padre-cacique.html",
+      dashboard: "dashboard-cooperativa-padre-cacique.html"
+    },
+    base: {
+      label: "Padre Cacique",
       lat: -30.140122365657504,
       lng: -51.1268772051727
     }
@@ -251,7 +276,124 @@ function toNumberOrNull(value) {
 
   return Number.isFinite(n) ? n : null;
 }
+function getCodeNumberFromValue(code, prefix) {
+  const text = String(code || "").trim();
 
+  if (!text.startsWith(`${prefix}-`)) return null;
+
+  const numberPart = Number(text.split("-")[1]);
+
+  return Number.isFinite(numberPart) ? numberPart : null;
+}
+
+function isApprovedForCode(data = {}) {
+  const status = String(data.status || "").toLowerCase().trim();
+  const approvalStatus = String(data.approvalStatus || "").toLowerCase().trim();
+  const active = data.active === true;
+
+  return (
+    status === "aprovado" ||
+    status === "approved" ||
+    status === "ativo" ||
+    status === "active" ||
+    approvalStatus === "approved" ||
+    approvalStatus === "aprovado" ||
+    active === true
+  );
+}
+
+
+const APPROVED_CODE_CONFIG = {
+  cooadesc: {
+    casa: { prefix: "COD", start: 1 },
+    condominio: { prefix: "COCD", start: 1 },
+    comercio: { prefix: "COCM", start: 1 },
+    outro: { prefix: "COO", start: 1 }
+  },
+  "vila-pinto": {
+    casa: { prefix: "VPD", start: 275 },
+    condominio: { prefix: "VPCD", start: 3 },
+    comercio: { prefix: "VPCM", start: 0 },
+    outro: { prefix: "VPO", start: 0 }
+  },
+  ccpa: {
+    casa: { prefix: "CCPA", start: 1 },
+    condominio: { prefix: "CCPACD", start: 1 },
+    comercio: { prefix: "CCPACM", start: 1 },
+    outro: { prefix: "CCPAO", start: 1 }
+  }
+};
+
+function getApprovedCodeLocalType(user = {}) {
+  const raw = user.raw || {};
+  const snapshot = raw.payloadSnapshot || {};
+
+  const value = normalizeRouteKey(
+    user.codeLocalType ||
+    user.localType ||
+    raw.codeLocalType ||
+    raw.localType ||
+    snapshot.codeLocalType ||
+    snapshot.localType ||
+    "casa"
+  );
+
+  if (value.includes("condominio")) return "condominio";
+  if (value.includes("comercio")) return "comercio";
+  if (value.includes("outro")) return "outro";
+
+  return "casa";
+}
+
+async function generateApprovedParticipantCode(userForCode = {}) {
+  const territoryId =
+    canonicalTerritoryId(
+      userForCode.territoryId ||
+      userForCode.raw?.territoryId ||
+      userForCode.raw?.payloadSnapshot?.territoryId ||
+      getPageTerritoryId() ||
+      getMyTerritoryId() ||
+      "ccpa"
+    ) || "ccpa";
+
+  const localTypeKey = getApprovedCodeLocalType(userForCode);
+  const codeConfig =
+    APPROVED_CODE_CONFIG[territoryId]?.[localTypeKey] ||
+    APPROVED_CODE_CONFIG[territoryId]?.casa ||
+    APPROVED_CODE_CONFIG["ccpa"]?.casa;
+
+  if (!codeConfig) {
+    throw new Error(`Configuração de código não encontrada para ${territoryId}/${localTypeKey}.`);
+  }
+
+  const { prefix, start } = codeConfig;
+  const aliases = getTerritoryAliases(territoryId);
+
+  const snap = await getDocs(
+    query(
+      collection(db, "participants"),
+      where("territoryId", "in", aliases)
+    )
+  );
+
+  let maxNumber = 0;
+
+  snap.forEach((docSnap) => {
+    const data = docSnap.data() || {};
+
+    if (!isApprovedForCode(data)) return;
+
+    const number = getCodeNumberFromValue(data.participantCode, prefix);
+
+    if (number !== null && number > maxNumber) {
+      maxNumber = number;
+    }
+  });
+
+  const nextNumber = Math.max(start, maxNumber + 1);
+
+  return `${prefix}-${String(nextNumber).padStart(4, "0")}`;
+}
 function isValidCoord(lat, lng) {
   return (
     Number.isFinite(lat) &&
@@ -340,18 +482,18 @@ function getCurrentTerritoryId() {
   return canonicalTerritoryId(
     document.body?.dataset?.territoryId ||
     STATE.userDoc?.territoryId ||
-    "vila-pinto"
+    "ccpa"
   );
 }
 
 function getRouteConfig(territoryId) {
   const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
-  return ROUTES[key] || ROUTES["vila-pinto"];
+  return ROUTES[key] || ROUTES["ccpa"];
 }
 
 function getRoutePage(pageName, territoryId) {
   const config = getRouteConfig(territoryId);
-  return config.pages?.[pageName] || ROUTES["vila-pinto"].pages?.[pageName] || "login.html";
+  return config.pages?.[pageName] || ROUTES["ccpa"].pages?.[pageName] || "login.html";
 }
 
 function buildPageUrl(pageName, territoryId, params = {}) {
@@ -369,7 +511,7 @@ function buildPageUrl(pageName, territoryId, params = {}) {
 
 function getTerritoryConfig(territoryId) {
   const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
-  return TERRITORIES[key] || TERRITORIES["vila-pinto"];
+  return TERRITORIES[key] || TERRITORIES["ccpa"];
 }
 
 function getTerritoryAliases(territoryId) {
@@ -530,8 +672,8 @@ function setImportStatus(message, type = "info") {
   }
 }
 
-function buildImportedParticipant(row, index) {
-  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "vila-pinto";
+async function buildImportedParticipant(row, index) {
+  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "ccpa";
   const territoryLabel = getMyTerritoryLabel() || getTerritoryLabelById(territoryId);
 
   const code = String(getExcelValue(row, [
@@ -618,8 +760,7 @@ function buildImportedParticipant(row, index) {
     "lon"
   ]));
 
-  const generatedCode = `IMP-${String(index + 1).padStart(4, "0")}-${Date.now()}`;
-  const participantCode = code || generatedCode;
+  const participantCode = code || await generateApprovedParticipantCode({ localType, codeLocalType: localType, territoryId });
 
   return {
     id: participantCode.replace(/[^a-zA-Z0-9_-]/g, "_"),
@@ -697,9 +838,9 @@ async function importParticipantsExcel(event) {
       return;
     }
 
-    const importedParticipants = rows
-      .map((row, index) => buildImportedParticipant(row, index))
-      .filter(Boolean);
+    const importedParticipants = (await Promise.all(
+      rows.map((row, index) => buildImportedParticipant(row, index))
+    )).filter(Boolean);
 
     if (!importedParticipants.length) {
       setImportStatus("Nenhum participante válido encontrado. Verifique se existe a coluna Nome.", "error");
@@ -1364,7 +1505,7 @@ function applyCoopUserPermissionsUI() {
   els.coopUsersSection.classList.remove("hidden");
 
   if (!canViewAllTerritories() && els.coopUserTerritory) {
-    els.coopUserTerritory.value = getMyTerritoryId() || "vila-pinto";
+    els.coopUserTerritory.value = getMyTerritoryId() || "ccpa";
     els.coopUserTerritory.disabled = true;
   }
 }
@@ -1517,7 +1658,7 @@ function mapApprovalRequestDoc(docSnap) {
     id: docSnap.id,
     participantId: data.targetId || data.participantId || null,
     participantName: data.participantName || snapshot.name || "Solicitação pendente",
-    participantCode: data.participantCode || snapshot.participantCode || "—",
+    participantCode: data.participantCode || snapshot.participantCode || "Aguardando aprovação",
     participantPhone: data.participantPhone || snapshot.phone || "",
     participantEmail: data.participantEmail || snapshot.email || "",
     participantCpf: data.participantCpf || snapshot.cpf || "",
@@ -1664,7 +1805,7 @@ function mergeUsers() {
   );
 
   emitPendingNotifications();
-  applyFilters();
+  applyFilters({ preservePages: true });
 }
 
 function emitPendingNotifications() {
@@ -1686,10 +1827,19 @@ function emitPendingNotifications() {
   STATE.lastPendingIds = currentPendingIds;
 }
 
-function applyFilters() {
-  STATE.pendingPage = 0;
-STATE.activePage = 0;
-STATE.tablePage = 0;
+function clampPage(value, totalItems) {
+  const totalPages = Math.max(1, Math.ceil(totalItems / STATE.pageSize));
+  return Math.min(Math.max(0, Number(value || 0)), totalPages - 1);
+}
+
+function applyFilters(options = {}) {
+  const preservePages = options?.preservePages === true;
+
+  if (!preservePages) {
+    STATE.pendingPage = 0;
+    STATE.activePage = 0;
+    STATE.tablePage = 0;
+  }
 
   const term = String(els.searchInput?.value || "").trim().toLowerCase();
   const status = String(els.statusFilter?.value || "all");
@@ -1710,6 +1860,15 @@ STATE.tablePage = 0;
 
     return matchesTerm && matchesStatus && matchesOperation;
   });
+
+  if (preservePages) {
+    const pendingCount = STATE.filteredUsers.filter((u) => u.status === "pendente").length;
+    const activeCount = STATE.filteredUsers.filter((u) => u.status === "aprovado").length;
+
+    STATE.pendingPage = clampPage(STATE.pendingPage, pendingCount);
+    STATE.activePage = clampPage(STATE.activePage, activeCount);
+    STATE.tablePage = clampPage(STATE.tablePage, STATE.filteredUsers.length);
+  }
 
   renderAll();
 }
@@ -1763,7 +1922,14 @@ function renderApprovedList() {
 
         <div class="user-actions">
           <span class="${badgeClass(user.status)}">Aprovado</span>
-          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Ver no mapa</button>
+          <button
+  class="btn ${isValidCoord(user.lat, user.lng) ? "btn-success" : "btn-danger"}"
+  data-action="focus"
+  data-id="${user.id}"
+  type="button"
+>
+  ${isValidCoord(user.lat, user.lng) ? "Mapa OK" : "Sem mapa"}
+</button>
           <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
         </div>
       </article>
@@ -1805,7 +1971,7 @@ function renderPendingList() {
       <article class="user-item">
         <div class="user-main">
           <strong>${safeText(user.name)}</strong>
-          <span>Código: ${safeText(user.code)}</span>
+          <span>Código: ${user.status === "pendente" ? "Será gerado após aprovação" : safeText(user.code)}</span>
           <span>Telefone: ${safeText(user.phone)}</span>
           <span>${safeText(user.address)}</span>
         </div>
@@ -1874,7 +2040,9 @@ function renderTable() {
   ensureTableHeaderForLabels();
 
   const allUsers = getTableFilteredUsers();
-  const totalPages = Math.ceil(allUsers.length / STATE.pageSize);
+  const totalPages = Math.max(1, Math.ceil(allUsers.length / STATE.pageSize));
+
+  STATE.tablePage = Math.min(STATE.tablePage, totalPages - 1);
 
   const start = STATE.tablePage * STATE.pageSize;
   const end = start + STATE.pageSize;
@@ -1914,7 +2082,14 @@ function renderTable() {
           <button class="btn btn-dark" data-action="print-label" data-id="${user.id}" type="button">Etiqueta</button>
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-success" data-action="approve" data-id="${user.id}" type="button">Aprovar</button>` : ""}
           ${canManageApprovals() && user.status === "pendente" ? `<button class="btn btn-danger" data-action="reject" data-id="${user.id}" type="button">Rejeitar</button>` : ""}
-          <button class="btn btn-ghost" data-action="focus" data-id="${user.id}" type="button">Mapa</button>
+          <button
+  class="btn ${isValidCoord(user.lat, user.lng) ? "btn-success" : "btn-danger"}"
+  data-action="focus"
+  data-id="${user.id}"
+  type="button"
+>
+  ${isValidCoord(user.lat, user.lng) ? "Mapa" : "Sem coordenada"}
+</button>
           <button class="btn btn-ghost" data-action="open" data-id="${user.id}" type="button">Abrir</button>
         </div>
       </td>
@@ -3196,7 +3371,7 @@ async function upsertParticipantFromApprovedRequest(user) {
   const payload = {
     name: user.name || snapshot.name || "Sem nome",
     nameLower: String(user.name || snapshot.name || "").toLowerCase(),
-    participantCode: user.code || snapshot.participantCode || "—",
+    participantCode: user.generatedCode || user.code || snapshot.participantCode || null,
     participantType: snapshot.participantType || "participante",
     localType: snapshot.localType || user.raw?.localType || "casa",
     phone: user.phone || snapshot.phone || null,
@@ -3235,11 +3410,18 @@ async function approveUser(userId) {
   if (!requireUserTerritoryAccess(user, "aprovar participante")) return;
 
   try {
+    const generatedCode =
+      user.code && user.code !== "—" && user.code !== "Aguardando aprovação"
+        ? user.code
+        : await generateApprovedParticipantCode(user);
+
     const batch = writeBatch(db);
     const sameRequests = STATE.approvalRequests.filter((req) => isSameRequestIdentity(req, user));
 
     sameRequests.forEach((req) => {
       batch.update(doc(db, "approvalRequests", req.id), {
+        participantCode: generatedCode,
+        codeStatus: "gerado",
         status: "approved",
         decision: "approved",
         reviewedAt: serverTimestamp(),
@@ -3255,6 +3437,8 @@ async function approveUser(userId) {
 
     await upsertParticipantFromApprovedRequest({
       ...user,
+      code: generatedCode,
+      generatedCode,
       status: "aprovado",
       inOperation: "sim",
       routeShift: selectedRouteShift,
@@ -3335,10 +3519,16 @@ async function saveModalUserChanges() {
       return;
     }
 
+    const generatedCodeForApproval =
+      chosenStatus === "aprovado" && (!user.code || user.code === "—" || user.code === "Aguardando aprovação")
+        ? await generateApprovedParticipantCode(user)
+        : null;
+
     await upsertParticipantFromApprovedRequest({
       ...user,
       name: els.modalUserName?.value?.trim() || user.name,
-      code: els.modalUserCode?.value?.trim() || user.code,
+      code: generatedCodeForApproval || els.modalUserCode?.value?.trim() || user.code,
+      generatedCode: generatedCodeForApproval || undefined,
       phone: onlyDigits(els.modalUserPhone?.value || user.phone),
       territoryLabel: els.modalTerritoryLabel?.value?.trim() || user.territoryLabel,
       address: els.modalAddress?.value?.trim() || user.address,
@@ -3356,6 +3546,8 @@ async function saveModalUserChanges() {
 
       sameRequests.forEach((req) => {
         batch.update(doc(db, "approvalRequests", req.id), {
+          participantCode: generatedCodeForApproval || els.modalUserCode?.value?.trim() || user.code || null,
+          codeStatus: "gerado",
           status: "approved",
           decision: "approved",
           reviewedAt: serverTimestamp(),
@@ -3621,7 +3813,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="usuarios.html"], a[href="/usuarios.html"], a[href="usuarios-vila-pinto.html"], a[href="/usuarios-vila-pinto.html"], a[href="usuarios-cooadesc.html"], a[href="/usuarios-cooadesc.html"], a[href="usuarios-ccpa.html"], a[href="/usuarios-ccpa.html"]'
+      'a[href="usuarios.html"], a[href="/usuarios.html"], a[href="usuarios-vila-pinto.html"], a[href="/usuarios-vila-pinto.html"], a[href="usuarios-cooadesc.html"], a[href="/usuarios-cooadesc.html"], a[href="usuarios-padre-cacique.html"], a[href="/usuarios-padre-cacique.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("usuarios", territoryId));
@@ -3629,7 +3821,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="cooperativa-vila-pinto.html"], a[href="/cooperativa-vila-pinto.html"], a[href="cooperativa-cooadesc.html"], a[href="/cooperativa-cooadesc.html"], a[href="cooperativa-ccpa.html"], a[href="/cooperativa-ccpa.html"]'
+      'a[href="cooperativa-vila-pinto.html"], a[href="/cooperativa-vila-pinto.html"], a[href="cooperativa-cooadesc.html"], a[href="/cooperativa-cooadesc.html"], a[href="cooperativa-padre-cacique.html"], a[href="/cooperativa-padre-cacique.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("home", territoryId));
@@ -3637,7 +3829,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="cadastro-coletas-vila-pinto.html"], a[href="/cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-cooadesc.html"], a[href="/cadastro-coletas-cooadesc.html"], a[href="cadastro-coletas-ccpa.html"], a[href="/cadastro-coletas-ccpa.html"]'
+      'a[href="cadastro-coletas-vila-pinto.html"], a[href="/cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-cooadesc.html"], a[href="/cadastro-coletas-cooadesc.html"], a[href="cadastro-coletas-padre-cacique.html"], a[href="/cadastro-coletas-padre-cacique.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("coletas", territoryId));
