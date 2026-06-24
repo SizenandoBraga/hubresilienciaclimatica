@@ -1,3 +1,9 @@
+/*
+  Arquivo clonado do JS funcional da Vila Pinto.
+  Adaptado para COOADESC.
+  Mantém a mesma renderização, classes CSS, modal, permissões, filtros, CSV/PDF e lógica de usuários.
+*/
+
 import { auth, db } from "./firebase-init-coadesc.js";
 import {
   onAuthStateChanged,
@@ -154,6 +160,7 @@ function getTerritoryLabelById(id) {
 
   if (territory === "vila-pinto") return "Centro de Triagem Vila Pinto";
   if (territory === "cooadesc" || territory === "coadesc") return "COOADESC";
+  if (territory === "ccpa") return "CCPA";
   if (territory === "padre-cacique") return "Padre Cacique";
 
   return id || "Cooperativa";
