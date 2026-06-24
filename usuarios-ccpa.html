@@ -275,11 +275,12 @@
   <div class="manual-route-search-box">
     <label for="manualRouteAddress">Código, CEP ou endereço</label>
 
-  <input
-  id="manualRouteAddress"
-  type="text"
-  placeholder="Ex.: CCPA-0001, 90000-000, Rua + número..."
-/>
+    <div class="manual-route-search-row">
+      <input
+        id="manualRouteAddress"
+        type="text"
+        placeholder="Ex.: CCPA-0001, 90000-000, Rua + número..."
+      />
 
       <button class="btn btn-primary" id="btnAddManualAddress" type="button">
         Adicionar ao mapa
@@ -287,7 +288,7 @@
     </div>
 
     <small>
-      Exemplos: <strong>VPD-0300</strong>, <strong>90250-596</strong>,
+      Exemplos: <strong>CCPA-0001</strong>, <strong>90250-596</strong>,
       <strong>Farrapos</strong> ou <strong>Rua + número</strong>.
     </small>
   </div>
@@ -314,7 +315,7 @@
     <div class="empty-state">Nenhum ponto manual adicionado.</div>
   </div>
 </div>
-            <div id="usersMap"></div>
+                        <div id="usersMap"></div>
 
             <div class="map-stats">
               <div class="map-stat">
