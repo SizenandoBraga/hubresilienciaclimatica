@@ -276,7 +276,7 @@ img {
 .quem-sao-header {
   width: 100%;
   background: var(--dark);
-  height: 180px;
+  height: 245px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: flex-start;
@@ -313,8 +313,8 @@ img {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  margin-top: -95px;
-  margin-bottom: -70px;
+  margin-top: -145px;
+  margin-bottom: -80px;
   position: relative;
   z-index: 30;
 }
@@ -720,7 +720,7 @@ img {
   }
 
   .quem-sao-header {
-    height: 112px;
+    height: 150x;
     gap: 14px;
     padding: 30px 16px 0;
   }
@@ -735,13 +735,13 @@ img {
   }
 
   .guardioes-personagens {
-    margin-top: 0;
+    margin-top: -55px;
     margin-bottom: 0;
   }
 
   .guardioes-personagens img {
     width: 100%;
-    transform: none;
+     transform: translateY(0) scale(1.04);
   }
 
   .guardioes-cards {
