@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Guardiões Urbanos | NSRU</title>
+
+<link rel="stylesheet" href="./header-publico.css" />
+<link rel="stylesheet" href="./guardioes.css">
+
+<link
+href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700;800&display=swap"
+rel="stylesheet">
+</head>
+
+<body id="top">
+<header class="site-header-public">
+  <div class="header-public-container">
+    <a class="header-brand" href="./index.html" aria-label="Ir para página inicial">
+      <img src="./img/NSRU-Logo-Preto.png" alt="NSRU" class="header-brand-logo" />
+    </a>
+
+    <button
+      class="header-menu-btn"
+      id="headerMenuBtn"
+      type="button"
+      aria-label="Abrir menu"
+      aria-expanded="false"
+      aria-controls="headerMainNav"
+    >
+      ☰
+    </button>
+
+    <nav class="header-main-nav" id="headerMainNav" aria-label="Navegação principal">
+      <a href="./index.html" class="header-nav-link" data-nav="index">Início</a>
+      <a href="./quem-somos.html" class="header-nav-link" data-nav="quem-somos">Quem Somos</a>
+
+      <a
+        href="https://aprendizagem.maosverdes.com.br"
+        class="header-nav-link"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        Educação
+      </a>
+
+      <a href="./guardioes.html" class="header-nav-link is-active" data-nav="guardioes">
+        Guardiões Urbanos
+      </a>
+
+      <div class="header-nav-dropdown" id="headerCrgrDropdown">
+        <button
+          class="header-nav-link header-nav-dropdown-toggle"
+          id="headerCrgrToggle"
+          type="button"
+          aria-expanded="false"
+          aria-controls="headerCrgrSubmenu"
+        >
+          CRGRs <span class="header-nav-dropdown-icon">⌄</span>
+        </button>
+
+        <div class="header-nav-submenu" id="headerCrgrSubmenu">
+          <a href="./vila-pinto.html" class="header-nav-sublink" data-nav-sub="vila-pinto">CRGR Vila Pinto</a>
+          <a href="./cooadesc.html" class="header-nav-sublink" data-nav-sub="cooadesc">CRGR Cooadesc</a>
+          <a href="./ccpa.html" class="header-nav-sublink" data-nav-sub="ccpa">CRGR CCPA</a>
+        </div>
+      </div>
+
+      <a href="./index.html#indicadores" class="header-nav-link" data-nav="indicadores">Dados e Relatórios</a>
+      <a href="./index.html#faq" class="header-nav-link" data-nav="faq">FAQ</a>
+      <a href="./login.html" class="header-nav-link header-mobile-cta" data-nav="login">Acessar Plataforma</a>
+    </nav>
+
+    <div class="header-public-actions">
+      <a href="./login.html" class="header-public-cta">Acessar Plataforma</a>
+    </div>
+  </div>
+</header>
+
+<section class="guardioes-hero">
+  <div class="guardioes-hero-inner">
+    <img src="./img/guardiao-1.png" alt="Guardiões Urbanos" class="guardioes-hero-img">
+  </div>
+</section>
+
+<section class="guardioes-cadastro-section">
+  <div class="guardian-card">
+    <div class="guardian-card-header">
+      Tenho interesse em entregar gratuitamente o resíduo<br>
+      reciclável gerado pela minha família ou comércio
+    </div>
+
+    <form id="guardianForm">
+      <div class="form-line">
+        <label for="nome">Nome</label>
+        <input type="text" id="nome" required>
+      </div>
+
+      <div class="form-line">
+        <label for="whatsapp">WhatsApp</label>
+        <input type="tel" id="whatsapp" required>
+      </div>
+
+      <div class="form-line form-cep">
+        <label for="cep">CEP</label>
+        <input type="text" id="cep" required>
+      </div>
+
+      <div class="form-line">
+        <label for="endereco">Endereço</label>
+        <input type="text" id="endereco" required>
+      </div>
+
+      <div class="form-line form-numero">
+        <label for="numero">Número</label>
+        <input type="text" id="numero" required>
+      </div>
+
+      <div class="form-line">
+        <label for="bairro">Bairro</label>
+        <input type="text" id="bairro" required>
+      </div>
+
+      <div class="form-line">
+        <label for="cidade">Cidade/UF</label>
+        <input type="text" id="cidade" required>
+      </div>
+
+      <div class="form-line form-cooperativa">
+        <label for="cooperativa">Cooperativa</label>
+        <select id="cooperativa" required>
+          <option value="">Selecione a cooperativa</option>
+          <option value="vila-pinto">CRGR Vila Pinto</option>
+          <option value="cooadesc">CRGR COADESC</option>
+          <option value="ccpa">CCPA</option>
+        </select>
+      </div>
+
+      <label class="lgpd-check" for="lgpdAceite">
+        <input type="checkbox" id="lgpdAceite" required>
+        <span>
+          Autorizo o uso do meu nome completo, telefone e endereço para verificar se estou
+          na área atendida pela cooperativa e para contato via WhatsApp.
+        </span>
+      </label>
+
+      <div id="formMessage" class="form-message" aria-live="polite"></div>
+
+      <button type="submit" class="send-btn" id="sendBtn">
+        <span class="send-text">Enviar</span> <span>▶</span>
+      </button>
+    </form>
+  </div>
+
+  <p class="lgpd-text">
+    Dados pessoais • Autorizo, conforme a LGPD, o uso do meu nome completo,
+    telefone e endereço para verificar se estou na área atendida pela cooperativa
+    e para que ela possa entrar em contato comigo via WhatsApp. Meus dados serão
+    usados somente para essa finalidade.
+  </p>
+</section>
+
+<section class="quem-sao-guardioes">
+  <div class="quem-sao-header">
+    <span></span>
+    <h2>Quem são os Guardiões</h2>
+    <span></span>
+  </div>
+
+  <div class="guardioes-personagens">
+    <img src="./img/guardioes.png" alt="Personagens Guardiões Urbanos">
+  </div>
+
+  <div class="guardioes-cards">
+    <article class="guardiao-card sr-cidade">
+      <h3>Sr. Cidade</h3>
+      <p>Guardião inspirado no trabalho que a cidade faz (DMLU)</p>
+    </article>
+
+    <article class="guardiao-card aurora">
+      <h3>Aurora</h3>
+      <p>Guardiã que representa as famílias que fazem a separação correta e entregam seu resíduo para o programa</p>
+    </article>
+
+    <article class="guardiao-card eco">
+      <h3>Eco</h3>
+      <p>Guardiões e guardiãs das cooperativas de triagem, que tornam a reciclagem possível</p>
+    </article>
+
+    <article class="guardiao-card lumen">
+      <h3>Lúmen</h3>
+      <p>Guardião inspirado nos técnicos que dão suporte aos times e lideram ações para estarmos preparados para futuros eventos climáticos</p>
+    </article>
+
+    <article class="guardiao-card tita">
+      <h3>Titã</h3>
+      <p>Guardião que representa os catadores individuais, essenciais no processo</p>
+    </article>
+  </div>
+</section>
+
+<section class="como-vai-funcionar">
+  <h2>Como Vai Funcionar:</h2>
+
+  <div class="funciona-lista">
+    <div class="funciona-item">
+      <span>1</span>
+      <p>Você preenche o formulário e demonstra seu interesse em ser um guardião também</p>
+    </div>
+
+    <div class="funciona-item darker">
+      <span>2</span>
+      <p>A equipe da cooperativa da sua comunidade entrará em contato</p>
+    </div>
+
+    <div class="funciona-item">
+      <span>3</span>
+      <p>Sua família recebe os materiais de orientação e educação ambiental</p>
+    </div>
+
+    <div class="funciona-item darker">
+      <span>4</span>
+      <p>Sua residência entra na rota de coleta da campanha</p>
+    </div>
+
+    <div class="funciona-item">
+      <span>5</span>
+      <p>Juntos, damos destino correto aos resíduos e prevenimos danos maiores em casos de enchentes, desastres climáticos, deslizamentos</p>
+    </div>
+  </div>
+</section>
+
+<section class="guardioes-parceiros">
+  <div class="parceiros-grupo">
+    <span>Realizadores:</span>
+    <div class="logos">
+      <img src="./img/maos_verdes_logo.jpg" alt="Mãos Verdes">
+      <img src="./img/Cluster_ecoar.png" alt="Cluster Ecoar">
+    </div>
+  </div>
+
+  <div class="divisor"></div>
+
+  <div class="parceiros-grupo">
+    <span>Parceiros:</span>
+    <div class="logos">
+      <img src="./img/logo-cea.png" alt="CEA">
+      <img src="./img/logo_cooadesc.jpg" alt="Coadesc">
+      <img src="./img/ccpa.png" alt="CCPA">
+    </div>
+  </div>
+
+  <div class="divisor"></div>
+
+  <div class="parceiros-grupo">
+    <span>Financiador:</span>
+    <div class="logos">
+      <img src="./img/regenera-rs-logo.png" alt="Regenera RS">
+    </div>
+  </div>
+</section>
+
+<script type="module" src="./header-publico.js"></script>
+<script type="module" src="./guardioes.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,731 @@
+/* =========================================================
+   BASE
+========================================================= */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+body,
+input,
+select,
+button,
+textarea {
+  font-family: 'Archivo Condensed', sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+/* =========================================================
+   HERO GUARDIÕES
+========================================================= */
+
+.guardioes-hero {
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.guardioes-hero-inner {
+  width: 100%;
+  max-width: 1440px;
+  background: linear-gradient(
+    90deg,
+    #ececec 0%,
+    #ececec 34%,
+    #00c92f 34%,
+    #00c92f 100%
+  );
+  line-height: 0;
+}
+
+.guardioes-hero-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* =========================================================
+   CADASTRO GUARDIÕES
+========================================================= */
+
+.guardioes-cadastro-section {
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    #ffffff 0%,
+    #ffffff 42%,
+    #292927 42%,
+    #292927 100%
+  );
+  padding: 18px 20px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.guardian-card {
+  width: min(100%, 640px);
+  background: #00c92f;
+  border-radius: 10px;
+  box-shadow: 7px 7px 12px rgba(0, 0, 0, .28);
+  padding: 8px 36px 18px;
+  position: relative;
+}
+
+.guardian-card-header {
+  background: #00b900;
+  color: #fff200;
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.15;
+  padding: 9px 14px;
+  margin-bottom: 12px;
+}
+
+.form-line {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.form-line label {
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  text-align: right;
+}
+
+.form-line input,
+.form-line select {
+  width: 100%;
+  height: 36px;
+  border: none;
+  outline: none;
+  border-radius: 6px;
+  background: #baf2bf;
+  padding: 0 12px;
+  font-size: 1rem;
+  color: #111;
+}
+
+.form-line input:focus,
+.form-line select:focus {
+  box-shadow: 0 0 0 3px rgba(255, 242, 0, .55);
+}
+
+.form-line select {
+  cursor: pointer;
+}
+
+.form-cep input,
+.form-numero input {
+  max-width: 220px;
+}
+
+.lgpd-check {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 8px 0 4px 94px;
+  color: #ffffff;
+  font-size: .78rem;
+  line-height: 1.2;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.lgpd-check input {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: #fff200;
+}
+
+.form-message {
+  min-height: 18px;
+  margin: 7px 0 0 94px;
+  font-size: .82rem;
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.form-message.is-info {
+  color: #ffffff;
+}
+
+.form-message.is-success {
+  color: #fff200;
+}
+
+.form-message.is-warning {
+  color: #fff200;
+}
+
+.form-message.is-error {
+  color: #b10000;
+}
+
+.send-btn {
+  width: 150px;
+  margin: 10px 0 -42px auto;
+  background: #f5fbf2;
+  color: #00b92d;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 1.45rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 3px 5px rgba(0,0,0,.22);
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,.24);
+}
+
+.send-btn:disabled {
+  opacity: .72;
+  cursor: wait;
+  transform: none;
+}
+
+.send-btn span {
+  font-size: 1.25rem;
+}
+
+.send-btn .send-text {
+  font-size: 1.45rem;
+}
+
+.lgpd-text {
+  width: min(100%, 640px);
+  margin: 16px auto 0;
+  padding-right: 175px;
+  color: #ffffff;
+  font-size: .58rem;
+  line-height: 1.18;
+  text-align: left;
+}
+
+/* =========================================================
+   SEÇÃO 2 - QUEM SÃO OS GUARDIÕES
+========================================================= */
+
+.quem-sao-guardioes {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.quem-sao-header {
+  background: #292927;
+  height: 105px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: start;
+  gap: 22px;
+  padding: 26px 42px 0;
+}
+
+.quem-sao-header span {
+  height: 2px;
+  background: #ffffff;
+  margin-top: 10px;
+}
+
+.quem-sao-header h2 {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.35rem;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.guardioes-personagens{
+  width:100%;
+  background:#ffffff;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+
+  margin-bottom:-380px;
+
+  position:relative;
+  z-index:30;
+}
+
+.guardioes-personagens img{
+  width:min(100%,720px);
+
+  transform:scale(1.35);
+
+  display:block;
+
+  position:relative;
+  z-index:30;
+}
+
+
+/* =========================================================
+   CARDS DOS GUARDIÕES
+========================================================= */
+
+
+.guardioes-cards{
+  width:100%;
+  max-width:1400px;
+
+  margin:0 auto;
+
+  display:grid;
+
+  grid-template-columns:
+  repeat(5,minmax(180px,1fr));
+
+  gap:16px;
+
+  padding:
+  390px
+  40px
+  60px;
+
+  align-items:end;
+
+  position:relative;
+  z-index:2;
+}
+.guardiao-card {
+  border-radius: 12px;
+  padding: 28px 18px 24px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 12px 28px rgba(0,0,0,.18);
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.guardiao-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 20px 36px rgba(0,0,0,.22);
+}
+
+.guardiao-card h3 {
+  margin: 0 0 18px;
+  color: #ffffff;
+  font-size: 2.5rem;
+  line-height: .9;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 rgba(0,0,0,.10);
+}
+
+.guardiao-card p {
+  margin: 0;
+  color: #111111;
+  font-size: 1rem;
+  line-height: 1.25;
+  font-weight: 800;
+}
+
+.sr-cidade {
+  background: #ff6816;
+  min-height: 260px;
+  transform: rotate(-2deg);
+}
+
+.aurora {
+  background: #ffd000;
+  min-height: 320px;
+  transform: rotate(1.5deg);
+}
+
+.eco {
+  background: #24ef43;
+  min-height: 380px;
+  transform: translateY(-18px);
+  box-shadow: 0 18px 35px rgba(0,0,0,.25);
+  z-index: 5;
+}
+
+.eco h3 {
+  font-size: 3rem;
+}
+
+.lumen {
+  background: #22aef5;
+  min-height: 340px;
+  transform: rotate(2deg);
+}
+
+.tita {
+  background: #ff2323;
+  min-height: 300px;
+  transform: rotate(-1deg);
+}
+
+/* =========================================================
+   SEÇÃO 3 - COMO VAI FUNCIONAR
+========================================================= */
+
+.como-vai-funcionar {
+  width: 100%;
+  background: #ffffff;
+  padding: 28px 20px 42px;
+}
+
+.como-vai-funcionar h2 {
+  margin: 0 0 14px;
+  text-align: center;
+  color: #292927;
+  font-size: 2rem;
+  font-weight: 900;
+}
+
+.funciona-lista {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.funciona-item {
+  background: #00c92f;
+  border-radius: 9px;
+  min-height: 70px;
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  align-items: center;
+  padding: 8px 28px 8px 18px;
+}
+
+.funciona-item.darker {
+  background: #008d24;
+}
+
+.funciona-item span {
+  color: rgba(0, 120, 30, .75);
+  font-size: 3.9rem;
+  line-height: 1;
+  font-weight: 900;
+}
+
+.funciona-item p {
+  margin: 0;
+  color: #ffffff;
+  font-size: 1.75rem;
+  line-height: 1.05;
+  font-weight: 900;
+}
+
+/* =========================================================
+   SEÇÃO 4 - PARCEIROS
+========================================================= */
+
+.guardioes-parceiros {
+  width: 100%;
+  background: #ffffff;
+  border-bottom: 22px solid #00c92f;
+  padding: 50px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.parceiros-grupo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.parceiros-grupo span {
+  color: #111;
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+}
+
+.logos img {
+  max-height: 95px;
+  max-width: 240px;
+  object-fit: contain;
+  transition: transform .25s ease;
+}
+
+.logos img:hover {
+  transform: scale(1.05);
+}
+
+.divisor {
+  width: 2px;
+  height: 110px;
+  background: #4a4a4a;
+  opacity: .5;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1200px) {
+  .guardioes-cards {
+    grid-template-columns: repeat(3, 1fr);
+    padding: 120px 25px 40px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .guardioes-parceiros {
+    gap: 40px;
+    padding: 40px 20px;
+  }
+
+  .logos img {
+    max-height: 75px;
+  }
+}
+
+@media (max-width: 920px) {
+  .guardian-card {
+    width: min(100%, 620px);
+    padding: 8px 28px 18px;
+  }
+
+  .lgpd-text {
+    padding-right: 160px;
+  }
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .guardioes-hero {
+    background: #ffffff;
+  }
+
+  .guardioes-hero-inner {
+    width: 100%;
+  }
+
+  .guardioes-hero-img {
+    width: 100%;
+    height: auto;
+  }
+
+  .guardioes-cadastro-section {
+    background: linear-gradient(
+      180deg,
+      #ffffff 0%,
+      #ffffff 25%,
+      #292927 25%,
+      #292927 100%
+    );
+    padding: 16px 14px 28px;
+  }
+
+  .guardian-card {
+    width: 100%;
+    padding: 8px 16px 18px;
+    border-radius: 10px;
+  }
+
+  .guardian-card-header {
+    font-size: .95rem;
+    padding: 9px 10px;
+  }
+
+  .form-line,
+  .form-cep,
+  .form-numero,
+  .form-cooperativa {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    margin-bottom: 9px;
+  }
+
+  .form-line label {
+    text-align: left;
+    font-size: .95rem;
+  }
+
+  .form-line input,
+  .form-line select {
+    height: 42px;
+    font-size: 1rem;
+  }
+
+  .form-cep input,
+  .form-numero input {
+    max-width: 100%;
+  }
+
+  .lgpd-check {
+    margin-left: 0;
+    font-size: .75rem;
+  }
+
+  .form-message {
+    margin-left: 0;
+    font-size: .82rem;
+  }
+
+  .send-btn {
+    width: 100%;
+    margin: 14px 0 0;
+    font-size: 1.5rem;
+  }
+
+  .lgpd-text {
+    width: 100%;
+    padding-right: 0;
+    margin-top: 12px;
+    font-size: .66rem;
+    line-height: 1.25;
+  }
+
+  .quem-sao-header {
+    height: 88px;
+    gap: 12px;
+    padding: 24px 16px 0;
+  }
+
+  .quem-sao-header h2 {
+    font-size: 1.1rem;
+  }
+
+  .guardioes-personagens {
+    margin-bottom: 0;
+  }
+
+  .guardioes-cards {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 24px 16px 30px;
+  }
+
+  .guardiao-card,
+  .sr-cidade,
+  .aurora,
+  .eco,
+  .tita,
+  .lumen {
+    min-height: auto;
+    transform: none;
+  }
+
+  .guardiao-card {
+    padding: 24px 20px;
+  }
+
+  .guardiao-card h3 {
+    font-size: 2rem;
+  }
+
+  .guardiao-card p {
+    font-size: 1rem;
+  }
+
+  .como-vai-funcionar {
+    padding: 24px 16px 34px;
+  }
+
+  .como-vai-funcionar h2 {
+    font-size: 1.6rem;
+  }
+
+  .funciona-item {
+    grid-template-columns: 54px 1fr;
+    padding: 12px 16px;
+  }
+
+  .funciona-item span {
+    font-size: 3rem;
+  }
+
+  .funciona-item p {
+    font-size: 1.2rem;
+  }
+
+  .guardioes-parceiros {
+    flex-direction: column;
+    gap: 35px;
+    padding: 35px 20px;
+  }
+
+  .divisor {
+    width: 80%;
+    height: 2px;
+  }
+
+  .logos {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .logos img {
+    max-height: 70px;
+    max-width: 180px;
+  }
+
+  .parceiros-grupo span {
+    font-size: .9rem;
+  }
+}
+
+/* =========================================================
+   CELULAR PEQUENO
+========================================================= */
+
+@media (max-width: 420px) {
+  .guardian-card-header {
+    font-size: .86rem;
+  }
+
+  .form-line label {
+    font-size: .9rem;
+  }
+
+  .lgpd-text {
+    font-size: .6rem;
+  }
+
+  .quem-sao-header h2 {
+    font-size: 1rem;
+  }
+}
