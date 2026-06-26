@@ -6,6 +6,16 @@
   box-sizing: border-box;
 }
 
+@font-face {
+    font-family: "Asdonuts";
+    src:
+        url("./fonts/Asdonuts.woff2") format("woff2"),
+        url("./fonts/Asdonuts.woff") format("woff");
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
 html,
 body {
   width: 100%;
@@ -272,7 +282,6 @@ select {
   display:flex;
   justify-content:center;
   align-items:flex-end;
-
   margin-bottom:-380px;
 
   position:relative;
@@ -342,6 +351,7 @@ select {
   font-size: 2.5rem;
   line-height: .9;
   font-weight: 900;
+  font-family: "Asdonuts", sans-serif;
   text-shadow: 2px 2px 0 rgba(0,0,0,.10);
 }
 
