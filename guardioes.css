@@ -379,7 +379,7 @@ img {
 .sr-cidade {
   background: var(--orange-card);
   min-height: 185px;
-  transform: rotate(-1deg) translateY(-45px);
+  transform: rotate(-1deg) translateY(-55px);
 }
 
 .aurora {
@@ -404,7 +404,7 @@ img {
 .tita {
   background: var(--red-card);
   min-height: 185px;
-  transform: rotate(1deg) translateY(-45px);
+  transform: rotate(1deg) translateY(-55px);
 }
 
 .eco h3 {
