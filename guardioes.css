@@ -7,13 +7,13 @@
 }
 
 @font-face {
-    font-family: "Asdonuts";
-    src:
-        url("./fonts/Asdonuts.woff2") format("woff2"),
-        url("./fonts/Asdonuts.woff") format("woff");
-    font-weight: normal;
-    font-style: normal;
-    font-display: swap;
+  font-family: "Asdonuts";
+  src:
+    url("./fonts/Asdonuts.woff2") format("woff2"),
+    url("./fonts/Asdonuts.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
 html,
@@ -29,7 +29,7 @@ input,
 select,
 button,
 textarea {
-  font-family: 'Archivo Condensed', sans-serif;
+  font-family: "Archivo Condensed", sans-serif;
 }
 
 button,
@@ -181,10 +181,7 @@ select {
   color: #ffffff;
 }
 
-.form-message.is-success {
-  color: #fff200;
-}
-
+.form-message.is-success,
 .form-message.is-warning {
   color: #fff200;
 }
@@ -276,127 +273,115 @@ select {
   white-space: nowrap;
 }
 
-.guardioes-personagens{
-  width:100%;
-  background:#ffffff;
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-  margin-bottom:-380px;
-
-  position:relative;
-  z-index:30;
-}
-
-.guardioes-personagens img{
-  width:min(100%,720px);
-
-  transform:scale(1.35);
-
-  display:block;
-
-  position:relative;
-  z-index:30;
-}
-
-
 /* =========================================================
-   CARDS DOS GUARDIÕES
+   PERSONAGENS + CARDS DOS GUARDIÕES
 ========================================================= */
 
-
-.guardioes-cards{
-  width:100%;
-  max-width:1400px;
-
-  margin:0 auto;
-
-  display:grid;
-
-  grid-template-columns:
-  repeat(5,minmax(180px,1fr));
-
-  gap:16px;
-
-  padding:
-  390px
-  40px
-  60px;
-
-  align-items:end;
-
-  position:relative;
-  z-index:2;
+.guardioes-personagens {
+  width: 100%;
+  background: #ffffff;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin-bottom: -210px;
+  position: relative;
+  z-index: 30;
 }
+
+.guardioes-personagens img {
+  width: min(100%, 640px);
+  transform: scale(1.15);
+  display: block;
+  position: relative;
+  z-index: 30;
+}
+
+.guardioes-cards {
+  width: 100%;
+  max-width: 980px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 210px 20px 80px;
+  position: relative;
+  z-index: 2;
+}
+
 .guardiao-card {
-  border-radius: 12px;
-  padding: 28px 18px 24px;
+  width: 150px;
+  border-radius: 10px;
+  padding: 14px 12px;
   text-align: center;
   display: flex;
   flex-direction: column;
   justify-content: center;
   position: relative;
-  box-shadow: 0 12px 28px rgba(0,0,0,.18);
-  transition: transform .25s ease, box-shadow .25s ease;
+  box-shadow: 0 12px 24px rgba(0,0,0,.12);
+  transition: box-shadow .25s ease;
 }
 
 .guardiao-card:hover {
-  transform: translateY(-6px);
-  box-shadow: 0 20px 36px rgba(0,0,0,.22);
+  box-shadow: 0 18px 32px rgba(0,0,0,.18);
 }
 
 .guardiao-card h3 {
-  margin: 0 0 18px;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  margin: 0 0 12px;
   color: #ffffff;
-  font-size: 2.5rem;
+  font-size: 1.85rem;
   line-height: .9;
-  font-weight: 900;
-  font-family: "Asdonuts", sans-serif;
+  font-weight: 400;
   text-shadow: 2px 2px 0 rgba(0,0,0,.10);
 }
 
 .guardiao-card p {
   margin: 0;
   color: #111111;
-  font-size: 1rem;
-  line-height: 1.25;
+  font-size: .86rem;
+  line-height: 1.05;
   font-weight: 800;
 }
 
 .sr-cidade {
   background: #ff6816;
-  min-height: 260px;
-  transform: rotate(-2deg);
+  min-height: 175px;
+  transform: rotate(-1deg) translateY(-18px);
 }
 
 .aurora {
   background: #ffd000;
-  min-height: 320px;
-  transform: rotate(1.5deg);
+  min-height: 210px;
+  transform: rotate(-1deg) translateY(16px);
 }
 
 .eco {
   background: #24ef43;
-  min-height: 380px;
-  transform: translateY(-18px);
-  box-shadow: 0 18px 35px rgba(0,0,0,.25);
-  z-index: 5;
+  min-height: 220px;
+  transform: translateY(28px);
+  z-index: 6;
 }
 
 .eco h3 {
-  font-size: 3rem;
+  font-size: 2.3rem;
 }
 
 .lumen {
   background: #22aef5;
-  min-height: 340px;
-  transform: rotate(2deg);
+  min-height: 210px;
+  transform: rotate(1deg) translateY(16px);
+}
+
+.lumen p {
+  font-size: .74rem;
+  line-height: 1.02;
 }
 
 .tita {
   background: #ff2323;
-  min-height: 300px;
-  transform: rotate(-1deg);
+  min-height: 175px;
+  transform: rotate(-1deg) translateY(-18px);
 }
 
 /* =========================================================
@@ -414,7 +399,8 @@ select {
   text-align: center;
   color: #292927;
   font-size: 2rem;
-  font-weight: 900;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-weight: 400;
 }
 
 .funciona-lista {
@@ -442,7 +428,8 @@ select {
   color: rgba(0, 120, 30, .75);
   font-size: 3.9rem;
   line-height: 1;
-  font-weight: 900;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-weight: 400;
 }
 
 .funciona-item p {
@@ -450,7 +437,8 @@ select {
   color: #ffffff;
   font-size: 1.75rem;
   line-height: 1.05;
-  font-weight: 900;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-weight: 400;
 }
 
 /* =========================================================
@@ -512,9 +500,23 @@ select {
 ========================================================= */
 
 @media (max-width: 1200px) {
+  .guardioes-personagens {
+    margin-bottom: -160px;
+  }
+
+  .guardioes-personagens img {
+    width: min(100%, 560px);
+    transform: scale(1.1);
+  }
+
   .guardioes-cards {
-    grid-template-columns: repeat(3, 1fr);
-    padding: 120px 25px 40px;
+    max-width: 900px;
+    padding: 170px 18px 70px;
+    gap: 6px;
+  }
+
+  .guardiao-card {
+    width: 140px;
   }
 }
 
@@ -537,6 +539,27 @@ select {
 
   .lgpd-text {
     padding-right: 160px;
+  }
+
+  .guardioes-cards {
+    max-width: 760px;
+  }
+
+  .guardiao-card {
+    width: 118px;
+    padding: 12px 9px;
+  }
+
+  .guardiao-card h3 {
+    font-size: 1.45rem;
+  }
+
+  .guardiao-card p {
+    font-size: .74rem;
+  }
+
+  .lumen p {
+    font-size: .64rem;
   }
 }
 
@@ -643,7 +666,13 @@ select {
     margin-bottom: 0;
   }
 
+  .guardioes-personagens img {
+    width: 100%;
+    transform: none;
+  }
+
   .guardioes-cards {
+    display: grid;
     grid-template-columns: 1fr;
     gap: 14px;
     padding: 24px 16px 30px;
@@ -655,6 +684,7 @@ select {
   .eco,
   .tita,
   .lumen {
+    width: 100%;
     min-height: auto;
     transform: none;
   }
@@ -667,8 +697,10 @@ select {
     font-size: 2rem;
   }
 
-  .guardiao-card p {
+  .guardiao-card p,
+  .lumen p {
     font-size: 1rem;
+    line-height: 1.12;
   }
 
   .como-vai-funcionar {
@@ -737,116 +769,5 @@ select {
 
   .quem-sao-header h2 {
     font-size: 1rem;
-  }
-}
-
-
-
-/* =========================================================
-   AJUSTE VISUAL DOS GUARDIÕES
-========================================================= */
-
-.guardioes-cards{
-  width:100%;
-  max-width:1320px;
-  margin:0 auto;
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-  gap:4px;
-  padding:320px 24px 70px;
-  position:relative;
-  z-index:2;
-}
-
-.guardiao-card{
-  width:155px;
-  min-height:250px;
-  border-radius:8px;
-  padding:22px 14px;
-  text-align:center;
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-  box-shadow:none;
-}
-
-.guardiao-card h3{
-  font-family:"Asdonuts","Archivo Condensed",sans-serif;
-  color:#fff;
-  font-size:2.25rem;
-  line-height:.9;
-  font-weight:400;
-  margin:0 0 20px;
-}
-
-.guardiao-card p{
-  font-family:"Archivo Condensed",sans-serif;
-  color:#111;
-  font-size:1.05rem;
-  line-height:1.12;
-  font-weight:800;
-}
-
-.sr-cidade{
-  background:#ff6816;
-  min-height:250px;
-  transform:rotate(-1.5deg) translateY(-34px);
-}
-
-.aurora{
-  background:#ffd000;
-  min-height:275px;
-  transform:rotate(-1deg) translateY(38px);
-}
-
-.eco{
-  background:#24ef43;
-  min-height:260px;
-  transform:translateY(62px);
-  z-index:6;
-}
-
-.lumen{
-  background:#22aef5;
-  min-height:275px;
-  transform:rotate(1deg) translateY(38px);
-  
-}
-.lumen p{
-  font-size:0.88rem;
-  line-height:1.12;
-}
-
-.tita{
-  background:#ff2323;
-  min-height:250px;
-  transform:rotate(-1deg) translateY(-34px);
-}
-
-.como-vai-funcionar h2,
-.funciona-item span,
-.funciona-item p{
-  font-family:"Asdonuts","Archivo Condensed",sans-serif;
-  font-weight:400;
-}
-
-@media (max-width:768px){
-  .guardioes-cards{
-    display:grid;
-    grid-template-columns:1fr;
-    padding:24px 16px 30px;
-    gap:14px;
-  }
-
-  .guardiao-card,
-  .sr-cidade,
-  .aurora,
-  .eco,
-  .tita,
-  .lumen{
-    width:100%;
-    min-height:auto;
-    transform:none;
   }
 }
