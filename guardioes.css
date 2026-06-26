@@ -251,7 +251,7 @@ select {
 
 .quem-sao-header {
   background: #292927;
-  height: 105px;
+  height: 115px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: start;
@@ -276,15 +276,18 @@ select {
 /* =========================================================
    PERSONAGENS + CARDS DOS GUARDIÕES
 ========================================================= */
-.guardioes-personagens {
-  width: 100%;
-  background: #ffffff;
-  display: flex;
-  justify-content: center;
-  align-items: flex-end;
-  margin-bottom: -205px;
-  position: relative;
-  z-index: 30;
+.guardioes-personagens{
+    width:100%;
+    background:#ffffff;
+    display:flex;
+    justify-content:center;
+    align-items:flex-end;
+
+    margin-top:-55px;      /* sobe os personagens para dentro da faixa preta */
+    margin-bottom:-205px;  /* mantém a aproximação com os cards */
+
+    position:relative;
+    z-index:30;
 }
 
 .guardioes-personagens img {
