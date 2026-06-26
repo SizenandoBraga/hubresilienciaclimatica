@@ -788,11 +788,36 @@ select {
   font-weight:800;
 }
 
-.sr-cidade{background:#ff6816;min-height:250px;transform:rotate(-1.5deg) translateY(-34px);}
-.aurora{background:#ffd000;min-height:275px;transform:rotate(-1deg) translateY(38px);}
-.eco{background:#24ef43;min-height:260px;transform:translateY(62px);z-index:6;}
-.lumen{background:#22aef5;min-height:250px;transform:rotate(1deg) translateY(-44px);}
-.tita{background:#ff2323;min-height:230px;transform:rotate(-1deg) translateY(18px);}
+.sr-cidade{
+  background:#ff6816;
+  min-height:250px;
+  transform:rotate(-1.5deg) translateY(-34px);
+}
+
+.aurora{
+  background:#ffd000;
+  min-height:275px;
+  transform:rotate(-1deg) translateY(38px);
+}
+
+.eco{
+  background:#24ef43;
+  min-height:260px;
+  transform:translateY(62px);
+  z-index:6;
+}
+
+.lumen{
+  background:#22aef5;
+  min-height:275px;
+  transform:rotate(1deg) translateY(38px);
+}
+
+.tita{
+  background:#ff2323;
+  min-height:250px;
+  transform:rotate(-1deg) translateY(-34px);
+}
 
 .como-vai-funcionar h2,
 .funciona-item span,
