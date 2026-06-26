@@ -276,14 +276,13 @@ select {
 /* =========================================================
    PERSONAGENS + CARDS DOS GUARDIÕES
 ========================================================= */
-
 .guardioes-personagens {
   width: 100%;
   background: #ffffff;
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  margin-bottom: -210px;
+  margin-bottom: -205px;
   position: relative;
   z-index: 30;
 }
@@ -302,9 +301,9 @@ select {
   margin: 0 auto;
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  align-items: flex-start;
   gap: 8px;
-  padding: 210px 20px 80px;
+  padding: 210px 20px 90px;
   position: relative;
   z-index: 2;
 }
@@ -318,12 +317,12 @@ select {
   flex-direction: column;
   justify-content: center;
   position: relative;
-  box-shadow: 0 12px 24px rgba(0,0,0,.12);
-  transition: box-shadow .25s ease;
+  box-shadow: 0 12px 24px rgba(0,0,0,.16);
+  transition: transform .25s ease, box-shadow .25s ease;
 }
 
 .guardiao-card:hover {
-  box-shadow: 0 18px 32px rgba(0,0,0,.18);
+  box-shadow: 0 20px 36px rgba(0,0,0,.24);
 }
 
 .guardiao-card h3 {
@@ -344,33 +343,30 @@ select {
   font-weight: 800;
 }
 
+/* V: Sr. Cidade e Titã em cima */
 .sr-cidade {
   background: #ff6816;
   min-height: 175px;
-  transform: rotate(-1deg) translateY(-18px);
+  transform: rotate(-1.4deg) translateY(-22px);
 }
 
+.tita {
+  background: #ff2323;
+  min-height: 175px;
+  transform: rotate(1.4deg) translateY(-22px);
+}
+
+/* V: Aurora e Lúmen no meio */
 .aurora {
   background: #ffd000;
   min-height: 210px;
-  transform: rotate(-1deg) translateY(16px);
-}
-
-.eco {
-  background: #24ef43;
-  min-height: 220px;
-  transform: translateY(28px);
-  z-index: 6;
-}
-
-.eco h3 {
-  font-size: 2.3rem;
+  transform: rotate(-1deg) translateY(22px);
 }
 
 .lumen {
   background: #22aef5;
   min-height: 210px;
-  transform: rotate(1deg) translateY(16px);
+  transform: rotate(1deg) translateY(22px);
 }
 
 .lumen p {
@@ -378,12 +374,38 @@ select {
   line-height: 1.02;
 }
 
-.tita {
-  background: #ff2323;
-  min-height: 175px;
-  transform: rotate(-1deg) translateY(-18px);
+/* Eco sozinho embaixo */
+.eco {
+  background: #24ef43;
+  min-height: 220px;
+  transform: translateY(64px);
+  z-index: 6;
 }
 
+.eco h3 {
+  font-size: 2.3rem;
+}
+
+/* Mantém efeito individual no hover, sem perder o formato em V */
+.sr-cidade:hover {
+  transform: rotate(-1.4deg) translateY(-30px);
+}
+
+.tita:hover {
+  transform: rotate(1.4deg) translateY(-30px);
+}
+
+.aurora:hover {
+  transform: rotate(-1deg) translateY(12px);
+}
+
+.lumen:hover {
+  transform: rotate(1deg) translateY(12px);
+}
+
+.eco:hover {
+  transform: translateY(52px);
+}
 /* =========================================================
    SEÇÃO 3 - COMO VAI FUNCIONAR
 ========================================================= */
