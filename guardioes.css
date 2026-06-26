@@ -249,14 +249,19 @@ select {
   overflow: hidden;
 }
 
-.quem-sao-header {
-  background: #292927;
-  height: 115px;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: start;
-  gap: 22px;
-  padding: 26px 42px 0;
+.quem-sao-header{
+    background:#292927;
+    height:180px;
+
+    display:grid;
+    grid-template-columns:1fr auto 1fr;
+    align-items:flex-start;
+    gap:30px;
+
+    padding:42px 60px 0;
+
+    position:relative;
+    z-index:10;
 }
 
 .quem-sao-header span {
@@ -265,12 +270,16 @@ select {
   margin-top: 10px;
 }
 
-.quem-sao-header h2 {
-  margin: 0;
-  color: #ffffff;
-  font-size: 1.35rem;
-  font-weight: 900;
-  white-space: nowrap;
+.quem-sao-header h2{
+    margin:0;
+    color:#ffffff;
+
+    font-family:"Asdonuts","Archivo Condensed",sans-serif;
+    font-size:3rem;
+    font-weight:400;
+    letter-spacing:.5px;
+
+    white-space:nowrap;
 }
 
 /* =========================================================
