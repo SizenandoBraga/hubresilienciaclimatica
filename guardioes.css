@@ -292,7 +292,7 @@ select {
   transform: scale(1.15);
   display: block;
   position: relative;
-  z-index: 30;
+  z-index: 10;
 }
 
 .guardioes-cards {
