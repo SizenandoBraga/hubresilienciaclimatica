@@ -739,3 +739,84 @@ select {
     font-size: 1rem;
   }
 }
+
+
+
+/* =========================================================
+   AJUSTE VISUAL DOS GUARDIÕES
+========================================================= */
+
+.guardioes-cards{
+  width:100%;
+  max-width:1320px;
+  margin:0 auto;
+  display:flex;
+  justify-content:center;
+  align-items:flex-end;
+  gap:4px;
+  padding:320px 24px 70px;
+  position:relative;
+  z-index:2;
+}
+
+.guardiao-card{
+  width:155px;
+  min-height:250px;
+  border-radius:8px;
+  padding:22px 14px;
+  text-align:center;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  box-shadow:none;
+}
+
+.guardiao-card h3{
+  font-family:"Asdonuts","Archivo Condensed",sans-serif;
+  color:#fff;
+  font-size:2.25rem;
+  line-height:.9;
+  font-weight:400;
+  margin:0 0 20px;
+}
+
+.guardiao-card p{
+  font-family:"Archivo Condensed",sans-serif;
+  color:#111;
+  font-size:1.05rem;
+  line-height:1.12;
+  font-weight:800;
+}
+
+.sr-cidade{background:#ff6816;min-height:250px;transform:rotate(-1.5deg) translateY(-34px);}
+.aurora{background:#ffd000;min-height:275px;transform:rotate(-1deg) translateY(38px);}
+.eco{background:#24ef43;min-height:260px;transform:translateY(62px);z-index:6;}
+.lumen{background:#22aef5;min-height:250px;transform:rotate(1deg) translateY(-44px);}
+.tita{background:#ff2323;min-height:230px;transform:rotate(-1deg) translateY(18px);}
+
+.como-vai-funcionar h2,
+.funciona-item span,
+.funciona-item p{
+  font-family:"Asdonuts","Archivo Condensed",sans-serif;
+  font-weight:400;
+}
+
+@media (max-width:768px){
+  .guardioes-cards{
+    display:grid;
+    grid-template-columns:1fr;
+    padding:24px 16px 30px;
+    gap:14px;
+  }
+
+  .guardiao-card,
+  .sr-cidade,
+  .aurora,
+  .eco,
+  .tita,
+  .lumen{
+    width:100%;
+    min-height:auto;
+    transform:none;
+  }
+}
