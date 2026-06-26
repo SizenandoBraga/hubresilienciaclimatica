@@ -417,7 +417,7 @@ img {
 }
 
 .sr-cidade:hover {
-  transform: rotate(-1deg) translateY(-36px);
+  transform: rotate(-1deg) translateY(-53px);
   box-shadow: 0 22px 38px rgba(255,104,22,.26);
 }
 
@@ -437,7 +437,7 @@ img {
 }
 
 .tita:hover {
-  transform: rotate(1deg) translateY(-36px);
+  transform: rotate(1deg) translateY(-53px);
   box-shadow: 0 22px 38px rgba(255,35,35,.28);
 }
 
