@@ -1,257 +1,754 @@
 /* =========================================================
-   HEADER: QUEM SÃO OS GUARDIÕES
+   GUARDIÕES URBANOS | NSRU
+   CSS completo atualizado
 ========================================================= */
 
-.quem-sao-header{
-  width:100%;
-  background:#292927;
-  height:180px;
+/* =========================================================
+   BASE
+========================================================= */
 
-  display:grid;
-  grid-template-columns:1fr auto 1fr;
-  align-items:flex-start;
-  gap:30px;
-
-  padding:42px 60px 0;
-
-  position:relative;
-  z-index:10;
+* {
+  box-sizing: border-box;
 }
 
-.quem-sao-header h2{
-  margin:0;
-  color:#ffffff;
-
-  font-family:"Asdonuts","Archivo Condensed",sans-serif;
-  font-size:3rem;
-  font-weight:400;
-  letter-spacing:.5px;
-
-  white-space:nowrap;
+@font-face {
+  font-family: "Asdonuts";
+  src:
+    url("./fonts/Asdonuts.woff2") format("woff2"),
+    url("./fonts/Asdonuts.woff") format("woff");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
 
-.quem-sao-header span{
-  height:3px;
-  background:#ffffff;
-  margin-top:28px;
+:root {
+  --green: #00c92f;
+  --green-dark: #008d24;
+  --dark: #292927;
+  --yellow: #fff200;
+  --orange-card: #ff6816;
+  --yellow-card: #ffd000;
+  --green-card: #24ef43;
+  --blue-card: #22aef5;
+  --red-card: #ff2323;
+  --text: #111111;
+  --white: #ffffff;
 }
 
+html,
+body {
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  background: var(--white);
+}
+
+body,
+input,
+select,
+button,
+textarea {
+  font-family: "Archivo Condensed", sans-serif;
+}
+
+button,
+input,
+select {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+}
+
+/* =========================================================
+   HERO GUARDIÕES
+========================================================= */
+
+.guardioes-hero {
+  background: var(--white);
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.guardioes-hero-inner {
+  width: 100%;
+  max-width: 1440px;
+  background: linear-gradient(
+    90deg,
+    #ececec 0%,
+    #ececec 34%,
+    var(--green) 34%,
+    var(--green) 100%
+  );
+  line-height: 0;
+}
+
+.guardioes-hero-img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* =========================================================
+   CADASTRO GUARDIÕES
+========================================================= */
+
+.guardioes-cadastro-section {
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    var(--white) 0%,
+    var(--white) 42%,
+    var(--dark) 42%,
+    var(--dark) 100%
+  );
+  padding: 18px 20px 26px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.guardian-card {
+  width: min(100%, 640px);
+  background: var(--green);
+  border-radius: 12px;
+  box-shadow: 7px 7px 12px rgba(0, 0, 0, .28);
+  padding: 8px 36px 18px;
+  position: relative;
+}
+
+.guardian-card-header {
+  background: #00b900;
+  color: var(--yellow);
+  text-align: center;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1.15;
+  padding: 9px 14px;
+  margin-bottom: 12px;
+}
+
+.form-line {
+  display: grid;
+  grid-template-columns: 84px 1fr;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.form-line label {
+  color: var(--white);
+  font-size: 1rem;
+  font-weight: 700;
+  text-align: right;
+}
+
+.form-line input,
+.form-line select {
+  width: 100%;
+  height: 36px;
+  border: none;
+  outline: none;
+  border-radius: 6px;
+  background: #baf2bf;
+  padding: 0 12px;
+  font-size: 1rem;
+  color: var(--text);
+}
+
+.form-line input:focus,
+.form-line select:focus {
+  box-shadow: 0 0 0 3px rgba(255, 242, 0, .55);
+}
+
+.form-line select {
+  cursor: pointer;
+}
+
+.form-cep input,
+.form-numero input {
+  max-width: 220px;
+}
+
+.lgpd-check {
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 8px 0 4px 94px;
+  color: var(--white);
+  font-size: .78rem;
+  line-height: 1.2;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.lgpd-check input {
+  width: 16px;
+  height: 16px;
+  margin: 1px 0 0;
+  accent-color: var(--yellow);
+}
+
+.form-message {
+  min-height: 18px;
+  margin: 7px 0 0 94px;
+  font-size: .82rem;
+  line-height: 1.2;
+  font-weight: 900;
+}
+
+.form-message.is-info {
+  color: var(--white);
+}
+
+.form-message.is-success,
+.form-message.is-warning {
+  color: var(--yellow);
+}
+
+.form-message.is-error {
+  color: #b10000;
+}
+
+.send-btn {
+  width: 150px;
+  margin: 10px 0 -42px auto;
+  background: #f5fbf2;
+  color: #00b92d;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 16px;
+  font-size: 1.45rem;
+  font-weight: 900;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  box-shadow: 0 3px 5px rgba(0,0,0,.22);
+  transition: transform .2s ease, box-shadow .2s ease, opacity .2s ease;
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 10px rgba(0,0,0,.24);
+}
+
+.send-btn:disabled {
+  opacity: .72;
+  cursor: wait;
+  transform: none;
+}
+
+.send-btn span {
+  font-size: 1.25rem;
+}
+
+.send-btn .send-text {
+  font-size: 1.45rem;
+}
+
+.lgpd-text {
+  width: min(100%, 640px);
+  margin: 16px auto 0;
+  padding-right: 175px;
+  color: var(--white);
+  font-size: .58rem;
+  line-height: 1.18;
+  text-align: left;
+}
+
+/* =========================================================
+   QUEM SÃO OS GUARDIÕES
+========================================================= */
+
+.quem-sao-guardioes {
+  width: 100vw;
+  margin-left: calc(50% - 50vw);
+  background: var(--white);
+  overflow: hidden;
+}
+
+.quem-sao-header {
+  width: 100%;
+  background: var(--dark);
+  height: 180px;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: flex-start;
+  gap: 30px;
+  padding: 42px 60px 0;
+  position: relative;
+  z-index: 10;
+}
+
+.quem-sao-header h2 {
+  margin: 0;
+  color: var(--white);
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-size: 3rem;
+  line-height: .95;
+  font-weight: 400;
+  letter-spacing: .5px;
+  white-space: nowrap;
+}
+
+.quem-sao-header span {
+  height: 3px;
+  background: var(--white);
+  margin-top: 28px;
+}
 
 /* =========================================================
    PERSONAGENS
 ========================================================= */
 
-.guardioes-personagens{
-  width:100%;
-  background:#ffffff;
-
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-
-  margin-top:-95px;
-  margin-bottom:-70px;
-
-  position:relative;
-  z-index:30;
+.guardioes-personagens {
+  width: 100%;
+  background: var(--white);
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  margin-top: -95px;
+  margin-bottom: -70px;
+  position: relative;
+  z-index: 30;
 }
 
-.guardioes-personagens img{
-  width:min(100%,680px);
-  display:block;
-
-  transform:translateY(-18px) scale(1.18);
-
-  position:relative;
-  z-index:30;
+.guardioes-personagens img {
+  width: min(100%, 680px);
+  display: block;
+  transform: translateY(-18px) scale(1.18);
+  position: relative;
+  z-index: 30;
 }
-
 
 /* =========================================================
    CARDS DOS GUARDIÕES
 ========================================================= */
 
-.guardioes-cards{
-  width:100%;
-  max-width:1100px;
-
-  margin:0 auto;
-
-  display:flex;
-  justify-content:center;
-  align-items:flex-end;
-
-  gap:18px;
-
-  padding:60px 20px 90px;
-
-  position:relative;
-  z-index:2;
+.guardioes-cards {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  gap: 18px;
+  padding: 60px 20px 90px;
+  position: relative;
+  z-index: 2;
 }
 
-.guardiao-card{
-  width:190px;
-  min-height:185px;
-
-  border-radius:14px;
-  padding:18px 20px;
-
-  text-align:center;
-
-  display:flex;
-  flex-direction:column;
-  justify-content:center;
-
-  box-shadow:0 14px 28px rgba(0,0,0,.18);
-
-  transition:
-    transform .25s ease,
-    box-shadow .25s ease;
+.guardiao-card {
+  width: 190px;
+  min-height: 185px;
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 14px 28px rgba(0,0,0,.18);
+  transition: transform .25s ease, box-shadow .25s ease;
 }
 
-.guardiao-card:hover{
-  transform:translateY(-6px);
-  box-shadow:0 20px 40px rgba(0,0,0,.22);
+.guardiao-card h3 {
+  margin: 0 0 14px;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-size: 2rem;
+  line-height: .9;
+  font-weight: 400;
+  color: var(--white);
+  text-shadow: 2px 2px 0 rgba(0,0,0,.10);
 }
 
-.guardiao-card h3{
-  margin:0 0 14px;
-
-  font-family:"Asdonuts","Archivo Condensed",sans-serif;
-  font-size:2rem;
-  line-height:.9;
-  font-weight:400;
-
-  color:#ffffff;
+.guardiao-card p {
+  margin: 0;
+  color: var(--text);
+  font-size: .9rem;
+  line-height: 1.15;
+  font-weight: 900;
 }
 
-.guardiao-card p{
-  margin:0;
-
-  color:#111111;
-
-  font-size:.9rem;
-  line-height:1.15;
-  font-weight:800;
+.sr-cidade {
+  background: var(--orange-card);
+  min-height: 185px;
+  transform: rotate(-1deg) translateY(-28px);
 }
 
-
-/* =========================================================
-   FORMATO EM V
-========================================================= */
-
-.sr-cidade{
-  background:#ff6816;
-  min-height:185px;
-  transform:rotate(-1deg) translateY(-28px);
+.aurora {
+  background: var(--yellow-card);
+  min-height: 220px;
+  transform: rotate(-1deg) translateY(10px);
 }
 
-.aurora{
-  background:#ffd000;
-  min-height:220px;
-  transform:rotate(-1deg) translateY(10px);
+.eco {
+  background: var(--green-card);
+  min-height: 230px;
+  transform: translateY(44px);
+  z-index: 6;
 }
 
-.eco{
-  background:#24ef43;
-  min-height:230px;
-  transform:translateY(44px);
-  z-index:6;
+.lumen {
+  background: var(--blue-card);
+  min-height: 220px;
+  transform: rotate(1deg) translateY(10px);
 }
 
-.lumen{
-  background:#22aef5;
-  min-height:220px;
-  transform:rotate(1deg) translateY(10px);
+.tita {
+  background: var(--red-card);
+  min-height: 185px;
+  transform: rotate(1deg) translateY(-28px);
 }
 
-.tita{
-  background:#ff2323;
-  min-height:185px;
-  transform:rotate(1deg) translateY(-28px);
+.eco h3 {
+  font-size: 2.35rem;
 }
 
-.eco h3{
-  font-size:2.35rem;
+.lumen p {
+  font-size: .78rem;
+  line-height: 1.08;
 }
 
-.lumen p{
-  font-size:.78rem;
-  line-height:1.08;
+.sr-cidade:hover {
+  transform: rotate(-1deg) translateY(-36px);
+  box-shadow: 0 22px 38px rgba(255,104,22,.26);
 }
 
-
-/* =========================================================
-   HOVER MANTENDO O V
-========================================================= */
-
-.sr-cidade:hover{
-  transform:rotate(-1deg) translateY(-36px);
+.aurora:hover {
+  transform: rotate(-1deg) translateY(2px);
+  box-shadow: 0 22px 38px rgba(255,208,0,.28);
 }
 
-.aurora:hover{
-  transform:rotate(-1deg) translateY(2px);
+.eco:hover {
+  transform: translateY(36px);
+  box-shadow: 0 22px 38px rgba(36,239,67,.28);
 }
 
-.eco:hover{
-  transform:translateY(36px);
+.lumen:hover {
+  transform: rotate(1deg) translateY(2px);
+  box-shadow: 0 22px 38px rgba(34,174,245,.28);
 }
 
-.lumen:hover{
-  transform:rotate(1deg) translateY(2px);
+.tita:hover {
+  transform: rotate(1deg) translateY(-36px);
+  box-shadow: 0 22px 38px rgba(255,35,35,.28);
 }
-
-.tita:hover{
-  transform:rotate(1deg) translateY(-36px);
-}
-
 
 /* =========================================================
    COMO VAI FUNCIONAR
 ========================================================= */
 
-.como-vai-funcionar h2,
-.funciona-item span,
-.funciona-item p{
-  font-family:"Asdonuts","Archivo Condensed",sans-serif;
-  font-weight:400;
+.como-vai-funcionar {
+  width: 100%;
+  background: var(--white);
+  padding: 40px 20px 48px;
 }
 
+.como-vai-funcionar h2 {
+  margin: 0 0 18px;
+  text-align: center;
+  color: var(--dark);
+  font-size: 2.35rem;
+  line-height: 1;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-weight: 400;
+}
+
+.funciona-lista {
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  display: grid;
+  gap: 12px;
+}
+
+.funciona-item {
+  background: var(--green);
+  border-radius: 10px;
+  min-height: 76px;
+  display: grid;
+  grid-template-columns: 78px 1fr;
+  align-items: center;
+  padding: 10px 30px 10px 18px;
+}
+
+.funciona-item.darker {
+  background: var(--green-dark);
+}
+
+.funciona-item span {
+  color: rgba(0, 120, 30, .75);
+  font-size: 3.9rem;
+  line-height: 1;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-weight: 400;
+}
+
+.funciona-item p {
+  margin: 0;
+  color: var(--white);
+  font-size: 1.7rem;
+  line-height: 1.06;
+  font-family: "Asdonuts", "Archivo Condensed", sans-serif;
+  font-weight: 400;
+}
+
+/* =========================================================
+   PARCEIROS
+========================================================= */
+
+.guardioes-parceiros {
+  width: 100%;
+  background: var(--white);
+  border-bottom: 22px solid var(--green);
+  padding: 50px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 60px;
+  flex-wrap: wrap;
+}
+
+.parceiros-grupo {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+}
+
+.parceiros-grupo span {
+  color: var(--text);
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.logos {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 35px;
+}
+
+.logos img {
+  max-height: 95px;
+  max-width: 240px;
+  object-fit: contain;
+  transition: transform .25s ease;
+}
+
+.logos img:hover {
+  transform: scale(1.05);
+}
+
+.divisor {
+  width: 2px;
+  height: 110px;
+  background: #4a4a4a;
+  opacity: .5;
+}
+
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 1200px) {
+  .quem-sao-header {
+    height: 160px;
+  }
+
+  .quem-sao-header h2 {
+    font-size: 2.45rem;
+  }
+
+  .guardioes-personagens {
+    margin-top: -80px;
+    margin-bottom: -60px;
+  }
+
+  .guardioes-personagens img {
+    width: min(100%, 600px);
+    transform: translateY(-14px) scale(1.12);
+  }
+
+  .guardioes-cards {
+    max-width: 920px;
+    gap: 10px;
+  }
+
+  .guardiao-card {
+    width: 160px;
+    padding: 16px 14px;
+  }
+
+  .guardiao-card h3 {
+    font-size: 1.75rem;
+  }
+
+  .guardiao-card p {
+    font-size: .82rem;
+  }
+
+  .lumen p {
+    font-size: .72rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  .guardioes-parceiros {
+    gap: 40px;
+    padding: 40px 20px;
+  }
+
+  .logos img {
+    max-height: 75px;
+  }
+}
+
+@media (max-width: 920px) {
+  .guardian-card {
+    width: min(100%, 620px);
+    padding: 8px 28px 18px;
+  }
+
+  .lgpd-text {
+    padding-right: 160px;
+  }
+
+  .guardioes-cards {
+    max-width: 760px;
+    gap: 7px;
+  }
+
+  .guardiao-card {
+    width: 132px;
+    padding: 14px 10px;
+  }
+
+  .guardiao-card h3 {
+    font-size: 1.45rem;
+  }
+
+  .guardiao-card p {
+    font-size: .72rem;
+  }
+
+  .lumen p {
+    font-size: .62rem;
+  }
+}
 
 /* =========================================================
    MOBILE
 ========================================================= */
 
-@media (max-width:768px){
-  .quem-sao-header{
-    height:110px;
-    gap:14px;
-    padding:28px 16px 0;
+@media (max-width: 768px) {
+  .guardioes-cadastro-section {
+    background: linear-gradient(
+      180deg,
+      var(--white) 0%,
+      var(--white) 25%,
+      var(--dark) 25%,
+      var(--dark) 100%
+    );
+    padding: 16px 14px 28px;
   }
 
-  .quem-sao-header h2{
-    font-size:1.35rem;
+  .guardian-card {
+    width: 100%;
+    padding: 8px 16px 18px;
+    border-radius: 10px;
   }
 
-  .quem-sao-header span{
-    margin-top:13px;
+  .guardian-card-header {
+    font-size: .95rem;
+    padding: 9px 10px;
   }
 
-  .guardioes-personagens{
-    margin-top:0;
-    margin-bottom:0;
+  .form-line,
+  .form-cep,
+  .form-numero,
+  .form-cooperativa {
+    grid-template-columns: 1fr;
+    gap: 4px;
+    margin-bottom: 9px;
   }
 
-  .guardioes-personagens img{
-    width:100%;
-    transform:none;
+  .form-line label {
+    text-align: left;
+    font-size: .95rem;
   }
 
-  .guardioes-cards{
-    display:grid;
-    grid-template-columns:1fr;
-    gap:14px;
-    padding:24px 16px 30px;
+  .form-line input,
+  .form-line select {
+    height: 42px;
+    font-size: 1rem;
+  }
+
+  .form-cep input,
+  .form-numero input {
+    max-width: 100%;
+  }
+
+  .lgpd-check {
+    margin-left: 0;
+    font-size: .75rem;
+  }
+
+  .form-message {
+    margin-left: 0;
+    font-size: .82rem;
+  }
+
+  .send-btn {
+    width: 100%;
+    margin: 14px 0 0;
+    font-size: 1.5rem;
+  }
+
+  .lgpd-text {
+    width: 100%;
+    padding-right: 0;
+    margin-top: 12px;
+    font-size: .66rem;
+    line-height: 1.25;
+  }
+
+  .quem-sao-header {
+    height: 112px;
+    gap: 14px;
+    padding: 30px 16px 0;
+  }
+
+  .quem-sao-header h2 {
+    font-size: 1.35rem;
+  }
+
+  .quem-sao-header span {
+    height: 2px;
+    margin-top: 13px;
+  }
+
+  .guardioes-personagens {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .guardioes-personagens img {
+    width: 100%;
+    transform: none;
+  }
+
+  .guardioes-cards {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 14px;
+    padding: 24px 16px 30px;
   }
 
   .guardiao-card,
@@ -259,10 +756,10 @@
   .aurora,
   .eco,
   .lumen,
-  .tita{
-    width:100%;
-    min-height:auto;
-    transform:none;
+  .tita {
+    width: 100%;
+    min-height: auto;
+    transform: none;
   }
 
   .guardiao-card:hover,
@@ -270,17 +767,95 @@
   .aurora:hover,
   .eco:hover,
   .lumen:hover,
-  .tita:hover{
-    transform:translateY(-4px);
+  .tita:hover {
+    transform: translateY(-4px);
   }
 
-  .guardiao-card h3{
-    font-size:2rem;
+  .guardiao-card {
+    padding: 24px 20px;
+  }
+
+  .guardiao-card h3 {
+    font-size: 2rem;
   }
 
   .guardiao-card p,
-  .lumen p{
-    font-size:1rem;
-    line-height:1.15;
+  .lumen p {
+    font-size: 1rem;
+    line-height: 1.15;
+  }
+
+  .como-vai-funcionar {
+    padding: 24px 16px 34px;
+  }
+
+  .como-vai-funcionar h2 {
+    font-size: 1.6rem;
+  }
+
+  .funciona-item {
+    grid-template-columns: 54px 1fr;
+    padding: 12px 16px;
+  }
+
+  .funciona-item span {
+    font-size: 3rem;
+  }
+
+  .funciona-item p {
+    font-size: 1.2rem;
+    line-height: 1.1;
+  }
+
+  .guardioes-parceiros {
+    flex-direction: column;
+    gap: 35px;
+    padding: 35px 20px;
+  }
+
+  .divisor {
+    width: 80%;
+    height: 2px;
+  }
+
+  .logos {
+    flex-wrap: wrap;
+    gap: 20px;
+  }
+
+  .logos img {
+    max-height: 70px;
+    max-width: 180px;
+  }
+
+  .parceiros-grupo span {
+    font-size: .9rem;
+  }
+}
+
+/* =========================================================
+   CELULAR PEQUENO
+========================================================= */
+
+@media (max-width: 420px) {
+  .guardian-card-header {
+    font-size: .86rem;
+  }
+
+  .form-line label {
+    font-size: .9rem;
+  }
+
+  .lgpd-text {
+    font-size: .6rem;
+  }
+
+  .quem-sao-header {
+    gap: 10px;
+    padding-inline: 12px;
+  }
+
+  .quem-sao-header h2 {
+    font-size: 1rem;
   }
 }
