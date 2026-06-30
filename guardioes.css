@@ -130,15 +130,20 @@ img {
   position: relative;
 }
 
-.guardian-card-header {
-  background: #00b900;
-  color: var(--yellow);
-  text-align: center;
-  font-size: 1rem;
-  font-weight: 900;
-  line-height: 1.15;
-  padding: 9px 14px;
-  margin-bottom: 12px;
+.guardian-card-header{
+    background:#00b900;
+    color:var(--yellow);
+    text-align:center;
+
+    font-size:1rem;
+    font-weight:900;
+
+    line-height:1.35;
+
+    padding:12px 18px;
+
+    white-space:normal;
+    text-wrap:balance;      /* navegadores modernos */
 }
 
 .form-line {
@@ -695,10 +700,11 @@ img {
     border-radius: 10px;
   }
 
-  .guardian-card-header {
-    font-size: .95rem;
-    padding: 9px 10px;
-  }
+ .guardian-card-header{
+    font-size:.92rem;
+    line-height:1.3;
+    padding:10px 14px;
+}
 
   .form-line,
   .form-cep,
