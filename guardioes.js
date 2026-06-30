@@ -1,3 +1,19 @@
+/* =========================================================
+   GUARDIÕES URBANOS | NSRU
+   JavaScript da página pública de cadastro
+
+   Responsabilidades deste arquivo:
+   1. Aplicar máscaras simples nos campos WhatsApp e CEP.
+   2. Buscar endereço pelo CEP usando ViaCEP.
+   3. Validar o formulário antes do envio.
+   4. Salvar a solicitação no Firestore.
+
+   Observação importante:
+   A troca da imagem do Hero NÃO é feita por JavaScript.
+   Ela é feita diretamente no HTML com <picture>, para evitar que
+   o celular carregue primeiro a imagem desktop e depois troque.
+========================================================= */
+
 import { db } from "./firebase-init-guardioes.js";
 
 import {
@@ -6,29 +22,19 @@ import {
   serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-const hero = document.getElementById("heroGuardioes");
-
-const HERO_DESKTOP = "./img/guardioes-1.png";
-const HERO_MOBILE = "./img/Artboard 1.jpg";
-
-function atualizarHero() {
-  if (!hero) return;
-
-  const novaImagem = window.innerWidth <= 768 ? HERO_MOBILE : HERO_DESKTOP;
-
-  if (hero.getAttribute("src") !== novaImagem) {
-    hero.setAttribute("src", novaImagem);
-  }
-}
-
-atualizarHero();
-window.addEventListener("resize", atualizarHero);
+/* =========================================================
+   ELEMENTOS DO FORMULÁRIO
+========================================================= */
 
 const form = document.getElementById("guardianForm");
 const sendBtn = document.getElementById("sendBtn");
 const sendText = sendBtn?.querySelector(".send-text");
 const formMessage = document.getElementById("formMessage");
 
+/*
+  Mapeamento centralizado dos campos.
+  Isso evita repetir muitos document.getElementById pelo código.
+*/
 const fields = {
   nome: document.getElementById("nome"),
   whatsapp: document.getElementById("whatsapp"),
@@ -42,16 +48,31 @@ const fields = {
   noticiasAceite: document.getElementById("noticiasAceite")
 };
 
+/*
+  Rótulos usados para salvar o nome legível da cooperativa no Firestore.
+*/
 const cooperativaLabels = {
   "vila-pinto": "CRGR Vila Pinto",
   cooadesc: "CRGR COADESC",
   ccpa: "CCPA"
 };
 
+/* =========================================================
+   HELPERS / UTILITÁRIOS
+========================================================= */
+
+/*
+  Remove tudo que não for número.
+  Usado para WhatsApp e CEP.
+*/
 function onlyDigits(value = "") {
   return String(value).replace(/\D/g, "");
 }
 
+/*
+  Aplica máscara para WhatsApp brasileiro.
+  Aceita telefones com 10 ou 11 dígitos.
+*/
 function maskWhatsapp(value = "") {
   const digits = onlyDigits(value).slice(0, 11);
 
@@ -62,6 +83,9 @@ function maskWhatsapp(value = "") {
   return `(${digits.slice(0, 2)}) ${digits.slice(2, 7)}-${digits.slice(7)}`;
 }
 
+/*
+  Aplica máscara padrão de CEP: 00000-000.
+*/
 function maskCep(value = "") {
   const digits = onlyDigits(value).slice(0, 8);
 
@@ -70,6 +94,9 @@ function maskCep(value = "") {
   return `${digits.slice(0, 5)}-${digits.slice(5)}`;
 }
 
+/*
+  Controla o estado visual do botão durante o envio.
+*/
 function setLoading(isLoading) {
   if (!sendBtn) return;
 
@@ -80,6 +107,10 @@ function setLoading(isLoading) {
   }
 }
 
+/*
+  Exibe mensagem para o usuário.
+  Tipos esperados: info, success, warning, error.
+*/
 function showMessage(message, type = "info") {
   if (!formMessage) return;
 
@@ -87,6 +118,9 @@ function showMessage(message, type = "info") {
   formMessage.className = `form-message is-${type}`;
 }
 
+/*
+  Limpa a mensagem do formulário.
+*/
 function clearMessage() {
   if (!formMessage) return;
 
@@ -94,9 +128,16 @@ function clearMessage() {
   formMessage.className = "form-message";
 }
 
+/*
+  Lê o valor de um campo de forma segura.
+*/
 function getFieldValue(field) {
   return field?.value?.trim() || "";
 }
+
+/* =========================================================
+   VALIDAÇÃO DO FORMULÁRIO
+========================================================= */
 
 function validateForm() {
   const nome = getFieldValue(fields.nome);
@@ -122,6 +163,10 @@ function validateForm() {
   return null;
 }
 
+/* =========================================================
+   BUSCA DE CEP
+========================================================= */
+
 async function buscarCep(cepValue) {
   const cepDigits = onlyDigits(cepValue);
 
@@ -138,8 +183,13 @@ async function buscarCep(cepValue) {
       return;
     }
 
-    if (fields.endereco && data.logradouro) fields.endereco.value = data.logradouro;
-    if (fields.bairro && data.bairro) fields.bairro.value = data.bairro;
+    if (fields.endereco && data.logradouro) {
+      fields.endereco.value = data.logradouro;
+    }
+
+    if (fields.bairro && data.bairro) {
+      fields.bairro.value = data.bairro;
+    }
 
     if (fields.cidade && data.localidade) {
       fields.cidade.value = `${data.localidade}${data.uf ? `/${data.uf}` : ""}`;
@@ -153,6 +203,10 @@ async function buscarCep(cepValue) {
   }
 }
 
+/* =========================================================
+   EVENTOS DOS CAMPOS
+========================================================= */
+
 fields.whatsapp?.addEventListener("input", () => {
   fields.whatsapp.value = maskWhatsapp(fields.whatsapp.value);
 });
@@ -164,6 +218,10 @@ fields.cep?.addEventListener("input", () => {
 fields.cep?.addEventListener("blur", () => {
   buscarCep(fields.cep.value);
 });
+
+/* =========================================================
+   ENVIO DO FORMULÁRIO PARA O FIRESTORE
+========================================================= */
 
 form?.addEventListener("submit", async (event) => {
   event.preventDefault();
