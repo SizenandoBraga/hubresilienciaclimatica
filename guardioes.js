@@ -1,20 +1,16 @@
-import { db } from "./firebase-init-guardioes.js";
-
-import {
-  collection,
-  addDoc,
-  serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 const hero = document.getElementById("heroGuardioes");
 
 function atualizarHero() {
-    hero.src = window.innerWidth <= 768
-        ? "img/Artboard 1.jpg"
-        : "img/guardioes-1.png";
+  if (!hero) return;
+
+  hero.src = window.innerWidth <= 768
+    ? "./img/Artboard 1.jpg"
+    : "./img/guardioes-1.png";
 }
 
 atualizarHero();
 window.addEventListener("resize", atualizarHero);
+
 const form = document.getElementById("guardianForm");
 const sendBtn = document.getElementById("sendBtn");
 const sendText = sendBtn?.querySelector(".send-text");
