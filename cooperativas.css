@@ -1403,6 +1403,13 @@ body.menu-open{
 .summary-orange strong{
   color:var(--nsru-orange);
 }
+.table-btn.image.no-image{
+    background:#eef7e6;
+    color:#9bb979;
+    border:1px solid #d6e8b6;
+    cursor:not-allowed;
+    opacity:1;
+}
 /* =========================================================
    POWER BI PRO
 ========================================================= */

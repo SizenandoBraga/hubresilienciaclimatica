@@ -17,7 +17,7 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-<link rel="manifest" href="./manifest.webmanifest">
+
 <meta name="theme-color" content="#81B92A">
   <link rel="stylesheet" href="cooperativas.css" />
 
@@ -324,8 +324,10 @@
 <body
   data-territory-id="vila-pinto"
   data-territory-label="Centro de Triagem Vila Pinto"
-  data-cooperative-name="vila-pinto"
+  data-cooperative-name="Vila Pinto"
   data-participant-url="cadastro-participantes-vila-pinto.html"
+  data-participants-list-url="usuarios-vila-pinto.html"
+  data-user-url="usuario-cooperativa-vila-pinto.html"
   data-coletas-url="cadastro-coletas-vila-pinto.html"
   data-map-lat="-30.048729170292532"
   data-map-lng="-51.15652604283108"
@@ -342,7 +344,7 @@
       <div class="sidebar-top">
         <a class="brand" href="index.html" aria-label="Ir para a página inicial">
           <div class="brand-mark">
-            <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
+            <img src="img/NSRU-Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
           </div>
         </a>
       </div>
@@ -365,7 +367,7 @@
           <span>Participantes</span>
         </a>
 
-        <a class="nav-link" href="dashboard-cooperativa-vila-pinto.html">
+        <a class="nav-link" href="dashboard-cooperativa.html">
           <span class="nav-ico">📈</span>
           <span>Dashboard</span>
         </a>
@@ -413,7 +415,7 @@
 
           <a class="topbar-brand" href="index.html">
             <div class="topbar-brand-mark">
-              <img src="img/NSRU - Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
+              <img src="img/NSRU-Logo-Preto.png" alt="Núcleo de Soluções para Resíduos Urbanos" />
             </div>
 
             <div class="topbar-brand-copy">
@@ -473,6 +475,63 @@
 
           </div>
         </section>
+            <section class="dashboard-section guardioes-section">
+
+  <div class="section-head">
+    <div>
+      <span class="section-tag">Guardiões Urbanos</span>
+      <h2>Solicitações Recebidas</h2>
+    </div>
+
+    <p>
+      Interessados que solicitaram participação através da página pública.
+    </p>
+  </div>
+
+  <div class="dashboard-kpi-grid">
+
+    <article class="dashboard-kpi-card kpi-green">
+      <span>Solicitações</span>
+      <strong id="indicatorGuardioesSolicitacoes">0</strong>
+      <small>Total recebido</small>
+    </article>
+
+    <article class="dashboard-kpi-card kpi-blue">
+      <span>Contatados</span>
+      <strong id="indicatorGuardioesContatados">0</strong>
+      <small>Já atendidos</small>
+    </article>
+
+    <article class="dashboard-kpi-card kpi-orange">
+      <span>Pendentes</span>
+      <strong id="indicatorGuardioesPendentes">0</strong>
+      <small>Aguardando contato</small>
+    </article>
+
+  </div>
+
+  <div class="table-wrap table-wrap-pro table-wrap-modern">
+    <table class="table-pro table-pro-modern">
+
+      <thead>
+        <tr>
+  <th>Data</th>
+  <th>Nome</th>
+  <th>WhatsApp</th>
+  <th>Endereço</th>
+  <th>CEP</th>
+  <th>Status</th>
+  <th>Ações</th>
+</tr>
+      
+      </thead>
+
+      <tbody id="guardioesCoopTableBody"></tbody>
+
+    </table>
+  </div>
+
+</section>
 
         <section class="dashboard-section dashboard-operational">
           <div class="section-head">
@@ -801,6 +860,6 @@
   </div>
 
   <script type="module" src="cooperativas-territorio.js"></script>
-  <script type="module" src="./app-install.js"></script>
+  
 </body>
 </html>
