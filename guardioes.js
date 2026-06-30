@@ -1,11 +1,24 @@
+import { db } from "./firebase-init-guardioes.js";
+
+import {
+  collection,
+  addDoc,
+  serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
 const hero = document.getElementById("heroGuardioes");
+
+const HERO_DESKTOP = "./img/guardioes-1.png";
+const HERO_MOBILE = "./img/Artboard 1.jpg";
 
 function atualizarHero() {
   if (!hero) return;
 
-  hero.src = window.innerWidth <= 768
-    ? "./img/Artboard 1.jpg"
-    : "./img/guardioes-1.png";
+  const novaImagem = window.innerWidth <= 768 ? HERO_MOBILE : HERO_DESKTOP;
+
+  if (hero.getAttribute("src") !== novaImagem) {
+    hero.setAttribute("src", novaImagem);
+  }
 }
 
 atualizarHero();
@@ -25,7 +38,8 @@ const fields = {
   bairro: document.getElementById("bairro"),
   cidade: document.getElementById("cidade"),
   cooperativa: document.getElementById("cooperativa"),
-  lgpdAceite: document.getElementById("lgpdAceite")
+  lgpdAceite: document.getElementById("lgpdAceite"),
+  noticiasAceite: document.getElementById("noticiasAceite")
 };
 
 const cooperativaLabels = {
@@ -126,6 +140,7 @@ async function buscarCep(cepValue) {
 
     if (fields.endereco && data.logradouro) fields.endereco.value = data.logradouro;
     if (fields.bairro && data.bairro) fields.bairro.value = data.bairro;
+
     if (fields.cidade && data.localidade) {
       fields.cidade.value = `${data.localidade}${data.uf ? `/${data.uf}` : ""}`;
     }
@@ -172,6 +187,7 @@ form?.addEventListener("submit", async (event) => {
   const cidade = getFieldValue(fields.cidade);
   const cooperativa = getFieldValue(fields.cooperativa);
   const cooperativaLabel = cooperativaLabels[cooperativa] || cooperativa;
+  const noticiasAceite = Boolean(fields.noticiasAceite?.checked);
 
   const enderecoCompleto = `${endereco}, ${numero} - ${bairro}, ${cidade}, CEP ${cep}`;
 
@@ -191,8 +207,11 @@ form?.addEventListener("submit", async (event) => {
     status: "solicitado",
     origem: "pagina-guardioes",
     lgpdAceite: true,
+    noticiasAceite,
     lgpdAceiteTexto:
       "Autorizo o uso do meu nome completo, telefone e endereço para verificar se estou na área atendida pela cooperativa e para contato via WhatsApp.",
+    noticiasAceiteTexto:
+      "Autorizo o recebimento de notícias e atualizações do projeto.",
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp()
   };

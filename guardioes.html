@@ -6,33 +6,21 @@
 
 <title>Guardiões Urbanos | NSRU</title>
 
-<link
-  rel="preload"
-  as="image"
-  href="./img/guardioes-1.png"
-  media="(min-width: 769px)"
->
+<link rel="preload" as="image" href="./img/guardioes-1.png" media="(min-width: 769px)">
+<link rel="preload" as="image" href="./img/Artboard 1.jpg" media="(max-width: 768px)">
 
-<link
-  rel="preload"
-  as="image"
-  href="./img/Artboard 1.jpg"
-  media="(max-width: 768px)"
->
-<link rel="stylesheet" href="./header-publico.css" />
-
+<link rel="stylesheet" href="./header-publico.css">
 <link rel="stylesheet" href="./guardioes.css">
 
-<link
-href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700;800&display=swap"
-rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Archivo+Condensed:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 
 <body id="top">
+
 <header class="site-header-public">
   <div class="header-public-container">
     <a class="header-brand" href="./index.html" aria-label="Ir para página inicial">
-      <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" class="header-brand-logo" />
+      <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" class="header-brand-logo">
     </a>
 
     <button
@@ -47,21 +35,14 @@ rel="stylesheet">
     </button>
 
     <nav class="header-main-nav" id="headerMainNav" aria-label="Navegação principal">
-      <a href="./index.html" class="header-nav-link" data-nav="index">Início</a>
-      <a href="./quem-somos.html" class="header-nav-link" data-nav="quem-somos">Quem Somos</a>
+      <a href="./index.html" class="header-nav-link">Início</a>
+      <a href="./quem-somos.html" class="header-nav-link">Quem Somos</a>
 
-      <a
-        href="https://aprendizagem.maosverdes.com.br"
-        class="header-nav-link"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
+      <a href="https://aprendizagem.maosverdes.com.br" class="header-nav-link" target="_blank" rel="noopener noreferrer">
         Educação
       </a>
 
-      <a href="./guardioes.html" class="header-nav-link is-active" data-nav="guardioes">
-        Guardiões Urbanos
-      </a>
+      <a href="./guardioes.html" class="header-nav-link is-active">Guardiões Urbanos</a>
 
       <div class="header-nav-dropdown" id="headerCrgrDropdown">
         <button
@@ -75,15 +56,15 @@ rel="stylesheet">
         </button>
 
         <div class="header-nav-submenu" id="headerCrgrSubmenu">
-          <a href="./vila-pinto.html" class="header-nav-sublink" data-nav-sub="vila-pinto">CRGR Vila Pinto</a>
-          <a href="./cooadesc.html" class="header-nav-sublink" data-nav-sub="cooadesc">CRGR Cooadesc</a>
-          <a href="./ccpa.html" class="header-nav-sublink" data-nav-sub="ccpa">CRGR CCPA</a>
+          <a href="./vila-pinto.html" class="header-nav-sublink">CRGR Vila Pinto</a>
+          <a href="./cooadesc.html" class="header-nav-sublink">CRGR Cooadesc</a>
+          <a href="./ccpa.html" class="header-nav-sublink">CRGR CCPA</a>
         </div>
       </div>
 
-      <a href="./index.html#indicadores" class="header-nav-link" data-nav="indicadores">Dados e Relatórios</a>
-      <a href="./index.html#faq" class="header-nav-link" data-nav="faq">FAQ</a>
-      <a href="./login.html" class="header-nav-link header-mobile-cta" data-nav="login">Acessar Plataforma</a>
+      <a href="./index.html#indicadores" class="header-nav-link">Dados e Relatórios</a>
+      <a href="./index.html#faq" class="header-nav-link">FAQ</a>
+      <a href="./login.html" class="header-nav-link header-mobile-cta">Acessar Plataforma</a>
     </nav>
 
     <div class="header-public-actions">
@@ -93,21 +74,22 @@ rel="stylesheet">
 </header>
 
 <section class="guardioes-hero">
-    <div class="guardioes-hero-inner">
-        <img
-            id="heroGuardioes"
-            src="./img/guardioes-1.png"
-            alt="Guardiões Urbanos"
-            class="guardioes-hero-img">
-    </div>
+  <div class="guardioes-hero-inner">
+    <img
+      id="heroGuardioes"
+      src="./img/guardioes-1.png"
+      alt="Guardiões Urbanos"
+      class="guardioes-hero-img"
+      fetchpriority="high"
+      decoding="async"
+    >
+  </div>
 </section>
-
 
 <section class="guardioes-cadastro-section">
   <div class="guardian-card">
     <div class="guardian-card-header">
-      Tenho interesse em entregar gratuitamente o resíduo
-      reciclável gerado pela minha família ou comércio
+      Tenho interesse em entregar gratuitamente o resíduo reciclável gerado pela minha família ou comércio
     </div>
 
     <form id="guardianForm">
@@ -162,9 +144,12 @@ rel="stylesheet">
           Autorizo o uso do meu nome completo, telefone e endereço para verificar se estou
           na área atendida pela cooperativa e para contato via WhatsApp.
         </span>
-         <input type="checkbox" id="lgpdAceite" required>
+      </label>
+
+      <label class="lgpd-check" for="noticiasAceite">
+        <input type="checkbox" id="noticiasAceite">
         <span>
-          Autorizo o recebimento de noticias e atualizações do projeto.
+          Autorizo o recebimento de notícias e atualizações do projeto.
         </span>
       </label>
 
@@ -256,12 +241,13 @@ rel="stylesheet">
 
 <section class="guardioes-parceiros">
   <img
-    src="img/Artboard 49.png"
+    src="./img/Artboard 49.png"
     alt="Realizadores, parceiros e financiador do projeto Guardiões Urbanos"
     class="guardioes-parceiros-img"
   >
 </section>
-<script type="module" src="./header-publico.js"></script>
+
+<script src="./header-publico.js"></script>
 <script type="module" src="./guardioes.js"></script>
 
 </body>
