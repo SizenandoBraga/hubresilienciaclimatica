@@ -1,15 +1,8 @@
-/* =========================================================
-   COOPERATIVA Vila Pinto • NSRU
-   Arquivo consolidado e exclusivo para a Vila Pinto.
-   Mantém Firebase da Vila Pinto e filtra somente registros do território "vila-pinto".
-========================================================= */
-
 import { auth, db } from "./firebase-init-vp.js";
-
-import {
-  onAuthStateChanged,
-  signOut
-} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+import "./polyfills.js";
+import { db as dbGuardioes } from "./firebase-init-guardioes.js";
+import { registerAccessLog } from "./access-tracker.js";
+import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
   doc,
@@ -19,12 +12,9 @@ import {
   onSnapshot,
   updateDoc,
   deleteDoc,
-  serverTimestamp
+  serverTimestamp,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-/* =========================================================
-   CONFIG
-========================================================= */
 
 const bodyConfig = document.body.dataset || {};
 
