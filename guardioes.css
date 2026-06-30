@@ -270,17 +270,7 @@ img {
   line-height: 1.18;
   text-align: left;
 }
-.guardioes-hero{
-    background-image:url("./img/guardioes-1.png");
-}
 
-@media (max-width:768px){
-
-    .guardioes-hero{
-        background-image:url("img/Artboard 1.jpg");
-    }
-
-}
 /* =========================================================
    QUEM SÃO OS GUARDIÕES
 ========================================================= */
