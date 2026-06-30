@@ -1,10 +1,5 @@
-/* =========================================================
-   COOPERATIVA CCPA • NSRU
-   Arquivo consolidado e exclusivo para a CCPA.
-   Mantém Firebase da CCPA e filtra somente registros territoryId/territory/cooperativeId = "ccpa".
-========================================================= */
-
 import { auth, db } from "./firebase-init-ccpa.js";
+import { db as dbGuardioes } from "./firebase-init-guardioes.js";
 
 import {
   onAuthStateChanged,
@@ -19,12 +14,9 @@ import {
   onSnapshot,
   updateDoc,
   deleteDoc,
-  serverTimestamp
+  serverTimestamp,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
-
-/* =========================================================
-   CONFIG
-========================================================= */
 
 const bodyConfig = document.body.dataset || {};
 
@@ -33,29 +25,29 @@ function canonicalTerritoryId(value) {
     .trim()
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replaceAll("_", "-")
     .replace(/\s+/g, "-");
 
-  if (
-    raw === "ccpa" ||
-    raw === "cooperativa-dos-catadores-de-porto-alegre"
-  ) {
-    return "ccpa";
-  }
+  if (!raw) return "vila-pinto";
+  if (raw === "crgr-vila-pinto" || raw === "vila-pinto" || raw === "vp") return "vila-pinto";
+  if (raw === "crgr-cooadesc" || raw === "crgr-coadesc" || raw === "cooadesc" || raw === "coadesc") return "cooadesc";
+  if (raw === "crgr-padre-cacique" || raw === "padre-cacique" || raw === "padre") return "padre-cacique";
+  if (raw === "ccpa" || raw === "crgr-ccpa") return "ccpa";
 
-  return "ccpa";
+  return raw;
 }
 
 const PAGE_TERRITORY = {
-  territoryId: "ccpa",
-  territoryLabel: "CCPA",
-  cooperativeName: "Cooperativa dos Catadores de Porto Alegre - CCPA",
-  participantUrl: "cadastro-participantes-ccpa.html",
-  participantsListUrl: "usuarios-ccpa.html",
-  coletasUrl: "cadastro-coletas-ccpa.html"
+  territoryId: canonicalTerritoryId(bodyConfig.territoryId || "vila-pinto"),
+  territoryLabel: bodyConfig.territoryLabel || "Centro de Triagem Vila Pinto",
+  cooperativeName: bodyConfig.cooperativeName || "Vila Pinto",
+  participantUrl: bodyConfig.participantUrl || "cadastro-participantes-vila-pinto.html",
+  participantsListUrl: bodyConfig.participantsListUrl || "usuarios-vila-pinto.html",
+  coletasUrl: bodyConfig.coletasUrl || "cadastro-coletas-vila-pinto.html",
+  userUrl: bodyConfig.userUrl || "usuario-cooperativa-vila-pinto.html"
 };
-
+ 
 /* =========================================================
    ELEMENTOS
 ========================================================= */
@@ -81,6 +73,11 @@ const els = {
   indicatorRejeito: document.getElementById("indicatorRejeito"),
   indicatorNaoComercializado: document.getElementById("indicatorNaoComercializado"),
   indicatorQualidadeMedia: document.getElementById("indicatorQualidadeMedia"),
+
+  indicatorGuardioesSolicitacoes: document.getElementById("indicatorGuardioesSolicitacoes"),
+indicatorGuardioesContatados: document.getElementById("indicatorGuardioesContatados"),
+indicatorGuardioesPendentes: document.getElementById("indicatorGuardioesPendentes"),
+guardioesCoopTableBody: document.getElementById("guardioesCoopTableBody"),
 
   participantsTotalCount: document.getElementById("participantsTotalCount"),
   participantsPeopleCount: document.getElementById("participantsPeopleCount"),
@@ -126,6 +123,7 @@ const STATE = {
   profile: null,
   isAdmin: false,
   canEditAll: false,
+  guardioesSolicitacoes: [],
   participants: [],
   coletas: [],
   approvalRequests: [],
@@ -134,6 +132,7 @@ const STATE = {
   recentPageSize: 10,
   recentLimit: 10
 };
+
 
 /* =========================================================
    HELPERS
@@ -238,6 +237,8 @@ function getParticipantCode(item = {}) {
 }
 
 function itemBelongsToTerritory(item = {}) {
+  const code = getParticipantCode(item).toUpperCase();
+
   const fields = [
     item.territoryId,
     item.territory,
@@ -266,16 +267,51 @@ function itemBelongsToTerritory(item = {}) {
     item.finalTurno?.cooperativeId
   ]
     .filter(Boolean)
-    .map((value) => String(value).trim().toLowerCase())
-    .map((value) =>
-      value
-        .normalize("NFD")
-        .replace(/[̀-ͯ]/g, "")
-        .replaceAll("_", "-")
-        .replace(/\s+/g, "-")
-    );
+    .map(canonicalTerritoryId);
 
-  return fields.includes("ccpa");
+  const current = PAGE_TERRITORY.territoryId;
+
+  if (fields.includes(current)) return true;
+
+  const hasOtherTerritory = fields.some((field) =>
+    ["vila-pinto", "cooadesc", "padre-cacique", "ccpa"].includes(field) &&
+    field !== current
+  );
+
+  if (hasOtherTerritory) return false;
+
+  if (current === "vila-pinto") {
+    if (
+      code.startsWith("VPD") ||
+      code.startsWith("VP") ||
+      code.startsWith("C") ||
+      code.startsWith("F") ||
+      code === "FAMILIAS"
+    ) return true;
+
+    if (
+      code.startsWith("COA") ||
+      code.startsWith("COO") ||
+      code.startsWith("PC") ||
+      code.startsWith("PCA")
+    ) return false;
+
+    return true;
+  }
+
+  if (current === "cooadesc") {
+    return code.startsWith("COA") || code.startsWith("COO") || code.startsWith("CD");
+  }
+
+  if (current === "padre-cacique") {
+    return code.startsWith("PC") || code.startsWith("PCA") || code.startsWith("PDC");
+  }
+
+  if (current === "ccpa") {
+    return code.startsWith("CCPA") || code.startsWith("CPA") || code.startsWith("CC");
+  }
+
+  return true;
 }
 
 /* =========================================================
@@ -349,7 +385,34 @@ function isPendingParticipant(item = {}) {
   );
 }
 
+
+function isColetaCancelada(item = {}) {
+  const status = normalizeText(
+    item.status ||
+    item.situacao ||
+    item.decision ||
+    item.approvalStatus ||
+    item.coletaStatus ||
+    item.cancelStatus ||
+    item.payloadSnapshot?.status ||
+    item.payloadSnapshot?.coletaStatus ||
+    ""
+  );
+
+  return (
+    status.includes("cancel") ||
+    item.cancelled === true ||
+    item.cancelada === true ||
+    item.cancelado === true ||
+    Boolean(item.cancelledAt) ||
+    Boolean(item.canceladaEm) ||
+    Boolean(item.canceladoEm)
+  );
+}
+
 function isColetaRealizada(item = {}) {
+  if (isColetaCancelada(item)) return false;
+
   const status = normalizeText(
     item.status ||
     item.situacao ||
@@ -526,6 +589,8 @@ function getEntrega(item = {}) {
 }
 
 function getColetaStatusLabel(item = {}) {
+  if (isColetaCancelada(item)) return "Cancelado";
+
   const raw =
     item.status ||
     item.situacao ||
@@ -542,7 +607,7 @@ function getColetaStatusLabel(item = {}) {
   if (normalized === "editado") return "Editado";
   if (normalized === "pending") return "Pendente";
   if (normalized === "rejected") return "Rejeitada";
-  if (normalized === "cancelado") return "Cancelado";
+  if (normalized === "cancelado" || normalized === "cancelada") return "Cancelado";
 
   return String(raw || "Ativo");
 }
@@ -924,7 +989,7 @@ function fillHeader(profile) {
     profile.displayName ||
     profile.name ||
     profile.nome ||
-    (isAdmin ? "Administrador CCPA" : "Usuário");
+    (isAdmin ? "Administrador Vila Pinto" : "Usuário");
 
   setText(els.userNameTop, name);
 
@@ -936,7 +1001,7 @@ function fillHeader(profile) {
     } else {
       els.accessBanner.className = "access-banner show cooperativa";
       els.accessBanner.innerHTML =
-        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa ${escapeHtml(PAGE_TERRITORY.territoryLabel)}.`;
+        `<strong>Acesso administrativo ativo.</strong> Indicadores vinculados à cooperativa ${PAGE_TERRITORY.cooperativeName}.`;
     }
   }
 
@@ -1220,6 +1285,15 @@ function setupTableFilters() {
    TABELA RECENTE COM PAGINAÇÃO
 ========================================================= */
 
+function getSortedColetasTabela() {
+  return [...STATE.coletas]
+    .sort((a, b) => {
+      const dateA = getDateValue(a)?.getTime() || 0;
+      const dateB = getDateValue(b)?.getTime() || 0;
+      return dateB - dateA;
+    });
+}
+
 function getSortedRealizadas() {
   return [...STATE.coletas]
     .filter(isColetaRealizada)
@@ -1229,187 +1303,30 @@ function getSortedRealizadas() {
       return dateB - dateA;
     });
 }
-function normalizeImageUrl(value) {
-  if (!value) return "";
 
-  if (typeof value === "string") {
-    return value.trim();
-  }
-
-  if (typeof value === "object") {
-    return String(
-      value.dataUrl ||
-      value.url ||
-      value.downloadUrl ||
-      value.photoUrl ||
-      value.imageUrl ||
-      value.src ||
-      ""
-    ).trim();
-  }
-
-  return "";
-}
-
-function pushImageUrl(target, value) {
-  if (Array.isArray(value)) {
-    value.forEach((item) => pushImageUrl(target, item));
-    return;
-  }
-
-  const url = normalizeImageUrl(value);
-
-  if (url && !target.includes(url)) {
-    target.push(url);
-  }
-}
-
-function getColetaImageGroups(item = {}) {
-  const groups = [
-    {
-      title: "Fotos do resíduo",
-      type: "residuo",
-      urls: []
-    },
-    {
-      title: "Fotos do não comercializado e rejeito",
-      type: "nao-comercializado",
-      urls: []
-    },
-    {
-      title: "Fotos do final do turno",
-      type: "final-turno",
-      urls: []
-    },
-    {
-      title: "Outras imagens da coleta",
-      type: "geral",
-      urls: []
-    }
-  ];
-
-  const byType = Object.fromEntries(groups.map((group) => [group.type, group.urls]));
-
-  /* =====================================================
-     Recebimento: compatível com o formato antigo e novo.
-     - Formato antigo: fotoResiduoUrl / fotoNaoComercializadoUrl
-     - Formato novo: fotoResiduoUrls / fotoNaoComercializadoUrls
-     - Fallbacks: photos, uploads, photoUrl
-  ===================================================== */
-
-  pushImageUrl(byType["residuo"], item.fotoResiduoUrl);
-  pushImageUrl(byType["residuo"], item.fotoResiduoUrls);
-  pushImageUrl(byType["residuo"], item.residuoPhotos);
-  pushImageUrl(byType["residuo"], item.residuoPhotoUrls);
-  pushImageUrl(byType["residuo"], item.recebimento?.fotoResiduoUrl);
-  pushImageUrl(byType["residuo"], item.recebimento?.fotoResiduoUrls);
-  pushImageUrl(byType["residuo"], item.recebimento?.residuoPhotos);
-  pushImageUrl(byType["residuo"], item.recebimento?.residuoPhotoUrls);
-  pushImageUrl(byType["residuo"], item.recebimento?.uploads?.fotoResiduo);
-  pushImageUrl(byType["residuo"], item.recebimento?.uploads?.fotosResiduo);
-  pushImageUrl(byType["residuo"], item.recebimento?.uploads?.residuo);
-
-  pushImageUrl(byType["nao-comercializado"], item.fotoNaoComercializadoUrl);
-  pushImageUrl(byType["nao-comercializado"], item.fotoNaoComercializadoUrls);
-  pushImageUrl(byType["nao-comercializado"], item.naoComercializadoPhotos);
-  pushImageUrl(byType["nao-comercializado"], item.naoComercializadoPhotoUrls);
-  pushImageUrl(byType["nao-comercializado"], item.recebimento?.fotoNaoComercializadoUrl);
-  pushImageUrl(byType["nao-comercializado"], item.recebimento?.fotoNaoComercializadoUrls);
-  pushImageUrl(byType["nao-comercializado"], item.recebimento?.naoComercializadoPhotos);
-  pushImageUrl(byType["nao-comercializado"], item.recebimento?.naoComercializadoPhotoUrls);
-  pushImageUrl(byType["nao-comercializado"], item.recebimento?.uploads?.fotoNaoComercializado);
-  pushImageUrl(byType["nao-comercializado"], item.recebimento?.uploads?.fotosNaoComercializado);
-  pushImageUrl(byType["nao-comercializado"], item.recebimento?.uploads?.naoComercializado);
-
-  pushImageUrl(byType["final-turno"], item.finalTurno?.photos);
-  pushImageUrl(byType["final-turno"], item.finalTurno?.photoUrls);
-  pushImageUrl(byType["final-turno"], item.finalTurno?.uploads);
-  pushImageUrl(byType["final-turno"], item.fotosFinalTurno);
-  pushImageUrl(byType["final-turno"], item.finalTurnoPhotos);
-
-  pushImageUrl(byType["geral"], item.photos);
-  pushImageUrl(byType["geral"], item.photoUrls);
-  pushImageUrl(byType["geral"], item.photoUrl);
-  pushImageUrl(byType["geral"], item.imageUrl);
-  pushImageUrl(byType["geral"], item.imagemUrl);
-  pushImageUrl(byType["geral"], item.fotoUrl);
-  pushImageUrl(byType["geral"], item.coletaImageUrl);
-  pushImageUrl(byType["geral"], item.recebimento?.photos);
-  pushImageUrl(byType["geral"], item.recebimento?.photoUrls);
-  pushImageUrl(byType["geral"], item.finalTurno?.photoUrl);
-  pushImageUrl(byType["geral"], item.payloadSnapshot?.photos);
-  pushImageUrl(byType["geral"], item.payloadSnapshot?.photoUrls);
-  pushImageUrl(byType["geral"], item.payloadSnapshot?.photoUrl);
-  pushImageUrl(byType["geral"], item.payloadSnapshot?.imageUrl);
-  pushImageUrl(byType["geral"], item.payloadSnapshot?.imagemUrl);
-  pushImageUrl(byType["geral"], item.payloadSnapshot?.fotoUrl);
-
-  const alreadyClassified = new Set([
-    ...byType["residuo"],
-    ...byType["nao-comercializado"],
-    ...byType["final-turno"]
-  ]);
-
-  byType["geral"] = byType["geral"].filter((url) => !alreadyClassified.has(url));
-
-  return groups
-    .map((group) => ({
-      ...group,
-      urls: group.type === "geral" ? byType["geral"] : group.urls
-    }))
-    .filter((group) => group.urls.length);
-}
-
-function getColetaImageUrls(item = {}) {
-  return getColetaImageGroups(item).flatMap((group) => group.urls);
-}
 
 function getColetaImageUrl(item = {}) {
-  return getColetaImageUrls(item)[0] || "";
-}
-
-function renderColetaImageGallery(groups = []) {
-  if (!groups.length) {
-    return `
-      <div class="empty-materials">
-        Nenhuma imagem encontrada neste registro.
-      </div>
-    `;
-  }
-
-  return groups.map((group) => {
-    return `
-      <section class="coleta-gallery-section">
-        <h3>${escapeHtml(group.title)} (${group.urls.length})</h3>
-
-        <div class="coleta-gallery-grid">
-          ${group.urls.map((url, index) => `
-            <article class="coleta-gallery-card">
-              <a href="${escapeHtml(url)}" target="_blank" rel="noopener">
-                <img
-                  src="${escapeHtml(url)}"
-                  alt="${escapeHtml(group.title)} ${index + 1}"
-                  loading="lazy"
-                />
-
-                <div class="coleta-gallery-caption">
-                  <span>Imagem ${index + 1}</span>
-                  <strong>Abrir</strong>
-                </div>
-              </a>
-            </article>
-          `).join("")}
-        </div>
-      </section>
-    `;
-  }).join("");
+  return (
+    item.imageUrl ||
+    item.imagemUrl ||
+    item.photoUrl ||
+    item.fotoUrl ||
+    item.coletaImageUrl ||
+    item.recebimento?.imageUrl ||
+    item.recebimento?.imagemUrl ||
+    item.finalTurno?.imageUrl ||
+    item.finalTurno?.imagemUrl ||
+    item.payloadSnapshot?.imageUrl ||
+    item.payloadSnapshot?.imagemUrl ||
+    item.payloadSnapshot?.fotoUrl ||
+    ""
+  );
 }
 
 function openColetaImageModal(item = {}) {
-  const imageGroups = getColetaImageGroups(item);
-  const imageCount = imageGroups.reduce((acc, group) => acc + group.urls.length, 0);
+  const imageUrl = getColetaImageUrl(item);
 
-  if (!imageCount) {
+  if (!imageUrl) {
     alert("Esta coleta não possui imagem salva.");
     return;
   }
@@ -1426,19 +1343,11 @@ function openColetaImageModal(item = {}) {
       <button class="coleta-modal-close" id="closeColetaImageModal" type="button">×</button>
 
       <div class="coleta-modal-head">
-        <div>
-          <h2>Imagens da coleta</h2>
-          <p>${escapeHtml(getParticipantName(item))} • ${escapeHtml(formatDateLabel(item))}</p>
-
-          <div class="coleta-image-summary">
-            <span>${imageCount} imagem(ns)</span>
-            <span>${escapeHtml(formatFluxoLabel(getTipoRecebimento(item)))}</span>
-            <span>${escapeHtml(getParticipantCode(item) || "Sem código")}</span>
-          </div>
-        </div>
+        <h2>Imagem da coleta</h2>
+        <p>${escapeHtml(getParticipantName(item))} • ${escapeHtml(formatDateLabel(item))}</p>
       </div>
 
-      ${renderColetaImageGallery(imageGroups)}
+      <img src="${escapeHtml(imageUrl)}" alt="Imagem da coleta" />
     </div>
   `;
 
@@ -1459,7 +1368,7 @@ function openColetaImageModal(item = {}) {
 function renderRecentColetas() {
   if (!els.recentColetasTableBody) return;
 
-  const all = getSortedRealizadas();
+  const all = getSortedColetasTabela();
   const filtered = applyTableFilterToItems(all);
 
   const start = STATE.recentPage * STATE.recentPageSize;
@@ -1488,23 +1397,10 @@ function renderRecentColetas() {
     const rejeito = formatKg(getRejeito(item));
     const naoComercializado = formatKg(getNaoComercializado(item));
     const tipo = getParticipantTypeLabel(item);
-    const imageCount = getColetaImageUrls(item).length;
-    const imageButtonClass = imageCount ? "has-images" : "no-images";
-    const imageButtonLabel = imageCount ? `Imagens (${imageCount})` : "Sem imagem";
+    const cancelada = isColetaCancelada(item);
 
     return `
-      <tr class="
-  dashboard-table-row
-  ${
-    normalizeText(
-      item.status ||
-      item.coletaStatus ||
-      ""
-    ).includes("cancel")
-      ? "coleta-cancelada"
-      : ""
-  }
-">
+      <tr class="dashboard-table-row ${cancelada ? "coleta-cancelada" : ""}">
         <td class="td-date">${escapeHtml(data)}</td>
 
         <td class="td-user">
@@ -1537,13 +1433,27 @@ function renderRecentColetas() {
     Ver coleta
   </button>
 
-  <button
-    class="table-btn image ${imageButtonClass}"
-    type="button"
-    data-image-coleta="${escapeHtml(item.id)}"
-  >
-    ${escapeHtml(imageButtonLabel)}
-  </button>
+  ${
+  getColetaImageUrl(item)
+    ? `
+      <button
+        class="table-btn image"
+        type="button"
+        data-image-coleta="${escapeHtml(item.id)}"
+      >
+        Ver imagem
+      </button>
+    `
+    : `
+      <button
+        class="table-btn image no-image"
+        type="button"
+        disabled
+      >
+        Sem imagem
+      </button>
+    `
+}
 
   <button
     class="table-btn edit"
@@ -1558,15 +1468,7 @@ function renderRecentColetas() {
     type="button"
     data-cancel-coleta="${escapeHtml(item.id)}"
   >
-    ${
-      normalizeText(
-        item.status ||
-        item.coletaStatus ||
-        ""
-      ).includes("cancel")
-        ? "Reativar"
-        : "Cancelar"
-    }
+    ${cancelada ? "Reativar" : "Cancelar"}
   </button>
 
   <button
@@ -1577,7 +1479,7 @@ function renderRecentColetas() {
     Excluir
   </button>
 
-</td>
+
         </td>
       </tr>
     `;
@@ -1619,7 +1521,7 @@ function setupTablePagination() {
   });
 
   els.btnNextColetas?.addEventListener("click", () => {
-    const total = applyTableFilterToItems(getSortedRealizadas()).length;
+    const total = applyTableFilterToItems(getSortedColetasTabela()).length;
     const totalPages = Math.ceil(total / STATE.recentPageSize);
 
     if (STATE.recentPage >= totalPages - 1) return;
@@ -1686,11 +1588,6 @@ function openColetaModal(item) {
         <div class="coleta-materials-list">
           ${renderMaterialsList(item)}
         </div>
-      </div>
-
-      <div class="coleta-materials-box">
-        <h3>Imagens salvas</h3>
-        ${renderColetaImageGallery(getColetaImageGroups(item))}
       </div>
     </div>
   `;
@@ -2139,6 +2036,134 @@ function openEditColetaModal(item) {
     }
   );
 }
+async function carregarSolicitacoesGuardioes(cooperativaId) {
+  const tbody = els.guardioesCoopTableBody;
+  if (!tbody) return;
+
+  try {
+    const snap = await getDocs(
+      collection(dbGuardioes, "cooperativas", cooperativaId, "solicitacoes")
+    );
+
+    const items = snap.docs
+      .map((docItem) => ({
+        id: docItem.id,
+        ...docItem.data()
+      }))
+      .sort((a, b) => {
+        const dateA = a.createdAt?.toDate?.()?.getTime?.() || 0;
+        const dateB = b.createdAt?.toDate?.()?.getTime?.() || 0;
+        return dateB - dateA;
+      });
+
+    STATE.guardioesSolicitacoes = items;
+
+    const total = items.length;
+    const contatados = items.filter((item) =>
+      ["contatado", "atendido"].includes(normalizeText(item.status))
+    ).length;
+    const pendentes = total - contatados;
+
+    animateNumber(els.indicatorGuardioesSolicitacoes, total);
+    animateNumber(els.indicatorGuardioesContatados, contatados);
+    animateNumber(els.indicatorGuardioesPendentes, pendentes);
+
+    if (!items.length) {
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="table-empty">
+            Nenhuma solicitação dos Guardiões encontrada.
+          </td>
+        </tr>
+      `;
+      return;
+    }
+
+    tbody.innerHTML = items.map((item) => {
+      const data = item.createdAt?.toDate?.().toLocaleString("pt-BR") || "-";
+      const status = item.status || "solicitado";
+      const contatado = normalizeText(status) === "contatado";
+
+      const whatsappDigits = String(item.whatsappDigits || item.whatsapp || "")
+        .replace(/\D/g, "");
+
+      const whatsappLink = whatsappDigits
+        ? `https://wa.me/55${whatsappDigits}`
+        : "#";
+
+      const endereco =
+        item.enderecoCompleto ||
+        [item.endereco, item.numero, item.bairro, item.cidade]
+          .filter(Boolean)
+          .join(", ") ||
+        "-";
+
+      return `
+        <tr class="dashboard-table-row">
+          <td>${escapeHtml(data)}</td>
+          <td class="td-user">
+            <strong>${escapeHtml(item.nome || "-")}</strong>
+            <span>${escapeHtml(item.cooperativaLabel || PAGE_TERRITORY.cooperativeName)}</span>
+          </td>
+          <td>
+            ${
+              whatsappDigits
+                ? `<a href="${escapeHtml(whatsappLink)}" target="_blank" rel="noopener noreferrer">${escapeHtml(item.whatsapp || whatsappDigits)}</a>`
+                : "-"
+            }
+          </td>
+          <td>${escapeHtml(endereco)}</td>
+          <td>${escapeHtml(item.cep || "-")}</td>
+          <td>
+            <span class="status-badge ${contatado ? "realizada" : "pendente"}">
+              ${escapeHtml(contatado ? "Contatado" : status)}
+            </span>
+          </td>
+          <td class="td-actions">
+            <button
+              type="button"
+              class="table-btn view"
+              data-contatar-guardiao="${escapeHtml(item.id)}"
+              data-whatsapp="${escapeHtml(whatsappLink)}"
+            >
+              Entrar em contato
+            </button>
+          </td>
+        </tr>
+      `;
+    }).join("");
+
+  } catch (error) {
+    console.error("Erro ao carregar solicitações dos Guardiões:", error);
+  }
+}
+
+async function marcarGuardiaoComoContatado(solicitacaoId) {
+  if (!solicitacaoId) return;
+
+  try {
+    await updateDoc(
+      doc(
+        dbGuardioes,
+        "cooperativas",
+        PAGE_TERRITORY.territoryId,
+        "solicitacoes",
+        solicitacaoId
+      ),
+      {
+        status: "contatado",
+        contactedAt: serverTimestamp(),
+        contactedBy: STATE.currentUser?.uid || null,
+        updatedAt: serverTimestamp()
+      }
+    );
+
+    await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
+  } catch (error) {
+    console.error("Erro ao atualizar solicitação:", error);
+    alert("Erro ao atualizar solicitação.");
+  }
+}
 
 async function toggleCancelColetaRecord(coletaId) {
 
@@ -2146,76 +2171,53 @@ async function toggleCancelColetaRecord(coletaId) {
 
   try {
 
-    const coleta =
-      STATE.coletas.find(
-        item =>
-          String(item.id) === String(coletaId)
-      );
+    const coleta = STATE.coletas.find(
+      item => String(item.id) === String(coletaId)
+    );
 
     if (!coleta) {
       alert("Coleta não encontrada.");
       return;
     }
 
-    const statusAtual = normalizeText(
+    const cancelada = normalizeText(
       coleta.status ||
       coleta.coletaStatus ||
       ""
-    );
-
-    const cancelada =
-      statusAtual.includes("cancel");
+    ).includes("cancel");
 
     const confirmed = confirm(
       cancelada
         ? "Deseja reativar esta coleta?"
-        : "Deseja cancelar esta coleta?"
+        : "Deseja cancelar esta coleta?\n\nEla ficará pausada, fora das contagens, mas continuará salva no banco."
     );
 
     if (!confirmed) return;
 
     await updateDoc(
-      doc(
-        db,
-        "coletas",
-        coletaId
-      ),
+      doc(db, "coletas", coletaId),
       {
-        status: cancelada
-          ? "ativo"
-          : "cancelado",
-
-        cancelledAt: cancelada
-          ? null
-          : serverTimestamp(),
-
-        cancelledBy: cancelada
-          ? null
-          : STATE.currentUser?.uid || null,
-
+        status: cancelada ? "ativo" : "cancelado",
+        coletaStatus: cancelada ? "ativo" : "cancelado",
+        cancelled: cancelada ? false : true,
+        cancelada: cancelada ? false : true,
+        cancelledAt: cancelada ? null : serverTimestamp(),
+        cancelledBy: cancelada ? null : STATE.currentUser?.uid || null,
+        reactivatedAt: cancelada ? serverTimestamp() : null,
         updatedAt: serverTimestamp(),
-
-        updatedBy:
-          STATE.currentUser?.uid || null
+        updatedBy: STATE.currentUser?.uid || null
       }
     );
 
     setCoopSyncStatus(
       cancelada
-        ? "Coleta reativada."
-        : "Coleta cancelada."
+        ? "Coleta reativada com sucesso."
+        : "Coleta cancelada e pausada com sucesso."
     );
 
   } catch (error) {
-
-    console.error(
-      "Erro ao alterar status:",
-      error
-    );
-
-    alert(
-      "Erro ao alterar status da coleta."
-    );
+    console.error("Erro ao alterar status da coleta:", error);
+    alert("Erro ao alterar status da coleta.");
   }
 }
 
@@ -2389,25 +2391,27 @@ function setupRecentColetasActions() {
         return;
       }
 
-       /* =====================================================
-         EDITAR
+      /* =====================================================
+         CANCELAR / REATIVAR
       ===================================================== */
-const cancelButton =
-  event.target.closest(
-    "[data-cancel-coleta]"
-  );
 
-if (cancelButton) {
+      const cancelButton =
+        event.target.closest(
+          "[data-cancel-coleta]"
+        );
 
-  const coletaId =
-    cancelButton.dataset.cancelColeta;
+      if (cancelButton) {
 
-  toggleCancelColetaRecord(
-    coletaId
-  );
+        const coletaId =
+          cancelButton.dataset.cancelColeta;
 
-  return;
-}
+        toggleCancelColetaRecord(
+          coletaId
+        );
+
+        return;
+      }
+
       /* =====================================================
          EXCLUIR
       ===================================================== */
@@ -2422,7 +2426,43 @@ if (cancelButton) {
         const coletaId =
           deleteButton.dataset.deleteColeta;
 
-        deleteColetaRecord(coletaId);
+        deleteColetaRecord(
+          coletaId
+        );
+
+        return;
+      }
+
+      /* =====================================================
+         GUARDIÕES URBANOS
+      ===================================================== */
+
+      const contatoGuardiaoBtn =
+        event.target.closest(
+          "[data-contatar-guardiao]"
+        );
+
+      if (contatoGuardiaoBtn) {
+
+        const solicitacaoId =
+          contatoGuardiaoBtn.dataset.contatarGuardiao;
+
+        const whatsappLink =
+          contatoGuardiaoBtn.dataset.whatsapp;
+
+        marcarGuardiaoComoContatado(
+          solicitacaoId
+        );
+
+        if (
+          whatsappLink &&
+          whatsappLink !== "#"
+        ) {
+          window.open(
+            whatsappLink,
+            "_blank"
+          );
+        }
 
         return;
       }
@@ -2604,9 +2644,8 @@ function applyRoleVisibility(profile) {
   const canManageUsers = isAdminUser(profile.role) || isGovernancaUser(profile.role);
 
   const userLinks = [
-    document.querySelector('a[href="usuarios-cooperativa-ccpa.html"]'),
-    document.querySelector('a[href="usuarios-ccpa.html"]'),
-    document.querySelector('a[href="usuario-cooperativa-ccpa.html"]')
+    document.querySelector(`a[href="${PAGE_TERRITORY.userUrl}"]`),
+    document.querySelector('a[href="usuarios.html"]')
   ].filter(Boolean);
 
   userLinks.forEach((link) => {
@@ -2633,9 +2672,11 @@ function listenDashboardData() {
   });
 
 listenCollection("coletas", (items) => {
-  STATE.coletas = items.filter(itemBelongsToTerritory);
+  STATE.coletas = items
+    .filter(itemBelongsToTerritory);
 
   STATE.recentPage = 0;
+
   populateEntregaFilter(STATE.coletas);
 
   updateKpis();
@@ -2801,12 +2842,13 @@ function boot() {
       const profile = await getUserProfile(user.uid);
       validateProfile(profile);
 
-      STATE.profile = profile;
+   STATE.profile = profile;
 
-      applyPermissionRules(profile);
+applyPermissionRules(profile);
       fillHeader(profile);
       applyRoleVisibility(profile);
       listenDashboardData();
+      await carregarSolicitacoesGuardioes(PAGE_TERRITORY.territoryId);
 
       setCoopSyncStatus("Indicadores carregados em tempo real.");
 
