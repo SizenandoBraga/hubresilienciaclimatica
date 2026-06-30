@@ -1,8 +1,10 @@
 import { auth, db } from "./firebase-init-vp.js";
-import "./polyfills.js";
 import { db as dbGuardioes } from "./firebase-init-guardioes.js";
-import { registerAccessLog } from "./access-tracker.js";
-import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+import {
+  onAuthStateChanged,
+  signOut
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 
 import {
   doc,
