@@ -226,3 +226,15 @@ form?.addEventListener("submit", async (event) => {
     setLoading(false);
   }
 });
+const hero = document.getElementById("heroGuardioes");
+
+function trocarHero() {
+    if (window.innerWidth <= 768) {
+        hero.src = "./img/Artboard 1.jpg";
+    } else {
+        hero.src = "./img/guardioes-1.png";
+    }
+}
+
+trocarHero();
+window.addEventListener("resize", trocarHero);
