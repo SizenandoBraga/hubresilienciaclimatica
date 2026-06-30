@@ -2842,18 +2842,9 @@ function boot() {
       const profile = await getUserProfile(user.uid);
       validateProfile(profile);
 
-      STATE.profile = profile;
-      await registerAccessLog({
-  db,
-  auth,
-  page: "painel-cooperativa",
-  pageType: "logada",
-  territoryId: PAGE_TERRITORY.territoryId,
-  cooperativeName: PAGE_TERRITORY.cooperativeName,
-  userProfile: profile
-});
-  
-      applyPermissionRules(profile);
+   STATE.profile = profile;
+
+applyPermissionRules(profile);
       fillHeader(profile);
       applyRoleVisibility(profile);
       listenDashboardData();
