@@ -91,6 +91,16 @@ img {
   height: auto;
   display: block;
 }
+.guardioes-hero picture{
+  display: block;
+  width: 100%;
+}
+
+.guardioes-hero picture img{
+  width: 100%;
+  height: auto;
+  display: block;
+}
 
 /* =========================================================
    CADASTRO GUARDIÕES
@@ -648,6 +658,26 @@ img {
 ========================================================= */
 
 @media (max-width: 768px) {
+  /* HERO MOBILE */
+
+.guardioes-hero{
+    background: var(--white);
+}
+
+.guardioes-hero-inner{
+    width:100%;
+    max-width:100%;
+}
+
+.guardioes-hero picture{
+    display:block;
+    width:100%;
+}
+
+.guardioes-hero-img{
+    width:100%;
+    display:block;
+}
   .guardioes-cadastro-section {
     background: linear-gradient(
       180deg,
