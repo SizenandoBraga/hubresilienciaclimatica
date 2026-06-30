@@ -9,7 +9,7 @@
   <!-- Pré-carregamento das imagens principais do Hero.
        No celular, o navegador prioriza a Artboard.
        No desktop/notebook, prioriza a imagem horizontal dos Guardiões. -->
-  <link rel="preload" as="image" href="./img/Artboard-1.jpg" media="(max-width: 768px)">
+  <link rel="preload" as="image" href="./img/artboard-1.webp" media="(max-width: 768px)">
   <link rel="preload" as="image" href="./img/guardioes-1.png" media="(min-width: 769px)">
 
   <!-- Estilos da página -->
@@ -98,23 +98,18 @@
        Importante: sem JS para trocar imagem, evitando piscar/carregar imagem errada.
   ====================================================== -->
   <section class="guardioes-hero">
-    <div class="guardioes-hero-inner">
-      <picture>
-        <source
-          media="(max-width: 768px)"
-          srcset="./img/Artboard-1.jpg"
-        >
-
-        <img
-          src="./img/guardioes-1.png"
-          alt="Guardiões Urbanos"
-          class="guardioes-hero-img"
-          fetchpriority="high"
-          decoding="async"
-        >
-      </picture>
-    </div>
-  </section>
+  <div class="guardioes-hero-inner">
+    <picture>
+      <source media="(max-width: 768px)" srcset="./img/artboard-1.webp">
+      <img
+        src="./img/guardioes-1.png"
+        alt="Guardiões Urbanos"
+        class="guardioes-hero-img"
+        fetchpriority="high"
+        decoding="async">
+    </picture>
+  </div>
+</section>
 
   <!-- =====================================================
        FORMULÁRIO DE INTERESSE
@@ -283,7 +278,7 @@
   ====================================================== -->
   <section class="guardioes-parceiros">
     <img
-      src="./img/Artboard 49.png"
+      src="./img/artboard 49.png"
       alt="Realizadores, parceiros e financiador do projeto Guardiões Urbanos"
       class="guardioes-parceiros-img"
       loading="lazy"
