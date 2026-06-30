@@ -1,11 +1,14 @@
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
 import {
   getAuth,
   setPersistence,
   browserLocalPersistence
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
-import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+import {
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDA2Xq9sRvRuVZVkeIH8Q6d6JB9Pv_Dkss",
@@ -17,11 +20,15 @@ const firebaseConfig = {
   measurementId: "G-N3JXY8LEY7"
 };
 
-const app = initializeApp(firebaseConfig, "vila-pinto");
-const auth = getAuth(app);
+const app = initializeApp(firebaseConfig);
 
-await setPersistence(auth, browserLocalPersistence);
+export const auth = getAuth(app);
 
-const db = getFirestore(app);
+await setPersistence(
+  auth,
+  browserLocalPersistence
+);
 
-export { app, auth, db };
+export const db = getFirestore(app);
+
+export default app;
