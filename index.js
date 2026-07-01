@@ -61,11 +61,11 @@ document.addEventListener("DOMContentLoaded", () => {
       id: "ccpa",
       code: "ccpa",
       territoryId: "ccpa",
-      name: "CCPA",
+      name: "CRGR CCPA",
       territoryLabel: "CCPA",
       lat: -30.140122365657504,
       lng: -51.1268772051727,
-      address: "Estrada do Rincão, 6781 • Belém Velho • Porto Alegre/RS",
+      address: "Estrada do Rincão, 6781 • Restinga • Porto Alegre/RS",
       page: "ccpa.html",
       active: true,
       color: "#ef6b22"
