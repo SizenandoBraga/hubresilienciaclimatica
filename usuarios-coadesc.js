@@ -52,7 +52,7 @@ const ROUTES = {
       home: "cooperativa-cooadesc.html",
       usuarios: "usuarios-cooadesc.html",
       coletas: "cadastro-coletas-cooadesc.html",
-      usuariosCooperativa: "usuario-cooperativa-cooadesc.html",
+      usuariosCooperativa: "user-cooperativa-cooadesc.html",
       dashboard: "dashboard-cooperativa-cooadesc.html"
     },
     base: {
