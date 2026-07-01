@@ -1,4 +1,4 @@
-import { auth, db } from "./firebase-init-cooadesc.js";
+import { auth, db } from "./firebase-init-coadesc.js";
 import { onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
 import {
   collection,
