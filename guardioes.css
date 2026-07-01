@@ -508,91 +508,82 @@ img {
   font-weight: 400;
 }
 
+/* =========================================================
+   PARCEIROS
+========================================================= */
+
 .guardioes-parceiros {
   width: 100%;
-  background: #fff;
-  border-bottom: 22px solid #00c92f;
-  padding: 26px 20px 34px;
+  background: #ffffff;
+  border-bottom: 22px solid var(--green);
+  padding: 28px 20px 36px;
+  overflow: hidden;
 }
 
 .guardioes-parceiros-inner {
-  max-width: 1180px;
+  width: min(100%, 1180px);
   margin: 0 auto;
   display: flex;
-  justify-content: center;
   align-items: flex-end;
-  gap: 34px;
+  justify-content: center;
+  gap: 36px;
 }
 
 .parceiros-grupo {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .parceiros-grupo span {
-  margin-bottom: 12px;
-  color: #111;
-  font-size: 0.78rem;
+  margin: 0 0 12px;
+  color: var(--text);
+  font-size: .82rem;
+  line-height: 1;
   font-weight: 900;
+  text-align: center;
 }
 
 .parceiros-logos {
+  min-height: 86px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 28px;
-  min-height: 72px;
+  gap: 30px;
 }
 
 .parceiros-logos img {
   display: block;
   width: auto;
-  max-width: 125px;
-  max-height: 64px;
+  height: auto;
+  max-width: 155px;
+  max-height: 82px;
   object-fit: contain;
 }
 
+.parceiros-logos--centro {
+  gap: 18px;
+}
+
 .parceiros-logos--centro img {
-  max-width: 72px;
-  max-height: 72px;
+  max-width: 90px;
+  max-height: 90px;
 }
 
 .parceiros-logos .logo-wide {
-  max-width: 210px;
-  max-height: 58px;
+  max-width: 330px;
+  max-height: 92px;
 }
 
 .parceiros-divisor {
   width: 2px;
-  height: 72px;
-  background: #4a4a4a;
-  margin-bottom: 2px;
+  height: 78px;
+  margin-bottom: 4px;
+  background: #3f3f3f;
+  flex: 0 0 auto;
 }
 
-/* Mobile */
-@media (max-width: 768px) {
-  .guardioes-parceiros-inner {
-    flex-direction: column;
-    align-items: center;
-    gap: 28px;
-  }
-
-  .parceiros-divisor {
-    width: 72%;
-    height: 2px;
-  }
-
-  .parceiros-logos {
-    flex-wrap: wrap;
-  }
-
-  .parceiros-logos--centro {
-    display: grid;
-    grid-template-columns: repeat(3, auto);
-    justify-content: center;
-  }
-}
 /* =========================================================
    TABLET / NOTEBOOK
 ========================================================= */
@@ -640,8 +631,27 @@ img {
 }
 
 @media (max-width: 1024px) {
-  .guardioes-parceiros {
-    padding: 40px 20px;
+  .guardioes-parceiros-inner {
+    gap: 24px;
+  }
+
+  .parceiros-logos {
+    gap: 22px;
+  }
+
+  .parceiros-logos img {
+    max-width: 130px;
+    max-height: 72px;
+  }
+
+  .parceiros-logos--centro img {
+    max-width: 78px;
+    max-height: 78px;
+  }
+
+  .parceiros-logos .logo-wide {
+    max-width: 280px;
+    max-height: 82px;
   }
 }
 
@@ -853,12 +863,59 @@ img {
   }
 
   .guardioes-parceiros {
-    padding: 28px 12px 35px;
+    padding: 30px 14px 32px;
+    border-bottom-width: 18px;
   }
 
-  .guardioes-parceiros-img {
+  .guardioes-parceiros-inner {
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+  }
+
+  .parceiros-grupo {
     width: 100%;
-    max-width: 100%;
+  }
+
+  .parceiros-grupo span {
+    margin-bottom: 10px;
+    font-size: .8rem;
+  }
+
+  .parceiros-logos {
+    width: 100%;
+    min-height: auto;
+    flex-wrap: wrap;
+    gap: 22px;
+  }
+
+  .parceiros-logos img {
+    max-width: 145px;
+    max-height: 76px;
+  }
+
+  .parceiros-logos--centro {
+    display: grid;
+    grid-template-columns: repeat(3, auto);
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+  }
+
+  .parceiros-logos--centro img {
+    max-width: 82px;
+    max-height: 82px;
+  }
+
+  .parceiros-logos .logo-wide {
+    max-width: 285px;
+    max-height: 82px;
+  }
+
+  .parceiros-divisor {
+    width: min(72%, 360px);
+    height: 2px;
+    margin: 0;
   }
 }
 
@@ -886,5 +943,28 @@ img {
 
   .quem-sao-header h2 {
     font-size: 1rem;
+  }
+
+  .guardioes-parceiros {
+    padding: 26px 12px 30px;
+  }
+
+  .parceiros-logos {
+    gap: 18px;
+  }
+
+  .parceiros-logos img {
+    max-width: 128px;
+    max-height: 70px;
+  }
+
+  .parceiros-logos--centro img {
+    max-width: 72px;
+    max-height: 72px;
+  }
+
+  .parceiros-logos .logo-wide {
+    max-width: 270px;
+    max-height: 78px;
   }
 }
