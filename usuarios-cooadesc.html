@@ -50,11 +50,11 @@
 -->
 
 <body
- data-territory-id="cooadesc"
+  data-territory-id="coadesc"
   data-territory-label="COOADESC"
   data-coop-home="cooperativa-cooadesc.html"
   data-coletas-url="cadastro-coletas-cooadesc.html"
-  data-user-coop-url="user-cooperativa-coadesc.html"
+  data-user-coop-url="usuario-cooperativa-coadesc.html"
 >
   <div class="mobile-overlay" id="mobileOverlay"></div>
 
@@ -66,7 +66,7 @@
 
       <div class="sidebar-top">
         <div class="brand-wrap">
-          <img src="img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo" />
+          <img src="./img/NSRU - Logo-Preto.png" alt="NSRU" class="brand-logo" />
         </div>
       </div>
 
@@ -275,11 +275,12 @@
   <div class="manual-route-search-box">
     <label for="manualRouteAddress">Código, CEP ou endereço</label>
 
-  <input
-  id="manualRouteAddress"
-  type="text"
-  placeholder="Ex.: CCPA-0001, 90000-000, Rua + número..."
-/>
+    <div class="manual-route-search-row">
+      <input
+        id="manualRouteAddress"
+        type="text"
+        placeholder="Ex.: VPD-0300, 90690-000, Av. Joaquim Porto Vilanova..."
+      />
 
       <button class="btn btn-primary" id="btnAddManualAddress" type="button">
         Adicionar ao mapa
