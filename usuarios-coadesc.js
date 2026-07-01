@@ -51,8 +51,8 @@ const ROUTES = {
     pages: {
       home: "cooperativa-cooadesc.html",
       usuarios: "usuarios-cooadesc.html",
-      coletas: "cadastro-coletas-cooadesc.html",
-      usuariosCooperativa: "user-cooperativa-cooadesc.html",
+      coletas: "cadastro-coletas-coadesc.html",
+      usuariosCooperativa: "usuario-cooperativa-coadesc.html",
       dashboard: "dashboard-cooperativa-cooadesc.html"
     },
     base: {
@@ -351,14 +351,14 @@ async function generateApprovedParticipantCode(userForCode = {}) {
       userForCode.raw?.payloadSnapshot?.territoryId ||
       getPageTerritoryId() ||
       getMyTerritoryId() ||
-      "cooadesc"
-    ) || "cooadesc";
+      "coadesc"
+    ) || "coadesc";
 
   const localTypeKey = getApprovedCodeLocalType(userForCode);
   const codeConfig =
     APPROVED_CODE_CONFIG[territoryId]?.[localTypeKey] ||
     APPROVED_CODE_CONFIG[territoryId]?.casa ||
-    APPROVED_CODE_CONFIG["cooadesc"]?.casa;
+    APPROVED_CODE_CONFIG["coadesc"]?.casa;
 
   if (!codeConfig) {
     throw new Error(`Configuração de código não encontrada para ${territoryId}/${localTypeKey}.`);
@@ -480,18 +480,18 @@ function getCurrentTerritoryId() {
   return canonicalTerritoryId(
     document.body?.dataset?.territoryId ||
     STATE.userDoc?.territoryId ||
-    "cooadesc"
+    "coadesc"
   );
 }
 
 function getRouteConfig(territoryId) {
   const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
-  return ROUTES[key] || ROUTES["cooadesc"];
+  return ROUTES[key] || ROUTES["coadesc"];
 }
 
 function getRoutePage(pageName, territoryId) {
   const config = getRouteConfig(territoryId);
-  return config.pages?.[pageName] || ROUTES["cooadesc"].pages?.[pageName] || "login.html";
+  return config.pages?.[pageName] || ROUTES["coadesc"].pages?.[pageName] || "login.html";
 }
 
 function buildPageUrl(pageName, territoryId, params = {}) {
@@ -509,7 +509,7 @@ function buildPageUrl(pageName, territoryId, params = {}) {
 
 function getTerritoryConfig(territoryId) {
   const key = canonicalTerritoryId(territoryId || getCurrentTerritoryId());
-  return TERRITORIES[key] || TERRITORIES["cooadesc"];
+  return TERRITORIES[key] || TERRITORIES["coadesc"];
 }
 
 function getTerritoryAliases(territoryId) {
@@ -671,7 +671,7 @@ function setImportStatus(message, type = "info") {
 }
 
 async function buildImportedParticipant(row, index) {
-  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "cooadesc";
+  const territoryId = getMyTerritoryId() || getPageTerritoryId() || "vila-pinto";
   const territoryLabel = getMyTerritoryLabel() || getTerritoryLabelById(territoryId);
 
   const code = String(getExcelValue(row, [
@@ -1503,7 +1503,7 @@ function applyCoopUserPermissionsUI() {
   els.coopUsersSection.classList.remove("hidden");
 
   if (!canViewAllTerritories() && els.coopUserTerritory) {
-    els.coopUserTerritory.value = getMyTerritoryId() || "cooadesc";
+    els.coopUserTerritory.value = getMyTerritoryId() || "coadesc";
     els.coopUserTerritory.disabled = true;
   }
 }
@@ -3811,7 +3811,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="usuarios.html"], a[href="/usuarios.html"], a[href="usuarios-vila-pinto.html"], a[href="/usuarios-vila-pinto.html"], a[href="usuarios-cooadesc.html"], a[href="/usuarios-cooadesc.html"], a[href="usuarios-padre-cacique.html"], a[href="/usuarios-padre-cacique.html"]'
+      'a[href="usuarios.html"], a[href="/usuarios.html"], a[href="usuarios-coadesc.html"], a[href="/usuarios-coadesc.html"], a[href="usuarios-cooadesc.html"], a[href="/usuarios-cooadesc.html"], a[href="usuarios-padre-cacique.html"], a[href="/usuarios-padre-cacique.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("usuarios", territoryId));
@@ -3819,7 +3819,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="cooperativa-vila-pinto.html"], a[href="/cooperativa-vila-pinto.html"], a[href="cooperativa-cooadesc.html"], a[href="/cooperativa-cooadesc.html"], a[href="cooperativa-padre-cacique.html"], a[href="/cooperativa-padre-cacique.html"]'
+      'a[href="cooperativa-coadesc.html"], a[href="/cooperativa-coadesc.html"], a[href="cooperativa-cooadesc.html"], a[href="/cooperativa-cooadesc.html"], a[href="cooperativa-padre-cacique.html"], a[href="/cooperativa-padre-cacique.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("home", territoryId));
@@ -3827,7 +3827,7 @@ function bindTerritoryNavigation() {
 
   document
     .querySelectorAll(
-      'a[href="cadastro-coletas-vila-pinto.html"], a[href="/cadastro-coletas-vila-pinto.html"], a[href="cadastro-coletas-cooadesc.html"], a[href="/cadastro-coletas-cooadesc.html"], a[href="cadastro-coletas-padre-cacique.html"], a[href="/cadastro-coletas-padre-cacique.html"]'
+      'a[href="cadastro-coletas-coadesc.html"], a[href="/cadastro-coletas-coadesc.html"], a[href="cadastro-coletas-cooadesc.html"], a[href="/cadastro-coletas-cooadesc.html"], a[href="cadastro-coletas-padre-cacique.html"], a[href="/cadastro-coletas-padre-cacique.html"]'
     )
     .forEach((link) => {
       link.setAttribute("href", getRoutePage("coletas", territoryId));
