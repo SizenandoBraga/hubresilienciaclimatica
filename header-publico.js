@@ -33,6 +33,8 @@ function ensurePlatformAccessButton() {
   link.href = "login.html";
   link.className = "header-nav-link header-mobile-cta";
   link.textContent = "Acessar plataforma";
+  link.dataset.nav = "login";
+
   nav.appendChild(link);
 }
 
@@ -101,25 +103,38 @@ function setupPublicHeaderDropdown() {
   });
 }
 
-function normalizePath(pathname) {
-  let path = pathname.split("/").pop();
+/* =========================================================
+   MENU ATIVO
+========================================================= */
 
-  if (!path || path === "/") path = "index.html";
+function normalizePage(value) {
+  if (!value) return "index";
 
-  return path.toLowerCase();
+  let page = value
+    .split("?")[0]
+    .split("#")[0]
+    .split("/")
+    .filter(Boolean)
+    .pop();
+
+  if (!page) return "index";
+
+  page = page.toLowerCase();
+
+  if (page === "index.html" || page === "index") return "index";
+
+  return page.replace(".html", "");
 }
 
 function markActivePublicNav() {
-  const currentPage = normalizePath(window.location.pathname);
+  const currentPage = normalizePage(window.location.pathname);
   const currentHash = window.location.hash;
 
-  const links = document.querySelectorAll(
-    ".header-nav-link, .header-nav-sublink"
-  );
+  const navLinks = document.querySelectorAll(".header-nav-link");
+  const subLinks = document.querySelectorAll(".header-nav-sublink");
 
-  links.forEach((link) => {
-    link.classList.remove("is-active");
-  });
+  navLinks.forEach((link) => link.classList.remove("is-active"));
+  subLinks.forEach((link) => link.classList.remove("is-active"));
 
   const dropdown = document.getElementById("headerCrgrDropdown");
   const toggle = document.getElementById("headerCrgrToggle");
@@ -127,26 +142,44 @@ function markActivePublicNav() {
   if (dropdown) dropdown.classList.remove("has-active-child");
   if (toggle) toggle.classList.remove("is-active");
 
-  links.forEach((link) => {
-    const href = link.getAttribute("href");
-    if (!href || href.startsWith("http")) return;
+  const pageToNav = {
+    index: "index",
+    "quem-somos": "quem-somos",
+    guardioes: "guardioes",
+    conteudos: "conteudos",
+    login: "login"
+  };
 
-    const linkUrl = new URL(href, window.location.origin);
-    const linkPage = normalizePath(linkUrl.pathname);
-    const linkHash = linkUrl.hash;
+  const pageToSubNav = {
+    "vila-pinto": "vila-pinto",
+    cooadesc: "cooadesc",
+    ccpa: "padre-cacique",
+    "padre-cacique": "padre-cacique"
+  };
 
-    const samePage = linkPage === currentPage;
-    const sameHash = linkHash && linkHash === currentHash;
-    const normalPageMatch = samePage && !linkHash && !currentHash;
-    const indexHashMatch = samePage && sameHash;
+  let activeNav = pageToNav[currentPage] || null;
+  const activeSubNav = pageToSubNav[currentPage] || null;
 
-    if (normalPageMatch || indexHashMatch) {
+  if (currentPage === "index" && currentHash === "#indicadores") {
+    activeNav = "indicadores";
+  }
+
+  if (currentPage === "index" && currentHash === "#faq") {
+    activeNav = "faq";
+  }
+
+  navLinks.forEach((link) => {
+    if (link.dataset.nav === activeNav) {
+      link.classList.add("is-active");
+    }
+  });
+
+  subLinks.forEach((link) => {
+    if (link.dataset.navSub === activeSubNav) {
       link.classList.add("is-active");
 
-      if (link.classList.contains("header-nav-sublink")) {
-        if (dropdown) dropdown.classList.add("has-active-child");
-        if (toggle) toggle.classList.add("is-active");
-      }
+      if (dropdown) dropdown.classList.add("has-active-child");
+      if (toggle) toggle.classList.add("is-active");
     }
   });
 }
