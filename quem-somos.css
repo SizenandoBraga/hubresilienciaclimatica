@@ -240,8 +240,8 @@
 
 .section-blue {
   background:
-    radial-gradient(circle at 88% 14%, rgba(255,255,255,.18), transparent 32%),
-    radial-gradient(circle at 8% 86%, rgba(0,0,0,.10), transparent 34%),
+    radial-gradient(circle at 88% 14%, rgba(255,255,255,.48), transparent 32%),
+    radial-gradient(circle at 8% 86%, rgba(255,255,255,.20), transparent 34%),
     var(--blue-primary) !important;
 }
 
@@ -257,25 +257,18 @@
   z-index: 2;
 }
 
-.section-green h2 {
-  color: var(--black) !important;
-}
+/* títulos das seções sempre legíveis */
 
-.section-green .section-head p {
-  color: rgba(35,35,35,.82) !important;
-}
-
+.section-green h2,
 .section-blue h2,
-.section-blue .section-head p {
-  color: #ffffff !important;
-}
-
 .section-white h2 {
   color: var(--black) !important;
 }
 
+.section-green .section-head p,
+.section-blue .section-head p,
 .section-white .section-head p {
-  color: var(--text-soft) !important;
+  color: rgba(35,35,35,.82) !important;
 }
 
 .section-head-balanced h2,
@@ -360,7 +353,7 @@
   opacity: .98;
 }
 
-/* Cores dos cards */
+/* cores dos cards */
 
 .about-card-green,
 .cards-grid.two .card:nth-child(1),
@@ -383,7 +376,7 @@
   background: var(--black) !important;
 }
 
-/* Cards em seções coloridas */
+/* textos dos cards em seções coloridas */
 
 .section-green .card h3,
 .section-blue .card h3,
@@ -397,7 +390,7 @@
   color: rgba(255,255,255,.92) !important;
 }
 
-/* Cards em seções claras */
+/* textos dos cards em seções claras */
 
 .section-white .card h3,
 .section-white .card-highlight {
@@ -407,6 +400,8 @@
 .section-white .card p {
   color: var(--text-soft) !important;
 }
+
+/* cards suaves nas seções claras */
 
 .section-white .about-card-green,
 .section-white .cards-grid.two .card:nth-child(1) {
