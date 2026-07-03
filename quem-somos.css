@@ -1,21 +1,19 @@
 /* =========================================================
    QUEM SOMOS - NSRU
-   Cards sólidos, coloridos e alinhados ao index
+   Azul, laranja, verde e preto | Sem cards brancos
 ========================================================= */
 
 .public-page {
   background:
-    radial-gradient(circle at 8% 8%, rgba(129,185,42,.16), transparent 34%),
-    radial-gradient(circle at 92% 14%, rgba(44,169,225,.14), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(242,153,74,.12), transparent 34%),
-    var(--bg-page);
+    radial-gradient(circle at 8% 8%, rgba(129,185,42,.18), transparent 34%),
+    radial-gradient(circle at 92% 14%, rgba(44,169,225,.18), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(242,153,74,.16), transparent 34%),
+    var(--black);
   padding-bottom: 64px;
   overflow: hidden;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
+/* HERO */
 
 .about-hero-section {
   margin-top: 24px;
@@ -41,7 +39,7 @@
   line-height: .92;
   letter-spacing: -1px;
   font-weight: 800;
-  color: var(--black);
+  color: #ffffff;
 }
 
 .hero-title-line,
@@ -59,7 +57,7 @@
   font-family: "Inter", sans-serif;
   font-size: clamp(16px, 1.5vw, 19px);
   line-height: 1.7;
-  color: var(--text-soft);
+  color: rgba(255,255,255,.84);
 }
 
 .hero-subtitle strong,
@@ -68,18 +66,16 @@
   font-weight: 850;
 }
 
-/* =========================================================
-   TEXTO PRINCIPAL
-========================================================= */
+/* TEXTO PRINCIPAL */
 
 .about-text-card {
   margin-top: 30px;
   padding: clamp(22px, 3vw, 34px);
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,.08);
+  background: var(--black);
+  border: none;
   border-top: 10px solid var(--green-primary);
   border-radius: 30px;
-  box-shadow: 0 22px 60px rgba(0,0,0,.10);
+  box-shadow: 0 22px 60px rgba(0,0,0,.22);
   display: grid;
   gap: 18px;
   position: relative;
@@ -91,23 +87,25 @@
   font-family: "Inter", sans-serif;
   font-size: 16.2px;
   line-height: 1.85;
-  color: var(--text-soft);
+  color: rgba(255,255,255,.86);
 }
 
 .about-text-card .hero-lead {
   padding: 20px 22px;
-  background: rgba(129,185,42,.12);
-  border-left: 6px solid var(--green-primary);
+  background: var(--green-primary);
+  border-left: 6px solid var(--blue-primary);
   border-radius: 0 22px 22px 0;
   font-size: 17px;
   line-height: 1.72;
   font-weight: 700;
-  color: var(--black);
+  color: #ffffff;
 }
 
-/* =========================================================
-   CARD LATERAL
-========================================================= */
+.about-text-card .hero-lead strong {
+  color: #ffffff;
+}
+
+/* CARD LATERAL */
 
 .about-hero-side {
   display: flex;
@@ -118,7 +116,7 @@
   padding: 26px;
   background: var(--green-primary);
   border-radius: 32px;
-  box-shadow: 0 24px 58px rgba(0,0,0,.18);
+  box-shadow: 0 24px 58px rgba(0,0,0,.22);
   color: #ffffff;
   display: flex;
   flex-direction: column;
@@ -132,8 +130,8 @@
   width: fit-content;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(255,255,255,.22);
-  border: 1px solid rgba(255,255,255,.34);
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.28);
   color: #ffffff;
   font-size: 12px;
   font-weight: 850;
@@ -143,15 +141,15 @@
 
 .side-item {
   padding: 20px;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.24);
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.22);
   border-radius: 24px;
   transition: transform .25s ease, background .25s ease;
 }
 
 .side-item:hover {
   transform: translateY(-4px);
-  background: rgba(255,255,255,.24);
+  background: rgba(0,0,0,.26);
 }
 
 .side-item strong {
@@ -166,9 +164,7 @@
   color: rgba(255,255,255,.92);
 }
 
-/* =========================================================
-   FECHAMENTO
-========================================================= */
+/* FECHAMENTO */
 
 .about-closing-card {
   margin-top: 26px;
@@ -176,50 +172,42 @@
   background: var(--blue-primary);
   border: none;
   border-radius: 30px;
-  box-shadow: 0 22px 54px rgba(0,0,0,.12);
+  box-shadow: 0 22px 54px rgba(0,0,0,.18);
 }
 
-.about-closing-card p {
+.about-closing-card p,
+.about-closing-card strong {
   margin: 0;
   max-width: 1080px;
   font-family: "Inter", sans-serif;
   font-size: 17px;
   line-height: 1.78;
   color: #ffffff;
-}
-
-.about-closing-card strong {
-  color: #ffffff;
   font-weight: 850;
 }
 
-/* =========================================================
-   SEÇÕES
-========================================================= */
+/* SEÇÕES */
 
 .section-shell {
   position: relative;
 }
 
+.section-white {
+  background: var(--black) !important;
+}
+
 .section-green {
-  background: var(--green-primary);
+  background: var(--orange-primary) !important;
 }
 
 .section-blue {
-  background: var(--blue-primary);
+  background: var(--blue-primary) !important;
 }
 
-.section-green h2,
-.section-green p,
-.section-blue h2,
-.section-blue p {
-  color: #ffffff;
-}
-
-.section-green .section-badge,
-.section-blue .section-badge {
-  background: rgba(255,255,255,.18);
-  border-color: rgba(255,255,255,.35);
+.section-shell h2,
+.section-shell p,
+.section-head h2,
+.section-head p {
   color: #ffffff;
 }
 
@@ -233,106 +221,68 @@
   line-height: 1.68;
 }
 
-/* =========================================================
-   CARDS
-========================================================= */
+/* CARDS */
 
 .cards-grid {
   gap: 22px;
 }
 
-.card {
+.card,
+.card-white {
   position: relative;
   overflow: hidden;
+  border: none !important;
   border-radius: 28px;
-  border: none;
-  box-shadow: 0 18px 44px rgba(0,0,0,.12);
+  box-shadow: 0 18px 44px rgba(0,0,0,.18);
   padding: 24px;
-  transition:
-    transform .25s ease,
-    box-shadow .25s ease;
+  color: #ffffff;
+  transition: transform .25s ease, box-shadow .25s ease;
 }
 
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 24px 54px rgba(0,0,0,.18);
+  box-shadow: 0 24px 54px rgba(0,0,0,.24);
 }
 
-.card h3 {
-  margin-top: 12px;
-  color: #ffffff;
+.card h3,
+.card p,
+.card-highlight {
+  color: #ffffff !important;
 }
 
 .card p {
   line-height: 1.72;
-  color: rgba(255,255,255,.92);
+  color: rgba(255,255,255,.92) !important;
 }
 
-.card-highlight {
-  color: #ffffff !important;
-  font-weight: 800;
-}
-
-/* cards sólidos */
-.about-card-green {
-  background: var(--green-primary);
-  color: #ffffff;
-}
-
-.about-card-blue {
-  background: var(--blue-primary);
-  color: #ffffff;
-}
-
-.about-card-orange {
-  background: var(--orange-primary);
-  color: #ffffff;
-}
-
-.card-white.about-card-green,
-.card-white.about-card-blue,
-.card-white.about-card-orange {
-  background: var(--green-primary);
-}
-
-.card-white.about-card-blue {
-  background: var(--blue-primary);
-}
-
-.card-white.about-card-orange {
-  background: var(--orange-primary);
-}
-
-/* variação automática para grids */
+.about-card-green,
+.cards-grid.two .card:nth-child(1),
 .cards-grid.four .card:nth-child(1) {
-  background: var(--green-primary);
+  background: var(--green-primary) !important;
 }
 
+.about-card-blue,
+.cards-grid.two .card:nth-child(2),
 .cards-grid.four .card:nth-child(2) {
-  background: var(--blue-primary);
+  background: var(--blue-primary) !important;
 }
 
+.about-card-orange,
 .cards-grid.four .card:nth-child(3) {
-  background: var(--orange-primary);
+  background: var(--orange-primary) !important;
 }
 
 .cards-grid.four .card:nth-child(4) {
-  background: var(--black);
+  background: var(--black) !important;
+  border: 2px solid var(--green-primary) !important;
 }
 
-.cards-grid.two .card:nth-child(1) {
-  background: var(--green-primary);
-}
+/* ÍCONES */
 
-.cards-grid.two .card:nth-child(2) {
-  background: var(--blue-primary);
-}
-
-/* ícones */
 .icon-box {
-  background: rgba(255,255,255,.22) !important;
+  background: rgba(0,0,0,.20) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255,255,255,.32);
+  border: 1px solid rgba(255,255,255,.28);
   box-shadow: none;
   transition: transform .25s ease;
 }
@@ -341,9 +291,7 @@
   transform: scale(1.08) rotate(-2deg);
 }
 
-/* =========================================================
-   PARCEIROS
-========================================================= */
+/* PARCEIROS */
 
 .partner-grid {
   display: grid;
@@ -359,34 +307,28 @@
   gap: 14px;
   flex-wrap: wrap;
   padding: 24px;
-  background: #ffffff;
+  background: var(--black) !important;
   border-radius: 28px;
-  border: 3px solid rgba(129,185,42,.35);
-  box-shadow: 0 18px 44px rgba(0,0,0,.09);
-  transition:
-    transform .25s ease,
-    box-shadow .25s ease,
-    border-color .25s ease;
+  border: 3px solid var(--green-primary) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.20);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 
 .logo-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 24px 52px rgba(0,0,0,.13);
-  border-color: var(--green-primary);
+  box-shadow: 0 24px 52px rgba(0,0,0,.26);
+  border-color: var(--orange-primary) !important;
 }
 
 .partner-logo {
   max-width: 100%;
   max-height: 86px;
   object-fit: contain;
-  filter: grayscale(8%);
-  transition:
-    transform .25s ease,
-    filter .25s ease;
+  filter: none !important;
+  transition: transform .25s ease;
 }
 
 .logo-card:hover .partner-logo {
-  filter: grayscale(0);
   transform: scale(1.05);
 }
 
@@ -395,16 +337,12 @@
   max-height: 72px;
 }
 
-/* =========================================================
-   ANIMAÇÕES
-========================================================= */
+/* ANIMAÇÕES */
 
 [data-reveal] {
   opacity: 0;
   transform: translateY(24px);
-  transition:
-    opacity .75s ease,
-    transform .75s ease;
+  transition: opacity .75s ease, transform .75s ease;
 }
 
 [data-reveal].in {
@@ -420,17 +358,14 @@
   will-change: transform;
 }
 
-/* foco teclado */
 .card.is-focused,
 .logo-card.is-focused,
 .side-item.is-focused {
-  outline: 3px solid rgba(129,185,42,.45);
+  outline: 3px solid rgba(129,185,42,.55);
   outline-offset: 4px;
 }
 
-/* =========================================================
-   NOTEBOOK
-========================================================= */
+/* NOTEBOOK */
 
 @media (max-width: 1200px) {
   .about-hero-layout {
@@ -447,9 +382,7 @@
   }
 }
 
-/* =========================================================
-   TABLET
-========================================================= */
+/* TABLET */
 
 @media (max-width: 992px) {
   .about-hero-layout {
@@ -475,9 +408,7 @@
   }
 }
 
-/* =========================================================
-   CELULAR GRANDE
-========================================================= */
+/* CELULAR GRANDE */
 
 @media (max-width: 768px) {
   .about-hero-section {
@@ -514,9 +445,7 @@
   }
 }
 
-/* =========================================================
-   CELULAR PEQUENO
-========================================================= */
+/* CELULAR PEQUENO */
 
 @media (max-width: 480px) {
   .public-page {
@@ -557,9 +486,7 @@
   }
 }
 
-/* =========================================================
-   ACESSIBILIDADE
-========================================================= */
+/* ACESSIBILIDADE */
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal],
