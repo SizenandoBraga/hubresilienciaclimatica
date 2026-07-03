@@ -233,8 +233,8 @@
 
 .section-green {
   background:
-    radial-gradient(circle at 10% 15%, rgba(255,255,255,.20), transparent 30%),
-    radial-gradient(circle at 90% 85%, rgba(0,0,0,.10), transparent 34%),
+    radial-gradient(circle at 10% 15%, rgba(255,255,255,.50), transparent 32%),
+    radial-gradient(circle at 92% 86%, rgba(255,255,255,.22), transparent 34%),
     var(--orange-primary) !important;
 }
 
@@ -257,8 +257,14 @@
   z-index: 2;
 }
 
-.section-green h2,
-.section-green .section-head p,
+.section-green h2 {
+  color: var(--black) !important;
+}
+
+.section-green .section-head p {
+  color: rgba(35,35,35,.82) !important;
+}
+
 .section-blue h2,
 .section-blue .section-head p {
   color: #ffffff !important;
@@ -354,31 +360,6 @@
   opacity: .98;
 }
 
-/* Cards em seções coloridas: texto branco */
-
-.section-green .card h3,
-.section-blue .card h3,
-.section-green .card-highlight,
-.section-blue .card-highlight {
-  color: #ffffff !important;
-}
-
-.section-green .card p,
-.section-blue .card p {
-  color: rgba(255,255,255,.92) !important;
-}
-
-/* Cards em seções claras: texto preto */
-
-.section-white .card h3,
-.section-white .card-highlight {
-  color: var(--black) !important;
-}
-
-.section-white .card p {
-  color: var(--text-soft) !important;
-}
-
 /* Cores dos cards */
 
 .about-card-green,
@@ -402,7 +383,30 @@
   background: var(--black) !important;
 }
 
-/* Seção branca: cards em tons claros do projeto */
+/* Cards em seções coloridas */
+
+.section-green .card h3,
+.section-blue .card h3,
+.section-green .card-highlight,
+.section-blue .card-highlight {
+  color: #ffffff !important;
+}
+
+.section-green .card p,
+.section-blue .card p {
+  color: rgba(255,255,255,.92) !important;
+}
+
+/* Cards em seções claras */
+
+.section-white .card h3,
+.section-white .card-highlight {
+  color: var(--black) !important;
+}
+
+.section-white .card p {
+  color: var(--text-soft) !important;
+}
 
 .section-white .about-card-green,
 .section-white .cards-grid.two .card:nth-child(1) {
