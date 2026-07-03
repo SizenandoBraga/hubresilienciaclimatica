@@ -1,25 +1,18 @@
 /* =========================================================
    QUEM SOMOS - NSRU
-   Cards sólidos, coloridos e alinhados ao index
+   Azul, laranja, verde e preto | Texto legível
 ========================================================= */
 
 .public-page {
-  background:
-    radial-gradient(circle at 8% 8%, rgba(129,185,42,.16), transparent 34%),
-    radial-gradient(circle at 92% 14%, rgba(44,169,225,.14), transparent 30%),
-    radial-gradient(circle at 50% 100%, rgba(242,153,74,.12), transparent 34%),
-    var(--bg-page);
+  background: var(--black);
   padding-bottom: 64px;
   overflow: hidden;
 }
 
-/* =========================================================
-   HERO
-========================================================= */
+/* HERO */
 
 .about-hero-section {
   margin-top: 24px;
-  position: relative;
 }
 
 .about-hero-layout {
@@ -27,10 +20,6 @@
   grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
   gap: 28px;
   align-items: stretch;
-}
-
-.about-hero-copy {
-  min-width: 0;
 }
 
 .hero-title {
@@ -41,7 +30,7 @@
   line-height: .92;
   letter-spacing: -1px;
   font-weight: 800;
-  color: var(--black);
+  color: #ffffff;
 }
 
 .hero-title-line,
@@ -59,31 +48,24 @@
   font-family: "Inter", sans-serif;
   font-size: clamp(16px, 1.5vw, 19px);
   line-height: 1.7;
-  color: var(--text-soft);
+  color: rgba(255,255,255,.86);
 }
 
-.hero-subtitle strong,
-.about-text-card strong {
+.hero-subtitle strong {
   color: var(--green-primary);
-  font-weight: 850;
 }
 
-/* =========================================================
-   TEXTO PRINCIPAL
-========================================================= */
+/* TEXTO PRINCIPAL */
 
 .about-text-card {
   margin-top: 30px;
   padding: clamp(22px, 3vw, 34px);
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,.08);
+  background: var(--black);
   border-top: 10px solid var(--green-primary);
   border-radius: 30px;
-  box-shadow: 0 22px 60px rgba(0,0,0,.10);
+  box-shadow: 0 22px 60px rgba(0,0,0,.24);
   display: grid;
   gap: 18px;
-  position: relative;
-  overflow: hidden;
 }
 
 .about-text-card p {
@@ -91,23 +73,29 @@
   font-family: "Inter", sans-serif;
   font-size: 16.2px;
   line-height: 1.85;
-  color: var(--text-soft);
+  color: rgba(255,255,255,.88);
+}
+
+.about-text-card strong {
+  color: var(--green-primary);
 }
 
 .about-text-card .hero-lead {
   padding: 20px 22px;
-  background: rgba(129,185,42,.12);
-  border-left: 6px solid var(--green-primary);
+  background: var(--green-primary);
+  border-left: 6px solid var(--blue-primary);
   border-radius: 0 22px 22px 0;
   font-size: 17px;
   line-height: 1.72;
-  font-weight: 700;
-  color: var(--black);
+  font-weight: 800;
+  color: #ffffff;
 }
 
-/* =========================================================
-   CARD LATERAL
-========================================================= */
+.about-text-card .hero-lead strong {
+  color: #ffffff;
+}
+
+/* CARD LATERAL */
 
 .about-hero-side {
   display: flex;
@@ -118,13 +106,12 @@
   padding: 26px;
   background: var(--green-primary);
   border-radius: 32px;
-  box-shadow: 0 24px 58px rgba(0,0,0,.18);
+  box-shadow: 0 24px 58px rgba(0,0,0,.22);
   color: #ffffff;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 18px;
-  min-height: 100%;
 }
 
 .side-label {
@@ -132,8 +119,8 @@
   width: fit-content;
   padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(255,255,255,.22);
-  border: 1px solid rgba(255,255,255,.34);
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.28);
   color: #ffffff;
   font-size: 12px;
   font-weight: 850;
@@ -143,15 +130,15 @@
 
 .side-item {
   padding: 20px;
-  background: rgba(255,255,255,.16);
-  border: 1px solid rgba(255,255,255,.24);
+  background: rgba(0,0,0,.18);
+  border: 1px solid rgba(255,255,255,.22);
   border-radius: 24px;
   transition: transform .25s ease, background .25s ease;
 }
 
 .side-item:hover {
   transform: translateY(-4px);
-  background: rgba(255,255,255,.24);
+  background: rgba(0,0,0,.26);
 }
 
 .side-item strong {
@@ -166,20 +153,18 @@
   color: rgba(255,255,255,.92);
 }
 
-/* =========================================================
-   FECHAMENTO
-========================================================= */
+/* FECHAMENTO */
 
 .about-closing-card {
   margin-top: 26px;
   padding: clamp(24px, 3vw, 34px);
   background: var(--blue-primary);
-  border: none;
   border-radius: 30px;
-  box-shadow: 0 22px 54px rgba(0,0,0,.12);
+  box-shadow: 0 22px 54px rgba(0,0,0,.18);
 }
 
-.about-closing-card p {
+.about-closing-card p,
+.about-closing-card strong {
   margin: 0;
   max-width: 1080px;
   font-family: "Inter", sans-serif;
@@ -188,152 +173,137 @@
   color: #ffffff;
 }
 
-.about-closing-card strong {
-  color: #ffffff;
-  font-weight: 850;
-}
-
-/* =========================================================
-   SEÇÕES
-========================================================= */
+/* SEÇÕES */
 
 .section-shell {
   position: relative;
+  overflow: hidden;
+}
+
+.section-white {
+  background: var(--black) !important;
 }
 
 .section-green {
-  background: var(--green-primary);
+  background: var(--orange-primary) !important;
 }
 
 .section-blue {
-  background: var(--blue-primary);
+  background: var(--blue-primary) !important;
 }
 
-.section-green h2,
-.section-green p,
-.section-blue h2,
-.section-blue p {
-  color: #ffffff;
+.section-green::before,
+.section-blue::before,
+.section-white::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 10% 15%, rgba(255,255,255,.16), transparent 30%),
+    radial-gradient(circle at 90% 85%, rgba(0,0,0,.12), transparent 34%);
+  pointer-events: none;
 }
 
-.section-green .section-badge,
-.section-blue .section-badge {
-  background: rgba(255,255,255,.18);
-  border-color: rgba(255,255,255,.35);
-  color: #ffffff;
+.section-shell-content {
+  position: relative;
+  z-index: 2;
 }
 
-.section-head-balanced h2 {
-  max-width: 800px;
+.section-head-balanced h2,
+.section-head h2 {
+  max-width: 820px;
+  color: #ffffff !important;
+  text-shadow: 0 2px 18px rgba(0,0,0,.18);
 }
 
-.section-head-balanced p {
-  max-width: 700px;
+.section-head-balanced p,
+.section-head p {
+  max-width: 720px;
   margin-top: 10px;
   line-height: 1.68;
+  color: rgba(255,255,255,.92) !important;
 }
 
-/* =========================================================
-   CARDS
-========================================================= */
+/* CARDS */
 
 .cards-grid {
   gap: 22px;
 }
 
-.card {
+.card,
+.card-white {
   position: relative;
   overflow: hidden;
+  border: none !important;
   border-radius: 28px;
-  border: none;
-  box-shadow: 0 18px 44px rgba(0,0,0,.12);
+  box-shadow: 0 18px 44px rgba(0,0,0,.18);
   padding: 24px;
-  transition:
-    transform .25s ease,
-    box-shadow .25s ease;
+  transition: transform .25s ease, box-shadow .25s ease;
+}
+
+.card::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 22px;
+  background: rgba(255,255,255,.94);
+  z-index: 0;
+}
+
+.card > * {
+  position: relative;
+  z-index: 1;
 }
 
 .card:hover {
   transform: translateY(-6px);
-  box-shadow: 0 24px 54px rgba(0,0,0,.18);
+  box-shadow: 0 24px 54px rgba(0,0,0,.24);
 }
 
 .card h3 {
   margin-top: 12px;
-  color: #ffffff;
+  color: var(--black) !important;
 }
 
 .card p {
   line-height: 1.72;
-  color: rgba(255,255,255,.92);
+  color: var(--text-soft) !important;
 }
 
 .card-highlight {
-  color: #ffffff !important;
-  font-weight: 800;
+  color: var(--black) !important;
+  font-weight: 850;
 }
 
-/* cards sólidos */
-.about-card-green {
-  background: var(--green-primary);
-  color: #ffffff;
-}
-
-.about-card-blue {
-  background: var(--blue-primary);
-  color: #ffffff;
-}
-
-.about-card-orange {
-  background: var(--orange-primary);
-  color: #ffffff;
-}
-
-.card-white.about-card-green,
-.card-white.about-card-blue,
-.card-white.about-card-orange {
-  background: var(--green-primary);
-}
-
-.card-white.about-card-blue {
-  background: var(--blue-primary);
-}
-
-.card-white.about-card-orange {
-  background: var(--orange-primary);
-}
-
-/* variação automática para grids */
+.about-card-green,
+.cards-grid.two .card:nth-child(1),
 .cards-grid.four .card:nth-child(1) {
-  background: var(--green-primary);
+  background: var(--green-primary) !important;
 }
 
+.about-card-blue,
+.cards-grid.two .card:nth-child(2),
 .cards-grid.four .card:nth-child(2) {
-  background: var(--blue-primary);
+  background: var(--blue-primary) !important;
 }
 
+.about-card-orange,
 .cards-grid.four .card:nth-child(3) {
-  background: var(--orange-primary);
+  background: var(--orange-primary) !important;
 }
 
 .cards-grid.four .card:nth-child(4) {
-  background: var(--black);
+  background: var(--black) !important;
+  border: 2px solid var(--green-primary) !important;
 }
 
-.cards-grid.two .card:nth-child(1) {
-  background: var(--green-primary);
-}
+/* ÍCONES */
 
-.cards-grid.two .card:nth-child(2) {
-  background: var(--blue-primary);
-}
-
-/* ícones */
 .icon-box {
-  background: rgba(255,255,255,.22) !important;
+  background: var(--black) !important;
   color: #ffffff !important;
-  border: 1px solid rgba(255,255,255,.32);
-  box-shadow: none;
+  border: none;
+  box-shadow: 0 10px 24px rgba(0,0,0,.18);
   transition: transform .25s ease;
 }
 
@@ -341,9 +311,7 @@
   transform: scale(1.08) rotate(-2deg);
 }
 
-/* =========================================================
-   PARCEIROS
-========================================================= */
+/* PARCEIROS */
 
 .partner-grid {
   display: grid;
@@ -359,34 +327,28 @@
   gap: 14px;
   flex-wrap: wrap;
   padding: 24px;
-  background: #ffffff;
+  background: var(--black) !important;
   border-radius: 28px;
-  border: 3px solid rgba(129,185,42,.35);
-  box-shadow: 0 18px 44px rgba(0,0,0,.09);
-  transition:
-    transform .25s ease,
-    box-shadow .25s ease,
-    border-color .25s ease;
+  border: 3px solid var(--green-primary) !important;
+  box-shadow: 0 18px 44px rgba(0,0,0,.20);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease;
 }
 
 .logo-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 24px 52px rgba(0,0,0,.13);
-  border-color: var(--green-primary);
+  box-shadow: 0 24px 52px rgba(0,0,0,.26);
+  border-color: var(--orange-primary) !important;
 }
 
 .partner-logo {
   max-width: 100%;
   max-height: 86px;
   object-fit: contain;
-  filter: grayscale(8%);
-  transition:
-    transform .25s ease,
-    filter .25s ease;
+  filter: none !important;
+  transition: transform .25s ease;
 }
 
 .logo-card:hover .partner-logo {
-  filter: grayscale(0);
   transform: scale(1.05);
 }
 
@@ -395,16 +357,12 @@
   max-height: 72px;
 }
 
-/* =========================================================
-   ANIMAÇÕES
-========================================================= */
+/* ANIMAÇÕES */
 
 [data-reveal] {
   opacity: 0;
   transform: translateY(24px);
-  transition:
-    opacity .75s ease,
-    transform .75s ease;
+  transition: opacity .75s ease, transform .75s ease;
 }
 
 [data-reveal].in {
@@ -412,25 +370,14 @@
   transform: none;
 }
 
-.about-text-card,
-.about-side-card,
-.about-closing-card,
-.card,
-.logo-card {
-  will-change: transform;
-}
-
-/* foco teclado */
 .card.is-focused,
 .logo-card.is-focused,
 .side-item.is-focused {
-  outline: 3px solid rgba(129,185,42,.45);
+  outline: 3px solid rgba(129,185,42,.55);
   outline-offset: 4px;
 }
 
-/* =========================================================
-   NOTEBOOK
-========================================================= */
+/* RESPONSIVO */
 
 @media (max-width: 1200px) {
   .about-hero-layout {
@@ -441,15 +388,7 @@
   .hero-title {
     font-size: clamp(38px, 4.8vw, 62px);
   }
-
-  .about-text-card p {
-    font-size: 15.8px;
-  }
 }
-
-/* =========================================================
-   TABLET
-========================================================= */
 
 @media (max-width: 992px) {
   .about-hero-layout {
@@ -459,7 +398,6 @@
   .about-side-card {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    align-items: start;
   }
 
   .side-label {
@@ -474,10 +412,6 @@
     grid-template-columns: repeat(2, 1fr);
   }
 }
-
-/* =========================================================
-   CELULAR GRANDE
-========================================================= */
 
 @media (max-width: 768px) {
   .about-hero-section {
@@ -500,10 +434,7 @@
     border-radius: 24px;
   }
 
-  .about-side-card {
-    grid-template-columns: 1fr;
-  }
-
+  .about-side-card,
   .cards-grid.two,
   .cards-grid.four {
     grid-template-columns: 1fr;
@@ -513,10 +444,6 @@
     max-width: 30%;
   }
 }
-
-/* =========================================================
-   CELULAR PEQUENO
-========================================================= */
 
 @media (max-width: 480px) {
   .public-page {
@@ -556,10 +483,6 @@
     max-height: 62px;
   }
 }
-
-/* =========================================================
-   ACESSIBILIDADE
-========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
   [data-reveal],
