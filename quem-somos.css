@@ -156,7 +156,7 @@
   margin: 8px 0 0;
   font-size: 14.8px;
   line-height: 1.65;
-  color: rgba(255,255,255,.90);
+  color:black !important;
 }
 
 /* FECHAMENTO */
@@ -178,7 +178,7 @@
   font-family: "Inter", sans-serif;
   font-size: 17px;
   line-height: 1.78;
-  color: #ffffff;
+  color:black !important;
 }
 
 .about-closing-card strong {
@@ -231,7 +231,7 @@
 }
 
 .section-white .section-head p {
-  color: var(--text-soft);
+  color: var(--black);
 }
 
 .section-head-balanced h2,
@@ -310,7 +310,7 @@
   margin: 0;
   font-size: 15.8px;
   line-height: 1.85;
-  color: rgba(255,255,255,.88) !important;
+  color:black !important;
 }
 
 .card p + p {
