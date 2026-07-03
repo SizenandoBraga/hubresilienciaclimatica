@@ -1,14 +1,16 @@
 /* =========================================================
    QUEM SOMOS - NSRU
-   Layout limpo, responsivo e alinhado ao index
+   Visual premium, colorido e alinhado ao index
 ========================================================= */
 
 .public-page {
   background:
-    radial-gradient(circle at top left, rgba(129,185,42,.10), transparent 32%),
-    radial-gradient(circle at 90% 20%, rgba(44,169,225,.08), transparent 28%),
+    radial-gradient(circle at 8% 8%, rgba(129,185,42,.18), transparent 34%),
+    radial-gradient(circle at 92% 14%, rgba(44,169,225,.16), transparent 30%),
+    radial-gradient(circle at 50% 100%, rgba(242,153,74,.12), transparent 34%),
     var(--bg-page);
-  padding-bottom: 56px;
+  padding-bottom: 64px;
+  overflow: hidden;
 }
 
 /* =========================================================
@@ -17,11 +19,24 @@
 
 .about-hero-section {
   margin-top: 24px;
+  position: relative;
+}
+
+.about-hero-section::before {
+  content: "";
+  position: absolute;
+  inset: 18px;
+  border-radius: 34px;
+  background:
+    linear-gradient(135deg, rgba(129,185,42,.14), rgba(44,169,225,.10)),
+    radial-gradient(circle at top right, rgba(242,153,74,.15), transparent 36%);
+  pointer-events: none;
 }
 
 .about-hero-layout {
+  position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) minmax(280px, .55fr);
+  grid-template-columns: minmax(0, 1.35fr) minmax(300px, .65fr);
   gap: 28px;
   align-items: stretch;
 }
@@ -31,12 +46,12 @@
 }
 
 .hero-title {
-  max-width: 850px;
+  max-width: 920px;
   margin: 12px 0 0;
   font-family: "Archivo Condensed", sans-serif;
-  font-size: clamp(40px, 5vw, 68px);
-  line-height: .96;
-  letter-spacing: -0.6px;
+  font-size: clamp(42px, 5.4vw, 76px);
+  line-height: .92;
+  letter-spacing: -1px;
   font-weight: 800;
   color: var(--black);
 }
@@ -48,14 +63,15 @@
 
 .hero-title-highlight {
   color: var(--green-primary);
+  text-shadow: 0 12px 34px rgba(129,185,42,.22);
 }
 
 .hero-subtitle {
-  max-width: 720px;
-  margin-top: 16px;
+  max-width: 760px;
+  margin-top: 18px;
   font-family: "Inter", sans-serif;
-  font-size: clamp(16px, 1.5vw, 18px);
-  line-height: 1.65;
+  font-size: clamp(16px, 1.5vw, 19px);
+  line-height: 1.7;
   color: var(--text-soft);
 }
 
@@ -64,25 +80,40 @@
 .about-closing-card strong,
 .side-item strong {
   color: var(--green-primary);
-  font-weight: 800;
+  font-weight: 850;
 }
 
 /* =========================================================
-   CARD TEXTO PRINCIPAL
+   TEXTO PRINCIPAL
 ========================================================= */
 
 .about-text-card {
-  margin-top: 28px;
-  padding: clamp(22px, 3vw, 32px);
-  background: #fff;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+  margin-top: 30px;
+  padding: clamp(22px, 3vw, 34px);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.96), rgba(255,255,255,.90));
+  border: 1px solid rgba(255,255,255,.72);
+  border-radius: 30px;
+  box-shadow: 0 22px 60px rgba(0,0,0,.10);
   display: grid;
   gap: 18px;
+  position: relative;
+  overflow: hidden;
+}
+
+.about-text-card::before {
+  content: "";
+  position: absolute;
+  width: 210px;
+  height: 210px;
+  right: -80px;
+  top: -80px;
+  background: rgba(129,185,42,.16);
+  border-radius: 999px;
 }
 
 .about-text-card p {
+  position: relative;
   margin: 0;
   font-family: "Inter", sans-serif;
   font-size: 16.2px;
@@ -91,13 +122,14 @@
 }
 
 .about-text-card .hero-lead {
-  padding: 18px 20px;
-  background: rgba(129,185,42,.08);
-  border-left: 5px solid var(--green-primary);
-  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  padding: 20px 22px;
+  background:
+    linear-gradient(135deg, rgba(129,185,42,.16), rgba(44,169,225,.08));
+  border-left: 6px solid var(--green-primary);
+  border-radius: 0 22px 22px 0;
   font-size: 17px;
-  line-height: 1.7;
-  font-weight: 600;
+  line-height: 1.72;
+  font-weight: 700;
   color: var(--black);
 }
 
@@ -111,68 +143,78 @@
 
 .about-side-card {
   width: 100%;
-  padding: 24px;
+  padding: 26px;
   background:
-    linear-gradient(145deg, rgba(35,35,35,.96), rgba(35,35,35,.88)),
-    radial-gradient(circle at top right, rgba(129,185,42,.28), transparent 34%);
-  border-radius: var(--radius-xl);
-  box-shadow: 0 18px 42px rgba(0,0,0,.18);
+    radial-gradient(circle at top right, rgba(129,185,42,.38), transparent 34%),
+    radial-gradient(circle at bottom left, rgba(44,169,225,.30), transparent 36%),
+    linear-gradient(145deg, #16231f, #242424);
+  border-radius: 32px;
+  box-shadow: 0 24px 58px rgba(0,0,0,.22);
   color: #fff;
   display: flex;
   flex-direction: column;
   justify-content: center;
   gap: 18px;
+  min-height: 100%;
 }
 
 .side-label {
   display: inline-flex;
   width: fit-content;
-  padding: 7px 12px;
+  padding: 8px 14px;
   border-radius: 999px;
-  background: rgba(129,185,42,.16);
-  border: 1px solid rgba(129,185,42,.45);
-  color: var(--green-primary);
+  background: rgba(129,185,42,.18);
+  border: 1px solid rgba(129,185,42,.48);
+  color: #baf06a;
   font-size: 12px;
-  font-weight: 800;
+  font-weight: 850;
   text-transform: uppercase;
-  letter-spacing: .04em;
+  letter-spacing: .05em;
 }
 
 .side-item {
-  padding: 18px;
-  background: rgba(255,255,255,.08);
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: var(--radius-lg);
+  padding: 20px;
+  background: rgba(255,255,255,.10);
+  border: 1px solid rgba(255,255,255,.15);
+  border-radius: 24px;
+  backdrop-filter: blur(10px);
+  transition: transform .25s ease, background .25s ease;
+}
+
+.side-item:hover {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,.14);
 }
 
 .side-item p {
   margin: 8px 0 0;
   font-size: 14.8px;
   line-height: 1.65;
-  color: rgba(255,255,255,.82);
+  color: rgba(255,255,255,.84);
 }
 
 /* =========================================================
-   CARD DE FECHAMENTO
+   FECHAMENTO
 ========================================================= */
 
 .about-closing-card {
-  margin-top: 24px;
-  padding: clamp(22px, 3vw, 30px);
+  position: relative;
+  margin-top: 26px;
+  padding: clamp(24px, 3vw, 34px);
   background:
-    linear-gradient(135deg, rgba(129,185,42,.12), rgba(255,255,255,.96));
-  border: 1px solid rgba(129,185,42,.28);
-  border-left: 7px solid var(--green-primary);
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
+    linear-gradient(135deg, rgba(129,185,42,.18), rgba(255,255,255,.96) 52%, rgba(44,169,225,.12));
+  border: 1px solid rgba(129,185,42,.30);
+  border-left: 8px solid var(--green-primary);
+  border-radius: 30px;
+  box-shadow: 0 22px 54px rgba(0,0,0,.10);
 }
 
 .about-closing-card p {
   margin: 0;
-  max-width: 1040px;
+  max-width: 1080px;
   font-family: "Inter", sans-serif;
   font-size: 17px;
-  line-height: 1.75;
+  line-height: 1.78;
   color: var(--black);
 }
 
@@ -180,66 +222,110 @@
    SEÇÕES
 ========================================================= */
 
+.section-shell {
+  position: relative;
+}
+
+.section-green {
+  background:
+    radial-gradient(circle at top left, rgba(129,185,42,.20), transparent 34%),
+    linear-gradient(135deg, rgba(129,185,42,.12), rgba(255,255,255,.92));
+}
+
+.section-blue {
+  background:
+    radial-gradient(circle at top right, rgba(44,169,225,.18), transparent 34%),
+    linear-gradient(135deg, rgba(44,169,225,.10), rgba(255,255,255,.94));
+}
+
 .section-head-balanced h2 {
-  max-width: 760px;
+  max-width: 800px;
 }
 
 .section-head-balanced p {
-  max-width: 680px;
+  max-width: 700px;
   margin-top: 10px;
-  line-height: 1.65;
+  line-height: 1.68;
 }
 
 /* =========================================================
-   CARDS GERAIS
+   CARDS
 ========================================================= */
 
 .cards-grid {
-  gap: 20px;
+  gap: 22px;
 }
 
 .card {
   position: relative;
   overflow: hidden;
-  border-radius: var(--radius-lg);
-  border: 1px solid rgba(0,0,0,.08);
-  box-shadow: var(--shadow-card);
-  padding: 22px;
+  border-radius: 28px;
+  border: 1px solid rgba(0,0,0,.07);
+  box-shadow: 0 18px 44px rgba(0,0,0,.09);
+  padding: 24px;
+  background:
+    linear-gradient(180deg, #fff, rgba(255,255,255,.94));
   transition:
     transform .25s ease,
     box-shadow .25s ease,
     border-color .25s ease;
 }
 
+.card::after {
+  content: "";
+  position: absolute;
+  width: 130px;
+  height: 130px;
+  right: -54px;
+  bottom: -54px;
+  border-radius: 999px;
+  background: rgba(129,185,42,.12);
+}
+
 .card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 20px 42px rgba(0,0,0,.12);
-  border-color: rgba(129,185,42,.28);
+  transform: translateY(-6px);
+  box-shadow: 0 24px 54px rgba(0,0,0,.13);
+  border-color: rgba(129,185,42,.36);
 }
 
 .card h3 {
-  margin-top: 10px;
+  position: relative;
+  margin-top: 12px;
+  color: var(--black);
 }
 
 .card p {
-  line-height: 1.7;
+  position: relative;
+  line-height: 1.72;
 }
 
 .about-card-green {
-  border-top: 7px solid var(--green-primary);
+  border-top: 8px solid var(--green-primary);
 }
 
 .about-card-blue {
-  border-top: 7px solid var(--blue-primary);
+  border-top: 8px solid var(--blue-primary);
 }
 
 .about-card-orange {
-  border-top: 7px solid var(--orange-primary);
+  border-top: 8px solid var(--orange-primary);
 }
 
-/* ícones dos cards */
+.about-card-green::after {
+  background: rgba(129,185,42,.14);
+}
+
+.about-card-blue::after {
+  background: rgba(44,169,225,.14);
+}
+
+.about-card-orange::after {
+  background: rgba(242,153,74,.16);
+}
+
 .icon-box {
   transition: transform .25s ease;
+  box-shadow: 0 12px 28px rgba(0,0,0,.12);
 }
 
 .card:hover .icon-box {
@@ -257,30 +343,35 @@
 }
 
 .logo-card {
-  min-height: 128px;
+  min-height: 142px;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 22px;
-  background: #fff;
-  border-radius: var(--radius-lg);
+  gap: 14px;
+  flex-wrap: wrap;
+  padding: 24px;
+  background:
+    linear-gradient(180deg, #fff, rgba(255,255,255,.92));
+  border-radius: 28px;
   border: 1px solid rgba(0,0,0,.08);
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 18px 44px rgba(0,0,0,.09);
   transition:
     transform .25s ease,
-    box-shadow .25s ease;
+    box-shadow .25s ease,
+    border-color .25s ease;
 }
 
 .logo-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 18px 38px rgba(0,0,0,.12);
+  transform: translateY(-5px);
+  box-shadow: 0 24px 52px rgba(0,0,0,.13);
+  border-color: rgba(129,185,42,.32);
 }
 
 .partner-logo {
   max-width: 100%;
-  max-height: 82px;
+  max-height: 86px;
   object-fit: contain;
-  filter: grayscale(15%);
+  filter: grayscale(10%);
   transition:
     transform .25s ease,
     filter .25s ease;
@@ -288,7 +379,12 @@
 
 .logo-card:hover .partner-logo {
   filter: grayscale(0);
-  transform: scale(1.04);
+  transform: scale(1.05);
+}
+
+.logo-card:nth-child(3) .partner-logo {
+  max-width: 31%;
+  max-height: 72px;
 }
 
 /* =========================================================
@@ -297,10 +393,10 @@
 
 [data-reveal] {
   opacity: 0;
-  transform: translateY(22px);
+  transform: translateY(24px);
   transition:
-    opacity .7s ease,
-    transform .7s ease;
+    opacity .75s ease,
+    transform .75s ease;
 }
 
 [data-reveal].in {
@@ -316,18 +412,26 @@
   will-change: transform;
 }
 
+/* foco teclado */
+.card.is-focused,
+.logo-card.is-focused,
+.side-item.is-focused {
+  outline: 3px solid rgba(129,185,42,.45);
+  outline-offset: 4px;
+}
+
 /* =========================================================
    NOTEBOOK
 ========================================================= */
 
 @media (max-width: 1200px) {
   .about-hero-layout {
-    grid-template-columns: 1.25fr .75fr;
+    grid-template-columns: 1.2fr .8fr;
     gap: 22px;
   }
 
   .hero-title {
-    font-size: clamp(38px, 4.6vw, 58px);
+    font-size: clamp(38px, 4.8vw, 62px);
   }
 
   .about-text-card p {
@@ -372,9 +476,14 @@
     margin-top: 18px;
   }
 
+  .about-hero-section::before {
+    inset: 8px;
+    border-radius: 26px;
+  }
+
   .hero-title {
-    font-size: 38px;
-    line-height: 1;
+    font-size: 39px;
+    line-height: .98;
   }
 
   .hero-subtitle {
@@ -385,6 +494,7 @@
   .about-closing-card,
   .about-side-card {
     padding: 20px;
+    border-radius: 24px;
   }
 
   .about-side-card {
@@ -395,6 +505,10 @@
   .cards-grid.four {
     grid-template-columns: 1fr;
   }
+
+  .logo-card:nth-child(3) .partner-logo {
+    max-width: 30%;
+  }
 }
 
 /* =========================================================
@@ -403,12 +517,12 @@
 
 @media (max-width: 480px) {
   .public-page {
-    padding-bottom: 40px;
+    padding-bottom: 42px;
   }
 
   .hero-title {
-    font-size: 32px;
-    letter-spacing: -0.3px;
+    font-size: 33px;
+    letter-spacing: -0.4px;
   }
 
   .about-text-card .hero-lead {
@@ -419,7 +533,7 @@
   .about-text-card p,
   .about-closing-card p {
     font-size: 15.4px;
-    line-height: 1.75;
+    line-height: 1.76;
   }
 
   .side-item {
@@ -431,7 +545,12 @@
   }
 
   .logo-card {
-    min-height: 112px;
+    min-height: 118px;
+  }
+
+  .logo-card:nth-child(3) .partner-logo {
+    max-width: 32%;
+    max-height: 62px;
   }
 }
 
@@ -444,7 +563,8 @@
   .card,
   .logo-card,
   .partner-logo,
-  .icon-box {
+  .icon-box,
+  .side-item {
     transition: none !important;
     transform: none !important;
   }
