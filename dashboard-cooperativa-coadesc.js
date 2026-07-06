@@ -975,9 +975,15 @@ function resolveParticipant(item = {}) {
     ? participantsMap.get(String(participantId))
     : null;
 
-  const fromCode = participantCode
-    ? participantsMap.get(String(participantCode))
-    : null;
+  const codeKey = String(participantCode || "").trim();
+
+const fromCode = codeKey
+  ? (
+      participantsMap.get(codeKey) ||
+      participantsMap.get(codeKey.toUpperCase()) ||
+      participantsMap.get(codeKey.toLowerCase())
+    )
+  : null;
 
   const matched = fromId || fromCode || null;
 
@@ -986,15 +992,15 @@ function resolveParticipant(item = {}) {
   return {
     id: participantId || matched?.id || "",
     code: matched?.code || matched?.participantCode || participantCode || "—",
-    name:
-      directName ||
-      matched?.name ||
-      matched?.nome ||
-      (
-        participantCode
-          ? `Participante ${participantCode}`
-          : "Sem participante vinculado"
-      ),
+   name:
+  matched?.name ||
+  matched?.nome ||
+  directName ||
+  (
+    participantCode
+      ? `Participante ${participantCode}`
+      : "Sem participante vinculado"
+  ),
     type:
       matched?.type ||
       matched?.participantType ||
@@ -1672,7 +1678,9 @@ function loadParticipantsMap() {
           const normalizedKey = String(key || "").trim();
 
           if (normalizedKey) {
-            participantsMap.set(normalizedKey, payload);
+           participantsMap.set(normalizedKey, payload);
+participantsMap.set(normalizedKey.toUpperCase(), payload);
+participantsMap.set(normalizedKey.toLowerCase(), payload);
           }
         });
       });
